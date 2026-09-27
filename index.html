@@ -229,7 +229,7 @@ button.icon:hover { color: var(--danger); border-color: var(--danger); }
   display: flex;
   height: 38px;
   border-radius: 7px;
-  overflow: hidden;
+  margin-top: 16px;
   background: var(--rest);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 15%, transparent);
 }
@@ -240,7 +240,23 @@ button.icon:hover { color: var(--danger); border-color: var(--danger); }
   min-width: 0;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.25), inset 0 -2px 0 rgba(0,0,0,.12);
 }
-.kerf { flex: 0 0 auto; width: 3px; background: var(--steel); position: relative; }
+.bar > :first-child { border-radius: 7px 0 0 7px; }
+.bar > :last-child { border-radius: 0 7px 7px 0; }
+/* prořez: bílá mezera s popiskem „3 mm“ nad pruhem */
+.kerf {
+  flex: 0 0 auto; width: 6px; position: relative;
+  background: var(--surface);
+  border-inline: 1px solid color-mix(in srgb, var(--ink) 55%, transparent);
+}
+.kerf::before {
+  content: attr(data-label);
+  position: absolute; bottom: calc(100% + 3px); left: 50%; transform: translateX(-50%);
+  font: 700 11px/1 var(--body); color: var(--ink); white-space: nowrap;
+}
+.kerf::after {
+  content: ""; position: absolute; bottom: 100%; left: 50%; width: 1px; height: 4px;
+  background: var(--ink); transform: translateX(-50%);
+}
 .seg.rest-seg {
   color: var(--rest-ink);
   background: repeating-linear-gradient(135deg, transparent 0 6px, color-mix(in srgb, var(--ink) 7%, transparent) 6px 12px);
@@ -675,7 +691,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
       bar.setAttribute("role", "img");
       bar.setAttribute("aria-label", g.pieces.map(fmt).join(" + ") + " mm, odřezek " + fmt(g.rest) + " mm");
       g.pieces.forEach(function (p, i) {
-        if (i > 0 && kerf > 0) { var k = el("span", "kerf"); k.title = "prořez " + fmt(kerf) + " mm"; bar.append(k); }
+        if (i > 0 && kerf > 0) { var k = el("span", "kerf"); k.title = "prořez " + fmt(kerf) + " mm"; k.setAttribute("data-label", fmt(kerf) + " mm"); bar.append(k); }
         var s = el("span", "seg");
         s.style.flex = p + " 1 0";
         s.style.background = colors[p];
