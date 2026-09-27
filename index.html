@@ -331,7 +331,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
       </div>
 
       <div class="pieces">
-        <div class="prow headrow"><span></span><span>Počet</span><span>Délka kusu</span><span></span></div>
+        <div class="prow headrow"><span></span><span>Počet</span><span>Délka trubky</span><span></span></div>
         <div id="rows" class="pieces"></div>
       </div>
       <div class="actions">
@@ -393,7 +393,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
     var lenIn = el("input");
     lenIn.type = "number"; lenIn.min = "1"; lenIn.step = "1"; lenIn.placeholder = "délka";
     lenIn.className = "len"; lenIn.value = len != null ? len : "";
-    lenIn.setAttribute("aria-label", "Délka kusu v mm");
+    lenIn.setAttribute("aria-label", "Délka trubky v mm");
     lenWrap.appendChild(lenIn);
     var qtyWrap = el("span", "cnt");
     var qtyIn = el("input");
