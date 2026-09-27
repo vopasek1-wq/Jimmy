@@ -295,6 +295,15 @@ tfoot .sum-label td {
 .notes { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 14px; }
 .toast { font-size: 13px; color: var(--ok); }
 .h2-note { font: 400 13px var(--body); text-transform: none; color: var(--muted); letter-spacing: 0; }
+/* levý panel se zadáním: větší písmo pro lepší čitelnost */
+#form .label, #form .prow.headrow { font-size: 14px; }
+#form .h2-note { font-size: 15px; }
+#form .hint { font-size: 15px; }
+#form input[type="number"], #form textarea { font-size: 17px; }
+#form .unit::after, #form .cnt::after { font-size: 14px; }
+#form .choices span { font-size: 16px; }
+#form button { font-size: 15px; }
+#form button.primary { font-size: 16px; }
 .out-actions { justify-content: flex-end; gap: 12px; }
 .out-actions button { font-size: 17px; padding: 14px 28px; border-radius: 8px; min-width: 190px; }
 @media print {
