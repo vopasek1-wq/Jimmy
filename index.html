@@ -278,15 +278,11 @@ td.n, th.n { text-align: right; }
 tfoot td { font-weight: 600; border-bottom: 0; }
 .overview table { font-size: 15px; }
 .overview th, .overview td { padding: 11px 12px; }
-.overview .c-qty { width: 90px; }
-.overview .c-len { width: 150px; }
-.overview td.c-len, .overview td:nth-child(2) { white-space: nowrap; }
-.len-track { height: 12px; border-radius: 6px; background: var(--ground); box-shadow: inset 0 0 0 1px var(--line); overflow: hidden; }
-.len-fill { height: 100%; border-radius: 6px; }
+.overview .c-qty { width: 22%; }
+.overview td:nth-child(2) { white-space: nowrap; }
 .overview td.n { white-space: nowrap; }
 @media (max-width: 600px) {
-  .overview .c-viz { display: none; }
-  .overview .c-qty, .overview .c-len { width: auto; }
+  .overview .c-qty { width: auto; }
   .overview th, .overview td { padding: 10px 6px; }
   .overview .h2-note { display: block; margin-top: 4px; line-height: 1.3; }
 }
@@ -745,7 +741,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
     tp.append(th2);
     var tw = el("div", "tablewrap");
     var table = el("table");
-    table.innerHTML = "<thead><tr><th class=\"c-qty\">Počet</th><th class=\"c-len\">Délka</th><th class=\"c-viz\">Délka vůči trubce " + fmt(stock) + " mm</th><th class=\"n\">Celkem</th></tr></thead>";
+    table.innerHTML = "<thead><tr><th class=\"c-qty\">Počet</th><th class=\"c-len\">Délka</th><th class=\"n\">Celkem</th></tr></thead>";
     var tb = el("tbody");
     demand.slice().sort(function (a, b) { return b.len - a.len; }).forEach(function (d) {
       var tr = el("tr");
@@ -755,20 +751,13 @@ tfoot td { font-weight: 600; border-bottom: 0; }
       sw.style.display = "inline-block"; sw.style.verticalAlign = "-2px"; sw.style.marginRight = "8px";
       sw.style.background = colors[d.len];
       td.append(sw, document.createTextNode(fmt(d.len) + " mm"));
-      var viz = el("td", "c-viz");
-      var track = el("div", "len-track");
-      var fill = el("div", "len-fill");
-      fill.style.width = (d.len / stock * 100) + "%";
-      fill.style.background = colors[d.len];
-      track.append(fill);
-      viz.append(track);
-      tr.append(el("td", "mono c-qty", d.qty + " ks"), td, viz, el("td", "n", fmt(d.len * d.qty) + " mm"));
+      tr.append(el("td", "mono c-qty", d.qty + " ks"), td, el("td", "n", fmt(d.len * d.qty) + " mm"));
       tb.append(tr);
     });
     table.append(tb);
     var tf = el("tfoot");
     var ftr = el("tr");
-    ftr.append(el("td", "mono c-qty", totalPieces + " ks"), el("td", null, "Celkem"), el("td", "c-viz"), el("td", "n", fmt(totalLen) + " mm"));
+    ftr.append(el("td", "mono c-qty", totalPieces + " ks"), el("td", null, "Celkem"), el("td", "n", fmt(totalLen) + " mm"));
     tf.append(ftr);
     table.append(tf);
     tw.append(table);
