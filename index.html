@@ -350,7 +350,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
       </div>
 
       <p class="error" id="error" hidden></p>
-      <button type="submit" class="primary">Spočítat plán</button>
+      <button type="submit" class="primary">Vypočítat</button>
     </form>
 
     <section class="results" id="results" aria-live="polite"></section>
@@ -727,7 +727,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
       "Prořez " + fmt(kerf) + " mm je započítán mezi jednotlivými kusy.",
       optimal
         ? "Menší počet tyčí nejde: kalkulačka prošla všechna možná rozložení."
-        : "Dolní mez je " + res.lower + " tyčí (jen součet délek). Zadání je příliš velké na úplné ověření, plán je nejlepší nalezený."
+        : "Dolní mez je " + res.lower + " tyčí (jen součet délek). Zadání je příliš velké na úplné ověření, rozložení je nejlepší nalezené."
     ].forEach(function (t) { ul.append(el("li", null, t)); });
     np.append(ul);
 
@@ -818,8 +818,8 @@ tfoot td { font-weight: 600; border-bottom: 0; }
   function showEmpty() {
     resultsEl.innerHTML = "";
     var box = el("div", "empty");
-    box.append(el("strong", null, "Zatím žádný plán"));
-    box.append(el("span", null, "Zadej délky kusů a jejich počty, pak klikni na Spočítat plán."));
+    box.append(el("strong", null, "Zatím žádný výpočet"));
+    box.append(el("span", null, "Zadej počty kusů a jejich délky, pak klikni na Vypočítat."));
     resultsEl.append(box);
   }
 
