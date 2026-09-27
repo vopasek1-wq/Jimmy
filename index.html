@@ -741,7 +741,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
     tp.append(th2);
     var tw = el("div", "tablewrap");
     var table = el("table");
-    table.innerHTML = "<thead><tr><th class=\"c-qty\">Počet</th><th class=\"c-len\">Délka</th><th class=\"n\">Celkem</th></tr></thead>";
+    table.innerHTML = "<thead><tr><th class=\"c-qty\">Počet</th><th class=\"c-len\">Délka</th><th class=\"n\">Celková délka</th></tr></thead>";
     var tb = el("tbody");
     demand.slice().sort(function (a, b) { return b.len - a.len; }).forEach(function (d) {
       var tr = el("tr");
