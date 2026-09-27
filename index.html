@@ -628,7 +628,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
       if (note) { if (typeof note === "string") s.append(el("small", null, note)); else s.append(note); }
       stats.append(s);
     }
-    stat("Potřebuješ", bars.length + " ks", "tyčí po " + fmt(stock) + " mm", true);
+    stat("Je potřeba", bars.length + " ks", "tyčí po " + fmt(stock) + " mm", true);
     stat("Kusů", totalPieces + " ks");
     stat("Zbytkový materiál", fmt(totalRest) + " mm", "největší " + fmt(Math.max.apply(null, bars.map(function (b) { return b.rest; }))) + " mm");
     resultsEl.append(stats);
@@ -716,7 +716,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
     np.append(el("h2", null, "Pokyny"));
     var ul = el("ul", "notes");
     [
-      "Každá tyč = " + fmt(stock) + " mm, celkem potřebuješ " + bars.length + " tyčí.",
+      "Každá tyč = " + fmt(stock) + " mm, celkem je potřeba " + bars.length + " tyčí.",
       "Prořez " + fmt(kerf) + " mm je započítán mezi jednotlivými kusy.",
       optimal
         ? "Menší počet tyčí nejde: kalkulačka prošla všechna možná rozložení."
