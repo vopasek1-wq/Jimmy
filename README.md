@@ -10,4 +10,4 @@ a ukáže zbytky.
   v ručně kresleném plánu.
 - Plán hledá heuristika (knapsack + First Fit Decreasing) a u menších zadání
   ho přesné prohledávání ověří jako optimum.
-- Délka tyče i prořez jdou změnit, zadání se pamatuje v prohlížeči.
+- Délka tyče i prořez jdou změnit, materiál ocel/hliník. Kalkulačka startuje prázdná, zadání se pamatuje v prohlížeči.

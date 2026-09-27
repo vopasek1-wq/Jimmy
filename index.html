@@ -155,6 +155,17 @@ button.icon:hover { color: var(--danger); border-color: var(--danger); }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; }
 details summary { cursor: pointer; font-size: 14px; color: var(--accent); font-weight: 500; }
 details textarea { margin-top: 8px; min-height: 110px; resize: vertical; }
+.seg-choice { border: 0; padding: 0; margin: 0; min-width: 0; }
+.seg-choice legend { padding: 0; margin-bottom: 4px; }
+.choices { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.choices label { position: relative; cursor: pointer; }
+.choices input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.choices span { display: block; text-align: center; padding: 8px 10px; font-weight: 600; background: var(--ground); color: var(--muted); }
+.choices label + label span { border-left: 1px solid var(--line); }
+.choices input:checked + span { background: var(--accent); color: #fff; }
+.choices input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: -2px; }
+.empty { background: var(--surface); border: 1px dashed var(--line); border-radius: 10px; padding: 32px 20px; text-align: center; color: var(--muted); display: grid; gap: 6px; justify-items: center; }
+.empty strong { font: 700 22px var(--display); color: var(--ink); text-transform: uppercase; }
 .hint { font-size: 13px; color: var(--muted); margin: 0; }
 .error { color: var(--danger); font-size: 14px; margin: 0; }
 
@@ -264,9 +275,16 @@ tfoot td { font-weight: 600; border-bottom: 0; }
           <span class="label">Prořez</span>
           <span class="unit"><input type="number" id="kerf" min="0" step="0.5" value="3"></span>
         </label>
+        <fieldset class="field full seg-choice">
+          <legend class="label">Materiál</legend>
+          <div class="choices">
+            <label><input type="radio" name="mat" id="matSteel" value="Ocel" checked><span>Ocel</span></label>
+            <label><input type="radio" name="mat" id="matAlu" value="Hliník"><span>Hliník</span></label>
+          </div>
+        </fieldset>
         <label class="field full">
-          <span class="label">Materiál</span>
-          <input type="text" id="material" value="Ø 48,3 × 3,25 mm">
+          <span class="label">Rozměr profilu (nepovinné)</span>
+          <input type="text" id="material" placeholder="např. Ø 48,3 × 3,25">
         </label>
       </div>
 
@@ -276,7 +294,6 @@ tfoot td { font-weight: 600; border-bottom: 0; }
       </div>
       <div class="actions">
         <button type="button" id="addRow">+ Přidat délku</button>
-        <button type="button" id="sample">Načíst příklad</button>
         <button type="button" id="clear">Vymazat</button>
       </div>
 
@@ -303,8 +320,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
   "use strict";
 
   var COLORS = ["#2f7de1", "#d9434f", "#f0a92e", "#3f9b4f", "#1fa5a8", "#7b4bc4", "#d6457e", "#9a6a3a", "#5f7d95", "#8aa82b"];
-  var SAMPLE = [[3740, 10], [3210, 2], [1265, 2], [2465, 12], [860, 23], [4083, 4]];
-  var STORE_KEY = "rezaci-plan-v1";
+  var STORE_KEY = "rezaci-plan-v2";
 
   var rowsEl = document.getElementById("rows");
   var resultsEl = document.getElementById("results");
@@ -710,7 +726,9 @@ tfoot td { font-weight: 600; border-bottom: 0; }
     errorEl.hidden = true;
     var stock = parseFloat(document.getElementById("stock").value);
     var kerf = parseFloat(document.getElementById("kerf").value);
-    var material = document.getElementById("material").value.trim();
+    var matType = document.getElementById("matAlu").checked ? "Hliník" : "Ocel";
+    var dim = document.getElementById("material").value.trim();
+    var material = matType + (dim ? " " + dim : "");
     function fail(msg) { errorEl.textContent = msg; errorEl.hidden = false; }
     if (!(stock > 0)) return fail("Zadej délku tyče větší než 0 mm.");
     if (!(kerf >= 0)) return fail("Prořez nesmí být záporný.");
@@ -725,7 +743,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
       if (!(l in agg)) { agg[l] = 0; order.push(l); }
       agg[l] += q;
     }
-    if (!order.length) return fail("Přidej alespoň jednu délku kusu.");
+    if (!order.length) { showEmpty(); return fail("Přidej alespoň jednu délku kusu."); }
     var demand = order.map(function (l) { return { len: l, qty: agg[l] }; });
     if (demand.reduce(function (s, d) { return s + d.qty; }, 0) > 5000) return fail("Najednou lze spočítat nejvýše 5000 kusů.");
     render(stock, kerf, material, demand, solve(stock, kerf, demand));
@@ -737,6 +755,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
         stock: document.getElementById("stock").value,
         kerf: document.getElementById("kerf").value,
         material: document.getElementById("material").value,
+        alu: document.getElementById("matAlu").checked,
         rows: readRows()
       }));
     } catch (e) { /* úložiště nemusí být dostupné */ }
@@ -748,6 +767,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
         document.getElementById("stock").value = d.stock;
         document.getElementById("kerf").value = d.kerf;
         document.getElementById("material").value = d.material || "";
+        document.getElementById(d.alu ? "matAlu" : "matSteel").checked = true;
         setRows(d.rows.map(function (r) { return [isFinite(r[0]) ? r[0] : "", isFinite(r[1]) ? r[1] : ""]; }));
         return true;
       }
@@ -757,14 +777,10 @@ tfoot td { font-weight: 600; border-bottom: 0; }
 
   document.getElementById("form").addEventListener("submit", function (e) { e.preventDefault(); save(); calc(); });
   ["stock", "kerf", "material"].forEach(function (id) { document.getElementById(id).addEventListener("input", save); });
+  ["matSteel", "matAlu"].forEach(function (id) { document.getElementById(id).addEventListener("change", save); });
   document.getElementById("addRow").addEventListener("click", function () { addRow().querySelector(".len").focus(); });
-  document.getElementById("sample").addEventListener("click", function () {
-    document.getElementById("stock").value = 6000;
-    document.getElementById("kerf").value = 3;
-    setRows(SAMPLE); save(); calc();
-  });
   document.getElementById("clear").addEventListener("click", function () {
-    setRows([]); resultsEl.innerHTML = ""; save();
+    setRows([]); showEmpty(); errorEl.hidden = true; save();
   });
   document.getElementById("bulkApply").addEventListener("click", function () {
     var list = [];
@@ -776,8 +792,16 @@ tfoot td { font-weight: 600; border-bottom: 0; }
     setRows(list); save(); calc();
   });
 
-  if (!load()) setRows(SAMPLE);
-  calc();
+  function showEmpty() {
+    resultsEl.innerHTML = "";
+    var box = el("div", "empty");
+    box.append(el("strong", null, "Zatím žádný plán"));
+    box.append(el("span", null, "Zadej délky kusů a jejich počty, pak klikni na Spočítat plán."));
+    resultsEl.append(box);
+  }
+
+  if (load() && readRows().some(function (r) { return r[0] > 0 && r[1] > 0; })) calc();
+  else { if (!rowsEl.children.length) setRows([[ "", "" ], [ "", "" ], [ "", "" ]]); showEmpty(); }
 })();
 </script>
 </body>
