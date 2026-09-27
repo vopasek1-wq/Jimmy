@@ -153,8 +153,8 @@ button.primary:hover { filter: brightness(1.08); color: #fff; }
 button.icon { padding: 0; width: 32px; height: 36px; font-size: 18px; line-height: 1; color: var(--muted); }
 button.icon:hover { color: var(--danger); border-color: var(--danger); }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; }
-details summary { cursor: pointer; font-size: 14px; color: var(--accent); font-weight: 500; }
-details textarea { margin-top: 8px; min-height: 110px; resize: vertical; }
+.bulk { display: grid; gap: 8px; }
+.bulk textarea { min-height: 110px; resize: vertical; }
 .seg-choice { border: 0; padding: 0; margin: 0; min-width: 0; }
 .seg-choice legend { padding: 0; margin-bottom: 4px; }
 .choices { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
@@ -285,14 +285,14 @@ tfoot td { font-weight: 600; border-bottom: 0; }
         <button type="button" id="clear">Vymazat</button>
       </div>
 
-      <details>
-        <summary>Vložit seznam z textu</summary>
+      <div class="bulk">
+        <label class="label" for="bulk">Vložit seznam z textu</label>
         <textarea id="bulk" placeholder="10 × 3740&#10;12 × 2465&#10;23 × 860"></textarea>
-        <div class="actions" style="margin-top:8px">
+        <div class="actions">
           <button type="button" id="bulkApply">Převzít seznam</button>
         </div>
         <p class="hint">Na každý řádek počet kusů a délka, např. „10 × 3740“ nebo „10 3740“.</p>
-      </details>
+      </div>
 
       <p class="error" id="error" hidden></p>
       <button type="submit" class="primary">Spočítat plán</button>
