@@ -718,7 +718,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
       "Je potřeba " + bars.length + " tyčí.",
       "Prořez " + fmt(kerf) + " mm je započítán mezi jednotlivými kusy.",
       optimal
-        ? "Menší počet tyčí nejde: kalkulačka prošla všechna možná rozložení."
+        ? "Menší počet tyčí nelze: kalkulačka prošla všechna možná rozložení."
         : "Dolní mez je " + res.lower + " tyčí (jen součet délek). Zadání je příliš velké na úplné ověření, rozložení je nejlepší nalezené."
     ].forEach(function (t) { ul.append(el("li", null, t)); });
     np.append(ul);
