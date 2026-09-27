@@ -691,7 +691,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
     var table = el("table");
     table.innerHTML = "<thead><tr><th>Délka</th><th class=\"n\">Počet</th><th class=\"n\">Celkem</th></tr></thead>";
     var tb = el("tbody");
-    demand.forEach(function (d) {
+    demand.slice().sort(function (a, b) { return b.len - a.len; }).forEach(function (d) {
       var tr = el("tr");
       var td = el("td", "n");
       td.style.textAlign = "left";
