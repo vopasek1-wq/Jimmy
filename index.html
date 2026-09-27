@@ -255,7 +255,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
   <header class="head">
     <div>
       <h1>Řezací plán trubek</h1>
-      <p id="subtitle">Prořez 3 mm · optimalizace nářezů z tyčí 6000 mm</p>
+      <p id="subtitle">Prořez 3 mm</p>
     </div>
     <div class="stock-pic" aria-hidden="true">
       <div class="tube"></div>
@@ -267,10 +267,6 @@ tfoot td { font-weight: 600; border-bottom: 0; }
     <form class="panel" id="form" autocomplete="off">
       <h2>Zadání</h2>
       <div class="fields">
-        <label class="field full">
-          <span class="label">Délka tyče</span>
-          <span class="unit"><input type="number" id="stock" min="1" step="1" value="6000"></span>
-        </label>
         <fieldset class="field full seg-choice">
           <legend class="label">Materiál</legend>
           <div class="choices">
@@ -314,6 +310,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
   var COLORS = ["#2f7de1", "#d9434f", "#f0a92e", "#3f9b4f", "#1fa5a8", "#7b4bc4", "#d6457e", "#9a6a3a", "#5f7d95", "#8aa82b"];
   var STORE_KEY = "rezaci-plan-v2";
   var KERF = 3; // prořez pilou v mm, pevně daný
+  var STOCK = 6000; // délka tyče v mm, pevně daná
 
   var rowsEl = document.getElementById("rows");
   var resultsEl = document.getElementById("results");
@@ -717,12 +714,11 @@ tfoot td { font-weight: 600; border-bottom: 0; }
   /* ---------- Flow ---------- */
   function calc() {
     errorEl.hidden = true;
-    var stock = parseFloat(document.getElementById("stock").value);
+    var stock = STOCK;
     var kerf = KERF;
     var matType = document.getElementById("matAlu").checked ? "Hliník" : "Ocel";
     var material = matType;
     function fail(msg) { errorEl.textContent = msg; errorEl.hidden = false; }
-    if (!(stock > 0)) return fail("Zadej délku tyče větší než 0 mm.");
 
     var agg = {}, order = [];
     var rows = readRows();
@@ -743,7 +739,6 @@ tfoot td { font-weight: 600; border-bottom: 0; }
   function save() {
     try {
       localStorage.setItem(STORE_KEY, JSON.stringify({
-        stock: document.getElementById("stock").value,
         alu: document.getElementById("matAlu").checked,
         rows: readRows()
       }));
@@ -753,7 +748,6 @@ tfoot td { font-weight: 600; border-bottom: 0; }
     try {
       var d = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
       if (d && d.rows && d.rows.length) {
-        document.getElementById("stock").value = d.stock;
         document.getElementById(d.alu ? "matAlu" : "matSteel").checked = true;
         setRows(d.rows.map(function (r) { return [isFinite(r[0]) ? r[0] : "", isFinite(r[1]) ? r[1] : ""]; }));
         return true;
@@ -763,11 +757,10 @@ tfoot td { font-weight: 600; border-bottom: 0; }
   }
 
   document.getElementById("form").addEventListener("submit", function (e) { e.preventDefault(); save(); calc(); });
-  ["stock"].forEach(function (id) { document.getElementById(id).addEventListener("input", save); });
   ["matSteel", "matAlu"].forEach(function (id) { document.getElementById(id).addEventListener("change", save); });
   document.getElementById("addRow").addEventListener("click", function () { addRow().querySelector(".len").focus(); });
   document.getElementById("clear").addEventListener("click", function () {
-    setRows([]); showEmpty(); errorEl.hidden = true; save();
+    setRows([]); showEmpty(); document.getElementById("subtitle").textContent = "Prořez 3 mm"; errorEl.hidden = true; save();
   });
   document.getElementById("bulkApply").addEventListener("click", function () {
     var list = [];
