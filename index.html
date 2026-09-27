@@ -255,7 +255,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
   <header class="head">
     <div>
       <h1>Řezací plán trubek</h1>
-      <p id="subtitle">Prořez 3 mm</p>
+      <p id="subtitle">Ocelová lešenářská trubka Ø 48,3 mm, tloušťka stěny 3,25 mm, prořez 3 mm</p>
     </div>
     <div class="stock-pic" aria-hidden="true">
       <div class="tube"></div>
@@ -564,8 +564,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
     var util = totalLen / (bars.length * stock) * 100;
     var optimal = res.proven;
 
-    document.getElementById("subtitle").textContent =
-      "Prořez " + fmt(kerf) + " mm · Celkem " + bars.length + " trubek" + (material ? " · Materiál " + material : "");
+    updateSubtitle();
     document.getElementById("stockDim").textContent = fmt(stock) + " mm";
 
     // statistiky
@@ -685,7 +684,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
     copy.type = "button";
     var toast = el("span", "toast");
     copy.addEventListener("click", function () {
-      var lines = ["ŘEZACÍ PLÁN – TRUBKY " + fmt(stock) + " mm", "Prořez: " + fmt(kerf) + " mm | Celkem: " + bars.length + " trubek" + (material ? " | Materiál: " + material : ""), ""];
+      var lines = ["ŘEZACÍ PLÁN – TRUBKY " + fmt(stock) + " mm", material + " | Celkem: " + bars.length + " trubek", ""];
       var f = 1;
       groups.forEach(function (g) {
         var t2 = f + g.count - 1;
@@ -715,8 +714,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
     errorEl.hidden = true;
     var stock = STOCK;
     var kerf = KERF;
-    var matType = document.getElementById("matAlu").checked ? "Hliník" : "Ocel";
-    var material = matType;
+    var material = matDesc();
     function fail(msg) { errorEl.textContent = msg; errorEl.hidden = false; }
 
     var agg = {}, order = [];
@@ -756,10 +754,18 @@ tfoot td { font-weight: 600; border-bottom: 0; }
   }
 
   document.getElementById("form").addEventListener("submit", function (e) { e.preventDefault(); save(); calc(); });
-  ["matSteel", "matAlu"].forEach(function (id) { document.getElementById(id).addEventListener("change", save); });
+  function matDesc() {
+    return document.getElementById("matAlu").checked
+      ? "Hliníková trubka Ø 48,3 mm, tloušťka stěny 4,00 mm, prořez " + fmt(KERF) + " mm"
+      : "Ocelová lešenářská trubka Ø 48,3 mm, tloušťka stěny 3,25 mm, prořez " + fmt(KERF) + " mm";
+  }
+  function updateSubtitle() { document.getElementById("subtitle").textContent = matDesc(); }
+  ["matSteel", "matAlu"].forEach(function (id) {
+    document.getElementById(id).addEventListener("change", function () { updateSubtitle(); save(); });
+  });
   document.getElementById("addRow").addEventListener("click", function () { addRow().querySelector(".len").focus(); });
   document.getElementById("clear").addEventListener("click", function () {
-    setRows([]); showEmpty(); document.getElementById("subtitle").textContent = "Prořez 3 mm"; errorEl.hidden = true; save();
+    setRows([]); showEmpty();  errorEl.hidden = true; save();
   });
   document.getElementById("bulkApply").addEventListener("click", function () {
     var list = [];
@@ -779,7 +785,9 @@ tfoot td { font-weight: 600; border-bottom: 0; }
     resultsEl.append(box);
   }
 
-  if (load() && readRows().some(function (r) { return r[0] > 0 && r[1] > 0; })) calc();
+  var loaded = load();
+  updateSubtitle();
+  if (loaded && readRows().some(function (r) { return r[0] > 0 && r[1] > 0; })) calc();
   else { if (!rowsEl.children.length) setRows([[ "", "" ], [ "", "" ], [ "", "" ]]); showEmpty(); }
 })();
 </script>
