@@ -559,8 +559,6 @@ tfoot td { font-weight: 600; border-bottom: 0; }
     var totalPieces = demand.reduce(function (s, d) { return s + d.qty; }, 0);
     var totalLen = demand.reduce(function (s, d) { return s + d.len * d.qty; }, 0);
     var totalRest = bars.reduce(function (s, b) { return s + b.rest; }, 0);
-    var cuts = bars.reduce(function (s, b) { return s + Math.max(0, b.pieces.length - 1); }, 0);
-    var kerfLoss = cuts * kerf;
     var util = totalLen / (bars.length * stock) * 100;
     var optimal = res.proven;
 
@@ -583,8 +581,8 @@ tfoot td { font-weight: 600; border-bottom: 0; }
     noteMain.append(document.createTextNode("tyčí po " + fmt(stock) + " mm "));
     noteMain.append(pill);
     stat("Potřebuješ", bars.length + " ks", noteMain, true);
-    stat("Kusů", totalPieces + " ks", cuts + " řezů");
-    stat("Využití", fmt(util) + " %", "prořez celkem " + fmt(kerfLoss) + " mm");
+    stat("Kusů", totalPieces + " ks");
+    stat("Využití", fmt(util) + " %");
     stat("Zbytky", fmt(totalRest) + " mm", "největší " + fmt(Math.max.apply(null, bars.map(function (b) { return b.rest; }))) + " mm");
     resultsEl.append(stats);
 
