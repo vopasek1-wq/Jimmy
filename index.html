@@ -261,6 +261,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
 @media (max-width: 760px) { .twocol { grid-template-columns: minmax(0, 1fr); } }
 .notes { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 14px; }
 .toast { font-size: 13px; color: var(--ok); }
+.h2-note { font: 400 13px var(--body); text-transform: none; color: var(--muted); letter-spacing: 0; }
 .out-actions { justify-content: flex-end; gap: 12px; }
 .out-actions button { font-size: 17px; padding: 14px 28px; border-radius: 8px; min-width: 190px; }
 @media print {
@@ -707,7 +708,9 @@ tfoot td { font-weight: 600; border-bottom: 0; }
     // přehled + poznámky
     var two = el("div", "twocol");
     var tp = el("div", "panel");
-    tp.append(el("h2", null, "Přehled délek"));
+    var th2 = el("h2", null, "Přehled délek ");
+    th2.append(el("span", "h2-note", "(seřazeno od největší po nejmenší)"));
+    tp.append(th2);
     var tw = el("div", "tablewrap");
     var table = el("table");
     table.innerHTML = "<thead><tr><th>Délka</th><th class=\"n\">Počet</th><th class=\"n\">Celkem</th></tr></thead>";
