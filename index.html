@@ -103,15 +103,16 @@ h1, h2, h3 { font-family: var(--display); font-weight: 700; margin: 0; text-wrap
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 12px 28px;
+  gap: 12px 20px;
 }
 @media (max-width: 860px) { .head { grid-template-columns: minmax(0, 1fr); } }
 .head h1 {
-  font: 700 clamp(38px, 5.6vw, 72px)/.95 var(--display);
+  font: 700 clamp(38px, 5vw, 62px)/.95 var(--display);
   white-space: nowrap;
   text-transform: uppercase;
   letter-spacing: .005em;
 }
+@media (min-width: 861px) { .head > div:first-child { width: min-content; } }
 .head p { margin: 8px 0 0; font: 500 clamp(16px, 1.7vw, 23px)/1.2 var(--display); color: #e6ebf0; }
 .tube-pic { width: 100%; height: auto; display: block; max-width: 100%; }
 .tube-pic text { font-family: var(--display); font-weight: 500; fill: #f2f5f8; }
@@ -326,7 +327,7 @@ tfoot .sum-label td {
       <h1>Kalkulace trubek</h1>
       <p id="subtitle">Ocelové lešenářské trubky nařežeme na míru z originální délky 6000 mm</p>
     </div>
-    <svg class="tube-pic" viewBox="0 0 1240 205" role="img" aria-label="Trubka Ø 48,3 mm, délka 6000 mm">
+    <svg class="tube-pic" viewBox="8 8 1236 200" role="img" aria-label="Trubka Ø 48,3 mm, délka 6000 mm">
       <defs>
         <linearGradient id="gBody" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stop-color="#5d6670"/>
