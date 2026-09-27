@@ -324,7 +324,7 @@ tfoot .sum-label td {
   <header class="head">
     <div>
       <h1>Kalkulace trubek</h1>
-      <p id="subtitle">Ocelové lešenářské trubky nařežeme na míru z originální délky 6000 mm.</p>
+      <p id="subtitle">Ocelové lešenářské trubky nařežeme na míru z originální délky 6000 mm</p>
     </div>
     <svg class="tube-pic" viewBox="0 0 1240 205" role="img" aria-label="Trubka Ø 48,3 mm, délka 6000 mm">
       <defs>
@@ -867,8 +867,8 @@ tfoot .sum-label td {
   document.getElementById("form").addEventListener("submit", function (e) { e.preventDefault(); save(); calc(); });
   function matDesc() {
     return document.getElementById("matAlu").checked
-      ? "Hliníkové trubky nařežeme na míru z originální délky 6000 mm."
-      : "Ocelové lešenářské trubky nařežeme na míru z originální délky 6000 mm.";
+      ? "Hliníkové trubky nařežeme na míru z originální délky 6000 mm"
+      : "Ocelové lešenářské trubky nařežeme na míru z originální délky 6000 mm";
   }
   function updateSubtitle() {
     document.getElementById("subtitle").textContent = matDesc();
