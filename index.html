@@ -250,6 +250,15 @@ tfoot td { font-weight: 600; border-bottom: 0; }
 @media (max-width: 760px) { .twocol { grid-template-columns: minmax(0, 1fr); } }
 .notes { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 14px; }
 .toast { font-size: 13px; color: var(--ok); }
+.out-actions { justify-content: flex-end; }
+@media print {
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { background: #fff; }
+  .wrap { max-width: none; padding: 0; gap: 12px; }
+  .grid { grid-template-columns: minmax(0, 1fr); }
+  #form, .out-actions { display: none !important; }
+  .pat, .panel, .stat { break-inside: avoid; }
+}
 @media (prefers-reduced-motion: no-preference) {
   .seg { transition: flex-grow .25s ease; }
 }
@@ -725,6 +734,38 @@ tfoot td { font-weight: 600; border-bottom: 0; }
 
     two.append(tp, np);
     resultsEl.append(two);
+
+    // Odeslat e-mailem / Vytisknout (v náhledu na claude.ai prohlížeč tisk ani e-mail nepustí, proto tam tlačítka skryjeme)
+    var embedded = false;
+    try { embedded = window.self !== window.top; } catch (e) { embedded = true; }
+    if (!embedded) {
+      var out = el("div", "actions out-actions");
+      var mail = el("button", null, "Odeslat e-mailem");
+      mail.type = "button";
+      mail.addEventListener("click", function () {
+        var lines = [material, "Prořez " + fmt(kerf) + " mm, délka trubky " + fmt(stock) + " mm", ""];
+        lines.push("Celkem je potřeba " + bars.length + " trubek.");
+        lines.push("Požadované kusy: " + totalPieces + " ks, zbytkový materiál: " + fmt(totalRest) + " mm", "");
+        var f = 1;
+        groups.forEach(function (g) {
+          var t2 = f + g.count - 1;
+          lines.push(g.count + "× " + (g.count === 1 ? "Trubka " + f : "Trubky " + f + "–" + t2) + ": " +
+            g.pieces.map(fmt).join(" + ") + " mm, odřezek " + fmt(g.rest) + " mm");
+          f = t2 + 1;
+        });
+        lines.push("", "Přehled délek:");
+        demand.slice().sort(function (a, b) { return b.len - a.len; }).forEach(function (d) {
+          lines.push(d.qty + " × " + fmt(d.len) + " mm");
+        });
+        location.href = "mailto:?subject=" + encodeURIComponent("Kalkulace trubek – " + bars.length + " trubek") +
+          "&body=" + encodeURIComponent(lines.join("\n"));
+      });
+      var print = el("button", "primary", "Vytisknout");
+      print.type = "button";
+      print.addEventListener("click", function () { window.print(); });
+      out.append(mail, print);
+      resultsEl.append(out);
+    }
   }
 
   /* ---------- Flow ---------- */
