@@ -16,8 +16,8 @@
 :root {
   --ground: #f1f4f7;
   --surface: #ffffff;
-  --ink: #323c46;
-  --muted: #7b8c96;
+  --ink: #1e2226;
+  --muted: #4a5560;
   --line: #e1e3e8;
   --steel: #1e2226;
   --steel-ink: #f1f4f6;
@@ -137,6 +137,7 @@ input[type="number"], input[type="text"], textarea {
   padding: 8px 10px;
 }
 input[type="text"] { font-family: var(--body); }
+input::placeholder, textarea::placeholder { color: var(--muted); opacity: .8; }
 input:focus-visible, textarea:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .unit { position: relative; }
 .unit input { padding-right: 38px; }
