@@ -221,6 +221,7 @@ button.icon:hover { color: var(--danger); border-color: var(--danger); }
   display: grid; place-items: center;
   font: 700 28px var(--display);
   color: #fff;
+  background: #1e2226;
 }
 .pat-body { display: grid; gap: 6px; min-width: 0; }
 .pat-title { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
@@ -692,9 +693,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
     groups.forEach(function (g, gi) {
       var to = from + g.count - 1;
       var card = el("article", "pat");
-      var first = colors[g.pieces[0]];
       var mult = el("div", "mult", g.count + "×");
-      mult.style.background = first; mult.style.color = textOn(first);
       card.append(mult);
 
       var body = el("div", "pat-body");
