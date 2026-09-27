@@ -666,15 +666,14 @@ tfoot td { font-weight: 600; border-bottom: 0; }
     tp.append(tw);
 
     var np = el("div", "panel");
-    np.append(el("h2", null, "Do dílny"));
+    np.append(el("h2", null, "Pokyny"));
     var ul = el("ul", "notes");
     [
       "Každá tyč = " + fmt(stock) + " mm, celkem potřebuješ " + bars.length + " tyčí.",
       "Prořez " + fmt(kerf) + " mm je započítán mezi jednotlivými kusy.",
       optimal
         ? "Menší počet tyčí nejde: kalkulačka prošla všechna možná rozložení."
-        : "Dolní mez je " + res.lower + " tyčí (jen součet délek). Zadání je příliš velké na úplné ověření, plán je nejlepší nalezený.",
-      "Zbytky si označ a uschovej, mohou se hodit příště."
+        : "Dolní mez je " + res.lower + " tyčí (jen součet délek). Zadání je příliš velké na úplné ověření, plán je nejlepší nalezený."
     ].forEach(function (t) { ul.append(el("li", null, t)); });
     np.append(ul);
     var act = el("div", "actions");
