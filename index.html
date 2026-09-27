@@ -276,6 +276,11 @@ th, td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: le
 th { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
 td.n, th.n { text-align: right; }
 tfoot td { font-weight: 600; border-bottom: 0; }
+tfoot .sum-label td {
+  border-top: 2px solid var(--ink);
+  padding-bottom: 0;
+  font: 600 12px var(--body); text-transform: uppercase; letter-spacing: .06em; color: var(--muted);
+}
 .overview table { font-size: 15px; }
 .overview th, .overview td { padding: 11px 12px; }
 .overview .c-qty { width: 22%; }
@@ -756,6 +761,11 @@ tfoot td { font-weight: 600; border-bottom: 0; }
     });
     table.append(tb);
     var tf = el("tfoot");
+    var ltr = el("tr", "sum-label");
+    var ltd = el("td", null, "Celkem");
+    ltd.colSpan = 3;
+    ltr.append(ltd);
+    tf.append(ltr);
     var ftr = el("tr");
     ftr.append(el("td", "mono c-qty", totalPieces + " ks"), el("td"), el("td", "n", fmt(totalLen) + " mm"));
     tf.append(ftr);
