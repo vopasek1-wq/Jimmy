@@ -260,7 +260,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
   <header class="head">
     <div>
       <h1>Kalkulace trubek</h1>
-      <p id="subtitle">Ocelová lešenářská trubka Ø 48,3 mm, tloušťka stěny 3,25 mm</p>
+      <p id="subtitle">Ocelová lešenářská trubka Ø 48,3 mm, tloušťka stěny 4,05 mm</p>
     </div>
     <svg class="tube-pic" viewBox="0 0 1240 205" role="img" aria-label="Trubka Ø 48,3 mm, délka 6000 mm">
       <defs>
@@ -306,7 +306,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
       <line x1="322" y1="78" x2="368" y2="78" stroke="#f2f5f8" stroke-width="3" marker-start="url(#arr)" marker-end="url(#arr)"/>
       <text x="300" y="88" text-anchor="end" font-size="31">Průměr trubky Ø 48,3 mm</text>
       <!-- tloušťka stěny -->
-      <text x="18" y="178" font-size="31" id="wallLabel">Tloušťka stěny 3,25 mm</text>
+      <text x="18" y="178" font-size="31" id="wallLabel">Tloušťka stěny 4,05 mm</text>
       <path d="M18 188 L300 188 L333 132" fill="none" stroke="#f2f5f8" stroke-width="2" marker-end="url(#arr)"/>
       <!-- délka -->
       <line x1="372" y1="140" x2="372" y2="168" stroke="#f2f5f8" stroke-width="2"/>
@@ -775,12 +775,12 @@ tfoot td { font-weight: 600; border-bottom: 0; }
   function matDesc() {
     return document.getElementById("matAlu").checked
       ? "Hliníková trubka Ø 48,3 mm, tloušťka stěny 4,00 mm"
-      : "Ocelová lešenářská trubka Ø 48,3 mm, tloušťka stěny 3,25 mm";
+      : "Ocelová lešenářská trubka Ø 48,3 mm, tloušťka stěny 4,05 mm";
   }
   function updateSubtitle() {
     document.getElementById("subtitle").textContent = matDesc();
     var alu = document.getElementById("matAlu").checked;
-    document.getElementById("wallLabel").textContent = "Tloušťka stěny " + (alu ? "4,00" : "3,25") + " mm";
+    document.getElementById("wallLabel").textContent = "Tloušťka stěny " + (alu ? "4,00" : "4,05") + " mm";
     // ocel = tmavší broušený povrch, hliník = světlý hladký
     document.getElementById("steelTex").setAttribute("display", alu ? "none" : "inline");
     document.getElementById("tubeFace").setAttribute("fill", alu ? "url(#gFace)" : "url(#gFaceSteel)");
