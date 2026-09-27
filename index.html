@@ -253,6 +253,7 @@ button.icon:hover { color: var(--danger); border-color: var(--danger); }
   position: absolute; bottom: calc(100% + 3px); left: 50%; transform: translateX(-50%);
   font: 700 11px/1 var(--body); color: var(--ink); white-space: nowrap;
 }
+.kerf.no-label::before, .kerf.no-label::after { display: none; }
 .kerf::after {
   content: ""; position: absolute; bottom: 100%; left: 50%; width: 1px; height: 4px;
   background: var(--ink); transform: translateX(-50%);
@@ -719,6 +720,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
       from = to + 1;
     });
     resultsEl.append(plan);
+    layoutKerfLabels();
 
     // přehled + poznámky
     var two = el("div", "twocol");
@@ -877,6 +879,21 @@ tfoot td { font-weight: 600; border-bottom: 0; }
     if (!list.length) { errorEl.textContent = "V textu jsem nenašel žádnou dvojici délka + počet."; errorEl.hidden = false; return; }
     setRows(list); save(); calc();
   });
+
+  // Popisky prořezu, které by se překrývaly (u krátkých kusů), skryjeme
+  function layoutKerfLabels() {
+    Array.prototype.forEach.call(document.querySelectorAll(".bar"), function (bar) {
+      var last = -Infinity;
+      Array.prototype.forEach.call(bar.querySelectorAll(".kerf"), function (k) {
+        k.classList.remove("no-label");
+        var x = k.offsetLeft;
+        if (x - last < 40) k.classList.add("no-label");
+        else last = x;
+      });
+    });
+  }
+  var resizeTimer;
+  window.addEventListener("resize", function () { clearTimeout(resizeTimer); resizeTimer = setTimeout(layoutKerfLabels, 100); });
 
   function showEmpty() {
     resultsEl.innerHTML = "";
