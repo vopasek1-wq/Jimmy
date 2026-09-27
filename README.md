@@ -1,4 +1,4 @@
-# Řezací plán trubek
+# Kalkulace trubek
 
 Kalkulačka pro optimalizaci řezání trubek z tyčí 6000 mm s prořezem 3 mm.
 
