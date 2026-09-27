@@ -131,7 +131,7 @@ input:focus-visible, textarea:focus-visible, button:focus-visible { outline: 2px
 .unit::after { content: "mm"; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--muted); pointer-events: none; }
 
 .pieces { display: grid; gap: 6px; }
-.prow { display: grid; grid-template-columns: 14px minmax(0, 1.3fr) minmax(0, 1fr) 32px; gap: 8px; align-items: center; }
+.prow { display: grid; grid-template-columns: 14px minmax(0, 1fr) minmax(0, 1.3fr) 32px; gap: 8px; align-items: center; }
 .prow.headrow { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
 .swatch { width: 14px; height: 14px; border-radius: 3px; }
 .cnt { position: relative; }
@@ -277,7 +277,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
       </div>
 
       <div class="pieces">
-        <div class="prow headrow"><span></span><span>Délka kusu</span><span>Počet</span><span></span></div>
+        <div class="prow headrow"><span></span><span>Počet</span><span>Délka kusu</span><span></span></div>
         <div id="rows" class="pieces"></div>
       </div>
       <div class="actions">
@@ -287,11 +287,11 @@ tfoot td { font-weight: 600; border-bottom: 0; }
 
       <details>
         <summary>Vložit seznam z textu</summary>
-        <textarea id="bulk" placeholder="3740 10&#10;2465 12&#10;860 x 23"></textarea>
+        <textarea id="bulk" placeholder="10 × 3740&#10;12 × 2465&#10;23 × 860"></textarea>
         <div class="actions" style="margin-top:8px">
           <button type="button" id="bulkApply">Převzít seznam</button>
         </div>
-        <p class="hint">Na každý řádek délka a počet kusů, např. „3740 10“ nebo „3740 × 10“.</p>
+        <p class="hint">Na každý řádek počet kusů a délka, např. „10 × 3740“ nebo „10 3740“.</p>
       </details>
 
       <p class="error" id="error" hidden></p>
@@ -351,7 +351,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
     del.type = "button";
     del.setAttribute("aria-label", "Odebrat řádek");
     del.addEventListener("click", function () { row.remove(); recolor(); save(); });
-    row.append(sw, lenWrap, qtyWrap, del);
+    row.append(sw, qtyWrap, lenWrap, del);
     rowsEl.appendChild(row);
     lenIn.id = "len-" + rowsEl.children.length;
     qtyIn.id = "qty-" + rowsEl.children.length;
@@ -768,8 +768,11 @@ tfoot td { font-weight: 600; border-bottom: 0; }
   document.getElementById("bulkApply").addEventListener("click", function () {
     var list = [];
     document.getElementById("bulk").value.split(/\n+/).forEach(function (line) {
-      var m = line.replace(",", ".").match(/(\d+(?:\.\d+)?)\D+(\d+)/);
-      if (m) list.push([parseFloat(m[1]), parseInt(m[2], 10)]);
+      var m = line.replace(",", ".").match(/(\d+(?:\.\d+)?)\D+(\d+(?:\.\d+)?)/);
+      if (!m) return;
+      // větší číslo je délka, menší počet kusů (pořadí na řádku nevadí)
+      var a = parseFloat(m[1]), b = parseFloat(m[2]);
+      list.push([Math.max(a, b), Math.round(Math.min(a, b))]);
     });
     if (!list.length) { errorEl.textContent = "V textu jsem nenašel žádnou dvojici délka + počet."; errorEl.hidden = false; return; }
     setRows(list); save(); calc();
