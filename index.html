@@ -676,31 +676,6 @@ tfoot td { font-weight: 600; border-bottom: 0; }
         : "Dolní mez je " + res.lower + " tyčí (jen součet délek). Zadání je příliš velké na úplné ověření, plán je nejlepší nalezený."
     ].forEach(function (t) { ul.append(el("li", null, t)); });
     np.append(ul);
-    var act = el("div", "actions");
-    var copy = el("button", null, "Kopírovat plán jako text");
-    copy.type = "button";
-    var toast = el("span", "toast");
-    copy.addEventListener("click", function () {
-      var lines = ["ŘEZACÍ PLÁN – TRUBKY " + fmt(stock) + " mm", material + " | Celkem: " + bars.length + " trubek", ""];
-      var f = 1;
-      groups.forEach(function (g) {
-        var t2 = f + g.count - 1;
-        lines.push(g.count + "× " + (g.count === 1 ? "Trubka " + f : "Trubky " + f + "–" + t2) + ": " + g.pieces.map(fmt).join(" + ") + " mm, zbytek " + fmt(g.rest) + " mm");
-        f = t2 + 1;
-      });
-      var text = lines.join("\n");
-      function fallback() {
-        var ta = document.getElementById("bulk");
-        ta.closest("details").open = true;
-        ta.value = text; ta.select();
-        toast.textContent = "Text je označený v poli výše, zkopíruj ho Ctrl+C.";
-      }
-      try {
-        navigator.clipboard.writeText(text).then(function () { toast.textContent = "Zkopírováno."; }, fallback);
-      } catch (e) { fallback(); }
-    });
-    act.append(copy, toast);
-    np.append(act);
 
     two.append(tp, np);
     resultsEl.append(two);
