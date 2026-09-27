@@ -176,8 +176,8 @@ button.icon:hover { color: var(--danger); border-color: var(--danger); }
 
 /* Results */
 .results { display: grid; gap: 16px; }
-.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
-@media (max-width: 600px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 600px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .stats .stat.main { grid-column: 1 / -1; } }
 .stat { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 2px; }
 .stat b { font: 700 clamp(24px, 2.6vw, 32px)/1.1 var(--display); white-space: nowrap; }
 .stat small { color: var(--muted); font-size: 13px; }
@@ -614,7 +614,6 @@ tfoot td { font-weight: 600; border-bottom: 0; }
     var totalPieces = demand.reduce(function (s, d) { return s + d.qty; }, 0);
     var totalLen = demand.reduce(function (s, d) { return s + d.len * d.qty; }, 0);
     var totalRest = bars.reduce(function (s, b) { return s + b.rest; }, 0);
-    var util = totalLen / (bars.length * stock) * 100;
     var optimal = res.proven;
 
     updateSubtitle();
@@ -636,7 +635,6 @@ tfoot td { font-weight: 600; border-bottom: 0; }
     noteMain.append(pill);
     stat("Potřebuješ", bars.length + " ks", noteMain, true);
     stat("Kusů", totalPieces + " ks");
-    stat("Využití", fmt(util) + " %");
     stat("Zbytky", fmt(totalRest) + " mm", "největší " + fmt(Math.max.apply(null, bars.map(function (b) { return b.rest; }))) + " mm");
     resultsEl.append(stats);
 
