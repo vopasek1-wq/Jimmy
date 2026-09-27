@@ -629,7 +629,10 @@ tfoot td { font-weight: 600; border-bottom: 0; }
       counts.forEach(function (n, i) { for (var k = 0; k < n; k++) pieces.push(types[i].len); });
       pieces.sort(function (a, b) { return b - a; });
       var used = pieces.reduce(function (s, l) { return s + l; }, 0) + Math.max(0, pieces.length - 1) * kerf;
-      return { pieces: pieces, rest: Math.round((stock - used) * 10) / 10 };
+      // zbývá-li kus materiálu, odřízne se od něj poslední kus dalším prořezem
+      var leftover = Math.round((stock - used) * 10) / 10;
+      var endCut = leftover > 0 && kerf > 0;
+      return { pieces: pieces, endCut: endCut, rest: Math.max(0, Math.round((leftover - (endCut ? kerf : 0)) * 10) / 10) };
     });
     return { bars: bars, lower: lower, proven: proven };
   }
@@ -644,7 +647,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
     var groups = [], byKey = {};
     bars.forEach(function (b) {
       var key = b.pieces.join("|");
-      if (!byKey[key]) { byKey[key] = { pieces: b.pieces, rest: b.rest, count: 0 }; groups.push(byKey[key]); }
+      if (!byKey[key]) { byKey[key] = { pieces: b.pieces, endCut: b.endCut, rest: b.rest, count: 0 }; groups.push(byKey[key]); }
       byKey[key].count++;
     });
     groups.sort(function (a, b) { return b.count - a.count || a.rest - b.rest; });
@@ -701,6 +704,9 @@ tfoot td { font-weight: 600; border-bottom: 0; }
         s.textContent = p / stock > 0.09 ? fmt(p) : "";
         bar.append(s);
       });
+      if (g.endCut) {
+        var ke = el("span", "kerf"); ke.title = "prořez " + fmt(kerf) + " mm"; ke.setAttribute("data-label", fmt(kerf) + " mm"); bar.append(ke);
+      }
       if (g.rest > 0) {
         var r = el("span", "seg rest-seg");
         r.style.flex = g.rest + " 1 0";
@@ -757,7 +763,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
     var ul = el("ul", "notes");
     [
       "Celkem je potřeba " + bars.length + " trubek.",
-      "Prořez " + fmt(kerf) + " mm je započítán mezi jednotlivými kusy.",
+      "Prořez " + fmt(kerf) + " mm je započítán u každého řezu, i před zbytkem.",
       optimal
         ? "Menší počet trubek nelze: kalkulačka prošla všechna možná rozložení."
         : "Dolní mez je " + res.lower + " trubek (jen součet délek). Zadání je příliš velké na úplné ověření, rozložení je nejlepší nalezené."
