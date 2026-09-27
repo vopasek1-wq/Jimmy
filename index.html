@@ -250,7 +250,8 @@ tfoot td { font-weight: 600; border-bottom: 0; }
 @media (max-width: 760px) { .twocol { grid-template-columns: minmax(0, 1fr); } }
 .notes { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 14px; }
 .toast { font-size: 13px; color: var(--ok); }
-.out-actions { justify-content: flex-end; }
+.out-actions { justify-content: flex-end; gap: 12px; }
+.out-actions button { font-size: 17px; padding: 14px 28px; border-radius: 8px; min-width: 190px; }
 @media print {
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   body { background: #fff; }
@@ -740,7 +741,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
     try { embedded = window.self !== window.top; } catch (e) { embedded = true; }
     if (!embedded) {
       var out = el("div", "actions out-actions");
-      var mail = el("button", null, "Odeslat e-mailem");
+      var mail = el("button", "primary", "Odeslat e-mailem");
       mail.type = "button";
       mail.addEventListener("click", function () {
         var lines = [material, "Prořez " + fmt(kerf) + " mm, délka trubky " + fmt(stock) + " mm", ""];
@@ -760,10 +761,10 @@ tfoot td { font-weight: 600; border-bottom: 0; }
         location.href = "mailto:?subject=" + encodeURIComponent("Kalkulace trubek – " + bars.length + " trubek") +
           "&body=" + encodeURIComponent(lines.join("\n"));
       });
-      var print = el("button", "primary", "Vytisknout");
+      var print = el("button", null, "Vytisknout");
       print.type = "button";
       print.addEventListener("click", function () { window.print(); });
-      out.append(mail, print);
+      out.append(print, mail);
       resultsEl.append(out);
     }
   }
