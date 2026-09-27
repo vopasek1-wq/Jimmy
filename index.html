@@ -363,7 +363,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
   var COLORS = ["#2f7de1", "#d9434f", "#f0a92e", "#3f9b4f", "#1fa5a8", "#7b4bc4", "#d6457e", "#9a6a3a", "#5f7d95", "#8aa82b"];
   var STORE_KEY = "rezaci-plan-v2";
   var KERF = 3; // prořez pilou v mm, pevně daný
-  var STOCK = 6000; // délka tyče v mm, pevně daná
+  var STOCK = 6000; // délka trubky v mm, pevně daná
 
   var rowsEl = document.getElementById("rows");
   var resultsEl = document.getElementById("results");
@@ -441,7 +441,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
 
   /* ---------- Solver ----------
      Každý kus spotřebuje (délka + prořez). Protože za posledním kusem se
-     prořez nepočítá, má tyč efektivní kapacitu (délka tyče + prořez). */
+     prořez nepočítá, má trubka efektivní kapacitu (délka trubky + prořez). */
   function solve(stock, kerf, demand) {
     // demand: [{len, qty}], délky v mm; počítáme v desetinách mm kvůli prořezu 0,5
     var S = 10;
@@ -627,7 +627,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
       if (note) { if (typeof note === "string") s.append(el("small", null, note)); else s.append(note); }
       stats.append(s);
     }
-    stat("Je potřeba", bars.length + " ks", "tyčí po " + fmt(stock) + " mm", true);
+    stat("Je potřeba", bars.length + " ks", "trubek po " + fmt(stock) + " mm", true);
     stat("Požadované kusy", totalPieces + " ks");
     stat("Zbytkový materiál", fmt(totalRest) + " mm", "největší " + fmt(Math.max.apply(null, bars.map(function (b) { return b.rest; }))) + " mm");
     resultsEl.append(stats);
@@ -646,7 +646,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
       var body = el("div", "pat-body");
       var title = el("div", "pat-title");
       title.append(el("h3", null, g.count === 1 ? "Trubka " + from : "Trubky " + from + "–" + to));
-      title.append(el("span", null, g.pieces.length + (g.pieces.length === 1 ? " kus" : g.pieces.length < 5 ? " kusy" : " kusů") + " z každé tyče"));
+      title.append(el("span", null, g.pieces.length + (g.pieces.length === 1 ? " kus" : g.pieces.length < 5 ? " kusy" : " kusů") + " z každé trubky"));
       body.append(title);
 
       var bar = el("div", "bar");
@@ -715,11 +715,11 @@ tfoot td { font-weight: 600; border-bottom: 0; }
     np.append(el("h2", null, "Pokyny"));
     var ul = el("ul", "notes");
     [
-      "Celkem je potřeba " + bars.length + " tyčí.",
+      "Celkem je potřeba " + bars.length + " trubek.",
       "Prořez " + fmt(kerf) + " mm je započítán mezi jednotlivými kusy.",
       optimal
-        ? "Menší počet tyčí nelze: kalkulačka prošla všechna možná rozložení."
-        : "Dolní mez je " + res.lower + " tyčí (jen součet délek). Zadání je příliš velké na úplné ověření, rozložení je nejlepší nalezené."
+        ? "Menší počet trubek nelze: kalkulačka prošla všechna možná rozložení."
+        : "Dolní mez je " + res.lower + " trubek (jen součet délek). Zadání je příliš velké na úplné ověření, rozložení je nejlepší nalezené."
     ].forEach(function (t) { ul.append(el("li", null, t)); });
     np.append(ul);
 
@@ -741,7 +741,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
       var l = rows[i][0], q = rows[i][1];
       if (!isFinite(l) && !isFinite(q)) continue;
       if (!(l > 0) || !(q > 0)) return fail("Řádek " + (i + 1) + ": vyplň délku i počet kusů.");
-      if (l > stock) return fail("Kus " + fmt(l) + " mm je delší než tyč " + fmt(stock) + " mm.");
+      if (l > stock) return fail("Kus " + fmt(l) + " mm je delší než trubka " + fmt(stock) + " mm.");
       if (!(l in agg)) { agg[l] = 0; order.push(l); }
       agg[l] += q;
     }
