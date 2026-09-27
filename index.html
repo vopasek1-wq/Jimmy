@@ -324,7 +324,7 @@ tfoot .sum-label td {
   <header class="head">
     <div>
       <h1>Kalkulace trubek</h1>
-      <p id="subtitle">Ocelová lešenářská trubka Ø 48,3 mm, tloušťka stěny 4,05 mm</p>
+      <p id="subtitle">Ocelové lešenářské trubky nařežeme na míru z originální délky 6000 mm.</p>
     </div>
     <svg class="tube-pic" viewBox="0 0 1240 205" role="img" aria-label="Trubka Ø 48,3 mm, délka 6000 mm">
       <defs>
@@ -794,7 +794,8 @@ tfoot .sum-label td {
       var mail = el("button", "primary", "Odeslat e-mailem");
       mail.type = "button";
       mail.addEventListener("click", function () {
-        var lines = [material, "Prořez " + fmt(kerf) + " mm, délka trubky " + fmt(stock) + " mm", ""];
+        var spec = document.getElementById("matAlu").checked ? "Hliníková trubka Ø 48,3 mm, tloušťka stěny 4,00 mm" : "Ocelová lešenářská trubka Ø 48,3 mm, tloušťka stěny 4,05 mm";
+        var lines = [spec, "Prořez " + fmt(kerf) + " mm, délka trubky " + fmt(stock) + " mm", ""];
         lines.push("Celkem je potřeba " + bars.length + " trubek.");
         lines.push("Požadované kusy: " + totalPieces + " ks, zbytkový materiál: " + fmt(totalRest) + " mm", "");
         var f = 1;
@@ -866,8 +867,8 @@ tfoot .sum-label td {
   document.getElementById("form").addEventListener("submit", function (e) { e.preventDefault(); save(); calc(); });
   function matDesc() {
     return document.getElementById("matAlu").checked
-      ? "Hliníková trubka Ø 48,3 mm, tloušťka stěny 4,00 mm"
-      : "Ocelová lešenářská trubka Ø 48,3 mm, tloušťka stěny 4,05 mm";
+      ? "Hliníkové trubky nařežeme na míru z originální délky 6000 mm."
+      : "Ocelové lešenářské trubky nařežeme na míru z originální délky 6000 mm.";
   }
   function updateSubtitle() {
     document.getElementById("subtitle").textContent = matDesc();
