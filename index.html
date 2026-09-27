@@ -1,0 +1,784 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Řezací plán trubek</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+:root {
+  --ground: #eef1f3;
+  --surface: #ffffff;
+  --ink: #17212a;
+  --muted: #5b6873;
+  --line: #d3dae0;
+  --steel: #243240;
+  --steel-ink: #e9eef2;
+  --accent: #1f6fb8;
+  --accent-soft: #e2edf8;
+  --rest: #c9d0d6;
+  --rest-ink: #3c4750;
+  --ok: #2d8a4e;
+  --warn: #b7791f;
+  --danger: #c0392b;
+  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --ground: #10161c;
+    --surface: #18212a;
+    --ink: #e4eaef;
+    --muted: #93a1ad;
+    --line: #2c3945;
+    --steel: #0b1015;
+    --steel-ink: #e4eaef;
+    --accent: #5aa5ec;
+    --accent-soft: #1b2d40;
+    --rest: #3a4652;
+    --rest-ink: #c9d2da;
+    --ok: #4cb872;
+    --warn: #e0a444;
+    --danger: #e36b5d;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ground: #10161c;
+  --surface: #18212a;
+  --ink: #e4eaef;
+  --muted: #93a1ad;
+  --line: #2c3945;
+  --steel: #0b1015;
+  --steel-ink: #e4eaef;
+  --accent: #5aa5ec;
+  --accent-soft: #1b2d40;
+  --rest: #3a4652;
+  --rest-ink: #c9d2da;
+  --ok: #4cb872;
+  --warn: #e0a444;
+  --danger: #e36b5d;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font: 15px/1.5 var(--body);
+}
+.wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding-inline: 16px;
+  padding-block: 20px 48px;
+  display: grid;
+  gap: 20px;
+}
+h1, h2, h3 { font-family: var(--display); font-weight: 700; margin: 0; text-wrap: balance; letter-spacing: .01em; }
+.num, td.n, .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* Header */
+.head {
+  background: var(--steel);
+  color: var(--steel-ink);
+  border-radius: 10px;
+  padding: 18px 22px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+}
+.head h1 { font-size: clamp(28px, 5vw, 40px); text-transform: uppercase; line-height: 1; }
+.head p { margin: 6px 0 0; opacity: .8; font-size: 14px; }
+.stock-pic { display: grid; gap: 4px; min-width: 180px; flex: 0 1 260px; }
+.stock-pic .tube {
+  height: 18px; border-radius: 9px;
+  background: linear-gradient(180deg, #9aa7b2, #e6ebef 40%, #7d8a95);
+}
+.stock-pic .dim { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 13px; }
+.stock-pic .dim::before, .stock-pic .dim::after { content: ""; flex: 1; border-top: 1px solid currentColor; opacity: .6; }
+
+/* Layout */
+.grid { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: grid; gap: 14px; }
+.panel h2 { font-size: 20px; text-transform: uppercase; }
+.label { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+
+.fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.field { display: grid; gap: 4px; }
+.field.full { grid-column: 1 / -1; }
+input[type="number"], input[type="text"], textarea {
+  width: 100%;
+  font: 500 15px var(--mono);
+  color: var(--ink);
+  background: var(--ground);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+input[type="text"] { font-family: var(--body); }
+input:focus-visible, textarea:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.unit { position: relative; }
+.unit input { padding-right: 38px; }
+.unit::after { content: "mm"; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--muted); pointer-events: none; }
+
+.pieces { display: grid; gap: 6px; }
+.prow { display: grid; grid-template-columns: 14px minmax(0, 1.3fr) minmax(0, 1fr) 32px; gap: 8px; align-items: center; }
+.prow.headrow { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.swatch { width: 14px; height: 14px; border-radius: 3px; }
+.cnt { position: relative; }
+.cnt input { padding-right: 32px; }
+.cnt::after { content: "ks"; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--muted); pointer-events: none; }
+
+button {
+  font: 600 14px var(--body);
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  padding: 8px 12px;
+  cursor: pointer;
+}
+button:hover { border-color: var(--accent); color: var(--accent); }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.primary:hover { filter: brightness(1.08); color: #fff; }
+button.icon { padding: 0; width: 32px; height: 36px; font-size: 18px; line-height: 1; color: var(--muted); }
+button.icon:hover { color: var(--danger); border-color: var(--danger); }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+details summary { cursor: pointer; font-size: 14px; color: var(--accent); font-weight: 500; }
+details textarea { margin-top: 8px; min-height: 110px; resize: vertical; }
+.hint { font-size: 13px; color: var(--muted); margin: 0; }
+.error { color: var(--danger); font-size: 14px; margin: 0; }
+
+/* Results */
+.results { display: grid; gap: 16px; }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 600px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 2px; }
+.stat b { font: 700 clamp(24px, 2.6vw, 32px)/1.1 var(--display); white-space: nowrap; }
+.stat small { color: var(--muted); font-size: 13px; }
+.stat.main { background: var(--steel); color: var(--steel-ink); border-color: var(--steel); }
+.stat.main .label, .stat.main small { color: var(--steel-ink); opacity: .85; }
+.stat.main .pill { background: #eef6f0; color: #1f6b3a; }
+.stat.main .pill.warn { background: #fbf1df; color: #7a4f0d; }
+.pill { display: inline-block; font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 999px; }
+.pill.ok { background: color-mix(in srgb, var(--ok) 18%, transparent); color: var(--ok); }
+.pill.warn { background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn); }
+
+.plan { display: grid; gap: 10px; }
+.pat {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) 96px;
+  gap: 8px 14px;
+  align-items: center;
+}
+@media (max-width: 600px) {
+  .pat { grid-template-columns: 52px minmax(0, 1fr); }
+  .pat .rest { grid-column: 1 / -1; justify-items: start; display: flex; gap: 8px; align-items: baseline; }
+}
+.mult {
+  width: 56px; height: 56px; border-radius: 8px;
+  display: grid; place-items: center;
+  font: 700 28px var(--display);
+  color: #fff;
+}
+.pat-body { display: grid; gap: 6px; min-width: 0; }
+.pat-title { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.pat-title h3 { font-size: 20px; }
+.pat-title span { color: var(--muted); font-size: 13px; }
+.bar {
+  display: flex;
+  height: 38px;
+  border-radius: 7px;
+  overflow: hidden;
+  background: var(--rest);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 15%, transparent);
+}
+.seg {
+  display: flex; align-items: center; justify-content: center;
+  font: 600 13px var(--mono);
+  white-space: nowrap; overflow: hidden;
+  min-width: 0;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.25), inset 0 -2px 0 rgba(0,0,0,.12);
+}
+.kerf { flex: 0 0 auto; width: 3px; background: var(--steel); position: relative; }
+.seg.rest-seg {
+  color: var(--rest-ink);
+  background: repeating-linear-gradient(135deg, transparent 0 6px, color-mix(in srgb, var(--ink) 7%, transparent) 6px 12px);
+  box-shadow: none;
+}
+.cuts { font-size: 13px; color: var(--muted); font-family: var(--mono); overflow-wrap: anywhere; }
+.rest { display: grid; justify-items: center; text-align: center; gap: 0; }
+.rest b { font: 700 22px var(--display); white-space: nowrap; }
+.rest small { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: left; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
+td.n, th.n { text-align: right; }
+tfoot td { font-weight: 600; border-bottom: 0; }
+.twocol { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 760px) { .twocol { grid-template-columns: minmax(0, 1fr); } }
+.notes { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 14px; }
+.toast { font-size: 13px; color: var(--ok); }
+@media (prefers-reduced-motion: no-preference) {
+  .seg { transition: flex-grow .25s ease; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="head">
+    <div>
+      <h1>Řezací plán trubek</h1>
+      <p id="subtitle">Prořez 3 mm · optimalizace nářezů z tyčí 6000 mm</p>
+    </div>
+    <div class="stock-pic" aria-hidden="true">
+      <div class="tube"></div>
+      <div class="dim" id="stockDim">6000 mm</div>
+    </div>
+  </header>
+
+  <div class="grid">
+    <form class="panel" id="form" autocomplete="off">
+      <h2>Zadání</h2>
+      <div class="fields">
+        <label class="field">
+          <span class="label">Délka tyče</span>
+          <span class="unit"><input type="number" id="stock" min="1" step="1" value="6000"></span>
+        </label>
+        <label class="field">
+          <span class="label">Prořez</span>
+          <span class="unit"><input type="number" id="kerf" min="0" step="0.5" value="3"></span>
+        </label>
+        <label class="field full">
+          <span class="label">Materiál</span>
+          <input type="text" id="material" value="Ø 48,3 × 3,25 mm">
+        </label>
+      </div>
+
+      <div class="pieces">
+        <div class="prow headrow"><span></span><span>Délka kusu</span><span>Počet</span><span></span></div>
+        <div id="rows" class="pieces"></div>
+      </div>
+      <div class="actions">
+        <button type="button" id="addRow">+ Přidat délku</button>
+        <button type="button" id="sample">Načíst příklad</button>
+        <button type="button" id="clear">Vymazat</button>
+      </div>
+
+      <details>
+        <summary>Vložit seznam z textu</summary>
+        <textarea id="bulk" placeholder="3740 10&#10;2465 12&#10;860 x 23"></textarea>
+        <div class="actions" style="margin-top:8px">
+          <button type="button" id="bulkApply">Převzít seznam</button>
+        </div>
+        <p class="hint">Na každý řádek délka a počet kusů, např. „3740 10“ nebo „3740 × 10“.</p>
+      </details>
+
+      <p class="error" id="error" hidden></p>
+      <button type="submit" class="primary">Spočítat plán</button>
+      <p class="hint">Prořez se počítá mezi jednotlivými kusy. Poslední kus odřezaný od zbytku prořez nepotřebuje, zbytek tak odpovídá tomu, co zůstane v ruce.</p>
+    </form>
+
+    <section class="results" id="results" aria-live="polite"></section>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var COLORS = ["#2f7de1", "#d9434f", "#f0a92e", "#3f9b4f", "#1fa5a8", "#7b4bc4", "#d6457e", "#9a6a3a", "#5f7d95", "#8aa82b"];
+  var SAMPLE = [[3740, 10], [3210, 2], [1265, 2], [2465, 12], [860, 23], [4083, 4]];
+  var STORE_KEY = "rezaci-plan-v1";
+
+  var rowsEl = document.getElementById("rows");
+  var resultsEl = document.getElementById("results");
+  var errorEl = document.getElementById("error");
+
+  function fmt(n) {
+    var r = Math.round(n * 10) / 10;
+    return r.toLocaleString("cs-CZ", { maximumFractionDigits: 1 });
+  }
+  function textOn(hex) {
+    var c = parseInt(hex.slice(1), 16);
+    var r = (c >> 16) & 255, g = (c >> 8) & 255, b = c & 255;
+    return (0.299 * r + 0.587 * g + 0.114 * b) > 165 ? "#1b1b1b" : "#ffffff";
+  }
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+
+  /* ---------- Rows ---------- */
+  function addRow(len, qty) {
+    var row = el("div", "prow");
+    var sw = el("span", "swatch");
+    var lenWrap = el("span", "unit");
+    var lenIn = el("input");
+    lenIn.type = "number"; lenIn.min = "1"; lenIn.step = "1"; lenIn.placeholder = "délka";
+    lenIn.className = "len"; lenIn.value = len != null ? len : "";
+    lenIn.setAttribute("aria-label", "Délka kusu v mm");
+    lenWrap.appendChild(lenIn);
+    var qtyWrap = el("span", "cnt");
+    var qtyIn = el("input");
+    qtyIn.type = "number"; qtyIn.min = "1"; qtyIn.step = "1"; qtyIn.placeholder = "počet";
+    qtyIn.className = "qty"; qtyIn.value = qty != null ? qty : "";
+    qtyIn.setAttribute("aria-label", "Počet kusů");
+    qtyWrap.appendChild(qtyIn);
+    var del = el("button", "icon", "×");
+    del.type = "button";
+    del.setAttribute("aria-label", "Odebrat řádek");
+    del.addEventListener("click", function () { row.remove(); recolor(); save(); });
+    row.append(sw, lenWrap, qtyWrap, del);
+    rowsEl.appendChild(row);
+    lenIn.id = "len-" + rowsEl.children.length;
+    qtyIn.id = "qty-" + rowsEl.children.length;
+    recolor();
+    return row;
+  }
+  function setRows(list) {
+    rowsEl.innerHTML = "";
+    list.forEach(function (p) { addRow(p[0], p[1]); });
+    if (!list.length) addRow();
+  }
+  function readRows() {
+    return Array.prototype.map.call(rowsEl.children, function (r) {
+      return [parseFloat(r.querySelector(".len").value), parseInt(r.querySelector(".qty").value, 10)];
+    });
+  }
+  function colorMap(lengths) {
+    var map = {}, i = 0;
+    lengths.forEach(function (l) {
+      if (!(l in map) && isFinite(l) && l > 0) { map[l] = COLORS[i % COLORS.length]; i++; }
+    });
+    return map;
+  }
+  function recolor() {
+    var lens = readRows().map(function (p) { return p[0]; });
+    var map = colorMap(lens);
+    Array.prototype.forEach.call(rowsEl.children, function (r, idx) {
+      var c = map[lens[idx]];
+      r.querySelector(".swatch").style.background = c || "var(--line)";
+    });
+  }
+  rowsEl.addEventListener("input", function () { recolor(); save(); });
+
+  /* ---------- Solver ----------
+     Každý kus spotřebuje (délka + prořez). Protože za posledním kusem se
+     prořez nepočítá, má tyč efektivní kapacitu (délka tyče + prořez). */
+  function solve(stock, kerf, demand) {
+    // demand: [{len, qty}], délky v mm; počítáme v desetinách mm kvůli prořezu 0,5
+    var S = 10;
+    var cap = Math.round((stock + kerf) * S);
+    var types = demand.map(function (d) {
+      return { len: d.len, qty: d.qty, w: Math.round((d.len + kerf) * S) };
+    });
+    var totalW = types.reduce(function (s, t) { return s + t.w * t.qty; }, 0);
+    var lower = Math.ceil(totalW / cap - 1e-9);
+
+    function knapsackPattern(rem, order) {
+      var dp = new Int32Array(cap + 1).fill(-1);
+      dp[0] = -2;
+      for (var oi = 0; oi < order.length; oi++) {
+        var ti = order[oi], t = types[ti];
+        var copies = Math.min(rem[ti], Math.floor(cap / t.w));
+        for (var k = 0; k < copies; k++) {
+          for (var c = cap; c >= t.w; c--) {
+            if (dp[c] === -1 && dp[c - t.w] !== -1) dp[c] = ti;
+          }
+        }
+      }
+      var best = cap;
+      while (best > 0 && dp[best] === -1) best--;
+      var counts = new Array(types.length).fill(0);
+      var c2 = best;
+      while (c2 > 0) { var ti2 = dp[c2]; counts[ti2]++; c2 -= types[ti2].w; }
+      return counts;
+    }
+
+    function greedy(order) {
+      var rem = types.map(function (t) { return t.qty; });
+      var bars = [];
+      var left = rem.reduce(function (a, b) { return a + b; }, 0);
+      while (left > 0) {
+        var counts = knapsackPattern(rem, order);
+        var times = Infinity;
+        counts.forEach(function (n, i) { if (n) times = Math.min(times, Math.floor(rem[i] / n)); });
+        if (!isFinite(times) || times < 1) break;
+        for (var r = 0; r < times; r++) bars.push(counts.slice());
+        counts.forEach(function (n, i) { rem[i] -= n * times; left -= n * times; });
+      }
+      return bars;
+    }
+
+    function ffd(bestFit) {
+      var list = [];
+      types.forEach(function (t, i) { for (var k = 0; k < t.qty; k++) list.push(i); });
+      list.sort(function (a, b) { return types[b].w - types[a].w; });
+      var bins = [];
+      list.forEach(function (ti) {
+        var w = types[ti].w, pick = -1;
+        for (var b = 0; b < bins.length; b++) {
+          if (bins[b].free >= w) {
+            if (!bestFit) { pick = b; break; }
+            if (pick < 0 || bins[b].free < bins[pick].free) pick = b;
+          }
+        }
+        if (pick < 0) { bins.push({ free: cap, counts: new Array(types.length).fill(0) }); pick = bins.length - 1; }
+        bins[pick].free -= w;
+        bins[pick].counts[ti]++;
+      });
+      return bins.map(function (b) { return b.counts; });
+    }
+
+    function score(bars) {
+      // méně tyčí je lepší; při shodě chceme odpad soustředěný do co nejmenšího počtu velkých zbytků
+      var sq = 0;
+      bars.forEach(function (c) {
+        var used = c.reduce(function (s, n, i) { return s + n * types[i].w; }, 0);
+        var f = (cap - used) / cap;
+        sq += f * f;
+      });
+      return bars.length * 1e6 - sq;
+    }
+
+    var base = types.map(function (_, i) { return i; }).sort(function (a, b) { return types[b].w - types[a].w; });
+    var candidates = [greedy(base), greedy(base.slice().reverse()), ffd(false), ffd(true)];
+    var seed = 12345;
+    function rnd() { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
+    var tries = types.length > 1 ? 40 : 0;
+    for (var t = 0; t < tries; t++) {
+      var o = base.slice();
+      for (var i = o.length - 1; i > 0; i--) { var j = Math.floor(rnd() * (i + 1)); var tmp = o[i]; o[i] = o[j]; o[j] = tmp; }
+      candidates.push(greedy(o));
+    }
+    var best = null, bestScore = Infinity;
+    candidates.forEach(function (c) {
+      var s = score(c);
+      if (s < bestScore) { bestScore = s; best = c; }
+    });
+
+    // Přesné ověření: zkusíme najít řešení s menším počtem tyčí (výčet
+    // maximálních vzorů + prohledávání s pamětí, omezené rozpočtem kroků).
+    var proven = best.length === lower;
+    var exact = exactSearch(best.length);
+    if (exact.bars) { best = exact.bars; proven = exact.proven; }
+    else if (exact.proven) proven = true;
+
+    function exactSearch(n) {
+      var nT = types.length, pats = [], budget = 300000, aborted = false;
+      (function gen(i, capLeft, cur) {
+        if (pats.length > 4000) { aborted = true; return; }
+        if (i === nT) { if (cur.some(Boolean)) pats.push(cur.slice()); return; }
+        for (var k = Math.min(types[i].qty, Math.floor(capLeft / types[i].w)); k >= 0; k--) {
+          cur[i] = k; gen(i + 1, capLeft - k * types[i].w, cur);
+        }
+        cur[i] = 0;
+      })(0, cap, new Array(nT).fill(0));
+      if (aborted) return {};
+      pats = pats.filter(function (p) {
+        return !pats.some(function (q) { return q !== p && q.every(function (v, j) { return v >= p[j]; }) && q.some(function (v, j) { return v > p[j]; }); });
+      });
+      var memo = new Map();
+      function can(rem, k) {
+        if (rem.every(function (r) { return r === 0; })) return [];
+        if (k === 0 || aborted) return null;
+        if (--budget < 0) { aborted = true; return null; }
+        var need = rem.reduce(function (s, r, j) { return s + r * types[j].w; }, 0);
+        if (need > k * cap) return null;
+        var key = rem.join(",") + "/" + k;
+        if (memo.has(key)) return null;
+        var i = rem.findIndex(function (r) { return r > 0; });
+        for (var pi = 0; pi < pats.length; pi++) {
+          var p = pats[pi];
+          if (!p[i]) continue;
+          var take = rem.map(function (r, j) { return Math.min(r, p[j]); });
+          var sub = can(rem.map(function (r, j) { return r - take[j]; }), k - 1);
+          if (sub) { sub.push(take); return sub; }
+        }
+        memo.set(key, true);
+        return null;
+      }
+      var found = null, target = n - 1;
+      while (target >= lower) {
+        var r = can(types.map(function (t) { return t.qty; }), target);
+        if (!r) break;
+        found = r; target--;
+      }
+      if (aborted) return { bars: found, proven: false };
+      return { bars: found, proven: true };
+    }
+
+    var bars = best.map(function (counts) {
+      var pieces = [];
+      counts.forEach(function (n, i) { for (var k = 0; k < n; k++) pieces.push(types[i].len); });
+      pieces.sort(function (a, b) { return b - a; });
+      var used = pieces.reduce(function (s, l) { return s + l; }, 0) + Math.max(0, pieces.length - 1) * kerf;
+      return { pieces: pieces, rest: Math.round((stock - used) * 10) / 10 };
+    });
+    return { bars: bars, lower: lower, proven: proven };
+  }
+
+  /* ---------- Render ---------- */
+  function render(stock, kerf, material, demand, res) {
+    resultsEl.innerHTML = "";
+    var colors = colorMap(demand.map(function (d) { return d.len; }));
+    var bars = res.bars;
+
+    // seskupení stejných nářezů
+    var groups = [], byKey = {};
+    bars.forEach(function (b) {
+      var key = b.pieces.join("|");
+      if (!byKey[key]) { byKey[key] = { pieces: b.pieces, rest: b.rest, count: 0 }; groups.push(byKey[key]); }
+      byKey[key].count++;
+    });
+    groups.sort(function (a, b) { return b.count - a.count || a.rest - b.rest; });
+
+    var totalPieces = demand.reduce(function (s, d) { return s + d.qty; }, 0);
+    var totalLen = demand.reduce(function (s, d) { return s + d.len * d.qty; }, 0);
+    var totalRest = bars.reduce(function (s, b) { return s + b.rest; }, 0);
+    var cuts = bars.reduce(function (s, b) { return s + Math.max(0, b.pieces.length - 1); }, 0);
+    var kerfLoss = cuts * kerf;
+    var util = totalLen / (bars.length * stock) * 100;
+    var optimal = res.proven;
+
+    document.getElementById("subtitle").textContent =
+      "Prořez " + fmt(kerf) + " mm · Celkem " + bars.length + " trubek" + (material ? " · Materiál " + material : "");
+    document.getElementById("stockDim").textContent = fmt(stock) + " mm";
+
+    // statistiky
+    var stats = el("div", "stats");
+    function stat(label, value, note, main) {
+      var s = el("div", "stat" + (main ? " main" : ""));
+      s.append(el("span", "label", label));
+      var b = el("b", null, value);
+      s.append(b);
+      if (note) { if (typeof note === "string") s.append(el("small", null, note)); else s.append(note); }
+      stats.append(s);
+    }
+    var pill = el("span", "pill " + (optimal ? "ok" : "warn"),
+      optimal ? "ověřené optimum" : "dolní mez " + res.lower);
+    var noteMain = el("small");
+    noteMain.append(document.createTextNode("tyčí po " + fmt(stock) + " mm "));
+    noteMain.append(pill);
+    stat("Potřebuješ", bars.length + " ks", noteMain, true);
+    stat("Kusů", totalPieces + " ks", cuts + " řezů");
+    stat("Využití", fmt(util) + " %", "prořez celkem " + fmt(kerfLoss) + " mm");
+    stat("Zbytky", fmt(totalRest) + " mm", "největší " + fmt(Math.max.apply(null, bars.map(function (b) { return b.rest; }))) + " mm");
+    resultsEl.append(stats);
+
+    // plán
+    var plan = el("div", "plan");
+    var from = 1;
+    groups.forEach(function (g, gi) {
+      var to = from + g.count - 1;
+      var card = el("article", "pat");
+      var first = colors[g.pieces[0]];
+      var mult = el("div", "mult", g.count + "×");
+      mult.style.background = first; mult.style.color = textOn(first);
+      card.append(mult);
+
+      var body = el("div", "pat-body");
+      var title = el("div", "pat-title");
+      title.append(el("h3", null, g.count === 1 ? "Trubka " + from : "Trubky " + from + "–" + to));
+      title.append(el("span", null, g.pieces.length + (g.pieces.length === 1 ? " kus" : g.pieces.length < 5 ? " kusy" : " kusů") + " z každé tyče"));
+      body.append(title);
+
+      var bar = el("div", "bar");
+      bar.setAttribute("role", "img");
+      bar.setAttribute("aria-label", g.pieces.map(fmt).join(" + ") + " mm, zbytek " + fmt(g.rest) + " mm");
+      g.pieces.forEach(function (p, i) {
+        if (i > 0 && kerf > 0) { var k = el("span", "kerf"); k.title = "prořez " + fmt(kerf) + " mm"; bar.append(k); }
+        var s = el("span", "seg");
+        s.style.flex = p + " 1 0";
+        s.style.background = colors[p];
+        s.style.color = textOn(colors[p]);
+        s.title = fmt(p) + " mm";
+        s.textContent = p / stock > 0.09 ? fmt(p) : "";
+        bar.append(s);
+      });
+      if (g.rest > 0) {
+        var r = el("span", "seg rest-seg");
+        r.style.flex = g.rest + " 1 0";
+        r.title = "zbytek " + fmt(g.rest) + " mm";
+        r.textContent = g.rest / stock > 0.07 ? fmt(g.rest) : "";
+        bar.append(r);
+      }
+      body.append(bar);
+      body.append(el("div", "cuts", g.pieces.map(fmt).join(" + ") +
+        (g.pieces.length > 1 ? " + " + (g.pieces.length - 1) + "× prořez " + fmt(kerf) : "") + " mm"));
+      card.append(body);
+
+      var rest = el("div", "rest");
+      rest.append(el("small", null, "Zbytek"));
+      rest.append(el("b", "num", fmt(g.rest) + " mm"));
+      card.append(rest);
+      plan.append(card);
+      from = to + 1;
+    });
+    resultsEl.append(plan);
+
+    // přehled + poznámky
+    var two = el("div", "twocol");
+    var tp = el("div", "panel");
+    tp.append(el("h2", null, "Přehled délek"));
+    var tw = el("div", "tablewrap");
+    var table = el("table");
+    table.innerHTML = "<thead><tr><th>Délka</th><th class=\"n\">Počet</th><th class=\"n\">Celkem</th></tr></thead>";
+    var tb = el("tbody");
+    demand.forEach(function (d) {
+      var tr = el("tr");
+      var td = el("td", "n");
+      td.style.textAlign = "left";
+      var sw = el("span", "swatch");
+      sw.style.display = "inline-block"; sw.style.verticalAlign = "-2px"; sw.style.marginRight = "8px";
+      sw.style.background = colors[d.len];
+      td.append(sw, document.createTextNode(fmt(d.len) + " mm"));
+      tr.append(td, el("td", "n", d.qty + " ks"), el("td", "n", fmt(d.len * d.qty) + " mm"));
+      tb.append(tr);
+    });
+    table.append(tb);
+    var tf = el("tfoot");
+    var ftr = el("tr");
+    ftr.append(el("td", null, "Celkem"), el("td", "n", totalPieces + " ks"), el("td", "n", fmt(totalLen) + " mm"));
+    tf.append(ftr);
+    table.append(tf);
+    tw.append(table);
+    tp.append(tw);
+
+    var np = el("div", "panel");
+    np.append(el("h2", null, "Do dílny"));
+    var ul = el("ul", "notes");
+    [
+      "Každá tyč = " + fmt(stock) + " mm, celkem potřebuješ " + bars.length + " tyčí.",
+      "Prořez " + fmt(kerf) + " mm je započítán mezi jednotlivými kusy.",
+      optimal
+        ? "Menší počet tyčí nejde: kalkulačka prošla všechna možná rozložení."
+        : "Dolní mez je " + res.lower + " tyčí (jen součet délek). Zadání je příliš velké na úplné ověření, plán je nejlepší nalezený.",
+      "Zbytky si označ a uschovej, mohou se hodit příště."
+    ].forEach(function (t) { ul.append(el("li", null, t)); });
+    np.append(ul);
+    var act = el("div", "actions");
+    var copy = el("button", null, "Kopírovat plán jako text");
+    copy.type = "button";
+    var toast = el("span", "toast");
+    copy.addEventListener("click", function () {
+      var lines = ["ŘEZACÍ PLÁN – TRUBKY " + fmt(stock) + " mm", "Prořez: " + fmt(kerf) + " mm | Celkem: " + bars.length + " trubek" + (material ? " | Materiál: " + material : ""), ""];
+      var f = 1;
+      groups.forEach(function (g) {
+        var t2 = f + g.count - 1;
+        lines.push(g.count + "× " + (g.count === 1 ? "Trubka " + f : "Trubky " + f + "–" + t2) + ": " + g.pieces.map(fmt).join(" + ") + " mm, zbytek " + fmt(g.rest) + " mm");
+        f = t2 + 1;
+      });
+      var text = lines.join("\n");
+      function fallback() {
+        var ta = document.getElementById("bulk");
+        ta.closest("details").open = true;
+        ta.value = text; ta.select();
+        toast.textContent = "Text je označený v poli výše, zkopíruj ho Ctrl+C.";
+      }
+      try {
+        navigator.clipboard.writeText(text).then(function () { toast.textContent = "Zkopírováno."; }, fallback);
+      } catch (e) { fallback(); }
+    });
+    act.append(copy, toast);
+    np.append(act);
+
+    two.append(tp, np);
+    resultsEl.append(two);
+  }
+
+  /* ---------- Flow ---------- */
+  function calc() {
+    errorEl.hidden = true;
+    var stock = parseFloat(document.getElementById("stock").value);
+    var kerf = parseFloat(document.getElementById("kerf").value);
+    var material = document.getElementById("material").value.trim();
+    function fail(msg) { errorEl.textContent = msg; errorEl.hidden = false; }
+    if (!(stock > 0)) return fail("Zadej délku tyče větší než 0 mm.");
+    if (!(kerf >= 0)) return fail("Prořez nesmí být záporný.");
+
+    var agg = {}, order = [];
+    var rows = readRows();
+    for (var i = 0; i < rows.length; i++) {
+      var l = rows[i][0], q = rows[i][1];
+      if (!isFinite(l) && !isFinite(q)) continue;
+      if (!(l > 0) || !(q > 0)) return fail("Řádek " + (i + 1) + ": vyplň délku i počet kusů.");
+      if (l > stock) return fail("Kus " + fmt(l) + " mm je delší než tyč " + fmt(stock) + " mm.");
+      if (!(l in agg)) { agg[l] = 0; order.push(l); }
+      agg[l] += q;
+    }
+    if (!order.length) return fail("Přidej alespoň jednu délku kusu.");
+    var demand = order.map(function (l) { return { len: l, qty: agg[l] }; });
+    if (demand.reduce(function (s, d) { return s + d.qty; }, 0) > 5000) return fail("Najednou lze spočítat nejvýše 5000 kusů.");
+    render(stock, kerf, material, demand, solve(stock, kerf, demand));
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify({
+        stock: document.getElementById("stock").value,
+        kerf: document.getElementById("kerf").value,
+        material: document.getElementById("material").value,
+        rows: readRows()
+      }));
+    } catch (e) { /* úložiště nemusí být dostupné */ }
+  }
+  function load() {
+    try {
+      var d = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
+      if (d && d.rows && d.rows.length) {
+        document.getElementById("stock").value = d.stock;
+        document.getElementById("kerf").value = d.kerf;
+        document.getElementById("material").value = d.material || "";
+        setRows(d.rows.map(function (r) { return [isFinite(r[0]) ? r[0] : "", isFinite(r[1]) ? r[1] : ""]; }));
+        return true;
+      }
+    } catch (e) { /* ignorovat */ }
+    return false;
+  }
+
+  document.getElementById("form").addEventListener("submit", function (e) { e.preventDefault(); save(); calc(); });
+  ["stock", "kerf", "material"].forEach(function (id) { document.getElementById(id).addEventListener("input", save); });
+  document.getElementById("addRow").addEventListener("click", function () { addRow().querySelector(".len").focus(); });
+  document.getElementById("sample").addEventListener("click", function () {
+    document.getElementById("stock").value = 6000;
+    document.getElementById("kerf").value = 3;
+    setRows(SAMPLE); save(); calc();
+  });
+  document.getElementById("clear").addEventListener("click", function () {
+    setRows([]); resultsEl.innerHTML = ""; save();
+  });
+  document.getElementById("bulkApply").addEventListener("click", function () {
+    var list = [];
+    document.getElementById("bulk").value.split(/\n+/).forEach(function (line) {
+      var m = line.replace(",", ".").match(/(\d+(?:\.\d+)?)\D+(\d+)/);
+      if (m) list.push([parseFloat(m[1]), parseInt(m[2], 10)]);
+    });
+    if (!list.length) { errorEl.textContent = "V textu jsem nenašel žádnou dvojici délka + počet."; errorEl.hidden = false; return; }
+    setRows(list); save(); calc();
+  });
+
+  if (!load()) setRows(SAMPLE);
+  calc();
+})();
+</script>
+</body>
+</html>
