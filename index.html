@@ -692,8 +692,8 @@ tfoot td { font-weight: 600; border-bottom: 0; }
         bar.append(r);
       }
       body.append(bar);
-      body.append(el("div", "cuts", g.pieces.map(fmt).join(" + ") +
-        (g.pieces.length > 1 ? " + " + (g.pieces.length - 1) + "× prořez " + fmt(kerf) : "") + " mm"));
+      body.append(el("div", "cuts", g.pieces.map(function (x) { return fmt(x) + " mm"; }).join(" + ") +
+        (g.pieces.length > 1 ? " + " + (g.pieces.length - 1) + "× prořez " + fmt(kerf) + " mm" : "")));
       card.append(body);
 
       var rest = el("div", "rest");
