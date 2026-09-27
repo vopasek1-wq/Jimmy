@@ -630,7 +630,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
     }
     stat("Potřebuješ", bars.length + " ks", "tyčí po " + fmt(stock) + " mm", true);
     stat("Kusů", totalPieces + " ks");
-    stat("Odřezky", fmt(totalRest) + " mm", "největší " + fmt(Math.max.apply(null, bars.map(function (b) { return b.rest; }))) + " mm");
+    stat("Zbytkový materiál", fmt(totalRest) + " mm", "největší " + fmt(Math.max.apply(null, bars.map(function (b) { return b.rest; }))) + " mm");
     resultsEl.append(stats);
 
     // plán
