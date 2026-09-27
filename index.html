@@ -882,12 +882,13 @@ tfoot td { font-weight: 600; border-bottom: 0; }
   // Popisky prořezu, které by se překrývaly (u krátkých kusů), skryjeme
   function layoutKerfLabels() {
     Array.prototype.forEach.call(document.querySelectorAll(".bar"), function (bar) {
-      var last = -Infinity;
-      Array.prototype.forEach.call(bar.querySelectorAll(".kerf"), function (k) {
-        k.classList.remove("no-label");
-        var x = k.offsetLeft;
-        if (x - last < 40) k.classList.add("no-label");
-        else last = x;
+      // popisek jen tam, kde je sousední řez na obou stranách dost daleko;
+      // mezi krátkými kusy se nezobrazí žádný
+      var ks = bar.querySelectorAll(".kerf");
+      var xs = Array.prototype.map.call(ks, function (k) { return k.offsetLeft; });
+      Array.prototype.forEach.call(ks, function (k, i) {
+        var tight = (i > 0 && xs[i] - xs[i - 1] < 40) || (i < xs.length - 1 && xs[i + 1] - xs[i] < 40);
+        k.classList.toggle("no-label", tight);
       });
     });
   }
