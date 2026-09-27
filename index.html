@@ -628,14 +628,9 @@ tfoot td { font-weight: 600; border-bottom: 0; }
       if (note) { if (typeof note === "string") s.append(el("small", null, note)); else s.append(note); }
       stats.append(s);
     }
-    var pill = el("span", "pill " + (optimal ? "ok" : "warn"),
-      optimal ? "ověřené optimum" : "dolní mez " + res.lower);
-    var noteMain = el("small");
-    noteMain.append(document.createTextNode("tyčí po " + fmt(stock) + " mm "));
-    noteMain.append(pill);
-    stat("Potřebuješ", bars.length + " ks", noteMain, true);
+    stat("Potřebuješ", bars.length + " ks", "tyčí po " + fmt(stock) + " mm", true);
     stat("Kusů", totalPieces + " ks");
-    stat("Zbytky", fmt(totalRest) + " mm", "největší " + fmt(Math.max.apply(null, bars.map(function (b) { return b.rest; }))) + " mm");
+    stat("Odřezky", fmt(totalRest) + " mm", "největší " + fmt(Math.max.apply(null, bars.map(function (b) { return b.rest; }))) + " mm");
     resultsEl.append(stats);
 
     // plán
@@ -657,7 +652,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
 
       var bar = el("div", "bar");
       bar.setAttribute("role", "img");
-      bar.setAttribute("aria-label", g.pieces.map(fmt).join(" + ") + " mm, zbytek " + fmt(g.rest) + " mm");
+      bar.setAttribute("aria-label", g.pieces.map(fmt).join(" + ") + " mm, odřezek " + fmt(g.rest) + " mm");
       g.pieces.forEach(function (p, i) {
         if (i > 0 && kerf > 0) { var k = el("span", "kerf"); k.title = "prořez " + fmt(kerf) + " mm"; bar.append(k); }
         var s = el("span", "seg");
@@ -671,7 +666,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
       if (g.rest > 0) {
         var r = el("span", "seg rest-seg");
         r.style.flex = g.rest + " 1 0";
-        r.title = "zbytek " + fmt(g.rest) + " mm";
+        r.title = "odřezek " + fmt(g.rest) + " mm";
         r.textContent = g.rest / stock > 0.07 ? fmt(g.rest) : "";
         bar.append(r);
       }
@@ -681,7 +676,7 @@ tfoot td { font-weight: 600; border-bottom: 0; }
       card.append(body);
 
       var rest = el("div", "rest");
-      rest.append(el("small", null, "Zbytek"));
+      rest.append(el("small", null, "Odřezek"));
       rest.append(el("b", "num", fmt(g.rest) + " mm"));
       card.append(rest);
       plan.append(card);
