@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="440" viewBox="0 0 880 440">
+  <!-- Placeholder: zasněžený štít za soumraku (pozadí karty s hodinami) -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0a1522"/>
+      <stop offset=".55" stop-color="#1c3048"/>
+      <stop offset="1" stop-color="#3a4d66"/>
+    </linearGradient>
+    <linearGradient id="lit" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f4e6d8"/>
+      <stop offset=".5" stop-color="#d8b49a"/>
+      <stop offset="1" stop-color="#8e7a78"/>
+    </linearGradient>
+    <linearGradient id="shade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4b5d78"/>
+      <stop offset="1" stop-color="#1c2a3d"/>
+    </linearGradient>
+    <linearGradient id="fog" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9fb3c9" stop-opacity="0"/>
+      <stop offset="1" stop-color="#9fb3c9" stop-opacity=".22"/>
+    </linearGradient>
+  </defs>
+  <rect width="880" height="440" fill="url(#sky)"/>
+  <g fill="#8aa0ba" opacity=".18">
+    <ellipse cx="640" cy="70" rx="190" ry="16"/>
+    <ellipse cx="760" cy="110" rx="140" ry="10"/>
+    <ellipse cx="480" cy="120" rx="120" ry="8"/>
+  </g>
+  <path d="M300 330 420 240 470 262 540 200 600 250 660 214 760 280 880 240V440H300Z" fill="#2a3b52"/>
+  <path d="M470 330 560 150 598 96 622 60 650 104 690 150 730 206 790 262 880 300V440H470Z" fill="url(#shade)"/>
+  <path d="M622 60 598 96 560 150 520 222 560 206 586 228 606 170 628 150 636 110Z" fill="url(#lit)"/>
+  <path d="M622 60 636 110 650 150 680 176 700 168 690 150 650 104Z" fill="#c8d4e2" opacity=".75"/>
+  <path d="M598 96 612 92 622 60Z M560 150 578 140 598 96Z" fill="#fff" opacity=".6"/>
+  <path d="M606 170 616 200 640 188 660 214 700 200 730 230 760 222 730 206 690 150 680 176 650 150 628 150Z" fill="#b9c8da" opacity=".35"/>
+  <rect y="230" width="880" height="110" fill="url(#fog)"/>
+  <path d="M0 360 120 318 240 346 340 300 460 340 560 312 680 350 800 322 880 340V440H0Z" fill="#101b28"/>
+  <path d="M0 400 160 372 300 396 440 368 600 398 760 374 880 392V440H0Z" fill="#0a121b"/>
+</svg>

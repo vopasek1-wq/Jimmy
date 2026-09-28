@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="120" viewBox="0 0 160 120">
+  <!-- Placeholder: větrná elektrárna -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3f7fc0"/><stop offset=".7" stop-color="#a9cfee"/><stop offset="1" stop-color="#e9d9b8"/></linearGradient>
+  </defs>
+  <rect width="160" height="120" fill="url(#sky)"/>
+  <ellipse cx="40" cy="30" rx="30" ry="6" fill="#fff" opacity=".45"/>
+  <ellipse cx="120" cy="22" rx="24" ry="5" fill="#fff" opacity=".35"/>
+  <path d="M0 90 50 84 110 88 160 82V120H0Z" fill="#6f8f4a"/>
+  <path d="M0 104 80 98 160 104V120H0Z" fill="#4c6a33"/>
+  <g stroke="#f4f7fb" stroke-linecap="round">
+    <path d="M86 44 88 96" stroke-width="3"/>
+    <path d="M87 44 87 14M87 44 113 58M87 44 61 58" stroke-width="2.4"/>
+    <path d="M38 64 39 94" stroke-width="2"/>
+    <path d="M38 64 38 48M38 64 52 72M38 64 24 72" stroke-width="1.5"/>
+  </g>
+  <circle cx="87" cy="44" r="3" fill="#fff"/>
+  <circle cx="38" cy="64" r="2" fill="#fff"/>
+</svg>

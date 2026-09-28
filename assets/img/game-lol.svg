@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="352" viewBox="0 0 360 352">
+  <!-- Placeholder: League of Legends (tmavě modrá, zlatý emblém) -->
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="35%" r="75%"><stop offset="0" stop-color="#1c3550"/><stop offset=".6" stop-color="#0c1726"/><stop offset="1" stop-color="#060a10"/></radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbe3a0"/><stop offset=".5" stop-color="#d4a041"/><stop offset="1" stop-color="#7b5516"/></linearGradient>
+  </defs>
+  <rect width="360" height="352" fill="url(#bg)"/>
+  <circle cx="180" cy="104" r="62" fill="#c8a24e" opacity=".12"/>
+  <circle cx="180" cy="104" r="44" fill="none" stroke="url(#gold)" stroke-width="8"/>
+  <path d="M160 64h26v68h26l-10 18h-42z" fill="url(#gold)" stroke="#2a1d06" stroke-width="2"/>
+  <path d="M0 290 60 250 120 272 180 236 240 270 300 246 360 280V352H0Z" fill="#08111c"/>
+</svg>

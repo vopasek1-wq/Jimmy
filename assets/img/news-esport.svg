@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="120" viewBox="0 0 160 120">
+  <!-- Placeholder: e-sportový tým -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1a2230"/><stop offset="1" stop-color="#07090d"/></linearGradient>
+  </defs>
+  <rect width="160" height="120" fill="url(#bg)"/>
+  <g fill="#2e3a4d">
+    <circle cx="28" cy="52" r="11"/><path d="M8 120c0-24 8-44 20-44s20 20 20 44z"/>
+    <circle cx="60" cy="46" r="12"/><path d="M38 120c0-28 10-48 22-48s22 20 22 48z"/>
+    <circle cx="92" cy="50" r="11"/><path d="M72 120c0-26 9-46 20-46s20 20 20 46z"/>
+  </g>
+  <g fill="#44546c">
+    <path d="M42 120c0-24 8-40 18-40s18 16 18 40z" opacity=".6"/>
+  </g>
+  <path d="M132 34 148 42v18c0 14-8 22-16 26-8-4-16-12-16-26V42z" fill="#f1f4f8"/>
+  <path d="M132 46 140 58 132 72 124 58z" fill="#1a2230"/>
+</svg>

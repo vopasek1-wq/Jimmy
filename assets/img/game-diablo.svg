@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="352" viewBox="0 0 360 352">
+  <!-- Placeholder: Diablo IV (temná gotika, rudá záře) -->
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="30%" r="75%"><stop offset="0" stop-color="#7a0d0d"/><stop offset=".5" stop-color="#2a0506"/><stop offset="1" stop-color="#0a0203"/></radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3c7a0"/><stop offset="1" stop-color="#8a3b1f"/></linearGradient>
+  </defs>
+  <rect width="360" height="352" fill="url(#bg)"/>
+  <path d="M180 46c-18 26-50 34-74 22 14 18 24 40 20 62 12-10 32-16 54-16s42 6 54 16c-4-22 6-44 20-62-24 12-56 4-74-22z" fill="#140203"/>
+  <path d="M180 92 166 118h28z" fill="#ff3b1f"/>
+  <text x="180" y="72" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="34" letter-spacing="10" fill="url(#gold)" opacity=".85">DIABLO</text>
+  <path d="M0 250 40 200 60 214 80 170 96 190 120 150 140 188 160 176 180 120 200 176 220 188 240 150 264 190 280 170 300 214 320 200 360 250V352H0Z" fill="#0c0203" opacity=".85"/>
+  <g fill="#ff7a3c"><circle cx="70" cy="120" r="1.6"/><circle cx="290" cy="100" r="1.4"/><circle cx="250" cy="140" r="1.2"/><circle cx="110" cy="96" r="1.1"/><circle cx="310" cy="160" r="1.8"/></g>
+</svg>

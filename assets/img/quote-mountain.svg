@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="332" height="394" viewBox="0 0 332 394">
+  <!-- Placeholder: noční hory (karta s citátem v sidebaru) -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#101a26"/>
+      <stop offset=".6" stop-color="#1d2c3f"/>
+      <stop offset="1" stop-color="#2c3d52"/>
+    </linearGradient>
+    <linearGradient id="snow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#dfe7f1"/>
+      <stop offset="1" stop-color="#7d8ea5"/>
+    </linearGradient>
+  </defs>
+  <rect width="332" height="394" fill="url(#sky)"/>
+  <g fill="#fff">
+    <circle cx="40" cy="170" r="1" opacity=".5"/><circle cx="260" cy="150" r="1.2" opacity=".5"/>
+    <circle cx="300" cy="200" r=".9" opacity=".4"/><circle cx="90" cy="210" r=".8" opacity=".4"/>
+  </g>
+  <path d="M0 300 70 250 120 262 170 196 196 214 222 190 280 250 332 236V394H0Z" fill="#34465d"/>
+  <path d="M60 330 150 224 176 186 196 214 230 250 290 300 332 316V394H60Z" fill="#26364a"/>
+  <path d="M176 186 150 224 124 262 150 254 164 270 174 236 190 230 196 214Z" fill="url(#snow)"/>
+  <path d="M196 214 190 230 212 250 222 244 230 250Z" fill="#aab8c9" opacity=".6"/>
+  <path d="M0 340 90 314 170 336 250 308 332 330V394H0Z" fill="#141f2c"/>
+  <path d="M0 370 120 352 220 370 332 356V394H0Z" fill="#0c141d"/>
+</svg>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="120" viewBox="0 0 160 120">
+  <!-- Placeholder: temná fantasy (herní novinka) -->
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="45%" r="60%"><stop offset="0" stop-color="#e0301e"/><stop offset=".45" stop-color="#6d0c0c"/><stop offset="1" stop-color="#1a0405"/></radialGradient>
+  </defs>
+  <rect width="160" height="120" fill="url(#glow)"/>
+  <path d="M80 20c-10 14-28 18-40 12 8 10 14 22 12 34 6-6 16-8 28-8s22 2 28 8c-2-12 4-24 12-34-12 6-30 2-40-12z" fill="#170304" opacity=".9"/>
+  <path d="M80 44 72 58h16z" fill="#ff5a36"/>
+  <g fill="#ffb28a" opacity=".85"><circle cx="30" cy="96" r="1.4"/><circle cx="130" cy="88" r="1.2"/><circle cx="112" cy="104" r="1"/><circle cx="52" cy="84" r="1"/></g>
+  <text x="80" y="102" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="15" letter-spacing="5" fill="#d8a58a" opacity=".75">DIABLO</text>
+</svg>

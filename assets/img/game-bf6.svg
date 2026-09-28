@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="352" viewBox="0 0 360 352">
+  <!-- Placeholder: Battlefield 6 (zničené město, kouř, oheň) -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b4450"/><stop offset=".6" stop-color="#6f6a62"/><stop offset="1" stop-color="#c26a2e"/></linearGradient>
+    <radialGradient id="fire" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffcf6b"/><stop offset=".5" stop-color="#ff6a1a" stop-opacity=".7"/><stop offset="1" stop-color="#ff6a1a" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="360" height="352" fill="url(#sky)"/>
+  <g fill="#9aa0a6" opacity=".35"><ellipse cx="90" cy="80" rx="80" ry="34"/><ellipse cx="250" cy="60" rx="110" ry="30"/><ellipse cx="300" cy="120" rx="70" ry="26"/></g>
+  <path d="M0 200h30v-60h24v40h20v-80h28v70h16v-30h26v60h20v-44h30v54h22v-90h26v70h20v-34h28v40h22v-50h28V352H0Z" fill="#1d2026"/>
+  <ellipse cx="250" cy="220" rx="70" ry="40" fill="url(#fire)"/>
+  <ellipse cx="80" cy="236" rx="46" ry="26" fill="url(#fire)" opacity=".7"/>
+  <path d="M168 170c6 0 10 4 10 10 0 3-1 5-3 7l8 14 12 4-2 6-14-3-4 22 10 30h-9l-12-26-10 26h-9l8-34 2-24-10 10-10-4 16-18c-2-2-3-4-3-8 0-6 4-12 10-12z" fill="#0d0f13"/>
+  <path d="M0 290 90 270 180 290 270 268 360 286V352H0Z" fill="#141619"/>
+</svg>

@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>AI Dashboard</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%234fd8ff'/%3E%3Cstop offset='1' stop-color='%231b6dff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M16 2.5 31 29.5h-8.2L16 16.8 9.2 29.5H1Z' fill='url(%23g)'/%3E%3C/svg%3E">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Ikony: Lucide (https://lucide.dev) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/lucide@1.48.0/dist/umd/lucide.min.js"></script>
+  <script defer src="script.js"></script>
+</head>
+<body>
+
+  <!-- Vlastní barevné SVG symboly (logo, AI orb, 3D ikony počasí) -->
+  <svg class="svg-sprite" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id="g-logo" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#4fd8ff"/>
+        <stop offset="1" stop-color="#1b6dff"/>
+      </linearGradient>
+      <radialGradient id="g-orb" cx="45%" cy="40%" r="60%">
+        <stop offset="0" stop-color="#f2fdff"/>
+        <stop offset=".35" stop-color="#6fe4ff"/>
+        <stop offset=".75" stop-color="#1a8fd6"/>
+        <stop offset="1" stop-color="#0b4a7c"/>
+      </radialGradient>
+      <radialGradient id="g-sun" cx="40%" cy="35%" r="70%">
+        <stop offset="0" stop-color="#fff2a8"/>
+        <stop offset=".55" stop-color="#ffc233"/>
+        <stop offset="1" stop-color="#ff8a1a"/>
+      </radialGradient>
+      <linearGradient id="g-cloud" x1="0" y1="0" x2="0" y2="1" gradientUnits="userSpaceOnUse">
+        <stop offset="12" stop-color="#ffffff"/>
+        <stop offset="40" stop-color="#cfe0f2"/>
+      </linearGradient>
+      <linearGradient id="g-cloud-grey" x1="0" y1="0" x2="0" y2="1" gradientUnits="userSpaceOnUse">
+        <stop offset="12" stop-color="#d7e0ea"/>
+        <stop offset="40" stop-color="#8795a8"/>
+      </linearGradient>
+      <linearGradient id="g-cloud-blue" x1="0" y1="0" x2="0" y2="1" gradientUnits="userSpaceOnUse">
+        <stop offset="12" stop-color="#b8e6ff"/>
+        <stop offset="40" stop-color="#3a8ff0"/>
+      </linearGradient>
+    </defs>
+
+    <symbol id="i-logo" viewBox="0 0 32 32">
+      <path d="M16 2.5 31 29.5h-8.2L16 16.8 9.2 29.5H1Z" fill="url(#g-logo)"/>
+      <path d="M16 16.8 12.6 23.2h6.8Z" fill="#0a121b" opacity=".55"/>
+    </symbol>
+
+    <symbol id="i-orb" viewBox="0 0 40 40">
+      <g stroke="#6fe4ff" stroke-linecap="round" stroke-width="1.6" opacity=".85">
+        <path d="M20 2.5v4M20 33.5v4M2.5 20h4M33.5 20h4M7.6 7.6l2.8 2.8M29.6 29.6l2.8 2.8M7.6 32.4l2.8-2.8M29.6 10.4l2.8-2.8"/>
+      </g>
+      <circle cx="20" cy="20" r="10.5" fill="url(#g-orb)"/>
+      <circle cx="20" cy="20" r="10.5" fill="none" stroke="#bff4ff" stroke-opacity=".5"/>
+      <path d="M15 21.5c2-4 8-4 10 0" fill="none" stroke="#e9fcff" stroke-width="1.4" stroke-linecap="round" opacity=".8"/>
+    </symbol>
+
+    <symbol id="wx-partly" viewBox="0 0 64 48">
+      <circle cx="41" cy="17" r="15" fill="#ffc233" opacity=".18"/>
+      <circle cx="41" cy="17" r="11" fill="url(#g-sun)"/>
+      <g fill="url(#g-cloud)">
+        <circle cx="17" cy="32" r="9"/>
+        <circle cx="29" cy="25" r="12"/>
+        <circle cx="42" cy="31" r="9"/>
+        <rect x="17" y="30" width="25" height="11"/>
+      </g>
+    </symbol>
+
+    <symbol id="wx-rain" viewBox="0 0 64 48">
+      <g fill="url(#g-cloud-grey)">
+        <circle cx="19" cy="26" r="9"/>
+        <circle cx="31" cy="19" r="12"/>
+        <circle cx="44" cy="25" r="9"/>
+        <rect x="19" y="24" width="25" height="11"/>
+      </g>
+      <g fill="#4fb3ff">
+        <path d="M22 38c-1.6 2.6-2.4 4.2-2.4 5.2a2.4 2.4 0 0 0 4.8 0c0-1-.8-2.6-2.4-5.2Z"/>
+        <path d="M32 38c-1.6 2.6-2.4 4.2-2.4 5.2a2.4 2.4 0 0 0 4.8 0c0-1-.8-2.6-2.4-5.2Z"/>
+        <path d="M42 38c-1.6 2.6-2.4 4.2-2.4 5.2a2.4 2.4 0 0 0 4.8 0c0-1-.8-2.6-2.4-5.2Z"/>
+      </g>
+    </symbol>
+
+    <symbol id="wx-showers" viewBox="0 0 64 48">
+      <g fill="url(#g-cloud-blue)">
+        <circle cx="19" cy="26" r="9"/>
+        <circle cx="31" cy="19" r="12"/>
+        <circle cx="44" cy="25" r="9"/>
+        <rect x="19" y="24" width="25" height="11"/>
+      </g>
+      <g fill="#dff3ff">
+        <path d="M24 38c-1.6 2.6-2.4 4.2-2.4 5.2a2.4 2.4 0 0 0 4.8 0c0-1-.8-2.6-2.4-5.2Z"/>
+        <path d="M36 38c-1.6 2.6-2.4 4.2-2.4 5.2a2.4 2.4 0 0 0 4.8 0c0-1-.8-2.6-2.4-5.2Z"/>
+      </g>
+    </symbol>
+
+    <symbol id="i-dots" viewBox="0 0 24 24">
+      <circle cx="5" cy="5" r="2.4" fill="#ff5c8a"/>
+      <circle cx="12" cy="5" r="2.4" fill="#ffb020"/>
+      <circle cx="19" cy="5" r="2.4" fill="#34d399"/>
+      <circle cx="5" cy="12" r="2.4" fill="#38bdf8"/>
+      <circle cx="12" cy="12" r="2.4" fill="#a78bfa"/>
+      <circle cx="19" cy="12" r="2.4" fill="#ff5c8a"/>
+      <circle cx="5" cy="19" r="2.4" fill="#34d399"/>
+      <circle cx="12" cy="19" r="2.4" fill="#38bdf8"/>
+      <circle cx="19" cy="19" r="2.4" fill="#ffb020"/>
+    </symbol>
+
+    <symbol id="i-windows" viewBox="0 0 24 24">
+      <rect x="2" y="2" width="9.5" height="9.5" rx=".6" fill="#2ea8ff"/>
+      <rect x="12.5" y="2" width="9.5" height="9.5" rx=".6" fill="#2ea8ff"/>
+      <rect x="2" y="12.5" width="9.5" height="9.5" rx=".6" fill="#2ea8ff"/>
+      <rect x="12.5" y="12.5" width="9.5" height="9.5" rx=".6" fill="#2ea8ff"/>
+    </symbol>
+  </svg>
+
+  <div class="app" id="app">
+
+    <!-- ============ LEVÝ SIDEBAR ============ -->
+    <aside class="sidebar" id="sidebar" aria-label="Hlavní navigace">
+      <a class="brand" href="#">
+        <svg class="brand__logo" aria-hidden="true"><use href="#i-logo"/></svg>
+        <span class="brand__name">AI Dashboard</span>
+      </a>
+
+      <nav class="nav">
+        <ul class="nav__list">
+          <li><a class="nav__link is-active" href="#" aria-current="page"><i data-lucide="house"></i><span>Přehled</span></a></li>
+          <li><a class="nav__link" href="#"><i data-lucide="message-circle-more"></i><span>AI asistent</span></a></li>
+          <li><a class="nav__link" href="#"><i data-lucide="cloud-sun"></i><span>Počasí</span></a></li>
+          <li><a class="nav__link" href="#"><i data-lucide="newspaper"></i><span>Novinky</span></a></li>
+          <li><a class="nav__link" href="#"><i data-lucide="notepad-text"></i><span>Úkoly a poznámky</span></a></li>
+          <li><a class="nav__link" href="#"><i data-lucide="gamepad-2"></i><span>Herní přehled</span></a></li>
+          <li><a class="nav__link" href="#"><i data-lucide="cog"></i><span>Automatizace</span></a></li>
+        </ul>
+        <ul class="nav__list nav__list--secondary">
+          <li><a class="nav__link" href="#"><i data-lucide="settings"></i><span>Nastavení</span></a></li>
+        </ul>
+      </nav>
+
+      <figure class="quote-card">
+        <img src="assets/img/quote-mountain.svg" width="166" height="197" alt="">
+        <figcaption>Malé kroky vedou<br>k velkým výsledkům.</figcaption>
+      </figure>
+    </aside>
+
+    <div class="sidebar-backdrop" id="sidebar-backdrop" hidden></div>
+
+    <!-- ============ HORNÍ LIŠTA ============ -->
+    <header class="topbar">
+      <button class="icon-btn topbar__menu" id="menu-toggle" type="button" aria-label="Otevřít menu" aria-controls="sidebar" aria-expanded="false">
+        <i data-lucide="menu"></i>
+      </button>
+
+      <div class="greeting">
+        <svg class="greeting__orb" aria-hidden="true"><use href="#i-orb"/></svg>
+        <p class="greeting__text">
+          <strong>Ahoj Jakube,</strong>
+          <span>tady je tvůj přehled na dnešní den.</span>
+        </p>
+      </div>
+
+      <form class="search" role="search" action="https://duckduckgo.com/" method="get" target="_blank">
+        <i data-lucide="search"></i>
+        <input class="search__input" id="search" type="search" name="q" placeholder="Hledat na internetu... (Ctrl + K)" aria-label="Hledat na internetu" autocomplete="off">
+      </form>
+
+      <div class="topbar__actions">
+        <button class="icon-btn" type="button" aria-label="Přepnout světlý motiv"><i data-lucide="sun"></i></button>
+        <button class="icon-btn" type="button" aria-label="Nastavení"><i data-lucide="settings"></i></button>
+        <div class="window-controls">
+          <button class="icon-btn" type="button" aria-label="Minimalizovat"><i data-lucide="minus"></i></button>
+          <button class="icon-btn" type="button" aria-label="Maximalizovat"><i data-lucide="square"></i></button>
+          <button class="icon-btn icon-btn--close" type="button" aria-label="Zavřít"><i data-lucide="x"></i></button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ============ OBSAH ============ -->
+    <main class="main" id="main">
+      <h1 class="sr-only">Přehled</h1>
+      <div class="dashboard">
+
+        <!-- Počasí -->
+        <section class="card weather" aria-labelledby="weather-title">
+          <div class="weather__layout">
+          <div class="weather__info">
+            <h2 class="card__title" id="weather-title"><i data-lucide="house"></i>Počasí</h2>
+            <p class="weather__place"><i data-lucide="map-pin"></i>Praha</p>
+            <div class="weather__now">
+              <svg class="weather__icon" aria-hidden="true"><use href="#wx-partly"/></svg>
+              <p class="weather__temp">14<span>°C</span></p>
+            </div>
+            <p class="weather__cond">Polojasno</p>
+            <p class="weather__meta">Vlhkost: 68% <span class="dot-sep" aria-hidden="true">•</span> Vítr: 12 km/h</p>
+          </div>
+
+          <ol class="forecast" aria-label="Předpověď na 5 dní">
+            <li class="forecast__day">
+              <span class="forecast__name">Dnes</span>
+              <svg class="forecast__icon" role="img" aria-label="Polojasno"><use href="#wx-partly"/></svg>
+              <span class="forecast__hi">14°</span><span class="forecast__lo">7°</span>
+            </li>
+            <li class="forecast__day">
+              <span class="forecast__name">Zítra</span>
+              <svg class="forecast__icon" role="img" aria-label="Polojasno"><use href="#wx-partly"/></svg>
+              <span class="forecast__hi">16°</span><span class="forecast__lo">8°</span>
+            </li>
+            <li class="forecast__day">
+              <span class="forecast__name">Čt</span>
+              <svg class="forecast__icon forecast__icon--sm" role="img" aria-label="Polojasno"><use href="#wx-partly"/></svg>
+              <span class="forecast__hi">17°</span><span class="forecast__lo">9°</span>
+            </li>
+            <li class="forecast__day">
+              <span class="forecast__name">Pá</span>
+              <svg class="forecast__icon" role="img" aria-label="Déšť"><use href="#wx-rain"/></svg>
+              <span class="forecast__hi">15°</span><span class="forecast__lo">8°</span>
+            </li>
+            <li class="forecast__day">
+              <span class="forecast__name">So</span>
+              <svg class="forecast__icon" role="img" aria-label="Přeháňky"><use href="#wx-showers"/></svg>
+              <span class="forecast__hi">13°</span><span class="forecast__lo">6°</span>
+            </li>
+          </ol>
+          </div>
+        </section>
+
+        <!-- Čas, datum a dnešní události -->
+        <section class="card clock" aria-label="Čas a dnešní události">
+          <img class="clock__bg" src="assets/img/hero-mountain.svg" width="880" height="440" alt="">
+          <div class="clock__content">
+            <time class="clock__time" id="clock-time" datetime="15:42">15:42</time>
+            <p class="clock__date" id="clock-date">Středa, 30. dubna 2025</p>
+
+            <h2 class="clock__today"><i data-lucide="calendar-days"></i>Dnes</h2>
+            <ul class="agenda">
+              <li class="agenda__item"><time>17:00</time><span>Trénink</span></li>
+              <li class="agenda__item"><time>20:00</time><span>Diablo IV – Season push</span></li>
+            </ul>
+          </div>
+          <blockquote class="clock__quote">„Nejlepší čas<br>na změnu je teď.“</blockquote>
+        </section>
+
+        <!-- Novinky -->
+        <section class="card news" aria-labelledby="news-title">
+          <header class="card__header">
+            <h2 class="card__title" id="news-title"><i data-lucide="newspaper"></i>Novinky</h2>
+            <div class="select">
+              <select class="select__input" id="news-region" aria-label="Zdroj novinek">
+                <option value="all">ČR / Svět</option>
+                <option value="cz">ČR</option>
+                <option value="world">Svět</option>
+              </select>
+              <i data-lucide="chevron-down"></i>
+            </div>
+          </header>
+          <ul class="news__list">
+            <li>
+              <a class="news__item" href="#" data-region="cz">
+                <img class="news__thumb" src="assets/img/news-defense.svg" width="76" height="57" alt="">
+                <span class="news__body">
+                  <span class="news__title">Česko posiluje obranu: vláda schválila nákup moderní techniky za miliardy</span>
+                  <span class="news__meta"><span class="news__source">iDNES.cz</span><span class="dot-sep" aria-hidden="true">•</span>před 2 hodinami</span>
+                </span>
+              </a>
+            </li>
+            <li>
+              <a class="news__item" href="#" data-region="world">
+                <img class="news__thumb" src="assets/img/news-energy.svg" width="76" height="57" alt="">
+                <span class="news__body">
+                  <span class="news__title">EU chce rychlejší přechod na čistou energii</span>
+                  <span class="news__meta"><span class="news__source">Seznam Zprávy</span><span class="dot-sep" aria-hidden="true">•</span>před 4 hodinami</span>
+                </span>
+              </a>
+            </li>
+            <li>
+              <a class="news__item" href="#" data-region="world">
+                <img class="news__thumb" src="assets/img/news-diablo.svg" width="76" height="57" alt="">
+                <span class="news__body">
+                  <span class="news__title">Nový update pro Diablo IV přináší několik zásadních změn</span>
+                  <span class="news__meta"><span class="news__source">Games.cz</span><span class="dot-sep" aria-hidden="true">•</span>před 6 hodinami</span>
+                </span>
+              </a>
+            </li>
+            <li>
+              <a class="news__item" href="#" data-region="cz">
+                <img class="news__thumb" src="assets/img/news-crypto.svg" width="76" height="57" alt="">
+                <span class="news__body">
+                  <span class="news__title">Češi stále více investují do kryptoměn</span>
+                  <span class="news__meta"><span class="news__source">Novinky.cz</span><span class="dot-sep" aria-hidden="true">•</span>před 8 hodinami</span>
+                </span>
+              </a>
+            </li>
+            <li>
+              <a class="news__item" href="#" data-region="world">
+                <img class="news__thumb" src="assets/img/news-esport.svg" width="76" height="57" alt="">
+                <span class="news__body">
+                  <span class="news__title">G2 si zajistilo postup do další fáze LEC</span>
+                  <span class="news__meta"><span class="news__source">EsportMania</span><span class="dot-sep" aria-hidden="true">•</span>před 10 hodinami</span>
+                </span>
+              </a>
+            </li>
+          </ul>
+        </section>
+
+        <!-- Úkoly a poznámky -->
+        <section class="card tasks" aria-labelledby="tasks-title">
+          <div class="tasks__layout">
+          <header class="card__header">
+            <h2 class="card__title" id="tasks-title"><i data-lucide="square-check"></i>Úkoly a poznámky</h2>
+            <button class="icon-btn icon-btn--sm" type="button" aria-label="Přidat úkol" data-add-task><i data-lucide="plus"></i></button>
+          </header>
+
+          <div class="tabs" role="group" aria-label="Filtr úkolů">
+            <button class="tabs__tab is-active" type="button" aria-pressed="true">Dnes</button>
+            <button class="tabs__tab" type="button" aria-pressed="false">Tento týden</button>
+            <button class="tabs__tab" type="button" aria-pressed="false">Vše</button>
+          </div>
+
+          <div class="tasks__body">
+            <ul class="task-list" id="task-list">
+              <li>
+                <label class="task">
+                  <input class="checkbox" type="checkbox">
+                  <span class="task__text">
+                    <span class="task__title">Zkontrolovat ceny na Alza.cz (grafická karta)</span>
+                    <span class="task__due">Dnes 16:00</span>
+                  </span>
+                </label>
+              </li>
+              <li>
+                <label class="task">
+                  <input class="checkbox" type="checkbox">
+                  <span class="task__text">
+                    <span class="task__title">Dokončit video pro YouTube</span>
+                    <span class="task__due">Dnes 19:00</span>
+                  </span>
+                </label>
+              </li>
+              <li>
+                <label class="task">
+                  <input class="checkbox" type="checkbox" checked>
+                  <span class="task__text">
+                    <span class="task__title">Trénink</span>
+                    <span class="task__due">Dnes 17:00</span>
+                  </span>
+                </label>
+              </li>
+              <li>
+                <label class="task">
+                  <input class="checkbox" type="checkbox">
+                  <span class="task__text">
+                    <span class="task__title">Napsat poznámky k Diablo IV buildu</span>
+                    <span class="task__due">Dnes 21:00</span>
+                  </span>
+                </label>
+              </li>
+              <li>
+                <label class="task">
+                  <input class="checkbox" type="checkbox">
+                  <span class="task__text">
+                    <span class="task__title">Zavolat do banky</span>
+                    <span class="task__due">Zítra 10:00</span>
+                  </span>
+                </label>
+              </li>
+            </ul>
+
+            <aside class="notes" aria-labelledby="notes-title">
+              <header class="notes__header">
+                <h3 class="notes__title" id="notes-title">Rychlé poznámky</h3>
+                <button class="icon-btn icon-btn--xs" type="button" aria-label="Upravit poznámky" id="notes-edit"><i data-lucide="pencil"></i></button>
+              </header>
+              <ul class="notes__list" id="notes-list">
+                <li>Diablo IV – farming runy</li>
+                <li>Zkontrolovat stav scaffoldu</li>
+                <li>Plán na víkend – Sapa?</li>
+              </ul>
+            </aside>
+          </div>
+
+          <form class="task-add" id="task-add">
+            <button class="task-add__btn" type="button" id="task-add-toggle"><i data-lucide="plus"></i>Přidat úkol nebo poznámku</button>
+            <div class="task-add__field" hidden>
+              <input class="input" id="task-input" type="text" placeholder="Název úkolu…" aria-label="Název nového úkolu" autocomplete="off">
+              <button class="btn btn--primary btn--sm" type="submit">Přidat</button>
+            </div>
+          </form>
+          </div>
+        </section>
+
+        <!-- Herní přehled -->
+        <section class="card games" aria-labelledby="games-title">
+          <header class="card__header">
+            <h2 class="card__title" id="games-title"><i data-lucide="gamepad-2" class="text-accent"></i>Herní přehled</h2>
+            <a class="pill-btn" href="#">Všechny hry <i data-lucide="arrow-right"></i></a>
+          </header>
+          <ul class="game-list">
+            <li>
+              <a class="game" href="#">
+                <img class="game__art" src="assets/img/game-diablo.svg" width="360" height="352" alt="">
+                <span class="game__info">
+                  <span class="game__title">Diablo IV</span>
+                  <span class="game__sub">Sezóna 8</span>
+                  <span class="game__stat">Level 235</span>
+                  <span class="game__activity"><span class="status-dot status-dot--green"></span>Poslední aktivita: včera</span>
+                </span>
+              </a>
+            </li>
+            <li>
+              <a class="game" href="#">
+                <img class="game__art" src="assets/img/game-lol.svg" width="360" height="352" alt="">
+                <span class="game__info">
+                  <span class="game__title">League of Legends</span>
+                  <span class="game__sub">Ranked</span>
+                  <span class="game__stat">Gold II <span class="dot-sep" aria-hidden="true">•</span> LP 45</span>
+                  <span class="game__activity"><span class="status-dot status-dot--blue"></span>Poslední aktivita: před 2 dny</span>
+                </span>
+              </a>
+            </li>
+            <li>
+              <a class="game" href="#">
+                <img class="game__art" src="assets/img/game-bf6.svg" width="360" height="352" alt="">
+                <span class="game__info">
+                  <span class="game__title">Battlefield 6</span>
+                  <span class="game__sub"></span>
+                  <span class="game__stat">Level 12</span>
+                  <span class="game__activity"><span class="status-dot"></span>Poslední aktivita: před 3 dny</span>
+                </span>
+              </a>
+            </li>
+          </ul>
+        </section>
+
+        <!-- AI automatizace -->
+        <section class="card automations" aria-labelledby="auto-title">
+          <header class="card__header">
+            <h2 class="card__title" id="auto-title"><i data-lucide="zap" class="icon-zap"></i>AI automatizace</h2>
+            <button class="icon-btn icon-btn--sm" type="button" aria-label="Nová automatizace"><i data-lucide="plus"></i></button>
+          </header>
+          <ul class="auto-list">
+            <li class="auto">
+              <span class="auto__icon auto__icon--green"><i data-lucide="calendar-clock"></i></span>
+              <span class="auto__text"><span class="auto__title">Denní souhrn</span><span class="auto__sub">Každé ráno v 8:00</span></span>
+              <label class="switch"><input type="checkbox" checked><span class="switch__track" aria-hidden="true"></span><span class="sr-only">Denní souhrn</span></label>
+            </li>
+            <li class="auto">
+              <span class="auto__icon auto__icon--green"><i data-lucide="radar"></i></span>
+              <span class="auto__text"><span class="auto__title">Hlídání cen</span><span class="auto__sub">Alza.cz, CZC, Steam</span></span>
+              <label class="switch"><input type="checkbox" checked><span class="switch__track" aria-hidden="true"></span><span class="sr-only">Hlídání cen</span></label>
+            </li>
+            <li class="auto">
+              <span class="auto__icon auto__icon--orange"><i data-lucide="newspaper"></i></span>
+              <span class="auto__text"><span class="auto__title">Novinky podle zájmů</span><span class="auto__sub">Hry, technologie, hardware</span></span>
+              <label class="switch"><input type="checkbox" checked><span class="switch__track" aria-hidden="true"></span><span class="sr-only">Novinky podle zájmů</span></label>
+            </li>
+            <li class="auto">
+              <span class="auto__icon auto__icon--blue"><i data-lucide="image-up"></i></span>
+              <span class="auto__text"><span class="auto__title">Zálohování fotek</span><span class="auto__sub">Každý pátek v 20:00</span></span>
+              <label class="switch"><input type="checkbox"><span class="switch__track" aria-hidden="true"></span><span class="sr-only">Zálohování fotek</span></label>
+            </li>
+            <li class="auto">
+              <span class="auto__icon auto__icon--green"><i data-lucide="brush-cleaning"></i></span>
+              <span class="auto__text"><span class="auto__title">Čištění souborů</span><span class="auto__sub">Jednou za měsíc</span></span>
+              <label class="switch"><input type="checkbox"><span class="switch__track" aria-hidden="true"></span><span class="sr-only">Čištění souborů</span></label>
+            </li>
+          </ul>
+        </section>
+      </div>
+
+      <!-- ============ PRAVÝ SIDEBAR ============ -->
+      <aside class="rightbar" aria-label="Asistent a nástroje">
+
+        <!-- AI asistent chat -->
+        <section class="card assistant" aria-labelledby="assistant-title">
+          <header class="assistant__header">
+            <span class="assistant__avatar" aria-hidden="true"><i data-lucide="bot"></i></span>
+            <div class="assistant__who">
+              <h2 class="assistant__name" id="assistant-title">AI asistent</h2>
+              <span class="assistant__status"><span class="status-dot status-dot--green"></span>Online</span>
+            </div>
+            <button class="icon-btn icon-btn--sm" type="button" aria-label="Možnosti chatu"><i data-lucide="ellipsis-vertical"></i></button>
+          </header>
+
+          <div class="chat" id="chat" role="log" aria-live="polite">
+            <div class="bubble bubble--bot">
+              <p>Ahoj Jakube! 👋</p>
+              <p>S čím ti dnes můžu pomoci?</p>
+            </div>
+            <ul class="suggestions" id="suggestions">
+              <li><button class="chip" type="button"><i data-lucide="sparkle"></i>Shrň mi dnešní novinky</button></li>
+              <li><button class="chip" type="button"><i data-lucide="sparkle"></i>Jaké bude zítra počasí?</button></li>
+              <li><button class="chip" type="button"><i data-lucide="sparkle"></i>Které hry dneska hrají?</button></li>
+              <li><button class="chip" type="button"><i data-lucide="sparkle"></i>Mám nějaké důležité úkoly?</button></li>
+              <li><button class="chip chip--note" type="button"><i data-lucide="notebook-pen"></i>Napiš mi připomínku...</button></li>
+            </ul>
+          </div>
+
+          <form class="composer" id="composer">
+            <div class="composer__box">
+              <input class="composer__input" id="composer-input" type="text" placeholder="Napiš zprávu..." aria-label="Zpráva pro AI asistenta" autocomplete="off">
+              <button class="composer__send" type="submit" aria-label="Odeslat zprávu"><i data-lucide="send-horizontal"></i></button>
+            </div>
+            <p class="composer__hint">Použij Ctrl + Enter pro odeslání</p>
+          </form>
+        </section>
+
+        <!-- Rychlé akce -->
+        <section class="card quick" aria-labelledby="quick-title">
+          <h2 class="card__title" id="quick-title"><svg class="icon-dots" aria-hidden="true"><use href="#i-dots"/></svg>Rychlé akce</h2>
+          <div class="quick__grid">
+            <button class="action" type="button"><span class="action__icon action__icon--teal"><i data-lucide="globe"></i></span><span class="action__label">Otevřít web</span></button>
+            <button class="action" type="button"><span class="action__icon action__icon--blue"><i data-lucide="folder"></i></span><span class="action__label">Otevřít složku</span></button>
+            <button class="action" type="button"><span class="action__icon action__icon--cyan"><i data-lucide="app-window"></i></span><span class="action__label">Spustit aplikaci</span></button>
+            <button class="action" type="button"><span class="action__icon action__icon--violet"><i data-lucide="notebook-pen"></i></span><span class="action__label">Uložit poznámku</span></button>
+          </div>
+        </section>
+
+        <!-- Systém -->
+        <section class="card system" aria-labelledby="system-title">
+          <h2 class="card__title" id="system-title"><i data-lucide="settings"></i>Systém</h2>
+          <ul class="meters">
+            <li class="meter">
+              <i data-lucide="cpu"></i>
+              <div class="meter__body">
+                <div class="meter__row"><span>CPU</span><span>12%</span></div>
+                <div class="meter__bar" role="progressbar" aria-label="Využití CPU" aria-valuenow="12" aria-valuemin="0" aria-valuemax="100"><span style="--value: 12%"></span></div>
+              </div>
+            </li>
+            <li class="meter">
+              <i data-lucide="memory-stick"></i>
+              <div class="meter__body">
+                <div class="meter__row"><span>RAM</span><span>34%</span></div>
+                <div class="meter__bar" role="progressbar" aria-label="Využití RAM" aria-valuenow="34" aria-valuemin="0" aria-valuemax="100"><span style="--value: 34%"></span></div>
+              </div>
+            </li>
+            <li class="meter">
+              <i data-lucide="hard-drive"></i>
+              <div class="meter__body">
+                <div class="meter__row"><span>Disk (C:)</span><span>68%</span></div>
+                <div class="meter__bar" role="progressbar" aria-label="Zaplnění disku C:" aria-valuenow="68" aria-valuemin="0" aria-valuemax="100"><span style="--value: 68%"></span></div>
+              </div>
+            </li>
+          </ul>
+        </section>
+      </aside>
+    </main>
+
+    <!-- ============ STAVOVÝ ŘÁDEK ============ -->
+    <footer class="statusbar">
+      <p class="statusbar__left"><span class="status-dot status-dot--green"></span>AI Dashboard v1.0 <span class="statusbar__sep">|</span> Lokální režim</p>
+      <p class="statusbar__right"><svg class="statusbar__os" aria-hidden="true"><use href="#i-windows"/></svg>Windows 11 <span class="statusbar__sep">|</span> <time id="status-time">15:42</time></p>
+    </footer>
+  </div>
+
+</body>
+</html>
