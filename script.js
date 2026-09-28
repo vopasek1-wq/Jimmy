@@ -7,6 +7,16 @@
 
   const renderIcons = () => window.lucide?.createIcons();
 
+  /* Ukládání stavu mezi spuštěními (localStorage je v Electronu trvalý). */
+  const store = {
+    get(key) {
+      try { return JSON.parse(localStorage.getItem(`dashboard:${key}`)); } catch { return null; }
+    },
+    set(key, value) {
+      try { localStorage.setItem(`dashboard:${key}`, JSON.stringify(value)); } catch { /* bez úložiště */ }
+    },
+  };
+
   /* ---------- Hodiny a datum (česky) ---------- */
   const timeEls = [$("#clock-time"), $("#status-time")].filter(Boolean);
   const dateEl = $("#clock-date");
@@ -105,23 +115,43 @@
     }
   });
 
-  taskForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const title = taskInput.value.trim();
-    if (!title) return;
-
+  const createTask = ({ title, due = "Dnes", done = false }) => {
     const li = document.createElement("li");
     li.innerHTML = `
       <label class="task">
         <input class="checkbox" type="checkbox">
         <span class="task__text">
           <span class="task__title"></span>
-          <span class="task__due">Dnes</span>
+          <span class="task__due"></span>
         </span>
       </label>`;
     $(".task__title", li).textContent = title;
+    $(".task__due", li).textContent = due;
+    $(".checkbox", li).checked = done;
     taskList.append(li);
-    li.scrollIntoView({ block: "nearest" });
+    return li;
+  };
+
+  const saveTasks = () => store.set("tasks", $$("li", taskList).map((li) => ({
+    title: $(".task__title", li).textContent,
+    due: $(".task__due", li).textContent,
+    done: $(".checkbox", li).checked,
+  })));
+
+  const savedTasks = store.get("tasks");
+  if (Array.isArray(savedTasks)) {
+    taskList.replaceChildren();
+    savedTasks.forEach(createTask);
+  }
+  taskList.addEventListener("change", saveTasks);
+
+  taskForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const title = taskInput.value.trim();
+    if (!title) return;
+
+    createTask({ title }).scrollIntoView({ block: "nearest" });
+    saveTasks();
     taskInput.value = "";
     taskField.hidden = true;
   });
@@ -129,12 +159,33 @@
   /* ---------- Rychlé poznámky (editace přímo v seznamu) ---------- */
   const notesList = $("#notes-list");
   const notesEdit = $("#notes-edit");
-  notesEdit.addEventListener("click", () => {
-    const editing = notesList.isContentEditable;
-    notesList.contentEditable = String(!editing);
-    notesEdit.setAttribute("aria-pressed", String(!editing));
-    if (!editing) notesList.focus();
-  });
+  const savedNotes = store.get("notes");
+  if (Array.isArray(savedNotes)) {
+    notesList.replaceChildren(...savedNotes.map((text) => {
+      const li = document.createElement("li");
+      li.textContent = text;
+      return li;
+    }));
+  }
+  const saveNotes = () => store.set("notes", $$("li", notesList).map((li) => li.textContent.trim()).filter(Boolean));
+
+  const setNotesEditing = (editing) => {
+    notesList.contentEditable = String(editing);
+    notesEdit.setAttribute("aria-pressed", String(editing));
+    if (editing) {
+      notesList.focus();
+    } else {
+      saveNotes();
+    }
+  };
+  notesEdit.addEventListener("click", () => setNotesEditing(!notesList.isContentEditable));
+  notesList.addEventListener("focusout", () => { if (notesList.isContentEditable) saveNotes(); });
+
+  /* ---------- AI automatizace: stav přepínačů ---------- */
+  const switches = $$(".automations .switch input");
+  const savedSwitches = store.get("automations");
+  if (Array.isArray(savedSwitches)) switches.forEach((input, i) => { input.checked = Boolean(savedSwitches[i]); });
+  switches.forEach((input) => input.addEventListener("change", () => store.set("automations", switches.map((s) => s.checked))));
 
   /* ---------- AI chat (simulované odpovědi) ---------- */
   const chat = $("#chat");
@@ -202,6 +253,51 @@
         send(text);
       }
     });
+  });
+
+  /* ---------- Desktop (Electron): okno, systém, rychlé akce ---------- */
+  const desktop = window.desktop;
+  if (desktop) {
+    document.documentElement.classList.add("is-desktop");
+
+    $('[data-win="minimize"]').addEventListener("click", desktop.minimize);
+    $('[data-win="maximize"]').addEventListener("click", desktop.toggleMaximize);
+    $('[data-win="close"]').addEventListener("click", desktop.close);
+
+    const maxBtn = $('[data-win="maximize"]');
+    desktop.onMaximizedChange((maximized) => {
+      maxBtn.setAttribute("aria-label", maximized ? "Obnovit" : "Maximalizovat");
+      maxBtn.innerHTML = `<i data-lucide="${maximized ? "copy" : "square"}"></i>`;
+      renderIcons();
+    });
+
+    desktop.systemInfo().then(({ os, version }) => {
+      $("#os-name").textContent = os;
+      $("#app-version").textContent = version.replace(/\.0$/, "");
+    });
+
+    const updateMeters = async () => {
+      const stats = await desktop.systemStats();
+      Object.entries(stats).forEach(([key, value]) => {
+        if (value == null) return;
+        const bar = $(`[data-meter="${key}"]`);
+        $(`[data-meter-value="${key}"]`).textContent = `${value}%`;
+        bar.setAttribute("aria-valuenow", value);
+        $("span", bar).style.setProperty("--value", `${value}%`);
+      });
+    };
+    updateMeters();
+    setInterval(updateMeters, 2000);
+  }
+
+  const actions = {
+    "open-web": () => (desktop ? desktop.openWeb() : window.open("https://www.google.com/", "_blank", "noopener")),
+    "open-folder": () => desktop?.openFolder(),
+    "launch-app": () => desktop?.launchApp(),
+    "save-note": () => setNotesEditing(true),
+  };
+  $$("[data-action]").forEach((btn) => {
+    btn.addEventListener("click", () => actions[btn.dataset.action]?.());
   });
 
   renderIcons();

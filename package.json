@@ -1,0 +1,75 @@
+{
+  "name": "jimmy-ai-dashboard",
+  "productName": "AI Dashboard",
+  "version": "1.0.0",
+  "description": "AI Dashboard – desktopová aplikace pro Windows (Electron)",
+  "author": "Jimmy",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win --x64",
+    "dist:portable": "electron-builder --win portable --x64",
+    "dist:zip": "electron-builder --win zip --x64"
+  },
+  "devDependencies": {
+    "electron": "^44.4.5",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "cz.jimmy.aidashboard",
+    "productName": "AI Dashboard",
+    "copyright": "© 2026 Jimmy",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "styles.css",
+      "script.js",
+      "assets/**/*",
+      "vendor/**/*",
+      "build/icon.png",
+      "package.json"
+    ],
+    "win": {
+      "icon": "build/icon.png",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "AI-Dashboard-${version}-win-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "AI Dashboard",
+      "artifactName": "AI-Dashboard-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "AI-Dashboard-${version}-portable.${ext}"
+    }
+  }
+}

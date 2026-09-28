@@ -1,28 +1,54 @@
-# Jimmy – AI Dashboard
+# Jimmy – AI Dashboard pro Windows
 
-Responzivní UI dashboardu v tmavém tématu (HTML + CSS Grid/Flexbox + trocha JavaScriptu),
-postavené podle návrhu 1536 × 1024 px.
+Desktopová aplikace pro Windows (Electron) s dashboardem v tmavém tématu podle návrhu 1536 × 1024 px.
+Okno je bez systémového rámečku – titulní lišta z návrhu funguje jako skutečná: tažení okna,
+dvojklik pro maximalizaci, tlačítka minimalizovat / maximalizovat / zavřít.
 
-<img src="docs/preview-desktop.png" alt="Náhled dashboardu na desktopu" width="100%">
+<img src="docs/preview-desktop.png" alt="Náhled aplikace" width="100%">
 
-## Spuštění
+## Stažení a instalace
 
-Stačí otevřít `index.html` v prohlížeči. Případně přes lokální server:
+Sestavené soubory jsou v GitHub Actions → workflow **Windows build** → artefakt `AI-Dashboard-Windows`:
+
+| Soubor | Použití |
+| --- | --- |
+| `AI-Dashboard-Setup-1.0.0.exe` | Instalátor (zástupce na ploše a v nabídce Start) |
+| `AI-Dashboard-1.0.0-portable.exe` | Přenosná verze – jeden soubor, bez instalace |
+| `AI-Dashboard-1.0.0-win-x64.zip` | Rozbalit a spustit `AI Dashboard.exe` |
+
+Aplikace není digitálně podepsaná, takže Windows SmartScreen může při prvním spuštění zobrazit
+varování → **Další informace** → **Přesto spustit**.
+
+## Co funguje „naostro“
+
+- **Ovládání okna** z vlastní titulní lišty (minimalizace, maximalizace/obnovení, zavření).
+- **Systém:** skutečné vytížení CPU, paměti RAM a zaplnění disku C: (obnovuje se každé 2 s),
+  ve stavovém řádku verze Windows (10/11).
+- **Rychlé akce:** Otevřít web (výchozí prohlížeč), Otevřít složku (Dokumenty),
+  Spustit aplikaci (výběr .exe/.lnk), Uložit poznámku.
+- **Ukládání:** úkoly, rychlé poznámky a stav přepínačů automatizací zůstávají i po restartu.
+- Vyhledávání a odkazy se otevírají ve výchozím prohlížeči; ikony a písmo jsou přibalené, aplikace funguje offline.
+- Počasí, novinky, herní přehled a odpovědi AI asistenta jsou zatím ukázková data.
+
+## Vývoj
 
 ```bash
-npx serve .
+npm install
+npm start            # spustí aplikaci
+npm run dist         # sestaví instalátor, portable .exe a zip do složky dist/ (na Windows)
+npm run dist:zip     # jen zip – jde sestavit i na Linuxu/macOS
 ```
-
-Ikony (Lucide) a písmo (Roboto) se načítají z CDN, takže je potřeba připojení k internetu.
-
-## Struktura
 
 | Soubor | Obsah |
 | --- | --- |
-| `index.html` | Kompletní markup: levý sidebar, horní lišta, 6 widgetů ve středu, pravý panel (AI chat, rychlé akce, systém), stavový řádek |
-| `styles.css` | Design tokeny (`:root`), layout, komponenty, stavy hover/active/focus, responzivita |
-| `script.js` | Živé hodiny, filtr novinek, záložky a přidávání úkolů, editace poznámek, simulovaný chat, mobilní menu, `Ctrl + K` |
-| `assets/img/` | Náhradní (placeholder) SVG obrázky ve stejných poměrech stran jako v návrhu |
+| `main.js` | Hlavní proces Electronu: okno bez rámečku, systémové údaje, rychlé akce |
+| `preload.js` | Bezpečný most mezi stránkou a hlavním procesem (`window.desktop`) |
+| `index.html` | Markup dashboardu |
+| `styles.css` | Design tokeny (`:root`), layout, komponenty, stavy hover/active/focus |
+| `script.js` | Hodiny, úkoly, poznámky, chat, filtr novinek, napojení na desktop API |
+| `assets/img/` | Náhradní (placeholder) SVG obrázky |
+| `vendor/` | Lokální kopie ikon Lucide a písma Roboto |
+| `build/icon.png` | Ikona aplikace |
 
 ## Layout
 
@@ -34,12 +60,10 @@ Ikony (Lucide) a písmo (Roboto) se načítají z CDN, takže je potřeba připo
 
 | Šířka okna | Chování |
 | --- | --- |
-| ≥ 1440 px | Rozložení 1 : 1 podle návrhu |
+| ≥ 1440 px | Rozložení 1 : 1 podle návrhu (výchozí velikost okna) |
 | 1280–1439 px | Střed ve 2 sloupcích |
 | 1100–1279 px | Sidebar se zúží na lištu s ikonami |
-| 960–1099 px | Pravý panel se přesune pod obsah |
-| < 960 px | Sidebar se vysouvá tlačítkem ☰ (off-canvas) |
-| < 720 px | Vše v jednom sloupci |
+| 1024–1099 px | Pravý panel se přesune pod obsah (minimální šířka okna je 1024 px) |
 
 ## Úpravy vzhledu
 
@@ -52,13 +76,6 @@ stavy `:hover`, `:active` a `:focus-visible`; animace respektují `prefers-reduc
 ## Poznámky
 
 - Obrázky v `assets/img/` jsou jen zástupné ilustrace – nahraďte je skutečnými (stejné poměry stran).
-- Hodiny ve widgetu i ve stavovém řádku ukazují aktuální čas a datum (česky); v HTML je jako
-  výchozí hodnota stav z návrhu.
+- Hodiny ve widgetu i ve stavovém řádku ukazují aktuální čas a datum (česky).
 - Dva překlepy z návrhu jsou opravené: „Herni přehled“ → „Herní přehled“,
   „Které hry dneska hrajú?“ → „Které hry dneska hrají?“.
-
-<details>
-<summary>Náhled na mobilu (390 px)</summary>
-
-<img src="docs/preview-mobile.png" alt="Náhled dashboardu na mobilu" width="320">
-</details>

@@ -1,0 +1,44 @@
+name: Windows build
+
+on:
+  push:
+    branches: ["**"]
+    paths-ignore: ["README.md", "docs/**"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalace závislostí
+        run: npm ci
+
+      - name: Sestavení (instalátor, portable, zip)
+        run: npm run dist
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+      - name: Zkušební spuštění aplikace
+        shell: pwsh
+        run: |
+          $exe = Join-Path $PWD "dist\win-unpacked\AI Dashboard.exe"
+          $p = Start-Process -FilePath $exe -PassThru
+          Start-Sleep -Seconds 15
+          if ($p.HasExited) { throw "Aplikace se ukončila s kódem $($p.ExitCode)" }
+          Stop-Process -Id $p.Id -Force
+          Write-Host "Aplikace běží."
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AI-Dashboard-Windows
+          path: |
+            dist/*.exe
+            dist/*.zip
+          if-no-files-found: error
