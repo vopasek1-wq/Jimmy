@@ -450,6 +450,17 @@ tfoot .sum-label td {
     return e;
   }
 
+  // stejné délky sloučí: [548, 548, 440] → "2 ks × 548 mm + 1 ks × 440 mm"
+  function piecesText(pieces) {
+    var parts = [];
+    pieces.forEach(function (l) {
+      var last = parts[parts.length - 1];
+      if (last && last.len === l) last.n++;
+      else parts.push({ len: l, n: 1 });
+    });
+    return parts.map(function (p) { return p.n + " ks × " + fmt(p.len) + " mm"; }).join(" + ");
+  }
+
   /* ---------- Rows ---------- */
   function addRow(len, qty) {
     var row = el("div", "prow");
@@ -716,7 +727,7 @@ tfoot .sum-label td {
 
       var bar = el("div", "bar");
       bar.setAttribute("role", "img");
-      bar.setAttribute("aria-label", g.pieces.map(fmt).join(" + ") + " mm, odřezek " + fmt(g.rest) + " mm");
+      bar.setAttribute("aria-label", piecesText(g.pieces) + ", odřezek " + fmt(g.rest) + " mm");
       g.pieces.forEach(function (p, i) {
         if (i > 0 && kerf > 0) { var k = el("span", "kerf"); k.title = "prořez " + fmt(kerf) + " mm"; k.setAttribute("data-label", fmt(kerf) + " mm"); bar.append(k); }
         var s = el("span", "seg");
@@ -737,7 +748,7 @@ tfoot .sum-label td {
         bar.append(r);
       }
       body.append(bar);
-      body.append(el("div", "cuts", g.pieces.map(function (x) { return fmt(x) + " mm"; }).join(" + ")));
+      body.append(el("div", "cuts", piecesText(g.pieces)));
       card.append(body);
 
       var rest = el("div", "rest");
@@ -803,7 +814,7 @@ tfoot .sum-label td {
         groups.forEach(function (g) {
           var t2 = f + g.count - 1;
           lines.push(g.count + "× " + (g.count === 1 ? "Trubka " + f : "Trubky " + f + "–" + t2) + ": " +
-            g.pieces.map(fmt).join(" + ") + " mm, odřezek " + fmt(g.rest) + " mm");
+            piecesText(g.pieces) + ", odřezek " + fmt(g.rest) + " mm");
           f = t2 + 1;
         });
         lines.push("", "Přehled délek:");
@@ -909,7 +920,7 @@ tfoot .sum-label td {
       var ks = bar.querySelectorAll(".kerf");
       var xs = Array.prototype.map.call(ks, function (k) { return k.offsetLeft; });
       Array.prototype.forEach.call(ks, function (k, i) {
-        var tight = (i > 0 && xs[i] - xs[i - 1] < 40) || (i < xs.length - 1 && xs[i + 1] - xs[i] < 40);
+        var tight = (i > 0 && xs[i] - xs[i - 1] < 52) || (i < xs.length - 1 && xs[i + 1] - xs[i] < 52);
         k.classList.toggle("no-label", tight);
       });
     });
