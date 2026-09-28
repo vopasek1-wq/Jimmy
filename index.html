@@ -450,7 +450,7 @@ tfoot .sum-label td {
     return e;
   }
 
-  // stejné délky sloučí: [548, 548, 440] → "2 ks × 548 mm + 1 ks × 440 mm"
+  // stejné délky sloučí: [548, 548, 440] → "2 ks × 548 mm | 1 ks × 440 mm"
   function piecesText(pieces) {
     var parts = [];
     pieces.forEach(function (l) {
@@ -458,7 +458,7 @@ tfoot .sum-label td {
       if (last && last.len === l) last.n++;
       else parts.push({ len: l, n: 1 });
     });
-    return parts.map(function (p) { return p.n + " ks × " + fmt(p.len) + " mm"; }).join(" + ");
+    return parts.map(function (p) { return p.n + " ks × " + fmt(p.len) + " mm"; }).join(" | ");
   }
 
   /* ---------- Rows ---------- */
