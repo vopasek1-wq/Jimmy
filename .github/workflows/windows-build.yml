@@ -6,6 +6,9 @@ on:
     paths-ignore: ["README.md", "docs/**"]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-latest
@@ -42,3 +45,23 @@ jobs:
             dist/*.exe
             dist/*.zip
           if-no-files-found: error
+
+      - name: Zveřejnění ke stažení (GitHub Releases)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: windows-latest-build
+          name: AI Dashboard pro Windows
+          target_commitish: ${{ github.sha }}
+          make_latest: true
+          body: |
+            **Ke stažení:**
+            - `AI-Dashboard-1.0.0-portable.exe` – stačí stáhnout a spustit (bez instalace)
+            - `AI-Dashboard-Setup-1.0.0.exe` – instalátor se zástupcem na ploše
+
+            Windows může při prvním spuštění zobrazit modré okno „Systém Windows ochránil váš počítač“:
+            klikněte na **Další informace** → **Přesto spustit**.
+
+            Sestaveno z commitu ${{ github.sha }}.
+          files: |
+            dist/AI-Dashboard-1.0.0-portable.exe
+            dist/AI-Dashboard-Setup-1.0.0.exe

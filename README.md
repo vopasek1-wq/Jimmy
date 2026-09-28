@@ -8,7 +8,8 @@ dvojklik pro maximalizaci, tlačítka minimalizovat / maximalizovat / zavřít.
 
 ## Stažení a instalace
 
-Sestavené soubory jsou v GitHub Actions → workflow **Windows build** → artefakt `AI-Dashboard-Windows`:
+**Stažení:** [github.com/vopasek1-wq/Jimmy/releases/latest](https://github.com/vopasek1-wq/Jimmy/releases/latest)
+(soubory jsou také v GitHub Actions → workflow **Windows build** → artefakt `AI-Dashboard-Windows`):
 
 | Soubor | Použití |
 | --- | --- |
