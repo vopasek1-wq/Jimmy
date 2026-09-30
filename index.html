@@ -9,10 +9,12 @@
   <link rel="icon" href="assets/img/logo-mark.png" type="image/png">
 
   <link rel="stylesheet" href="vendor/fonts.css">
+  <link rel="stylesheet" href="vendor/gridstack.min.css">
   <link rel="stylesheet" href="styles.css">
 
   <!-- Ikony: Lucide 1.48.0 (https://lucide.dev), lokální kopie – aplikace funguje i offline -->
   <script defer src="vendor/lucide.min.js"></script>
+  <script defer src="vendor/gridstack-all.js"></script>
   <script defer src="script.js"></script>
 </head>
 <body>
@@ -193,6 +195,8 @@
       </form>
 
       <div class="topbar__actions">
+        <button class="layout-btn" type="button" id="layout-reset" hidden><i data-lucide="rotate-ccw"></i>Výchozí rozložení</button>
+        <button class="layout-btn" type="button" id="layout-edit" aria-pressed="false" title="Přetahovat a měnit velikost bloků na Přehledu"><i data-lucide="layout-dashboard"></i><span>Upravit rozložení</span></button>
         <div class="window-controls">
           <button class="icon-btn" type="button" aria-label="Minimalizovat" data-win="minimize"><i data-lucide="minus"></i></button>
           <button class="icon-btn" type="button" aria-label="Maximalizovat" data-win="maximize"><i data-lucide="square"></i></button>
@@ -204,8 +208,10 @@
     <!-- ============ OBSAH ============ -->
     <main class="main" id="main">
       <h1 class="sr-only">Přehled</h1>
-      <div class="dashboard">
-
+      <!-- Přehled: přizpůsobitelná mřížka (GridStack) – bloky jde přetahovat a měnit jejich velikost -->
+      <div class="grid-stack board" id="board">
+        <div class="grid-stack-item" gs-id="weather" gs-x="0" gs-y="0" gs-w="4" gs-h="4" gs-min-w="3" gs-min-h="3">
+          <div class="grid-stack-item-content">
         <!-- Počasí -->
         <section class="card weather" aria-labelledby="weather-title">
           <div class="weather__layout">
@@ -229,7 +235,10 @@
           </div>
           </div>
         </section>
-
+          </div>
+        </div>
+        <div class="grid-stack-item" gs-id="tasks" gs-x="0" gs-y="4" gs-w="4" gs-h="8" gs-min-w="3" gs-min-h="5">
+          <div class="grid-stack-item-content">
         <!-- Úkoly – týdenní kalendář -->
         <section class="card tasks" aria-labelledby="tasks-title">
           <header class="card__header">
@@ -260,7 +269,10 @@
             </form>
           </div>
         </section>
-
+          </div>
+        </div>
+        <div class="grid-stack-item" gs-id="news" gs-x="4" gs-y="0" gs-w="5" gs-h="12" gs-min-w="3" gs-min-h="4">
+          <div class="grid-stack-item-content">
         <!-- Zprávy (Seznam Zprávy, Novinky.cz, iDNES.cz – načítá se živě z RSS) -->
         <section class="card news" aria-labelledby="news-title">
           <header class="card__header">
@@ -271,8 +283,32 @@
             <li class="news__status">Načítám zprávy…</li>
           </ul>
         </section>
+          </div>
+        </div>
+        <div class="grid-stack-item" gs-id="assistant" gs-x="9" gs-y="0" gs-w="3" gs-h="12" gs-min-w="2" gs-min-h="5">
+          <div class="grid-stack-item-content">
+        <!-- AI asistent: Gemini (gemini.google.com/app) -->
+        <section class="card assistant" aria-labelledby="assistant-title">
+          <header class="assistant__header">
+            <span class="assistant__avatar" aria-hidden="true"><i data-lucide="sparkles"></i></span>
+            <div class="assistant__who">
+              <h2 class="assistant__name" id="assistant-title">AI asistent</h2>
+              <span class="assistant__status" id="gemini-status"><span class="status-dot"></span>Gemini · načítám…</span>
+            </div>
+            <button class="icon-btn icon-btn--sm" type="button" id="gemini-reload" aria-label="Znovu načíst Gemini" title="Znovu načíst"><i data-lucide="refresh-cw"></i></button>
+            <button class="icon-btn icon-btn--sm" type="button" id="gemini-external" aria-label="Otevřít Gemini v prohlížeči" title="Otevřít v prohlížeči"><i data-lucide="external-link"></i></button>
+          </header>
+          <div class="gemini" id="gemini">
+            <p class="gemini__fallback">Gemini se zobrazí jen v desktopové aplikaci.
+              <a href="https://gemini.google.com/app" target="_blank" rel="noopener">Otevřít gemini.google.com</a></p>
+          </div>
+        </section>
+          </div>
+        </div>
+      </div>
 
-
+      <!-- Samostatné stránky z levého menu -->
+      <div class="pages">
         <!-- Chytrá schránka: historie kopírovaného textu, rychlé vkládání, AI úpravy -->
         <section class="card clipboard" aria-labelledby="clip-title">
           <header class="card__header">
@@ -342,7 +378,6 @@
             </div>
           </div>
         </section>
-
         <!-- Herní přehled -->
         <section class="card games" aria-labelledby="games-title">
           <header class="card__header">
@@ -385,28 +420,6 @@
           </ul>
         </section>
       </div>
-
-      <!-- ============ PRAVÝ SIDEBAR ============ -->
-      <aside class="rightbar" aria-label="Asistent a nástroje">
-
-        <!-- AI asistent: Gemini (gemini.google.com/app) -->
-        <section class="card assistant" aria-labelledby="assistant-title">
-          <header class="assistant__header">
-            <span class="assistant__avatar" aria-hidden="true"><i data-lucide="sparkles"></i></span>
-            <div class="assistant__who">
-              <h2 class="assistant__name" id="assistant-title">AI asistent</h2>
-              <span class="assistant__status" id="gemini-status"><span class="status-dot"></span>Gemini · načítám…</span>
-            </div>
-            <button class="icon-btn icon-btn--sm" type="button" id="gemini-reload" aria-label="Znovu načíst Gemini" title="Znovu načíst"><i data-lucide="refresh-cw"></i></button>
-            <button class="icon-btn icon-btn--sm" type="button" id="gemini-external" aria-label="Otevřít Gemini v prohlížeči" title="Otevřít v prohlížeči"><i data-lucide="external-link"></i></button>
-          </header>
-          <div class="gemini" id="gemini">
-            <p class="gemini__fallback">Gemini se zobrazí jen v desktopové aplikaci.
-              <a href="https://gemini.google.com/app" target="_blank" rel="noopener">Otevřít gemini.google.com</a></p>
-          </div>
-        </section>
-
-      </aside>
     </main>
 
   </div>

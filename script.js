@@ -599,6 +599,74 @@
     $("#ai-paste").addEventListener("click", () => api.pasteText(output.value));
   };
 
+  /* ---------- Přizpůsobitelná mřížka Přehledu (GridStack) ---------- */
+  const setupBoard = () => {
+    const GS = window.GridStack?.GridStack || window.GridStack;
+    const boardEl = $("#board");
+    if (!GS || !boardEl) return;
+
+    const ROWS = 12;
+    const DEFAULT_LAYOUT = $$(".grid-stack-item", boardEl).map((el) => ({
+      id: el.getAttribute("gs-id"),
+      x: +el.getAttribute("gs-x"), y: +el.getAttribute("gs-y"),
+      w: +el.getAttribute("gs-w"), h: +el.getAttribute("gs-h"),
+    }));
+
+    // Výška řádku tak, aby 12 řádků vyplnilo okno pod horní lištou.
+    const rowHeight = () => {
+      const top = $(".topbar").getBoundingClientRect().height;
+      return Math.max(40, Math.floor((window.innerHeight - top - 26) / ROWS));
+    };
+
+    const grid = GS.init({
+      column: 12,
+      cellHeight: rowHeight(),
+      margin: 8,
+      float: false,
+      animate: true,
+      staticGrid: true,              // mimo režim úprav je mřížka zamčená
+      handle: ".card__title, .assistant__who",
+      resizable: { handles: "e, se, s, sw, w" },
+      draggable: { cancel: "button, input, textarea, select, a, webview" },
+    }, boardEl);
+
+    const saved = store.get("board-layout");
+    const applyLayout = (layout) => {
+      grid.batchUpdate();
+      layout.forEach(({ id, x, y, w, h }) => {
+        const el = boardEl.querySelector(`[gs-id="${id}"]`);
+        if (el) grid.update(el, { x, y, w, h });
+      });
+      grid.batchUpdate(false);
+    };
+    if (Array.isArray(saved)) applyLayout(saved);
+
+    const saveLayout = () => store.set("board-layout",
+      grid.save(false).map(({ id, x, y, w, h }) => ({ id, x, y, w, h })));
+    grid.on("change", saveLayout);
+
+    window.addEventListener("resize", () => grid.cellHeight(rowHeight()));
+
+    const editBtn = $("#layout-edit");
+    const resetBtn = $("#layout-reset");
+    const setEditing = (on) => {
+      if (on && app.dataset.view !== "overview") showView("overview");
+      grid.setStatic(!on);
+      app.classList.toggle("is-editing", on);
+      editBtn.setAttribute("aria-pressed", String(on));
+      $("span", editBtn).textContent = on ? "Hotovo" : "Upravit rozložení";
+      resetBtn.hidden = !on;
+    };
+    editBtn.addEventListener("click", () => setEditing(!app.classList.contains("is-editing")));
+    resetBtn.addEventListener("click", () => { applyLayout(DEFAULT_LAYOUT); saveLayout(); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && app.classList.contains("is-editing")) setEditing(false); });
+    // Přepnutí na jinou stránku režim úprav ukončí.
+    new MutationObserver(() => {
+      if (app.dataset.view !== "overview" && app.classList.contains("is-editing")) setEditing(false);
+    }).observe(app, { attributes: true, attributeFilter: ["data-view"] });
+  };
+  setupBoard();
+
   /* ---------- Desktop (Electron): ovládání okna ---------- */
   const desktop = window.desktop;
   if (desktop) {

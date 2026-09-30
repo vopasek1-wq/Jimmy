@@ -18,6 +18,9 @@ varování → **Další informace** → **Přesto spustit**.
 
 ## Co funguje „naostro“
 
+- **Přizpůsobitelný Přehled** ([GridStack.js](https://gridstackjs.com)): tlačítko **Upravit rozložení** v horní liště
+  – bloky Počasí, Úkoly, Zprávy a AI asistent jde přetahovat za nadpis a měnit jejich velikost za okraje/rohy;
+  rozložení se ukládá, **Výchozí rozložení** ho vrátí. Mimo režim úprav je mřížka zamčená.
 - **Levé menu** přepíná pohledy: Přehled, AI asistent (Gemini přes celou šířku), Počasí, Zprávy,
   Úkoly, Chytrá schránka a Herní přehled (jednotlivé sekce přes celou plochu).
 - **AI asistent** = [Gemini](https://gemini.google.com/app) vložené v pravém panelu (Electron `<webview>`,
@@ -61,7 +64,7 @@ npm run dist         # sestaví portable .exe do složky dist/ (na Windows)
 | `styles.css` | Design tokeny (`:root`), layout, komponenty, stavy hover/active/focus |
 | `script.js` | Pohledy z menu, hodiny, počasí, zprávy, týdenní kalendář, Gemini, ovládání okna |
 | `assets/img/` | Náhradní (placeholder) SVG obrázky |
-| `vendor/` | Lokální kopie ikon Lucide a písma Roboto |
+| `vendor/` | Lokální kopie ikon Lucide, písma Roboto a GridStack.js |
 | `build/icon.png` | Ikona aplikace |
 
 ## Layout

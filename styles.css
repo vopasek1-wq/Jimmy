@@ -280,54 +280,115 @@ i[data-lucide],
    ========================================================================== */
 .main {
   grid-area: main;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--rightbar-w);
-  gap: 18px;
-  align-items: start;
-  padding: 17px 16px 16px 17px;
+  position: relative;
   min-width: 0;
+  padding: 9px 8px 8px 9px;
 }
 
-/* Přehled: vlevo Počasí + hodiny a pod ním Úkoly, vpravo Zprávy přes oba řádky. */
-.dashboard {
-  display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); /* užší Počasí + Úkoly, širší Zprávy */
-  grid-template-rows: auto 1fr;
-  grid-template-areas:
-    "weather news"
-    "tasks   news";
-  gap: var(--gap);
-  min-height: min(calc(100dvh - var(--topbar-h) - 33px), 1000px);
+/* ---------- Přehled: mřížka GridStack (12 sloupců × 12 řádků) ---------- */
+.board { min-height: 100%; }
+.board > .grid-stack-item > .grid-stack-item-content { display: flex; overflow: hidden !important; }
+.board > .grid-stack-item > .grid-stack-item-content > .card { flex: 1; min-width: 0; min-height: 0; }
+.board .assistant { min-height: 0; max-height: none; }
+.board .news__list { min-height: 0; }
+
+/* Režim úprav rozložení */
+.is-editing .board .card { outline: 2px dashed rgba(86, 203, 255, 0.45); outline-offset: -2px; }
+.is-editing .board { user-select: none; }
+.is-editing .board .grid-stack-item-content * { pointer-events: none; }
+.is-editing .board .card__title,
+.is-editing .board .assistant__who { pointer-events: auto; cursor: move; }
+.is-editing .board .card__title::after,
+.is-editing .board .assistant__who::after {
+  content: "⠿ přetáhni";
+  margin-left: 10px;
+  padding: 1px 8px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--accent-bright);
 }
-.weather { grid-area: weather; }
-.news    { grid-area: news; }
-.tasks   { grid-area: tasks; }
-.games   { grid-area: games; }
+.is-editing .board .assistant__who::after { display: inline-block; margin: 4px 0 0; }
+.board .grid-stack-placeholder > .placeholder-content {
+  background: rgba(54, 181, 244, 0.1);
+  border: 2px dashed rgba(86, 203, 255, 0.6);
+  border-radius: var(--radius-card);
+}
+.board > .grid-stack-item > .ui-resizable-handle { filter: invert(1) brightness(1.4); opacity: 0.8; }
+.board > .grid-stack-item.ui-draggable-dragging > .grid-stack-item-content,
+.board > .grid-stack-item.ui-resizable-resizing > .grid-stack-item-content { box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.8); }
+
+.layout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--border-2);
+  border-radius: 16px;
+  background: #13202e;
+  font-size: 12.5px;
+  color: var(--text-2);
+  white-space: nowrap;
+  transition: background-color 0.16s, border-color 0.16s, color 0.16s, transform 0.12s;
+}
+.layout-btn .lucide { width: 16px; height: 16px; }
+.layout-btn:hover { background: #182a3c; border-color: var(--border-3); color: var(--text); }
+.layout-btn:active { transform: scale(0.96); }
+.layout-btn[aria-pressed="true"] { background: var(--accent-deep); border-color: rgba(86, 203, 255, 0.55); color: var(--accent-bright); }
 
 /* ---------- Pohledy z levého menu ---------- */
-.app[data-view="overview"] .games,
-.app[data-view="overview"] .clipboard { display: none; }
+.pages { display: none; }
+.app[data-view="clipboard"] .pages,
+.app[data-view="games"] .pages { display: block; }
 
-/* Jedna sekce přes celou střední plochu (Gemini zůstává vpravo) */
-.app[data-view="weather"] .dashboard,
-.app[data-view="news"] .dashboard,
-.app[data-view="tasks"] .dashboard,
-.app[data-view="clipboard"] .dashboard,
-.app[data-view="games"] .dashboard {
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto;
-  grid-template-areas: none;
-  align-content: start;
+/* Mimo Přehled se mřížka chová jako obyčejné rozvržení: vybraný blok + Gemini vpravo. */
+.app:not([data-view="overview"]) .board {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--rightbar-w);
+  gap: 16px;
+  height: calc(100dvh - var(--topbar-h) - 17px) !important;
+  min-height: 520px;
+  padding: 8px 8px 0 8px;
 }
-.app[data-view="weather"] .dashboard > .card:not(.weather),
-.app[data-view="news"] .dashboard > .card:not(.news),
-.app[data-view="tasks"] .dashboard > .card:not(.tasks),
-.app[data-view="clipboard"] .dashboard > .card:not(.clipboard),
-.app[data-view="games"] .dashboard > .card:not(.games) { display: none; }
-.app:not([data-view="overview"]) .dashboard > .card { grid-area: auto; }
-.app[data-view="news"] .news,
-.app[data-view="tasks"] .tasks,
-.app[data-view="clipboard"] .clipboard { height: calc(100dvh - var(--topbar-h) - 33px); min-height: 520px; }
+.app:not([data-view="overview"]) .board > .grid-stack-item {
+  position: relative !important;
+  inset: auto !important;
+  width: auto !important;
+  height: auto !important;
+  min-height: 0;
+  transform: none !important;
+}
+.app:not([data-view="overview"]) .board > .grid-stack-item > .grid-stack-item-content { inset: 0 !important; }
+.app:not([data-view="overview"]) .board > .grid-stack-item > .ui-resizable-handle { display: none; }
+
+.app[data-view="weather"] .board > .grid-stack-item:not([gs-id="weather"]):not([gs-id="assistant"]),
+.app[data-view="news"] .board > .grid-stack-item:not([gs-id="news"]):not([gs-id="assistant"]),
+.app[data-view="tasks"] .board > .grid-stack-item:not([gs-id="tasks"]):not([gs-id="assistant"]),
+.app[data-view="assistant"] .board > .grid-stack-item:not([gs-id="assistant"]),
+.app[data-view="clipboard"] .board > .grid-stack-item:not([gs-id="assistant"]),
+.app[data-view="games"] .board > .grid-stack-item:not([gs-id="assistant"]) { display: none; }
+.app[data-view="weather"] .board > [gs-id="weather"] { align-self: start; }
+.app[data-view="weather"] .board > [gs-id="weather"] > .grid-stack-item-content { position: static; }
+
+/* AI asistent: Gemini přes celou šířku */
+.app[data-view="assistant"] .board { grid-template-columns: minmax(0, 1fr); }
+
+/* Samostatné stránky (Chytrá schránka, Herní přehled) vlevo, Gemini vpravo */
+.app[data-view="clipboard"] .main,
+.app[data-view="games"] .main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--rightbar-w);
+  align-items: start;
+}
+.app[data-view="clipboard"] .board,
+.app[data-view="games"] .board { grid-column: 2; grid-row: 1; grid-template-columns: minmax(0, 1fr); }
+.pages { grid-column: 1; grid-row: 1; min-width: 0; padding: 8px 0 0 8px; }
+.app[data-view="clipboard"] .pages > .card:not(.clipboard),
+.app[data-view="games"] .pages > .card:not(.games) { display: none; }
+.app[data-view="clipboard"] .clipboard { height: calc(100dvh - var(--topbar-h) - 25px); min-height: 520px; }
+
 .app[data-view="news"] .news__list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
@@ -337,11 +398,6 @@ i[data-lucide],
 .app[data-view="news"] .news__list li + li { border-top: 0; }
 .app[data-view="news"] .news__list li { border-bottom: 1px solid var(--line); }
 .app[data-view="games"] .game { height: 260px; }
-
-/* AI asistent: Gemini přes celou šířku */
-.app[data-view="assistant"] .main { grid-template-columns: minmax(0, 1fr); }
-.app[data-view="assistant"] .dashboard { display: none; }
-.app[data-view="assistant"] .assistant { height: calc(100dvh - var(--topbar-h) - 33px); max-height: none; }
 
 /* ---------- Karta ---------- */
 .card {
@@ -881,7 +937,6 @@ i[data-lucide],
 /* ==========================================================================
    Pravý sidebar
    ========================================================================== */
-.rightbar { display: flex; flex-direction: column; gap: 17px; min-width: 0; align-self: stretch; }
 
 /* ---------- AI asistent ---------- */
 .assistant {
@@ -974,18 +1029,6 @@ i[data-lucide],
   :root { --rightbar-w: 340px; }
 }
 
-/* Střední šířky: středová mřížka 2 sloupce */
-@media (max-width: 1439px) {
-  .dashboard {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-rows: none;
-    grid-template-areas:
-      "weather weather"
-      "tasks   tasks"
-      "news    news";
-  }
-}
-
 /* Sidebar jako úzká lišta s ikonami */
 @media (max-width: 1279px) {
   .app { grid-template-columns: var(--rail-w) minmax(0, 1fr); }
@@ -995,20 +1038,6 @@ i[data-lucide],
   .nav__link span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   .nav__link { justify-content: center; padding: 0; }
   .search { margin-right: 16px; }
-}
-
-/* Pravý panel pod obsah */
-@media (max-width: 1099px) {
-  .main { grid-template-columns: minmax(0, 1fr); }
-  .rightbar {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-rows: auto 1fr;
-    grid-template-areas: "chat chat";
-    gap: var(--gap);
-  }
-  .assistant { grid-area: chat; flex: none; height: 520px; }
-  .dashboard { min-height: 0; }
 }
 
 /* Tablet: sidebar se vysouvá (off-canvas) */
@@ -1042,15 +1071,6 @@ i[data-lucide],
 /* Mobil */
 @media (max-width: 719px) {
   .main { padding: 16px; }
-  .dashboard {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "weather" "tasks" "news";
-  }
-  .rightbar {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: none;
-    grid-template-areas: "chat";
-  }
 
   .topbar {
     flex-wrap: wrap;
