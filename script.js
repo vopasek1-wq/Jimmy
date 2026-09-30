@@ -128,12 +128,15 @@
       const thumb = $(".news__thumb", li);
       thumb.textContent = a.sourceName.charAt(0);
       if (a.image) {
-        const img = new Image();
+        // Obrázek je rovnou v DOM (skrytý), po načtení překryje písmeno zdroje; při chybě zmizí.
+        const img = document.createElement("img");
         img.alt = "";
-        img.loading = "lazy";
+        img.decoding = "async";
         img.referrerPolicy = "no-referrer";
-        img.onload = () => thumb.replaceChildren(img);
+        img.addEventListener("load", () => thumb.classList.add("has-image"));
+        img.addEventListener("error", () => img.remove());
         img.src = a.image;
+        thumb.append(img);
       }
       return li;
     }));
@@ -264,7 +267,7 @@
       $(".day__name", li).textContent = capitalize(dayShortFmt.format(d));
       $(".day__num", li).textContent = `${d.getDate()}.`;
       $(".day__tasks", li).textContent = list.length
-        ? list.map((t) => (t.time ? `${t.time} ${t.title}` : t.title)).join(" · ")
+        ? list.map((t) => (t.time ? `${t.time} ${t.title}` : t.title)).join("\n")
         : "—";
       $(".day__count", li).textContent = open.length ? open.length : "";
       btn.setAttribute("aria-label", `${capitalize(dayNameFmt.format(d))} ${d.getDate()}. ${d.getMonth() + 1}., úkolů: ${list.length}`);

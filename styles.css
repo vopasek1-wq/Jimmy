@@ -302,20 +302,19 @@ i[data-lucide],
   min-width: 0;
 }
 
-/* Střední mřížka: Počasí | Hodiny / Novinky | Úkoly (týden) / Herní přehled. */
+/* Střední mřížka: Počasí + hodiny | Úkoly (přes dva řádky) / Novinky | … / Herní přehled. */
 .dashboard {
   display: grid;
-  grid-template-columns: minmax(0, 416fr) minmax(0, 100fr) minmax(0, 32fr) minmax(0, 374fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   grid-template-rows: auto 1fr auto;
   grid-template-areas:
-    "weather weather clock clock"
-    "news    tasks   tasks tasks"
-    "games   games   games games";
+    "weather tasks"
+    "news    tasks"
+    "games   games";
   gap: var(--gap);
   min-height: min(calc(100dvh - var(--topbar-h) - 33px), 1000px);
 }
 .weather { grid-area: weather; }
-.clock   { grid-area: clock; }
 .news    { grid-area: news; }
 .tasks   { grid-area: tasks; }
 .games   { grid-area: games; }
@@ -387,8 +386,7 @@ i[data-lucide],
 .forecast {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  align-self: start;
-  margin-top: 39px;
+  margin-top: 10px;
   padding: 12px 0 9px;
   background: var(--panel);
   border: 1px solid var(--border-2);
@@ -410,44 +408,29 @@ i[data-lucide],
 
 @container (max-width: 445px) {
   .weather__layout { grid-template-columns: minmax(0, 1fr); }
-  .forecast { margin-top: 18px; }
+  .weather__side { margin-top: 18px; }
+  .weather__clock { justify-content: flex-start; }
 }
 
-/* ---------- Hodiny + dnešní události ---------- */
-.clock {
-  overflow: hidden;
-  padding: 10px 18px 16px 15px;
-  isolation: isolate;
+/* ---------- Hodiny v kartě Počasí ---------- */
+.weather__side { display: flex; flex-direction: column; min-width: 0; }
+.weather__clock {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 10px;
+  min-height: 40px;
+  padding-right: 2px;
+  white-space: nowrap;
 }
-.clock__bg {
-  position: absolute;
-  inset: 0 0 0 auto;
-  z-index: -1;
-  width: 72%;
-  height: 100%;
-  object-fit: cover;
-  object-position: 70% 40%;
-  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 55%);
-          mask-image: linear-gradient(90deg, transparent 0%, #000 55%);
-  opacity: 0.92;
-}
-.clock::after {
-  /* ztmavení spodní části pozadí kvůli čitelnosti citátu */
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: linear-gradient(180deg, transparent 45%, rgba(8, 14, 22, 0.55) 100%);
-}
-.clock__time {
-  display: block;
-  font-size: 38px;
+.weather__time {
+  font-size: 34px;
   font-weight: 500;
-  line-height: 44px;
+  line-height: 40px;
   letter-spacing: -0.5px;
   font-variant-numeric: tabular-nums;
 }
-.clock__date { margin-top: 3px; font-size: 14px; line-height: 20px; color: var(--text); }
+.weather__date { font-size: 13px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; }
 
 /* ---------- Novinky ---------- */
 .news { display: flex; flex-direction: column; min-height: 0; padding: 16px 14px 8px 13px; }
@@ -487,7 +470,17 @@ i[data-lucide],
   color: rgba(255, 255, 255, 0.85);
   transition: transform 0.25s var(--ease), filter 0.25s;
 }
-.news__thumb img { width: 100%; height: 100%; object-fit: cover; }
+.news__thumb { position: relative; }
+.news__thumb img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+.news__thumb.has-image img { opacity: 1; }
 .news__thumb--seznam  { background: linear-gradient(135deg, #d52b1e, #8f1a12); }
 .news__thumb--novinky { background: linear-gradient(135deg, #e0322b, #a01b16); }
 .news__thumb--idnes   { background: linear-gradient(135deg, #1f5fa8, #123a66); }
@@ -541,6 +534,9 @@ i[data-lucide],
 .planner {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-areas: "day week" "add add";
+  row-gap: 12px;
   gap: 16px;
   flex: 1;
   min-height: 0;
@@ -548,7 +544,7 @@ i[data-lucide],
 }
 
 /* Levá část: úkoly vybraného dne */
-.day-tasks { display: flex; flex-direction: column; min-height: 0; }
+.day-tasks { grid-area: day; display: flex; flex-direction: column; min-height: 0; }
 .day-tasks__title { font-size: 14px; font-weight: 500; line-height: 20px; color: var(--accent-bright); }
 .task-list {
   display: flex;
@@ -627,14 +623,14 @@ i[data-lucide],
   text-decoration-color: rgba(200, 212, 226, 0.7);
 }
 
-.task-add { display: flex; gap: 6px; margin-top: 8px; }
+.task-add { grid-area: add; display: flex; gap: 8px; }
 .task-add .input { height: 32px; font-size: 12.5px; }
-.input--time { flex: 0 0 82px; padding: 0 6px; color-scheme: dark; font-variant-numeric: tabular-nums; }
+.input--time { flex: 0 0 96px; padding: 0 6px; color-scheme: dark; font-variant-numeric: tabular-nums; }
 .btn.btn--icon { width: 32px; height: 32px; padding: 0; flex: none; }
 .btn.btn--icon .lucide { width: 18px; height: 18px; }
 
 /* Pravá část: dny v týdnu */
-.week { display: flex; flex-direction: column; gap: 4px; min-height: 0; }
+.week { grid-area: week; display: flex; flex-direction: column; gap: 4px; min-height: 0; }
 .week > li { flex: 1; display: flex; }
 .day {
   display: grid;
@@ -655,7 +651,17 @@ i[data-lucide],
 .day__date { display: flex; align-items: baseline; gap: 6px; }
 .day__name { width: 20px; font-size: 12px; color: var(--muted); }
 .day__num { font-size: 13px; font-weight: 500; color: var(--text); font-variant-numeric: tabular-nums; }
-.day__tasks { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 12px; color: var(--text-2); }
+.day__tasks {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+  white-space: pre-line;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-2);
+}
 .day__count {
   min-width: 20px;
   height: 20px;
@@ -986,9 +992,8 @@ i[data-lucide],
     grid-template-rows: none;
     grid-template-areas:
       "weather weather"
-      "clock   clock"
-      "news    news"
       "tasks   tasks"
+      "news    news"
       "games   games";
   }
 }
@@ -1054,15 +1059,13 @@ i[data-lucide],
   .main { padding: 16px; }
   .dashboard {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "weather" "clock" "news" "tasks" "games";
+    grid-template-areas: "weather" "tasks" "news" "games";
   }
   .rightbar {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: none;
     grid-template-areas: "chat";
   }
-  .clock { min-height: 212px; }
-  .clock__bg { width: 85%; }
 
   .topbar {
     flex-wrap: wrap;

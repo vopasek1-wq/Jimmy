@@ -150,8 +150,6 @@
       </form>
 
       <div class="topbar__actions">
-        <button class="icon-btn" type="button" aria-label="Přepnout světlý motiv"><i data-lucide="sun"></i></button>
-        <button class="icon-btn" type="button" aria-label="Nastavení"><i data-lucide="settings"></i></button>
         <div class="window-controls">
           <button class="icon-btn" type="button" aria-label="Minimalizovat" data-win="minimize"><i data-lucide="minus"></i></button>
           <button class="icon-btn" type="button" aria-label="Maximalizovat" data-win="maximize"><i data-lucide="square"></i></button>
@@ -179,6 +177,11 @@
             <p class="weather__meta">Vlhkost: 68% <span class="dot-sep" aria-hidden="true">•</span> Vítr: 12 km/h</p>
           </div>
 
+          <div class="weather__side">
+          <div class="weather__clock" aria-label="Aktuální čas a datum">
+            <time class="weather__time" id="clock-time" datetime="15:42">15:42</time>
+            <span class="weather__date" id="clock-date">Středa, 30. dubna 2025</span>
+          </div>
           <ol class="forecast" aria-label="Předpověď na 5 dní">
             <li class="forecast__day">
               <span class="forecast__name">Dnes</span>
@@ -207,27 +210,7 @@
             </li>
           </ol>
           </div>
-        </section>
-
-        <!-- Čas, datum a dnešní události -->
-        <section class="card clock" aria-label="Čas a dnešní události">
-          <img class="clock__bg" src="assets/img/hero-mountain.svg" width="880" height="440" alt="">
-          <div class="clock__content">
-            <time class="clock__time" id="clock-time" datetime="15:42">15:42</time>
-            <p class="clock__date" id="clock-date">Středa, 30. dubna 2025</p>
-
           </div>
-        </section>
-
-        <!-- Novinky (Seznam Zprávy, Novinky.cz, iDNES.cz – načítá se živě z RSS) -->
-        <section class="card news" aria-labelledby="news-title">
-          <header class="card__header">
-            <h2 class="card__title" id="news-title"><i data-lucide="newspaper"></i>Novinky</h2>
-            <button class="icon-btn icon-btn--sm" type="button" id="news-refresh" aria-label="Obnovit zprávy" title="Obnovit zprávy"><i data-lucide="refresh-cw"></i></button>
-          </header>
-          <ul class="news__list" id="news-list" aria-busy="true">
-            <li class="news__status">Načítám zprávy…</li>
-          </ul>
         </section>
 
         <!-- Úkoly – týdenní kalendář -->
@@ -245,15 +228,26 @@
             <div class="day-tasks">
               <h3 class="day-tasks__title" id="day-title"></h3>
               <ul class="task-list" id="task-list" aria-labelledby="day-title"></ul>
-              <form class="task-add" id="task-add">
-                <input class="input" id="task-input" type="text" placeholder="Nový úkol…" aria-label="Název nového úkolu" autocomplete="off">
-                <input class="input input--time" id="task-time" type="time" aria-label="Čas (nepovinný)">
-                <button class="btn btn--primary btn--icon" type="submit" aria-label="Přidat úkol"><i data-lucide="plus"></i></button>
-              </form>
             </div>
 
             <ol class="week" id="week" aria-label="Dny v týdnu"></ol>
+            <form class="task-add" id="task-add">
+              <input class="input" id="task-input" type="text" placeholder="Nový úkol…" aria-label="Název nového úkolu" autocomplete="off">
+              <input class="input input--time" id="task-time" type="time" aria-label="Čas (nepovinný)">
+              <button class="btn btn--primary btn--icon" type="submit" aria-label="Přidat úkol"><i data-lucide="plus"></i></button>
+            </form>
           </div>
+        </section>
+
+        <!-- Novinky (Seznam Zprávy, Novinky.cz, iDNES.cz – načítá se živě z RSS) -->
+        <section class="card news" aria-labelledby="news-title">
+          <header class="card__header">
+            <h2 class="card__title" id="news-title"><i data-lucide="newspaper"></i>Novinky</h2>
+            <button class="icon-btn icon-btn--sm" type="button" id="news-refresh" aria-label="Obnovit zprávy" title="Obnovit zprávy"><i data-lucide="refresh-cw"></i></button>
+          </header>
+          <ul class="news__list" id="news-list" aria-busy="true">
+            <li class="news__status">Načítám zprávy…</li>
+          </ul>
         </section>
 
         <!-- Herní přehled -->

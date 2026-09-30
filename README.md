@@ -49,7 +49,8 @@ npm run dist         # sestaví portable .exe do složky dist/ (na Windows)
 ## Layout
 
 - **Shell:** CSS Grid `sidebar | obsah`, horní lišta je `sticky`.
-- **Střed:** Počasí | Hodiny, Novinky | Úkoly (týdenní kalendář), Herní přehled přes celou šířku.
+- **Střed:** vlevo Počasí s hodinami a pod ním Novinky, vpravo Úkoly (týdenní kalendář) přes oba řádky,
+  dole Herní přehled přes celou šířku.
 - **Vpravo:** AI asistent na celou výšku okna.
 - **Container queries** přizpůsobují vnitřek karet jejich šířce (předpověď počasí pod teplotu,
   herní karty ve vodorovném posuvníku).
@@ -71,7 +72,7 @@ stavy `:hover`, `:active` a `:focus-visible`; animace respektují `prefers-reduc
 
 ## Poznámky
 
-- Obrázky v `assets/img/` (hory, hry) jsou jen zástupné ilustrace – nahraďte je skutečnými.
-- Hodiny ve widgetu ukazují aktuální čas a datum (česky).
+- Obrázky v `assets/img/` (hory v sidebaru, hry) jsou jen zástupné ilustrace – nahraďte je skutečnými.
+- Hodiny v kartě Počasí ukazují aktuální čas a datum (česky).
 - Dva překlepy z návrhu jsou opravené: „Herni přehled“ → „Herní přehled“,
   „Které hry dneska hrajú?“ → „Které hry dneska hrají?“.
