@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/logo.png" alt="J.I.M.M.Y. Dashboard" width="220"></p>
+
 # J.I.M.M.Y. – osobní dashboard pro Windows
 
 Desktopová aplikace pro Windows (Electron) s dashboardem v tmavém tématu podle návrhu 1536 × 1024 px.
