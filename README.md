@@ -36,8 +36,9 @@ varování → **Další informace** → **Přesto spustit**.
   (porovnání klíčových slov titulku a perexu). Kliknutí otevře článek v prohlížeči.
 - **Úkoly – týdenní kalendář:** dny v týdnu (šipkami se přepíná týden, klik na datum vrátí
   na dnešek) a úkoly vybraného dne s možností přidat (i s časem), odškrtnout a smazat.
-  Úkol lze nastavit na opakování **každý den** nebo **každý týden** (ve stejný den v týdnu);
-  opakovaný úkol se odškrtává zvlášť pro každý den, smazání odstraní celou řadu.
+  Úkol lze nastavit na opakování **každý den**, **každý pracovní den** (Po–Pá) nebo **každý týden**
+  (ve stejný den v týdnu); opakovaný úkol se odškrtává zvlášť pro každý den, smazání odstraní celou řadu.
+  **Přetažením** úkolu na jiný den v týdnu se úkol přesune (u opakovaného jen tento jeden výskyt).
 - **Chytrá schránka:** historie kopírovaného textu z celého Windows (vyhledávání, připnutí, mazání,
   pozastavení záznamu), klik = zkopírovat zpět, **Zkopírovat a přepnout zpět** = zkopíruje text a schová aplikaci,
   v předchozím okně pak stačí Ctrl+V. Zkratka **Alt+Shift+V** otevře schránku odkudkoliv. **AI úprava textu** (oprava pravopisu,

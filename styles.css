@@ -697,6 +697,10 @@ i[data-lucide],
   transition: background-color 0.16s;
 }
 .task:hover { background: rgba(255, 255, 255, 0.03); }
+.task-list > li[draggable="true"] { cursor: grab; }
+.task-list > li.is-dragging { opacity: 0.45; }
+.week.is-drop-target .day { border-style: dashed; }
+.day.is-drop { background: var(--accent-deep); border-color: var(--accent-bright); border-style: solid; box-shadow: var(--ring); }
 .task__text { display: flex; flex-direction: column; min-width: 0; }
 .task__title { font-size: 12.5px; line-height: 18px; color: #e3eaf2; overflow-wrap: anywhere; transition: color 0.18s; }
 .task__due { margin-top: 1px; font-size: 12px; line-height: 16px; color: var(--muted); font-variant-numeric: tabular-nums; }

@@ -213,14 +213,35 @@
   const weekEl = $("#week");
   const byTime = (a, b) => (a.time || "99").localeCompare(b.time || "99") || a.title.localeCompare(b.title, "cs");
 
-  /* Opakování: "none" | "daily" (každý den) | "weekly" (každý týden ve stejný den).
-     U opakovaných úkolů se splnění ukládá zvlášť pro každý den (doneDates). */
-  const REPEAT_LABEL = { daily: "každý den", weekly: "každý týden" };
+  /* Opakování: "none" | "daily" (každý den) | "weekdays" (Po–Pá) | "weekly" (každý týden ve stejný den).
+     U opakovaných úkolů se splnění ukládá zvlášť pro každý den (doneDates),
+     přesunuté/vynechané výskyty jsou ve skipDates. */
+  const REPEAT_LABEL = { daily: "každý den", weekdays: "každý pracovní den", weekly: "každý týden" };
   const weekdayOf = (key) => new Date(`${key}T00:00`).getDay();
   const occursOn = (t, key) => {
     if (!t.repeat || t.repeat === "none") return t.date === key;
-    if (key < t.date) return false;
-    return t.repeat === "daily" || weekdayOf(key) === weekdayOf(t.date);
+    if (key < t.date || (t.skipDates || []).includes(key)) return false;
+    if (t.repeat === "daily") return true;
+    if (t.repeat === "weekdays") { const wd = weekdayOf(key); return wd >= 1 && wd <= 5; }
+    return weekdayOf(key) === weekdayOf(t.date);
+  };
+
+  /* Přesun úkolu na jiný den (přetažením na den v týdnu).
+     Jednorázový úkol se přesune; u opakovaného se přesune jen tento výskyt. */
+  const moveTask = (task, fromKey, toKey) => {
+    if (!task || fromKey === toKey) return;
+    if (REPEAT_LABEL[task.repeat]) {
+      task.skipDates = [...new Set([...(task.skipDates || []), fromKey])];
+      tasks.push({
+        id: `${Date.now()}`, title: task.title, date: toKey, time: task.time, repeat: "none",
+        done: isDone(task, fromKey), doneDates: [],
+      });
+    } else {
+      task.date = toKey;
+    }
+    saveTasks();
+    selectedDay = toKey;
+    renderAll();
   };
   const isDone = (t, key) => (t.repeat && t.repeat !== "none" ? (t.doneDates || []).includes(key) : Boolean(t.done));
   const setDone = (t, key, done) => {
@@ -261,6 +282,18 @@
         rep.append(REPEAT_LABEL[task.repeat]);
         due.append(rep);
       }
+      li.draggable = true;
+      li.title = "Přetáhni na jiný den v týdnu";
+      li.addEventListener("dragstart", (e) => {
+        e.dataTransfer.setData("application/x-jimmy-task", JSON.stringify({ id: task.id, from: selectedDay }));
+        e.dataTransfer.effectAllowed = "move";
+        li.classList.add("is-dragging");
+        weekEl.classList.add("is-drop-target");
+      });
+      li.addEventListener("dragend", () => {
+        li.classList.remove("is-dragging");
+        weekEl.classList.remove("is-drop-target");
+      });
       const box = $(".checkbox", li);
       box.checked = isDone(task, selectedDay);
       box.addEventListener("change", () => { setDone(task, selectedDay, box.checked); saveTasks(); renderWeek(); });
@@ -314,6 +347,22 @@
       $(".day__count", li).textContent = open.length ? open.length : "";
       btn.setAttribute("aria-label", `${capitalize(dayNameFmt.format(d))} ${d.getDate()}. ${d.getMonth() + 1}., úkolů: ${list.length}`);
       btn.addEventListener("click", () => { selectedDay = key; renderWeek(); renderDay(); });
+      // Cíl přetažení úkolu
+      btn.addEventListener("dragover", (e) => {
+        if (!e.dataTransfer.types.includes("application/x-jimmy-task")) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+        btn.classList.add("is-drop");
+      });
+      btn.addEventListener("dragleave", () => btn.classList.remove("is-drop"));
+      btn.addEventListener("drop", (e) => {
+        e.preventDefault();
+        btn.classList.remove("is-drop");
+        try {
+          const { id, from } = JSON.parse(e.dataTransfer.getData("application/x-jimmy-task"));
+          moveTask(tasks.find((t) => t.id === id), from, key);
+        } catch { /* neplatná data */ }
+      });
       return li;
     }));
   };
@@ -744,18 +793,22 @@
     }, boardEl);
 
     const saved = store.get("board-layout");
+    const num = (v, fallback) => (Number.isFinite(v) && v >= 0 ? v : fallback);
     const applyLayout = (layout) => {
       grid.batchUpdate();
-      layout.forEach(({ id, x, y, w, h }) => {
-        const el = boardEl.querySelector(`[gs-id="${id}"]`);
-        if (el) grid.update(el, { x, y, w, h });
+      DEFAULT_LAYOUT.forEach((def) => {
+        const item = layout.find((l) => l.id === def.id) || def;
+        const el = boardEl.querySelector(`[gs-id="${def.id}"]`);
+        // chybějící nebo neplatné hodnoty doplnit z výchozího rozložení
+        if (el) grid.update(el, { x: num(item.x, def.x), y: num(item.y, def.y), w: num(item.w, def.w) || def.w, h: num(item.h, def.h) || def.h });
       });
       grid.batchUpdate(false);
     };
     if (Array.isArray(saved)) applyLayout(saved);
 
+    // Pozice brát přímo z GridStacku (grid.save() vynechává hodnoty rovné minimu).
     const saveLayout = () => store.set("board-layout",
-      grid.save(false).map(({ id, x, y, w, h }) => ({ id, x, y, w, h })));
+      grid.engine.nodes.map(({ id, x, y, w, h }) => ({ id, x, y, w, h })));
     grid.on("change", saveLayout);
 
     window.addEventListener("resize", () => grid.cellHeight(rowHeight()));
