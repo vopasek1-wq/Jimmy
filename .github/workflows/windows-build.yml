@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
@@ -31,7 +31,7 @@ jobs:
       - name: Zkušební spuštění aplikace
         shell: pwsh
         run: |
-          $exe = Join-Path $PWD "dist\win-unpacked\AI Dashboard.exe"
+          $exe = Join-Path $PWD "dist\win-unpacked\JIMMY.exe"
           $p = Start-Process -FilePath $exe -PassThru
           Start-Sleep -Seconds 15
           if ($p.HasExited) { throw "Aplikace se ukončila s kódem $($p.ExitCode)" }
@@ -40,27 +40,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: AI-Dashboard-Windows
+          name: JIMMY-Windows
           path: |
             dist/*.exe
           if-no-files-found: error
-
-      - name: Zveřejnění ke stažení (GitHub Releases)
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: windows-latest-build
-          name: AI Dashboard pro Windows
-          target_commitish: ${{ github.sha }}
-          make_latest: true
-          body: |
-            **Ke stažení:**
-            - `AI-Dashboard-1.0.0-portable.exe` – stačí stáhnout a spustit (bez instalace)
-            - `AI-Dashboard-Setup-1.0.0.exe` – instalátor se zástupcem na ploše
-
-            Windows může při prvním spuštění zobrazit modré okno „Systém Windows ochránil váš počítač“:
-            klikněte na **Další informace** → **Přesto spustit**.
-
-            Sestaveno z commitu ${{ github.sha }}.
-          files: |
-            dist/AI-Dashboard-1.0.0-portable.exe
-            dist/AI-Dashboard-Setup-1.0.0.exe

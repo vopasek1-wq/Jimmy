@@ -1,8 +1,8 @@
 {
   "name": "jimmy-ai-dashboard",
-  "productName": "AI Dashboard",
+  "productName": "J.I.M.M.Y.",
   "version": "1.0.0",
-  "description": "AI Dashboard – desktopová aplikace pro Windows (Electron)",
+  "description": "J.I.M.M.Y. – osobní dashboard pro Windows (Electron)",
   "author": "Jimmy",
   "private": true,
   "main": "main.js",
@@ -16,8 +16,8 @@
   },
   "build": {
     "appId": "cz.jimmy.aidashboard",
-    "productName": "AI Dashboard",
-    "copyright": "© 2026 Jimmy",
+    "productName": "J.I.M.M.Y.",
+    "copyright": "© 2026 J.I.M.M.Y.",
     "directories": {
       "output": "dist",
       "buildResources": "build"
@@ -27,6 +27,7 @@
       "preload.js",
       "news.js",
       "weather.js",
+      "clipboard.js",
       "index.html",
       "styles.css",
       "script.js",
@@ -45,10 +46,11 @@
           ]
         }
       ],
-      "artifactName": "AI-Dashboard-${version}-win-${arch}.${ext}"
+      "artifactName": "JIMMY-${version}-win-${arch}.${ext}",
+      "executableName": "JIMMY"
     },
     "portable": {
-      "artifactName": "AI-Dashboard-${version}-portable.${ext}"
+      "artifactName": "JIMMY-${version}-portable.${ext}"
     }
   }
 }

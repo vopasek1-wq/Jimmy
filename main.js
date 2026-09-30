@@ -1,10 +1,17 @@
-// AI Dashboard – hlavní proces Electronu (Windows desktop aplikace).
+// J.I.M.M.Y. – hlavní proces Electronu (Windows desktop aplikace).
 "use strict";
 
 const { app, BrowserWindow, ipcMain, shell, screen, net, session } = require("electron");
 const path = require("node:path");
+const fs = require("node:fs");
+
+// Data (úkoly, historie schránky, přihlášení do Gemini) zůstávají ve složce z doby,
+// kdy se aplikace jmenovala „AI Dashboard“ – po přejmenování se nic neztratí.
+const legacyUserData = path.join(app.getPath("appData"), "AI Dashboard");
+if (fs.existsSync(legacyUserData)) app.setPath("userData", legacyUserData);
 const { fetchNews } = require("./news");
 const { fetchWeather } = require("./weather");
+const { setupClipboard } = require("./clipboard");
 
 const DESIGN_SIZE = { width: 1536, height: 1024 };
 const isHttpUrl = (url) => /^https?:\/\//i.test(url);
@@ -36,7 +43,7 @@ function createWindow() {
     minHeight: 680,
     frame: false, // vlastní titulní lišta z návrhu
     backgroundColor: "#080f17",
-    title: "AI Dashboard",
+    title: "J.I.M.M.Y.",
     icon: path.join(__dirname, "build", "icon.png"),
     show: false,
     webPreferences: {
@@ -138,6 +145,7 @@ if (!app.requestSingleInstanceLock()) {
     app.setAppUserModelId("cz.jimmy.aidashboard");
     session.fromPartition(GEMINI_PARTITION).setUserAgent(chromeUserAgent());
     createWindow();
+    setupClipboard(() => mainWindow);
     app.on("activate", () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow();
     });

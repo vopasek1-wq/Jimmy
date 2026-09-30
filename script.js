@@ -1,4 +1,4 @@
-/* AI Dashboard – lehká interaktivita (UI je plně funkční i bez dat z backendu). */
+/* J.I.M.M.Y. – interaktivita (UI je plně funkční i bez dat z backendu). */
 (() => {
   "use strict";
 
@@ -53,7 +53,7 @@
   backdrop.addEventListener("click", () => setNav(false));
 
   /* Levé menu přepíná pohledy: přehled, nebo jedna sekce přes celou plochu. */
-  const VIEWS = ["overview", "assistant", "weather", "news", "tasks", "games"];
+  const VIEWS = ["overview", "assistant", "weather", "news", "tasks", "clipboard", "games"];
   const showView = (view) => {
     if (!VIEWS.includes(view)) view = "overview";
     app.dataset.view = view;
@@ -452,6 +452,153 @@
     $("#gemini-external").addEventListener("click", () => window.desktop.openGeminiExternal());
   };
 
+  /* ---------- Chytrá schránka ---------- */
+  const setupClipboard = () => {
+    const api = window.desktop.clipboard;
+    const ai = window.desktop.ai;
+    const list = $("#clip-list");
+    const search = $("#clip-search");
+    const textEl = $("#clip-text");
+    const status = $("#ai-status");
+    const output = $("#ai-output");
+    let items = [];
+    let selectedId = null;
+
+    const timeFmt2 = new Intl.DateTimeFormat("cs-CZ", { hour: "2-digit", minute: "2-digit" });
+    const dateFmt2 = new Intl.DateTimeFormat("cs-CZ", { day: "numeric", month: "numeric" });
+    const when = (ms) => {
+      const d = new Date(ms);
+      return dateKey(d) === todayKey() ? timeFmt2.format(d) : `${dateFmt2.format(d)} ${timeFmt2.format(d)}`;
+    };
+    const flash = (text, kind = "") => {
+      status.textContent = text;
+      status.dataset.kind = kind;
+    };
+
+    const render = () => {
+      const q = search.value.trim().toLowerCase();
+      const shown = items
+        .filter((it) => !q || it.text.toLowerCase().includes(q))
+        .sort((a, b) => Number(b.pinned) - Number(a.pinned)); // připnuté nahoře, jinak od nejnovějších
+      if (!shown.length) {
+        list.innerHTML = `<li class="clip__empty"></li>`;
+        $("li", list).textContent = items.length ? "Nic nenalezeno." : "Zatím prázdné – zkopíruj nějaký text (Ctrl+C).";
+        return;
+      }
+      list.replaceChildren(...shown.map((it) => {
+        const li = document.createElement("li");
+        li.className = "clip-item";
+        li.classList.toggle("is-selected", it.id === selectedId);
+        li.classList.toggle("is-pinned", it.pinned);
+        li.innerHTML = `
+          <button class="clip-item__main" type="button" title="Klik = vybrat a zkopírovat">
+            <span class="clip-item__text"></span>
+            <span class="clip-item__meta"></span>
+          </button>
+          <div class="clip-item__tools">
+            <button class="icon-btn icon-btn--xs" type="button" data-act="paste" aria-label="Vložit do předchozí aplikace" title="Vložit"><i data-lucide="clipboard-paste"></i></button>
+            <button class="icon-btn icon-btn--xs" type="button" data-act="pin"><i data-lucide="${it.pinned ? "pin-off" : "pin"}"></i></button>
+            <button class="icon-btn icon-btn--xs clip-item__del" type="button" data-act="delete" aria-label="Smazat" title="Smazat"><i data-lucide="trash-2"></i></button>
+          </div>`;
+        $(".clip-item__text", li).textContent = it.text;
+        $(".clip-item__meta", li).textContent = `${when(it.time)} · ${it.text.length} znaků${it.pinned ? " · připnuto" : ""}`;
+        const pinBtn = $('[data-act="pin"]', li);
+        pinBtn.setAttribute("aria-label", it.pinned ? "Odepnout" : "Připnout");
+        pinBtn.title = pinBtn.getAttribute("aria-label");
+        $(".clip-item__main", li).addEventListener("click", () => {
+          selectedId = it.id;
+          textEl.value = it.text;
+          api.copy(it.id);
+          flash("Zkopírováno do schránky – vlož pomocí Ctrl+V.", "ok");
+          render();
+        });
+        $('[data-act="paste"]', li).addEventListener("click", () => api.paste(it.id));
+        pinBtn.addEventListener("click", () => api.pin(it.id));
+        $('[data-act="delete"]', li).addEventListener("click", () => api.remove(it.id));
+        return li;
+      }));
+      renderIcons();
+    };
+
+    const apply = ({ history, paused }) => {
+      items = history;
+      $("#clip-pause").checked = paused;
+      render();
+    };
+    api.list().then(apply);
+    api.onUpdate(apply);
+    search.addEventListener("input", render);
+    $("#clip-pause").addEventListener("change", (e) => api.pause(e.target.checked));
+    $("#clip-clear").addEventListener("click", () => {
+      if (window.confirm("Vymazat historii schránky? Připnuté položky zůstanou.")) api.clear();
+    });
+
+    const current = () => textEl.value;
+    $("#clip-copy").addEventListener("click", () => {
+      if (!current()) return;
+      api.copyText(current());
+      flash("Zkopírováno do schránky.", "ok");
+    });
+    $("#clip-paste").addEventListener("click", () => { if (current()) api.pasteText(current()); });
+
+    /* AI úpravy */
+    const keyForm = $("#ai-key-form");
+    let hasKey = false;
+    const refreshKey = async () => {
+      hasKey = await ai.hasKey();
+      $("#ai-key-btn").classList.toggle("is-set", hasKey);
+      $("#ai-key").placeholder = hasKey ? "Klíč je uložený – zadej nový pro změnu" : "Gemini API klíč";
+    };
+    refreshKey();
+    $("#ai-key-btn").addEventListener("click", () => { keyForm.hidden = !keyForm.hidden; if (!keyForm.hidden) $("#ai-key").focus(); });
+    keyForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!$("#ai-key").value.trim()) return;
+      await ai.setKey($("#ai-key").value);
+      $("#ai-key").value = "";
+      keyForm.hidden = true;
+      await refreshKey();
+      flash("API klíč uložen.", "ok");
+    });
+    $("#ai-key-remove").addEventListener("click", async () => {
+      await ai.setKey("");
+      await refreshKey();
+      flash("API klíč odebrán.");
+    });
+
+    const run = async (instruction) => {
+      const text = current().trim();
+      if (!text) { flash("Nejdřív vyber nebo napiš text.", "error"); textEl.focus(); return; }
+      if (!hasKey) {
+        // Bez API klíče: připravit zadání do schránky a otevřít Gemini (stačí Ctrl+V a Enter)
+        await api.copyText(`${instruction}\n\n${text}`);
+        showView("assistant");
+        flash("Zadání je ve schránce – v Gemini ho vlož (Ctrl+V) a odešli. Pro úpravy přímo tady nastav API klíč 🔑.");
+        return;
+      }
+      $$("#ai-actions button, #ai-custom button").forEach((b) => { b.disabled = true; });
+      flash("Gemini upravuje text…", "busy");
+      const res = await ai.transform(text, instruction);
+      $$("#ai-actions button, #ai-custom button").forEach((b) => { b.disabled = false; });
+      if (!res.ok) {
+        flash(res.error === "NO_KEY" ? "Chybí API klíč." : `Chyba: ${res.error}`, "error");
+        return;
+      }
+      output.value = res.text;
+      $("#ai-result").hidden = false;
+      flash("Hotovo.", "ok");
+    };
+    $$("#ai-actions [data-ai]").forEach((b) => b.addEventListener("click", () => run(b.dataset.ai)));
+    $("#ai-custom").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const instruction = $("#ai-instruction").value.trim();
+      if (instruction) run(instruction);
+    });
+    $("#ai-use").addEventListener("click", () => { textEl.value = output.value; });
+    $("#ai-copy").addEventListener("click", () => { api.copyText(output.value); flash("Výsledek zkopírován.", "ok"); });
+    $("#ai-paste").addEventListener("click", () => api.pasteText(output.value));
+  };
+
   /* ---------- Desktop (Electron): ovládání okna ---------- */
   const desktop = window.desktop;
   if (desktop) {
@@ -472,7 +619,11 @@
 
   loadNews();
   loadWeather();
-  if (desktop) setupGemini();
+  if (desktop) {
+    setupGemini();
+    setupClipboard();
+    desktop.onShowView((view) => showView(view));
+  }
 
   renderIcons();
 })();

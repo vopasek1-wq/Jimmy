@@ -1,4 +1,4 @@
-# Jimmy – AI Dashboard pro Windows
+# J.I.M.M.Y. – osobní dashboard pro Windows
 
 Desktopová aplikace pro Windows (Electron) s dashboardem v tmavém tématu podle návrhu 1536 × 1024 px.
 Okno je bez systémového rámečku – titulní lišta z návrhu funguje jako skutečná: tažení okna,
@@ -8,8 +8,8 @@ dvojklik pro maximalizaci, tlačítka minimalizovat / maximalizovat / zavřít.
 
 ## Stažení
 
-Sestavený soubor je v GitHub Actions → workflow **Windows build** → artefakt `AI-Dashboard-Windows`:
-`AI-Dashboard-1.0.0-portable.exe` – stačí stáhnout a spustit, bez instalace.
+Sestavený soubor je v GitHub Actions → workflow **Windows build** → artefakt `JIMMY-Windows`:
+`JIMMY-1.0.0-portable.exe` – stačí stáhnout a spustit, bez instalace.
 
 Aplikace není digitálně podepsaná, takže Windows SmartScreen může při prvním spuštění zobrazit
 varování → **Další informace** → **Přesto spustit**.
@@ -17,7 +17,7 @@ varování → **Další informace** → **Přesto spustit**.
 ## Co funguje „naostro“
 
 - **Levé menu** přepíná pohledy: Přehled, AI asistent (Gemini přes celou šířku), Počasí, Zprávy,
-  Úkoly a Herní přehled (jednotlivé sekce přes celou plochu).
+  Úkoly, Chytrá schránka a Herní přehled (jednotlivé sekce přes celou plochu).
 - **AI asistent** = [Gemini](https://gemini.google.com/app) vložené v pravém panelu (Electron `<webview>`,
   vlastní trvalé úložiště → přihlášení Google účtem vydrží i po restartu). Odkazy z odpovědí se otevírají
   ve výchozím prohlížeči; tlačítka v hlavičce: znovu načíst / otevřít v prohlížeči.
@@ -30,7 +30,13 @@ varování → **Další informace** → **Přesto spustit**.
   na dnešek) a úkoly vybraného dne s možností přidat (i s časem), odškrtnout a smazat.
   Úkol lze nastavit na opakování **každý den** nebo **každý týden** (ve stejný den v týdnu);
   opakovaný úkol se odškrtává zvlášť pro každý den, smazání odstraní celou řadu.
-- **Ukládání:** úkoly zůstávají i po restartu aplikace.
+- **Chytrá schránka:** historie kopírovaného textu z celého Windows (vyhledávání, připnutí, mazání,
+  pozastavení záznamu), klik = zkopírovat zpět, **Vložit** = schová aplikaci a vloží text do předchozího
+  okna (Ctrl+V). Zkratka **Alt+Shift+V** otevře schránku odkudkoliv. **AI úprava textu** (oprava pravopisu,
+  zkrácení, formálněji, překlad, shrnutí, vlastní pokyn) přes Gemini API s vlastním bezplatným klíčem
+  z [aistudio.google.com/apikey](https://aistudio.google.com/apikey) (uložen šifrovaně); bez klíče se
+  zadání připraví do schránky a otevře se Gemini.
+- **Ukládání:** úkoly a historie schránky zůstávají i po restartu aplikace.
 - Herní přehled obsahuje zatím ukázková data.
 
 ## Vývoj
@@ -46,6 +52,7 @@ npm run dist         # sestaví portable .exe do složky dist/ (na Windows)
 | `main.js` | Hlavní proces Electronu: okno bez rámečku, zprávy, počasí, zabezpečení webview s Gemini |
 | `news.js` | Stažení a zpracování RSS, odstranění duplicitních témat |
 | `weather.js` | Počasí z Open-Meteo (Teplice) |
+| `clipboard.js` | Chytrá schránka: historie, vkládání, AI úpravy přes Gemini API |
 | `preload.js` | Bezpečný most mezi stránkou a hlavním procesem (`window.desktop`) |
 | `index.html` | Markup dashboardu |
 | `styles.css` | Design tokeny (`:root`), layout, komponenty, stavy hover/active/focus |

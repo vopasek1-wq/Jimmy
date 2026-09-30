@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'">
-  <title>AI Dashboard</title>
+  <title>J.I.M.M.Y.</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%234fd8ff'/%3E%3Cstop offset='1' stop-color='%231b6dff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M16 2.5 31 29.5h-8.2L16 16.8 9.2 29.5H1Z' fill='url(%23g)'/%3E%3C/svg%3E">
 
   <link rel="stylesheet" href="vendor/fonts.css">
@@ -149,7 +149,7 @@
     <aside class="sidebar" id="sidebar" aria-label="Hlavní navigace">
       <a class="brand" href="#">
         <svg class="brand__logo" aria-hidden="true"><use href="#i-logo"/></svg>
-        <span class="brand__name">AI Dashboard</span>
+        <span class="brand__name">J.I.M.M.Y.</span>
       </a>
 
       <nav class="nav">
@@ -159,6 +159,7 @@
           <li><a class="nav__link" href="#" data-view="weather"><i data-lucide="cloud-sun"></i><span>Počasí</span></a></li>
           <li><a class="nav__link" href="#" data-view="news"><i data-lucide="newspaper"></i><span>Zprávy</span></a></li>
           <li><a class="nav__link" href="#" data-view="tasks"><i data-lucide="calendar-check"></i><span>Úkoly</span></a></li>
+          <li><a class="nav__link" href="#" data-view="clipboard"><i data-lucide="clipboard-list"></i><span>Chytrá schránka</span></a></li>
           <li><a class="nav__link" href="#" data-view="games"><i data-lucide="gamepad-2"></i><span>Herní přehled</span></a></li>
         </ul>
       </nav>
@@ -258,6 +259,76 @@
           </ul>
         </section>
 
+
+        <!-- Chytrá schránka: historie kopírovaného textu, rychlé vkládání, AI úpravy -->
+        <section class="card clipboard" aria-labelledby="clip-title">
+          <header class="card__header">
+            <h2 class="card__title" id="clip-title"><i data-lucide="clipboard-list"></i>Chytrá schránka</h2>
+            <div class="clip-tools">
+              <label class="check-pill"><input type="checkbox" id="clip-pause"><span>Pozastavit záznam</span></label>
+              <button class="pill-btn" type="button" id="clip-clear">Vymazat historii</button>
+            </div>
+          </header>
+
+          <div class="clip">
+            <div class="clip__history">
+              <label class="clip__search">
+                <i data-lucide="search"></i>
+                <input class="input" id="clip-search" type="search" placeholder="Hledat v historii…" aria-label="Hledat v historii schránky" autocomplete="off">
+              </label>
+              <ul class="clip__list" id="clip-list" aria-label="Historie schránky"></ul>
+              <p class="clip__hint">Kopíruj text kdekoliv ve Windows – objeví se tady. <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd> otevře schránku odkudkoliv.</p>
+            </div>
+
+            <div class="clip__editor">
+              <textarea class="input clip__text" id="clip-text" placeholder="Vyber položku z historie nebo sem napiš / vlož text…" aria-label="Text"></textarea>
+              <div class="clip__actions">
+                <button class="btn btn--secondary" type="button" id="clip-copy"><i data-lucide="copy"></i>Kopírovat</button>
+                <button class="btn btn--primary" type="button" id="clip-paste"><i data-lucide="clipboard-paste"></i>Vložit do předchozí aplikace</button>
+              </div>
+
+              <div class="clip__ai">
+                <div class="clip__ai-head">
+                  <h3><i data-lucide="sparkles"></i>AI úprava textu</h3>
+                  <button class="icon-btn icon-btn--sm" type="button" id="ai-key-btn" aria-label="Nastavit Gemini API klíč" title="Gemini API klíč"><i data-lucide="key-round"></i></button>
+                </div>
+                <form class="ai-key" id="ai-key-form" hidden>
+                  <p>Pro úpravy přímo v aplikaci vlož bezplatný Gemini API klíč z
+                    <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>.
+                    Klíč se uloží šifrovaně jen v tomto počítači. Bez klíče se zadání připraví pro Gemini v záložce AI asistent.</p>
+                  <div class="ai-key__row">
+                    <input class="input" id="ai-key" type="password" placeholder="Gemini API klíč" autocomplete="off" aria-label="Gemini API klíč">
+                    <button class="btn btn--primary btn--sm" type="submit">Uložit</button>
+                    <button class="pill-btn" type="button" id="ai-key-remove">Odebrat</button>
+                  </div>
+                </form>
+                <div class="ai-actions" id="ai-actions">
+                  <button class="chip-btn" type="button" data-ai="Oprav pravopis, gramatiku a interpunkci. Zachovej jazyk, význam a styl.">Opravit pravopis</button>
+                  <button class="chip-btn" type="button" data-ai="Zkrať text na zhruba polovinu a zachovej hlavní sdělení.">Zkrátit</button>
+                  <button class="chip-btn" type="button" data-ai="Přepiš text formálněji a profesionálněji.">Formálněji</button>
+                  <button class="chip-btn" type="button" data-ai="Přepiš text přátelštěji a neformálně.">Přátelštěji</button>
+                  <button class="chip-btn" type="button" data-ai="Shrň text do několika krátkých vět.">Shrnout</button>
+                  <button class="chip-btn" type="button" data-ai="Převeď text na přehledný seznam s odrážkami.">Odrážky</button>
+                  <button class="chip-btn" type="button" data-ai="Přelož text do angličtiny.">Do angličtiny</button>
+                  <button class="chip-btn" type="button" data-ai="Přelož text do češtiny.">Do češtiny</button>
+                </div>
+                <form class="ai-custom" id="ai-custom">
+                  <input class="input" id="ai-instruction" type="text" placeholder="Vlastní pokyn, např. „přepiš jako e-mail šéfovi“" aria-label="Vlastní pokyn pro AI" autocomplete="off">
+                  <button class="btn btn--primary btn--icon" type="submit" aria-label="Upravit podle pokynu"><i data-lucide="send-horizontal"></i></button>
+                </form>
+                <p class="ai-status" id="ai-status" role="status"></p>
+                <div class="ai-result" id="ai-result" hidden>
+                  <textarea class="input clip__text clip__text--result" id="ai-output" aria-label="Výsledek AI úpravy"></textarea>
+                  <div class="clip__actions">
+                    <button class="btn btn--secondary btn--sm" type="button" id="ai-use">Použít jako text</button>
+                    <button class="btn btn--secondary btn--sm" type="button" id="ai-copy"><i data-lucide="copy"></i>Kopírovat</button>
+                    <button class="btn btn--primary btn--sm" type="button" id="ai-paste"><i data-lucide="clipboard-paste"></i>Vložit</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
         <!-- Herní přehled -->
         <section class="card games" aria-labelledby="games-title">
