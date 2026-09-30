@@ -310,6 +310,17 @@ i[data-lucide],
   color: var(--accent-bright);
 }
 .is-editing .board .assistant__who::after { display: inline-block; margin: 4px 0 0; }
+.is-editing .nav__link { padding-left: 22px; outline: 1px dashed rgba(86, 203, 255, 0.4); outline-offset: -1px; cursor: grab; }
+.is-editing .nav__link:active { cursor: grabbing; transform: none; }
+.is-editing .nav__link::after {
+  content: "⠿";
+  position: absolute;
+  left: 7px;
+  font-size: 13px;
+  color: var(--accent-bright);
+  opacity: 0.75;
+}
+.nav__list > li.is-dragging { opacity: 0.4; }
 .board .grid-stack-placeholder > .placeholder-content {
   background: rgba(54, 181, 244, 0.1);
   border: 2px dashed rgba(86, 203, 255, 0.6);
@@ -532,7 +543,7 @@ i[data-lucide],
 .weather__tip-badge.is-ai { background: linear-gradient(90deg, #1b6dff, #36b5f4); color: #fff; }
 .weather__chart { position: relative; flex: 1 1 110px; min-height: 90px; }
 .weather__chart canvas { position: absolute; inset: 0; }
-.app[data-view="weather"] .weather__chart { flex: none; height: 300px; }
+.app[data-view="weather"] .weather__chart { flex: none; height: 170px; }
 /* V mřížce Přehledu kompaktnější předpověď, aby se vešel graf */
 .board .forecast { padding: 8px 0 6px; }
 .board .forecast__icon { margin: 6px 0 8px; }
@@ -1078,6 +1089,8 @@ i[data-lucide],
   .brand__name,
   .nav__link span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   .nav__link { justify-content: center; padding: 0; }
+  .is-editing .nav__link { padding-left: 0; }
+  .is-editing .nav__link::after { display: none; }
   .search { margin-right: 16px; }
 }
 

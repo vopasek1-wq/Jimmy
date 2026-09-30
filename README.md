@@ -20,7 +20,8 @@ varování → **Další informace** → **Přesto spustit**.
 
 - **Přizpůsobitelný Přehled** ([GridStack.js](https://gridstackjs.com)): tlačítko **Upravit rozložení** v horní liště
   – bloky Počasí, Úkoly, Zprávy a AI asistent jde přetahovat za nadpis a měnit jejich velikost za okraje/rohy;
-  rozložení se ukládá, **Výchozí rozložení** ho vrátí. Mimo režim úprav je mřížka zamčená.
+  v tomtéž režimu jde přetažením měnit i pořadí položek levého menu.
+  Rozložení se ukládá, **Výchozí rozložení** vrátí bloky i menu. Mimo režim úprav je vše zamčené.
 - **Levé menu** přepíná pohledy: Přehled, AI asistent (Gemini přes celou šířku), Počasí, Zprávy,
   Úkoly, Chytrá schránka a Herní přehled (jednotlivé sekce přes celou plochu).
 - **AI asistent** = [Gemini](https://gemini.google.com/app) vložené v pravém panelu (Electron `<webview>`,

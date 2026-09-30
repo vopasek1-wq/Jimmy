@@ -72,6 +72,7 @@
     link.title = link.textContent.trim();
     link.addEventListener("click", (e) => {
       e.preventDefault();
+      if (app.classList.contains("is-editing")) return; // v režimu úprav se položky jen přesouvají
       showView(link.dataset.view);
       setNav(false);
     });
@@ -486,7 +487,7 @@
         },
         scales: {
           x: { grid: { display: false }, ticks: { color: "#8d9cae", font: { size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } },
-          y: { position: "left", grid: { color: grid }, ticks: { color: "#8d9cae", font: { size: 10 }, callback: (v) => `${v}°` } },
+          y: { position: "left", grid: { color: grid }, ticks: { color: "#8d9cae", font: { size: 10 }, maxTicksLimit: 5, callback: (v) => `${v}°` } },
           y1: { position: "right", min: 0, max: 100, grid: { display: false }, ticks: { color: "#5f7ea8", font: { size: 10 }, stepSize: 50, callback: (v) => `${v}%` } },
         },
       },
@@ -810,8 +811,51 @@
     const saveLayout = () => store.set("board-layout",
       grid.engine.nodes.map(({ id, x, y, w, h }) => ({ id, x, y, w, h })));
     grid.on("change", saveLayout);
+    $$(".nav__link").forEach((l) => { l.draggable = false; });
 
     window.addEventListener("resize", () => grid.cellHeight(rowHeight()));
+
+    /* Pořadí položek levého menu – v režimu úprav jde měnit přetažením */
+    const navList = $(".nav__list");
+    const navItems = () => $$(":scope > li", navList);
+    const viewOf = (li) => $(".nav__link", li).dataset.view;
+    const DEFAULT_NAV = navItems().map(viewOf);
+    const applyNavOrder = (order) => {
+      const byView = new Map(navItems().map((li) => [viewOf(li), li]));
+      // položky chybějící v uloženém pořadí (např. nové) přijdou na konec
+      [...order.filter((v) => byView.has(v)), ...DEFAULT_NAV.filter((v) => !order.includes(v))]
+        .forEach((v) => navList.append(byView.get(v)));
+    };
+    const saveNavOrder = () => store.set("nav-order", navItems().map(viewOf));
+    const savedNav = store.get("nav-order");
+    if (Array.isArray(savedNav)) applyNavOrder(savedNav);
+
+    let draggedNav = null;
+    navList.addEventListener("dragstart", (e) => {
+      const li = e.target.closest?.("li");
+      if (!li || !app.classList.contains("is-editing")) return;
+      draggedNav = li;
+      e.dataTransfer.clearData(); // bez adresy odkazu – přetažení mimo menu nic neotevře
+      e.dataTransfer.setData("application/x-jimmy-nav", viewOf(li));
+      e.dataTransfer.effectAllowed = "move";
+      li.classList.add("is-dragging");
+    });
+    navList.addEventListener("dragover", (e) => {
+      if (!draggedNav) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      const over = e.target.closest?.("li");
+      if (!over || over === draggedNav) return;
+      const r = over.getBoundingClientRect();
+      navList.insertBefore(draggedNav, e.clientY > r.top + r.height / 2 ? over.nextSibling : over);
+    });
+    navList.addEventListener("drop", (e) => { if (draggedNav) e.preventDefault(); });
+    navList.addEventListener("dragend", () => {
+      if (!draggedNav) return;
+      draggedNav.classList.remove("is-dragging");
+      draggedNav = null;
+      saveNavOrder();
+    });
 
     const editBtn = $("#layout-edit");
     const resetBtn = $("#layout-reset");
@@ -822,9 +866,15 @@
       editBtn.setAttribute("aria-pressed", String(on));
       $("span", editBtn).textContent = on ? "Hotovo" : "Upravit rozložení";
       resetBtn.hidden = !on;
+      $$(".nav__link").forEach((l) => { l.draggable = on; });
     };
     editBtn.addEventListener("click", () => setEditing(!app.classList.contains("is-editing")));
-    resetBtn.addEventListener("click", () => { applyLayout(DEFAULT_LAYOUT); saveLayout(); });
+    resetBtn.addEventListener("click", () => {
+      applyLayout(DEFAULT_LAYOUT);
+      saveLayout();
+      applyNavOrder(DEFAULT_NAV);
+      saveNavOrder();
+    });
     document.addEventListener("keydown", (e) => { if (e.key === "Escape" && app.classList.contains("is-editing")) setEditing(false); });
     // Přepnutí na jinou stránku režim úprav ukončí.
     new MutationObserver(() => {
