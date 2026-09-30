@@ -23,8 +23,6 @@ varování → **Další informace** → **Přesto spustit**.
 ## Co funguje „naostro“
 
 - **Ovládání okna** z vlastní titulní lišty (minimalizace, maximalizace/obnovení, zavření).
-- **Systém:** skutečné vytížení CPU, paměti RAM a zaplnění disku C: (obnovuje se každé 2 s),
-  ve stavovém řádku verze Windows (10/11).
 - **Rychlé akce:** Otevřít web (výchozí prohlížeč), Otevřít složku (Dokumenty),
   Spustit aplikaci (výběr .exe/.lnk), Uložit poznámku.
 - **Ukládání:** úkoly, rychlé poznámky a stav přepínačů automatizací zůstávají i po restartu.
@@ -42,7 +40,7 @@ npm run dist:zip     # jen zip – jde sestavit i na Linuxu/macOS
 
 | Soubor | Obsah |
 | --- | --- |
-| `main.js` | Hlavní proces Electronu: okno bez rámečku, systémové údaje, rychlé akce |
+| `main.js` | Hlavní proces Electronu: okno bez rámečku, rychlé akce |
 | `preload.js` | Bezpečný most mezi stránkou a hlavním procesem (`window.desktop`) |
 | `index.html` | Markup dashboardu |
 | `styles.css` | Design tokeny (`:root`), layout, komponenty, stavy hover/active/focus |
@@ -53,7 +51,7 @@ npm run dist:zip     # jen zip – jde sestavit i na Linuxu/macOS
 
 ## Layout
 
-- **Shell:** CSS Grid `sidebar | obsah`, horní lišta a stavový řádek jsou `sticky`.
+- **Shell:** CSS Grid `sidebar | obsah`, horní lišta je `sticky`.
 - **Střed:** mřížka o 4 stopách (`416fr 100fr 32fr 374fr`) s pojmenovanými oblastmi, která věrně
   skládá „posunuté“ řádky z návrhu (Novinky přesahují pod Úkoly, Automatizace začíná nad Herním přehledem).
 - **Container queries** přizpůsobují vnitřek karet jejich šířce (předpověď počasí pod teplotu,
@@ -77,6 +75,6 @@ stavy `:hover`, `:active` a `:focus-visible`; animace respektují `prefers-reduc
 ## Poznámky
 
 - Obrázky v `assets/img/` jsou jen zástupné ilustrace – nahraďte je skutečnými (stejné poměry stran).
-- Hodiny ve widgetu i ve stavovém řádku ukazují aktuální čas a datum (česky).
+- Hodiny ve widgetu ukazují aktuální čas a datum (česky).
 - Dva překlepy z návrhu jsou opravené: „Herni přehled“ → „Herní přehled“,
   „Které hry dneska hrajú?“ → „Které hry dneska hrají?“.

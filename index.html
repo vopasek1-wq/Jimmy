@@ -54,14 +54,6 @@
       <path d="M16 16.8 12.6 23.2h6.8Z" fill="#0a121b" opacity=".55"/>
     </symbol>
 
-    <symbol id="i-orb" viewBox="0 0 40 40">
-      <g stroke="#6fe4ff" stroke-linecap="round" stroke-width="1.6" opacity=".85">
-        <path d="M20 2.5v4M20 33.5v4M2.5 20h4M33.5 20h4M7.6 7.6l2.8 2.8M29.6 29.6l2.8 2.8M7.6 32.4l2.8-2.8M29.6 10.4l2.8-2.8"/>
-      </g>
-      <circle cx="20" cy="20" r="10.5" fill="url(#g-orb)"/>
-      <circle cx="20" cy="20" r="10.5" fill="none" stroke="#bff4ff" stroke-opacity=".5"/>
-      <path d="M15 21.5c2-4 8-4 10 0" fill="none" stroke="#e9fcff" stroke-width="1.4" stroke-linecap="round" opacity=".8"/>
-    </symbol>
 
     <symbol id="wx-partly" viewBox="0 0 64 48">
       <circle cx="41" cy="17" r="15" fill="#ffc233" opacity=".18"/>
@@ -113,12 +105,6 @@
       <circle cx="19" cy="19" r="2.4" fill="#ffb020"/>
     </symbol>
 
-    <symbol id="i-windows" viewBox="0 0 24 24">
-      <rect x="2" y="2" width="9.5" height="9.5" rx=".6" fill="#2ea8ff"/>
-      <rect x="12.5" y="2" width="9.5" height="9.5" rx=".6" fill="#2ea8ff"/>
-      <rect x="2" y="12.5" width="9.5" height="9.5" rx=".6" fill="#2ea8ff"/>
-      <rect x="12.5" y="12.5" width="9.5" height="9.5" rx=".6" fill="#2ea8ff"/>
-    </symbol>
   </svg>
 
   <div class="app" id="app">
@@ -159,13 +145,6 @@
         <i data-lucide="menu"></i>
       </button>
 
-      <div class="greeting">
-        <svg class="greeting__orb" aria-hidden="true"><use href="#i-orb"/></svg>
-        <p class="greeting__text">
-          <strong>Ahoj Jakube,</strong>
-          <span>tady je tvůj přehled na dnešní den.</span>
-        </p>
-      </div>
 
       <form class="search" role="search" action="https://duckduckgo.com/" method="get" target="_blank">
         <i data-lucide="search"></i>
@@ -523,41 +502,9 @@
           </div>
         </section>
 
-        <!-- Systém -->
-        <section class="card system" aria-labelledby="system-title">
-          <h2 class="card__title" id="system-title"><i data-lucide="settings"></i>Systém</h2>
-          <ul class="meters">
-            <li class="meter">
-              <i data-lucide="cpu"></i>
-              <div class="meter__body">
-                <div class="meter__row"><span>CPU</span><span data-meter-value="cpu">12%</span></div>
-                <div class="meter__bar" role="progressbar" data-meter="cpu" aria-label="Využití CPU" aria-valuenow="12" aria-valuemin="0" aria-valuemax="100"><span style="--value: 12%"></span></div>
-              </div>
-            </li>
-            <li class="meter">
-              <i data-lucide="memory-stick"></i>
-              <div class="meter__body">
-                <div class="meter__row"><span>RAM</span><span data-meter-value="ram">34%</span></div>
-                <div class="meter__bar" role="progressbar" data-meter="ram" aria-label="Využití RAM" aria-valuenow="34" aria-valuemin="0" aria-valuemax="100"><span style="--value: 34%"></span></div>
-              </div>
-            </li>
-            <li class="meter">
-              <i data-lucide="hard-drive"></i>
-              <div class="meter__body">
-                <div class="meter__row"><span>Disk (C:)</span><span data-meter-value="disk">68%</span></div>
-                <div class="meter__bar" role="progressbar" data-meter="disk" aria-label="Zaplnění disku C:" aria-valuenow="68" aria-valuemin="0" aria-valuemax="100"><span style="--value: 68%"></span></div>
-              </div>
-            </li>
-          </ul>
-        </section>
       </aside>
     </main>
 
-    <!-- ============ STAVOVÝ ŘÁDEK ============ -->
-    <footer class="statusbar">
-      <p class="statusbar__left"><span class="status-dot status-dot--green"></span>AI Dashboard v<span id="app-version">1.0</span><span class="statusbar__sep">|</span>Lokální režim</p>
-      <p class="statusbar__right"><svg class="statusbar__os" aria-hidden="true"><use href="#i-windows"/></svg><span id="os-name">Windows 11</span><span class="statusbar__sep">|</span><time id="status-time">15:42</time></p>
-    </footer>
   </div>
 
 </body>

@@ -18,7 +18,7 @@
   };
 
   /* ---------- Hodiny a datum (česky) ---------- */
-  const timeEls = [$("#clock-time"), $("#status-time")].filter(Boolean);
+  const timeEls = [$("#clock-time")].filter(Boolean);
   const dateEl = $("#clock-date");
   const timeFmt = new Intl.DateTimeFormat("cs-CZ", { hour: "2-digit", minute: "2-digit" });
   const weekdayFmt = new Intl.DateTimeFormat("cs-CZ", { weekday: "long" });
@@ -271,23 +271,6 @@
       renderIcons();
     });
 
-    desktop.systemInfo().then(({ os, version }) => {
-      $("#os-name").textContent = os;
-      $("#app-version").textContent = version.replace(/\.0$/, "");
-    });
-
-    const updateMeters = async () => {
-      const stats = await desktop.systemStats();
-      Object.entries(stats).forEach(([key, value]) => {
-        if (value == null) return;
-        const bar = $(`[data-meter="${key}"]`);
-        $(`[data-meter-value="${key}"]`).textContent = `${value}%`;
-        bar.setAttribute("aria-valuenow", value);
-        $("span", bar).style.setProperty("--value", `${value}%`);
-      });
-    };
-    updateMeters();
-    setInterval(updateMeters, 2000);
   }
 
   const actions = {

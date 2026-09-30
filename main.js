@@ -3,8 +3,6 @@
 
 const { app, BrowserWindow, ipcMain, shell, dialog, screen } = require("electron");
 const path = require("node:path");
-const os = require("node:os");
-const fs = require("node:fs");
 
 const DESIGN_SIZE = { width: 1536, height: 1024 };
 const isHttpUrl = (url) => /^https?:\/\//i.test(url);
@@ -68,52 +66,6 @@ ipcMain.on("win:toggle-maximize", (e) => {
   win.isMaximized() ? win.unmaximize() : win.maximize();
 });
 ipcMain.on("win:close", (e) => senderWindow(e)?.close());
-
-/* ---------- Systémové informace ---------- */
-let lastCpu = os.cpus().map((c) => c.times);
-
-function cpuUsage() {
-  const now = os.cpus().map((c) => c.times);
-  let idle = 0;
-  let total = 0;
-  now.forEach((t, i) => {
-    const prev = lastCpu[i] || t;
-    const busy = (t.user - prev.user) + (t.nice - prev.nice) + (t.sys - prev.sys) + (t.irq - prev.irq);
-    const free = t.idle - prev.idle;
-    idle += free;
-    total += busy + free;
-  });
-  lastCpu = now;
-  return total > 0 ? Math.round((1 - idle / total) * 100) : 0;
-}
-
-function diskUsage() {
-  const root = process.platform === "win32" ? "C:\\" : "/";
-  try {
-    const s = fs.statfsSync(root);
-    return Math.round((1 - s.bavail / s.blocks) * 100);
-  } catch {
-    return null;
-  }
-}
-
-function osName() {
-  if (process.platform !== "win32") return os.type();
-  // Windows 11 má stále verzi jádra 10.0, liší se číslem buildu (22000+).
-  const build = Number(os.release().split(".")[2] || 0);
-  return build >= 22000 ? "Windows 11" : "Windows 10";
-}
-
-ipcMain.handle("sys:stats", () => ({
-  cpu: cpuUsage(),
-  ram: Math.round((1 - os.freemem() / os.totalmem()) * 100),
-  disk: diskUsage(),
-}));
-
-ipcMain.handle("sys:info", () => ({
-  os: osName(),
-  version: app.getVersion(),
-}));
 
 /* ---------- Rychlé akce ---------- */
 ipcMain.handle("action:open-web", () => shell.openExternal("https://www.google.com/"));
