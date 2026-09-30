@@ -77,115 +77,253 @@
     if (e.key === "Escape") setNav(false);
   });
 
-  /* ---------- Novinky: filtr ČR / Svět ---------- */
-  $("#news-region").addEventListener("change", (e) => {
-    const region = e.target.value;
-    $$(".news__item").forEach((item) => {
-      item.parentElement.hidden = region !== "all" && item.dataset.region !== region;
-    });
-  });
+  /* ---------- Novinky: Seznam Zprávy, Novinky.cz, iDNES.cz (živě z RSS) ---------- */
+  const newsList = $("#news-list");
+  const newsRefresh = $("#news-refresh");
+  let articles = [];
 
-  /* ---------- Záložky úkolů ---------- */
-  $$(".tabs__tab").forEach((tab) => {
-    tab.addEventListener("click", () => {
-      $$(".tabs__tab").forEach((t) => {
-        t.classList.toggle("is-active", t === tab);
-        t.setAttribute("aria-pressed", String(t === tab));
-      });
-    });
-  });
-
-  /* ---------- Přidání úkolu ---------- */
-  const taskForm = $("#task-add");
-  const taskField = $(".task-add__field", taskForm);
-  const taskInput = $("#task-input");
-  const taskList = $("#task-list");
-
-  const openTaskField = () => {
-    taskField.hidden = false;
-    taskInput.focus();
+  const relativeTime = (ms) => {
+    const min = Math.round((Date.now() - ms) / 60000);
+    if (min < 1) return "právě teď";
+    if (min === 1) return "před minutou";
+    if (min < 60) return `před ${min} minutami`;
+    const h = Math.round(min / 60);
+    if (h === 1) return "před hodinou";
+    if (h < 24) return `před ${h} hodinami`;
+    const d = Math.round(h / 24);
+    return d === 1 ? "včera" : `před ${d} dny`;
   };
-  $("#task-add-toggle").addEventListener("click", openTaskField);
-  $("[data-add-task]").addEventListener("click", openTaskField);
 
-  taskInput.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-      taskInput.value = "";
-      taskField.hidden = true;
+  const newsStatus = (text, retry = false) => {
+    newsList.innerHTML = `<li class="news__status"></li>`;
+    const li = $("li", newsList);
+    li.textContent = text;
+    if (retry) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "pill-btn";
+      btn.textContent = "Zkusit znovu";
+      btn.addEventListener("click", loadNews);
+      li.append(btn);
     }
-  });
-
-  const createTask = ({ title, due = "Dnes", done = false }) => {
-    const li = document.createElement("li");
-    li.innerHTML = `
-      <label class="task">
-        <input class="checkbox" type="checkbox">
-        <span class="task__text">
-          <span class="task__title"></span>
-          <span class="task__due"></span>
-        </span>
-      </label>`;
-    $(".task__title", li).textContent = title;
-    $(".task__due", li).textContent = due;
-    $(".checkbox", li).checked = done;
-    taskList.append(li);
-    return li;
   };
 
-  const saveTasks = () => store.set("tasks", $$("li", taskList).map((li) => ({
-    title: $(".task__title", li).textContent,
-    due: $(".task__due", li).textContent,
-    done: $(".checkbox", li).checked,
-  })));
-
-  const savedTasks = store.get("tasks");
-  if (Array.isArray(savedTasks)) {
-    taskList.replaceChildren();
-    savedTasks.forEach(createTask);
-  }
-  taskList.addEventListener("change", saveTasks);
-
-  taskForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const title = taskInput.value.trim();
-    if (!title) return;
-
-    createTask({ title }).scrollIntoView({ block: "nearest" });
-    saveTasks();
-    taskInput.value = "";
-    taskField.hidden = true;
-  });
-
-  /* ---------- Rychlé poznámky (editace přímo v seznamu) ---------- */
-  const notesList = $("#notes-list");
-  const notesEdit = $("#notes-edit");
-  const savedNotes = store.get("notes");
-  if (Array.isArray(savedNotes)) {
-    notesList.replaceChildren(...savedNotes.map((text) => {
+  const renderNews = () => {
+    newsList.replaceChildren(...articles.map((a) => {
       const li = document.createElement("li");
-      li.textContent = text;
+      li.innerHTML = `
+        <a class="news__item" target="_blank" rel="noopener">
+          <span class="news__thumb news__thumb--${a.source}"></span>
+          <span class="news__body">
+            <span class="news__title"></span>
+            <span class="news__meta"><span class="news__source"></span><span class="dot-sep" aria-hidden="true">•</span><span class="news__time"></span></span>
+          </span>
+        </a>`;
+      const link = $("a", li);
+      link.href = a.link;
+      link.title = a.description;
+      $(".news__title", li).textContent = a.title;
+      $(".news__source", li).textContent = a.sourceName;
+      $(".news__time", li).textContent = relativeTime(a.published);
+      const thumb = $(".news__thumb", li);
+      thumb.textContent = a.sourceName.charAt(0);
+      if (a.image) {
+        const img = new Image();
+        img.alt = "";
+        img.loading = "lazy";
+        img.referrerPolicy = "no-referrer";
+        img.onload = () => thumb.replaceChildren(img);
+        img.src = a.image;
+      }
       return li;
     }));
-  }
-  const saveNotes = () => store.set("notes", $$("li", notesList).map((li) => li.textContent.trim()).filter(Boolean));
-
-  const setNotesEditing = (editing) => {
-    notesList.contentEditable = String(editing);
-    notesEdit.setAttribute("aria-pressed", String(editing));
-    if (editing) {
-      notesList.focus();
-    } else {
-      saveNotes();
-    }
   };
-  notesEdit.addEventListener("click", () => setNotesEditing(!notesList.isContentEditable));
-  notesList.addEventListener("focusout", () => { if (notesList.isContentEditable) saveNotes(); });
 
-  /* ---------- AI automatizace: stav přepínačů ---------- */
-  const switches = $$(".automations .switch input");
-  const savedSwitches = store.get("automations");
-  if (Array.isArray(savedSwitches)) switches.forEach((input, i) => { input.checked = Boolean(savedSwitches[i]); });
-  switches.forEach((input) => input.addEventListener("change", () => store.set("automations", switches.map((s) => s.checked))));
+  async function loadNews() {
+    if (!window.desktop?.fetchNews) {
+      newsStatus("Zprávy se načítají jen v desktopové aplikaci.");
+      return;
+    }
+    newsRefresh.disabled = true;
+    newsRefresh.classList.add("is-spinning");
+    newsList.setAttribute("aria-busy", "true");
+    if (!articles.length) newsStatus("Načítám zprávy…");
+    try {
+      ({ articles } = await window.desktop.fetchNews());
+      renderNews();
+    } catch {
+      if (!articles.length) newsStatus("Zprávy se nepodařilo načíst. Zkontroluj připojení k internetu.", true);
+    } finally {
+      newsRefresh.disabled = false;
+      newsRefresh.classList.remove("is-spinning");
+      newsList.setAttribute("aria-busy", "false");
+    }
+  }
+  newsRefresh.addEventListener("click", loadNews);
+  setInterval(loadNews, 15 * 60 * 1000);           // nové zprávy každých 15 minut
+  setInterval(() => { if (articles.length) renderNews(); }, 60 * 1000); // „před X minutami“
+
+  /* ---------- Úkoly: týdenní kalendář ---------- */
+  const pad = (n) => String(n).padStart(2, "0");
+  const dateKey = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+  const mondayOf = (d) => addDays(d, -((d.getDay() + 6) % 7));
+  const todayKey = () => dateKey(new Date());
+  const capitalize = (t) => t.charAt(0).toUpperCase() + t.slice(1);
+  const dayNameFmt = new Intl.DateTimeFormat("cs-CZ", { weekday: "long" });
+  const dayShortFmt = new Intl.DateTimeFormat("cs-CZ", { weekday: "short" });
+
+  const seedTasks = () => {
+    const t = new Date();
+    const k = (n) => dateKey(addDays(t, n));
+    return [
+      { title: "Zkontrolovat ceny na Alza.cz (grafická karta)", date: k(0), time: "16:00" },
+      { title: "Trénink", date: k(0), time: "17:00", done: true },
+      { title: "Dokončit video pro YouTube", date: k(0), time: "19:00" },
+      { title: "Diablo IV – Season push", date: k(0), time: "20:00" },
+      { title: "Zavolat do banky", date: k(1), time: "10:00" },
+      { title: "Napsat poznámky k Diablo IV buildu", date: k(1), time: "21:00" },
+      { title: "Plán na víkend – Sapa?", date: k(3), time: "" },
+    ].map((task, i) => ({ id: `seed-${i}`, done: false, ...task }));
+  };
+
+  let tasks = store.get("week-tasks");
+  if (!Array.isArray(tasks)) tasks = seedTasks();
+  const saveTasks = () => store.set("week-tasks", tasks);
+
+  let selectedDay = todayKey();
+  let weekStart = mondayOf(new Date());
+
+  const taskList = $("#task-list");
+  const weekEl = $("#week");
+  const byTime = (a, b) => (a.time || "99").localeCompare(b.time || "99") || a.title.localeCompare(b.title, "cs");
+  const tasksFor = (key) => tasks.filter((t) => t.date === key).sort(byTime);
+
+  const renderDay = () => {
+    const d = new Date(`${selectedDay}T00:00`);
+    const label = selectedDay === todayKey() ? "Dnes" : capitalize(dayNameFmt.format(d));
+    $("#day-title").textContent = `${label} ${d.getDate()}. ${d.getMonth() + 1}.`;
+
+    const list = tasksFor(selectedDay);
+    taskList.replaceChildren(...list.map((task) => {
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <label class="task">
+          <input class="checkbox" type="checkbox">
+          <span class="task__text">
+            <span class="task__title"></span>
+            <span class="task__due"></span>
+          </span>
+        </label>
+        <button class="task__delete icon-btn icon-btn--xs" type="button" aria-label="Smazat úkol"><i data-lucide="x"></i></button>`;
+      $(".task__title", li).textContent = task.title;
+      $(".task__due", li).textContent = task.time || "Kdykoliv";
+      const box = $(".checkbox", li);
+      box.checked = task.done;
+      box.addEventListener("change", () => { task.done = box.checked; saveTasks(); renderWeek(); renderAgenda(); });
+      $(".task__delete", li).addEventListener("click", () => {
+        tasks = tasks.filter((t) => t !== task);
+        saveTasks();
+        renderAll();
+      });
+      return li;
+    }));
+    if (!list.length) {
+      const li = document.createElement("li");
+      li.className = "task-list__empty";
+      li.textContent = "Na tento den nemáš žádné úkoly.";
+      taskList.append(li);
+    }
+    renderIcons();
+  };
+
+  const renderWeek = () => {
+    const end = addDays(weekStart, 6);
+    const sameMonth = weekStart.getMonth() === end.getMonth();
+    $("#week-today").textContent = sameMonth
+      ? `${weekStart.getDate()}.–${end.getDate()}. ${end.getMonth() + 1}. ${end.getFullYear()}`
+      : `${weekStart.getDate()}. ${weekStart.getMonth() + 1}. – ${end.getDate()}. ${end.getMonth() + 1}. ${end.getFullYear()}`;
+
+    weekEl.replaceChildren(...Array.from({ length: 7 }, (_, i) => {
+      const d = addDays(weekStart, i);
+      const key = dateKey(d);
+      const list = tasksFor(key);
+      const open = list.filter((t) => !t.done);
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <button class="day" type="button">
+          <span class="day__date"><span class="day__name"></span><span class="day__num"></span></span>
+          <span class="day__tasks"></span>
+          <span class="day__count"></span>
+        </button>`;
+      const btn = $("button", li);
+      btn.classList.toggle("is-today", key === todayKey());
+      btn.classList.toggle("is-selected", key === selectedDay);
+      btn.classList.toggle("is-weekend", i >= 5);
+      btn.setAttribute("aria-pressed", String(key === selectedDay));
+      $(".day__name", li).textContent = capitalize(dayShortFmt.format(d));
+      $(".day__num", li).textContent = `${d.getDate()}.`;
+      $(".day__tasks", li).textContent = list.length
+        ? list.map((t) => (t.time ? `${t.time} ${t.title}` : t.title)).join(" · ")
+        : "—";
+      $(".day__count", li).textContent = open.length ? open.length : "";
+      btn.setAttribute("aria-label", `${capitalize(dayNameFmt.format(d))} ${d.getDate()}. ${d.getMonth() + 1}., úkolů: ${list.length}`);
+      btn.addEventListener("click", () => { selectedDay = key; renderWeek(); renderDay(); });
+      return li;
+    }));
+  };
+
+  const renderAgenda = () => {
+    const agenda = $("#agenda");
+    const upcoming = tasksFor(todayKey()).filter((t) => !t.done).slice(0, 2);
+    if (!upcoming.length) {
+      agenda.innerHTML = `<li class="agenda__item agenda__item--empty">Na dnes nic dalšího</li>`;
+      return;
+    }
+    agenda.replaceChildren(...upcoming.map((t) => {
+      const li = document.createElement("li");
+      li.className = "agenda__item";
+      li.innerHTML = "<time></time><span></span>";
+      $("time", li).textContent = t.time || "—";
+      $("span", li).textContent = t.title;
+      return li;
+    }));
+  };
+
+  const renderAll = () => { renderWeek(); renderDay(); renderAgenda(); };
+
+  $("#week-prev").addEventListener("click", () => { weekStart = addDays(weekStart, -7); renderWeek(); });
+  $("#week-next").addEventListener("click", () => { weekStart = addDays(weekStart, 7); renderWeek(); });
+  $("#week-today").addEventListener("click", () => {
+    weekStart = mondayOf(new Date());
+    selectedDay = todayKey();
+    renderAll();
+  });
+
+  $("#task-add").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const input = $("#task-input");
+    const time = $("#task-time");
+    const title = input.value.trim();
+    if (!title) return;
+    tasks.push({ id: `${Date.now()}`, title, date: selectedDay, time: time.value, done: false });
+    saveTasks();
+    input.value = "";
+    time.value = "";
+    renderAll();
+  });
+
+  // Po půlnoci se přepne „dnes“.
+  let lastToday = todayKey();
+  setInterval(() => {
+    if (todayKey() === lastToday) return;
+    if (selectedDay === lastToday) selectedDay = todayKey();
+    lastToday = todayKey();
+    weekStart = mondayOf(new Date());
+    renderAll();
+  }, 60 * 1000);
+
+  renderAll();
 
   /* ---------- AI chat (simulované odpovědi) ---------- */
   const chat = $("#chat");
@@ -193,10 +331,16 @@
   const composerInput = $("#composer-input");
 
   const replies = {
-    "novinky": "Dnes nejvíc rezonuje obrana (nákup techniky), přechod EU na čistou energii a nový update pro Diablo IV. Chceš k některé zprávě delší shrnutí?",
+    "novinky": () => (articles.length
+      ? `Nejnovější zprávy: ${articles.slice(0, 3).map((a) => `„${a.title}“ (${a.sourceName})`).join(", ")}.`
+      : "Zprávy se zatím nenačetly – zkus to za chvilku."),
     "počasí": "Zítra v Praze polojasno, přes den kolem 16 °C, v noci 8 °C. Deštník zatím není potřeba – déšť přijde až v pátek.",
     "hry": "Ve 20:00 máš v kalendáři Diablo IV – Season push. League of Legends naposledy před 2 dny (Gold II, 45 LP).",
-    "úkol": "Dnes máš 4 nesplněné úkoly. Nejdřív tě čeká kontrola cen na Alza.cz (16:00), pak video pro YouTube (19:00).",
+    "úkol": () => {
+      const open = tasksFor(todayKey()).filter((t) => !t.done);
+      if (!open.length) return "Na dnes nemáš žádné nesplněné úkoly. 🎉";
+      return `Dnes máš ${open.length} nesplněné úkoly: ${open.map((t) => (t.time ? `${t.title} (${t.time})` : t.title)).join(", ")}.`;
+    },
     "připomín": "Jasně! Napiš, co ti mám připomenout a kdy – třeba „Zavolat do banky zítra v 10:00“.",
   };
   const fallback = "Rozumím. Tohle je ukázkové UI – po napojení na AI backend tu uvidíš skutečnou odpověď.";
@@ -227,7 +371,8 @@
     const key = Object.keys(replies).find((k) => lower.includes(k));
     setTimeout(() => {
       typing.remove();
-      addBubble(key ? replies[key] : fallback, "bot");
+      const reply = typeof replies[key] === "function" ? replies[key]() : replies[key];
+      addBubble(reply || fallback, "bot");
     }, 700);
   };
 
@@ -255,7 +400,7 @@
     });
   });
 
-  /* ---------- Desktop (Electron): okno, systém, rychlé akce ---------- */
+  /* ---------- Desktop (Electron): ovládání okna ---------- */
   const desktop = window.desktop;
   if (desktop) {
     document.documentElement.classList.add("is-desktop");
@@ -273,15 +418,7 @@
 
   }
 
-  const actions = {
-    "open-web": () => (desktop ? desktop.openWeb() : window.open("https://www.google.com/", "_blank", "noopener")),
-    "open-folder": () => desktop?.openFolder(),
-    "launch-app": () => desktop?.launchApp(),
-    "save-note": () => setNotesEditing(true),
-  };
-  $$("[data-action]").forEach((btn) => {
-    btn.addEventListener("click", () => actions[btn.dataset.action]?.());
-  });
+  loadNews();
 
   renderIcons();
 })();

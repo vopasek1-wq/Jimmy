@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'">
   <title>AI Dashboard</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%234fd8ff'/%3E%3Cstop offset='1' stop-color='%231b6dff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M16 2.5 31 29.5h-8.2L16 16.8 9.2 29.5H1Z' fill='url(%23g)'/%3E%3C/svg%3E">
 
@@ -122,9 +122,8 @@
           <li><a class="nav__link" href="#"><i data-lucide="message-circle-more"></i><span>AI asistent</span></a></li>
           <li><a class="nav__link" href="#"><i data-lucide="cloud-sun"></i><span>Počasí</span></a></li>
           <li><a class="nav__link" href="#"><i data-lucide="newspaper"></i><span>Novinky</span></a></li>
-          <li><a class="nav__link" href="#"><i data-lucide="notepad-text"></i><span>Úkoly a poznámky</span></a></li>
+          <li><a class="nav__link" href="#"><i data-lucide="calendar-check"></i><span>Úkoly</span></a></li>
           <li><a class="nav__link" href="#"><i data-lucide="gamepad-2"></i><span>Herní přehled</span></a></li>
-          <li><a class="nav__link" href="#"><i data-lucide="cog"></i><span>Automatizace</span></a></li>
         </ul>
         <ul class="nav__list nav__list--secondary">
           <li><a class="nav__link" href="#"><i data-lucide="settings"></i><span>Nastavení</span></a></li>
@@ -219,159 +218,45 @@
             <p class="clock__date" id="clock-date">Středa, 30. dubna 2025</p>
 
             <h2 class="clock__today"><i data-lucide="calendar-days"></i>Dnes</h2>
-            <ul class="agenda">
-              <li class="agenda__item"><time>17:00</time><span>Trénink</span></li>
-              <li class="agenda__item"><time>20:00</time><span>Diablo IV – Season push</span></li>
-            </ul>
+            <ul class="agenda" id="agenda"></ul>
           </div>
           <blockquote class="clock__quote">„Nejlepší čas<br>na změnu je teď.“</blockquote>
         </section>
 
-        <!-- Novinky -->
+        <!-- Novinky (Seznam Zprávy, Novinky.cz, iDNES.cz – načítá se živě z RSS) -->
         <section class="card news" aria-labelledby="news-title">
           <header class="card__header">
             <h2 class="card__title" id="news-title"><i data-lucide="newspaper"></i>Novinky</h2>
-            <div class="select">
-              <select class="select__input" id="news-region" aria-label="Zdroj novinek">
-                <option value="all">ČR / Svět</option>
-                <option value="cz">ČR</option>
-                <option value="world">Svět</option>
-              </select>
-              <i data-lucide="chevron-down"></i>
-            </div>
+            <button class="icon-btn icon-btn--sm" type="button" id="news-refresh" aria-label="Obnovit zprávy" title="Obnovit zprávy"><i data-lucide="refresh-cw"></i></button>
           </header>
-          <ul class="news__list">
-            <li>
-              <a class="news__item" href="#" data-region="cz">
-                <img class="news__thumb" src="assets/img/news-defense.svg" width="76" height="57" alt="">
-                <span class="news__body">
-                  <span class="news__title">Česko posiluje obranu: vláda schválila nákup moderní techniky za miliardy</span>
-                  <span class="news__meta"><span class="news__source">iDNES.cz</span><span class="dot-sep" aria-hidden="true">•</span>před 2 hodinami</span>
-                </span>
-              </a>
-            </li>
-            <li>
-              <a class="news__item" href="#" data-region="world">
-                <img class="news__thumb" src="assets/img/news-energy.svg" width="76" height="57" alt="">
-                <span class="news__body">
-                  <span class="news__title">EU chce rychlejší přechod na čistou energii</span>
-                  <span class="news__meta"><span class="news__source">Seznam Zprávy</span><span class="dot-sep" aria-hidden="true">•</span>před 4 hodinami</span>
-                </span>
-              </a>
-            </li>
-            <li>
-              <a class="news__item" href="#" data-region="world">
-                <img class="news__thumb" src="assets/img/news-diablo.svg" width="76" height="57" alt="">
-                <span class="news__body">
-                  <span class="news__title">Nový update pro Diablo IV přináší několik zásadních změn</span>
-                  <span class="news__meta"><span class="news__source">Games.cz</span><span class="dot-sep" aria-hidden="true">•</span>před 6 hodinami</span>
-                </span>
-              </a>
-            </li>
-            <li>
-              <a class="news__item" href="#" data-region="cz">
-                <img class="news__thumb" src="assets/img/news-crypto.svg" width="76" height="57" alt="">
-                <span class="news__body">
-                  <span class="news__title">Češi stále více investují do kryptoměn</span>
-                  <span class="news__meta"><span class="news__source">Novinky.cz</span><span class="dot-sep" aria-hidden="true">•</span>před 8 hodinami</span>
-                </span>
-              </a>
-            </li>
-            <li>
-              <a class="news__item" href="#" data-region="world">
-                <img class="news__thumb" src="assets/img/news-esport.svg" width="76" height="57" alt="">
-                <span class="news__body">
-                  <span class="news__title">G2 si zajistilo postup do další fáze LEC</span>
-                  <span class="news__meta"><span class="news__source">EsportMania</span><span class="dot-sep" aria-hidden="true">•</span>před 10 hodinami</span>
-                </span>
-              </a>
-            </li>
+          <ul class="news__list" id="news-list" aria-busy="true">
+            <li class="news__status">Načítám zprávy…</li>
           </ul>
         </section>
 
-        <!-- Úkoly a poznámky -->
+        <!-- Úkoly – týdenní kalendář -->
         <section class="card tasks" aria-labelledby="tasks-title">
-          <div class="tasks__layout">
           <header class="card__header">
-            <h2 class="card__title" id="tasks-title"><i data-lucide="square-check"></i>Úkoly a poznámky</h2>
-            <button class="icon-btn icon-btn--sm" type="button" aria-label="Přidat úkol" data-add-task><i data-lucide="plus"></i></button>
+            <h2 class="card__title" id="tasks-title"><i data-lucide="calendar-check"></i>Úkoly</h2>
+            <div class="week-nav">
+              <button class="icon-btn icon-btn--sm" type="button" id="week-prev" aria-label="Předchozí týden"><i data-lucide="chevron-left"></i></button>
+              <button class="week-nav__label" type="button" id="week-today" title="Přejít na dnešek"></button>
+              <button class="icon-btn icon-btn--sm" type="button" id="week-next" aria-label="Další týden"><i data-lucide="chevron-right"></i></button>
+            </div>
           </header>
 
-          <div class="tabs" role="group" aria-label="Filtr úkolů">
-            <button class="tabs__tab is-active" type="button" aria-pressed="true">Dnes</button>
-            <button class="tabs__tab" type="button" aria-pressed="false">Tento týden</button>
-            <button class="tabs__tab" type="button" aria-pressed="false">Vše</button>
-          </div>
-
-          <div class="tasks__body">
-            <ul class="task-list" id="task-list">
-              <li>
-                <label class="task">
-                  <input class="checkbox" type="checkbox">
-                  <span class="task__text">
-                    <span class="task__title">Zkontrolovat ceny na Alza.cz (grafická karta)</span>
-                    <span class="task__due">Dnes 16:00</span>
-                  </span>
-                </label>
-              </li>
-              <li>
-                <label class="task">
-                  <input class="checkbox" type="checkbox">
-                  <span class="task__text">
-                    <span class="task__title">Dokončit video pro YouTube</span>
-                    <span class="task__due">Dnes 19:00</span>
-                  </span>
-                </label>
-              </li>
-              <li>
-                <label class="task">
-                  <input class="checkbox" type="checkbox" checked>
-                  <span class="task__text">
-                    <span class="task__title">Trénink</span>
-                    <span class="task__due">Dnes 17:00</span>
-                  </span>
-                </label>
-              </li>
-              <li>
-                <label class="task">
-                  <input class="checkbox" type="checkbox">
-                  <span class="task__text">
-                    <span class="task__title">Napsat poznámky k Diablo IV buildu</span>
-                    <span class="task__due">Dnes 21:00</span>
-                  </span>
-                </label>
-              </li>
-              <li>
-                <label class="task">
-                  <input class="checkbox" type="checkbox">
-                  <span class="task__text">
-                    <span class="task__title">Zavolat do banky</span>
-                    <span class="task__due">Zítra 10:00</span>
-                  </span>
-                </label>
-              </li>
-            </ul>
-
-            <aside class="notes" aria-labelledby="notes-title">
-              <header class="notes__header">
-                <h3 class="notes__title" id="notes-title">Rychlé poznámky</h3>
-                <button class="icon-btn icon-btn--xs" type="button" aria-label="Upravit poznámky" id="notes-edit"><i data-lucide="pencil"></i></button>
-              </header>
-              <ul class="notes__list" id="notes-list">
-                <li>Diablo IV – farming runy</li>
-                <li>Zkontrolovat stav scaffoldu</li>
-                <li>Plán na víkend – Sapa?</li>
-              </ul>
-            </aside>
-          </div>
-
-          <form class="task-add" id="task-add">
-            <button class="task-add__btn" type="button" id="task-add-toggle"><i data-lucide="plus"></i>Přidat úkol nebo poznámku</button>
-            <div class="task-add__field" hidden>
-              <input class="input" id="task-input" type="text" placeholder="Název úkolu…" aria-label="Název nového úkolu" autocomplete="off">
-              <button class="btn btn--primary btn--sm" type="submit">Přidat</button>
+          <div class="planner">
+            <div class="day-tasks">
+              <h3 class="day-tasks__title" id="day-title"></h3>
+              <ul class="task-list" id="task-list" aria-labelledby="day-title"></ul>
+              <form class="task-add" id="task-add">
+                <input class="input" id="task-input" type="text" placeholder="Nový úkol…" aria-label="Název nového úkolu" autocomplete="off">
+                <input class="input input--time" id="task-time" type="time" aria-label="Čas (nepovinný)">
+                <button class="btn btn--primary btn--icon" type="submit" aria-label="Přidat úkol"><i data-lucide="plus"></i></button>
+              </form>
             </div>
-          </form>
+
+            <ol class="week" id="week" aria-label="Dny v týdnu"></ol>
           </div>
         </section>
 
@@ -417,41 +302,6 @@
             </li>
           </ul>
         </section>
-
-        <!-- AI automatizace -->
-        <section class="card automations" aria-labelledby="auto-title">
-          <header class="card__header">
-            <h2 class="card__title" id="auto-title"><i data-lucide="zap" class="icon-zap"></i>AI automatizace</h2>
-            <button class="icon-btn icon-btn--sm" type="button" aria-label="Nová automatizace"><i data-lucide="plus"></i></button>
-          </header>
-          <ul class="auto-list">
-            <li class="auto">
-              <span class="auto__icon auto__icon--green"><i data-lucide="calendar-clock"></i></span>
-              <span class="auto__text"><span class="auto__title">Denní souhrn</span><span class="auto__sub">Každé ráno v 8:00</span></span>
-              <label class="switch"><input type="checkbox" checked><span class="switch__track" aria-hidden="true"></span><span class="sr-only">Denní souhrn</span></label>
-            </li>
-            <li class="auto">
-              <span class="auto__icon auto__icon--green"><i data-lucide="radar"></i></span>
-              <span class="auto__text"><span class="auto__title">Hlídání cen</span><span class="auto__sub">Alza.cz, CZC, Steam</span></span>
-              <label class="switch"><input type="checkbox" checked><span class="switch__track" aria-hidden="true"></span><span class="sr-only">Hlídání cen</span></label>
-            </li>
-            <li class="auto">
-              <span class="auto__icon auto__icon--orange"><i data-lucide="newspaper"></i></span>
-              <span class="auto__text"><span class="auto__title">Novinky podle zájmů</span><span class="auto__sub">Hry, technologie, hardware</span></span>
-              <label class="switch"><input type="checkbox" checked><span class="switch__track" aria-hidden="true"></span><span class="sr-only">Novinky podle zájmů</span></label>
-            </li>
-            <li class="auto">
-              <span class="auto__icon auto__icon--blue"><i data-lucide="image-up"></i></span>
-              <span class="auto__text"><span class="auto__title">Zálohování fotek</span><span class="auto__sub">Každý pátek v 20:00</span></span>
-              <label class="switch"><input type="checkbox"><span class="switch__track" aria-hidden="true"></span><span class="sr-only">Zálohování fotek</span></label>
-            </li>
-            <li class="auto">
-              <span class="auto__icon auto__icon--green"><i data-lucide="brush-cleaning"></i></span>
-              <span class="auto__text"><span class="auto__title">Čištění souborů</span><span class="auto__sub">Jednou za měsíc</span></span>
-              <label class="switch"><input type="checkbox"><span class="switch__track" aria-hidden="true"></span><span class="sr-only">Čištění souborů</span></label>
-            </li>
-          </ul>
-        </section>
       </div>
 
       <!-- ============ PRAVÝ SIDEBAR ============ -->
@@ -489,17 +339,6 @@
             </div>
             <p class="composer__hint">Použij Ctrl + Enter pro odeslání</p>
           </form>
-        </section>
-
-        <!-- Rychlé akce -->
-        <section class="card quick" aria-labelledby="quick-title">
-          <h2 class="card__title" id="quick-title"><svg class="icon-dots" aria-hidden="true"><use href="#i-dots"/></svg>Rychlé akce</h2>
-          <div class="quick__grid">
-            <button class="action" type="button" data-action="open-web"><span class="action__icon action__icon--teal"><i data-lucide="globe"></i></span><span class="action__label">Otevřít web</span></button>
-            <button class="action" type="button" data-action="open-folder"><span class="action__icon action__icon--blue"><i data-lucide="folder"></i></span><span class="action__label">Otevřít složku</span></button>
-            <button class="action" type="button" data-action="launch-app"><span class="action__icon action__icon--cyan"><i data-lucide="app-window"></i></span><span class="action__label">Spustit aplikaci</span></button>
-            <button class="action" type="button" data-action="save-note"><span class="action__icon action__icon--violet"><i data-lucide="notebook-pen"></i></span><span class="action__label">Uložit poznámku</span></button>
-          </div>
         </section>
 
       </aside>

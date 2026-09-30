@@ -27,6 +27,7 @@
     "files": [
       "main.js",
       "preload.js",
+      "news.js",
       "index.html",
       "styles.css",
       "script.js",

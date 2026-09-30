@@ -1,8 +1,9 @@
 // AI Dashboard – hlavní proces Electronu (Windows desktop aplikace).
 "use strict";
 
-const { app, BrowserWindow, ipcMain, shell, dialog, screen } = require("electron");
+const { app, BrowserWindow, ipcMain, shell, screen, net } = require("electron");
 const path = require("node:path");
+const { fetchNews } = require("./news");
 
 const DESIGN_SIZE = { width: 1536, height: 1024 };
 const isHttpUrl = (url) => /^https?:\/\//i.test(url);
@@ -67,22 +68,9 @@ ipcMain.on("win:toggle-maximize", (e) => {
 });
 ipcMain.on("win:close", (e) => senderWindow(e)?.close());
 
-/* ---------- Rychlé akce ---------- */
-ipcMain.handle("action:open-web", () => shell.openExternal("https://www.google.com/"));
-ipcMain.handle("action:open-folder", () => shell.openPath(app.getPath("documents")));
-ipcMain.handle("action:launch-app", async (e) => {
-  const win = senderWindow(e);
-  const { canceled, filePaths } = await dialog.showOpenDialog(win, {
-    title: "Spustit aplikaci",
-    properties: ["openFile"],
-    filters: process.platform === "win32"
-      ? [{ name: "Aplikace", extensions: ["exe", "lnk", "bat", "cmd"] }]
-      : [{ name: "Všechny soubory", extensions: ["*"] }],
-  });
-  if (canceled || !filePaths[0]) return false;
-  const error = await shell.openPath(filePaths[0]);
-  return error === "";
-});
+/* ---------- Novinky (RSS) ---------- */
+// Stahuje hlavní proces přes síťový stack Chromia (systémové proxy a certifikáty Windows).
+ipcMain.handle("news:fetch", () => fetchNews((url, init) => net.fetch(url, init)));
 
 /* ---------- Životní cyklus ---------- */
 if (!app.requestSingleInstanceLock()) {

@@ -10,7 +10,5 @@ contextBridge.exposeInMainWorld("desktop", {
   onMaximizedChange: (callback) => {
     ipcRenderer.on("win:maximized", (_event, maximized) => callback(Boolean(maximized)));
   },
-  openWeb: () => ipcRenderer.invoke("action:open-web"),
-  openFolder: () => ipcRenderer.invoke("action:open-folder"),
-  launchApp: () => ipcRenderer.invoke("action:launch-app"),
+  fetchNews: () => ipcRenderer.invoke("news:fetch"),
 });

@@ -23,11 +23,15 @@ varování → **Další informace** → **Přesto spustit**.
 ## Co funguje „naostro“
 
 - **Ovládání okna** z vlastní titulní lišty (minimalizace, maximalizace/obnovení, zavření).
-- **Rychlé akce:** Otevřít web (výchozí prohlížeč), Otevřít složku (Dokumenty),
-  Spustit aplikaci (výběr .exe/.lnk), Uložit poznámku.
-- **Ukládání:** úkoly, rychlé poznámky a stav přepínačů automatizací zůstávají i po restartu.
-- Vyhledávání a odkazy se otevírají ve výchozím prohlížeči; ikony a písmo jsou přibalené, aplikace funguje offline.
-- Počasí, novinky, herní přehled a odpovědi AI asistenta jsou zatím ukázková data.
+- **Novinky** se načítají živě z RSS webů Seznam Zprávy, Novinky.cz a iDNES.cz (každých 15 minut
+  nebo tlačítkem obnovit). Zdroje se střídají a stejná událost z více webů se zobrazí jen jednou
+  (porovnání klíčových slov titulku a perexu). Kliknutí otevře článek v prohlížeči.
+- **Úkoly – týdenní kalendář:** vpravo dny v týdnu (šipkami se přepíná týden, klik na datum vrátí
+  na dnešek), vlevo úkoly vybraného dne s možností přidat (i s časem), odškrtnout a smazat.
+  Dnešní nesplněné úkoly se ukazují v kartě s hodinami.
+- **Ukládání:** úkoly zůstávají i po restartu aplikace.
+- Vyhledávání a odkazy se otevírají ve výchozím prohlížeči; ikony a písmo jsou přibalené.
+- Počasí, herní přehled a odpovědi AI asistenta jsou zatím ukázková data.
 
 ## Vývoj
 
@@ -40,11 +44,12 @@ npm run dist:zip     # jen zip – jde sestavit i na Linuxu/macOS
 
 | Soubor | Obsah |
 | --- | --- |
-| `main.js` | Hlavní proces Electronu: okno bez rámečku, rychlé akce |
+| `main.js` | Hlavní proces Electronu: okno bez rámečku, načítání zpráv |
+| `news.js` | Stažení a zpracování RSS, odstranění duplicitních témat |
 | `preload.js` | Bezpečný most mezi stránkou a hlavním procesem (`window.desktop`) |
 | `index.html` | Markup dashboardu |
 | `styles.css` | Design tokeny (`:root`), layout, komponenty, stavy hover/active/focus |
-| `script.js` | Hodiny, úkoly, poznámky, chat, filtr novinek, napojení na desktop API |
+| `script.js` | Hodiny, novinky, týdenní kalendář úkolů, chat, ovládání okna |
 | `assets/img/` | Náhradní (placeholder) SVG obrázky |
 | `vendor/` | Lokální kopie ikon Lucide a písma Roboto |
 | `build/icon.png` | Ikona aplikace |
@@ -52,10 +57,10 @@ npm run dist:zip     # jen zip – jde sestavit i na Linuxu/macOS
 ## Layout
 
 - **Shell:** CSS Grid `sidebar | obsah`, horní lišta je `sticky`.
-- **Střed:** mřížka o 4 stopách (`416fr 100fr 32fr 374fr`) s pojmenovanými oblastmi, která věrně
-  skládá „posunuté“ řádky z návrhu (Novinky přesahují pod Úkoly, Automatizace začíná nad Herním přehledem).
+- **Střed:** Počasí | Hodiny, Novinky | Úkoly (týdenní kalendář), Herní přehled přes celou šířku.
+- **Vpravo:** AI asistent na celou výšku okna.
 - **Container queries** přizpůsobují vnitřek karet jejich šířce (předpověď počasí pod teplotu,
-  poznámky pod seznam úkolů, herní karty ve vodorovném posuvníku).
+  herní karty ve vodorovném posuvníku).
 
 | Šířka okna | Chování |
 | --- | --- |
@@ -69,12 +74,12 @@ npm run dist:zip     # jen zip – jde sestavit i na Linuxu/macOS
 Barvy, rádiusy, stíny a rozměry jsou v CSS proměnných na začátku `styles.css`
 (`--bg`, `--card`, `--accent`, `--green`, `--sidebar-w`, `--rightbar-w` …).
 
-Všechna tlačítka, checkboxy, přepínače, záložky, výběr zdroje novinek a textová pole mají odlišené
+Všechna tlačítka, checkboxy, dny kalendáře a textová pole mají odlišené
 stavy `:hover`, `:active` a `:focus-visible`; animace respektují `prefers-reduced-motion`.
 
 ## Poznámky
 
-- Obrázky v `assets/img/` jsou jen zástupné ilustrace – nahraďte je skutečnými (stejné poměry stran).
+- Obrázky v `assets/img/` (hory, hry) jsou jen zástupné ilustrace – nahraďte je skutečnými.
 - Hodiny ve widgetu ukazují aktuální čas a datum (česky).
 - Dva překlepy z návrhu jsou opravené: „Herni přehled“ → „Herní přehled“,
   „Které hry dneska hrajú?“ → „Které hry dneska hrají?“.
