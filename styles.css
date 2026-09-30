@@ -173,7 +173,6 @@ i[data-lucide],
 
 .nav { display: flex; flex-direction: column; flex: 1 0 auto; padding-top: 8px; }
 .nav__list { display: flex; flex-direction: column; gap: 5px; }
-.nav__list--secondary { margin-top: 70px; }
 
 .nav__link {
   position: relative;
@@ -202,19 +201,6 @@ i[data-lucide],
 .nav__link.is-active .lucide { color: var(--accent-bright); }
 .nav__link.is-active .lucide-house { fill: currentColor; }
 .nav__link.is-active:hover { filter: brightness(1.08); }
-
-.quote-card {
-  position: relative;
-  flex: none;
-  width: 166px;
-  height: 197px;
-  margin: 24px auto 0 8px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: var(--shadow-card);
-}
-.quote-card img { width: 100%; height: 100%; object-fit: cover; }
 
 .sidebar-backdrop {
   position: fixed;
@@ -302,15 +288,14 @@ i[data-lucide],
   min-width: 0;
 }
 
-/* Střední mřížka: Počasí + hodiny | Úkoly (přes dva řádky) / Novinky | … / Herní přehled. */
+/* Přehled: vlevo Počasí + hodiny a pod ním Úkoly, vpravo Novinky přes oba řádky. */
 .dashboard {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto 1fr;
   grid-template-areas:
-    "weather tasks"
-    "news    tasks"
-    "games   games";
+    "weather news"
+    "tasks   news";
   gap: var(--gap);
   min-height: min(calc(100dvh - var(--topbar-h) - 33px), 1000px);
 }
@@ -318,6 +303,41 @@ i[data-lucide],
 .news    { grid-area: news; }
 .tasks   { grid-area: tasks; }
 .games   { grid-area: games; }
+
+/* ---------- Pohledy z levého menu ---------- */
+.app[data-view="overview"] .games { display: none; }
+
+/* Jedna sekce přes celou střední plochu (Gemini zůstává vpravo) */
+.app[data-view="weather"] .dashboard,
+.app[data-view="news"] .dashboard,
+.app[data-view="tasks"] .dashboard,
+.app[data-view="games"] .dashboard {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto;
+  grid-template-areas: none;
+  align-content: start;
+}
+.app[data-view="weather"] .dashboard > .card:not(.weather),
+.app[data-view="news"] .dashboard > .card:not(.news),
+.app[data-view="tasks"] .dashboard > .card:not(.tasks),
+.app[data-view="games"] .dashboard > .card:not(.games) { display: none; }
+.app:not([data-view="overview"]) .dashboard > .card { grid-area: auto; }
+.app[data-view="news"] .news,
+.app[data-view="tasks"] .tasks { height: calc(100dvh - var(--topbar-h) - 33px); min-height: 520px; }
+.app[data-view="news"] .news__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  align-content: start;
+  column-gap: 24px;
+}
+.app[data-view="news"] .news__list li + li { border-top: 0; }
+.app[data-view="news"] .news__list li { border-bottom: 1px solid var(--line); }
+.app[data-view="games"] .game { height: 260px; }
+
+/* AI asistent: Gemini přes celou šířku */
+.app[data-view="assistant"] .main { grid-template-columns: minmax(0, 1fr); }
+.app[data-view="assistant"] .dashboard { display: none; }
+.app[data-view="assistant"] .assistant { height: calc(100dvh - var(--topbar-h) - 33px); max-height: none; }
 
 /* ---------- Karta ---------- */
 .card {
@@ -378,7 +398,7 @@ i[data-lucide],
   line-height: 1;
   letter-spacing: -1px;
 }
-.weather__temp span { margin-left: 2px; font-size: 27px; letter-spacing: 0; line-height: 1.05; }
+.weather__temp .weather__unit { margin-left: 2px; font-size: 27px; letter-spacing: 0; line-height: 1.05; }
 .weather__cond { margin-top: 11px; font-size: 14px; line-height: 20px; }
 .weather__meta { margin-top: 3px; font-size: 14px; line-height: 20px; color: var(--text-2); white-space: nowrap; }
 .weather__meta .dot-sep { margin: 0 12px; }
@@ -841,8 +861,48 @@ i[data-lucide],
   flex: 1 1 0;
   min-height: 465px;
   max-height: calc(100dvh - var(--topbar-h) - 33px);
-  padding: 13px 18px 8px 12px;
+  padding: 13px 14px 14px 12px;
 }
+.gemini {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  margin-top: 12px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-md);
+}
+.gemini__view { flex: 1; width: 100%; height: 100%; border: 0; }
+.gemini__fallback {
+  align-self: center;
+  width: 100%;
+  padding: 16px;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--muted);
+  background: var(--panel);
+}
+.gemini__fallback a { color: var(--accent); }
+.gemini__error {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 20px;
+  background: var(--panel);
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--text-2);
+}
+.gemini__error-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.gemini:has(.gemini__fallback) { background: var(--panel); }
 .assistant__header { display: flex; align-items: center; gap: 12px; }
 .assistant__avatar {
   display: grid;
@@ -859,108 +919,8 @@ i[data-lucide],
 .assistant__name { font-size: 16.5px; font-weight: 500; line-height: 20px; }
 .assistant__status { display: flex; align-items: center; gap: 7px; font-size: 12px; line-height: 18px; color: var(--text-2); }
 .assistant__status .status-dot { width: 7px; height: 7px; margin-left: 1px; }
-.assistant__header .icon-btn { margin-right: -10px; }
+.assistant__header .icon-btn:last-child { margin-right: -4px; }
 
-.chat {
-  display: flex;
-  flex-direction: column;
-  gap: 17px;
-  flex: 1;
-  min-height: 0;
-  margin-top: 21px;
-  padding: 0 0 12px 6px;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-3) transparent;
-}
-.bubble {
-  max-width: 100%;
-  padding: 12px 18px 13px;
-  border-radius: 22px;
-  font-size: 14.5px;
-  line-height: 21px;
-}
-.bubble--bot { align-self: stretch; background: #1a2a3b; color: var(--text); }
-.bubble--user {
-  align-self: flex-end;
-  max-width: 85%;
-  padding: 9px 14px;
-  background: linear-gradient(180deg, #1c7fc0, #145f93);
-  border-radius: 18px 18px 6px 18px;
-  font-size: 13.5px;
-}
-.bubble--bot.bubble--reply { padding: 10px 16px; border-radius: 18px 18px 18px 6px; font-size: 13.5px; line-height: 20px; }
-.bubble--typing { display: inline-flex; gap: 4px; align-self: flex-start; padding: 12px 16px; }
-.bubble--typing span {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--muted);
-  animation: typing 1s infinite ease-in-out;
-}
-.bubble--typing span:nth-child(2) { animation-delay: 0.15s; }
-.bubble--typing span:nth-child(3) { animation-delay: 0.3s; }
-@keyframes typing {
-  0%, 80%, 100% { opacity: 0.35; transform: translateY(0); }
-  40% { opacity: 1; transform: translateY(-3px); }
-}
-
-.suggestions { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; padding-left: 17px; }
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  height: 32px;
-  padding: 0 16px 0 12px;
-  background: #0c1a26;
-  border: 1px solid #1d4561;
-  border-radius: 16px;
-  font-size: 12px;
-  color: #d4dde8;
-  text-align: left;
-  transition: background-color 0.16s, border-color 0.16s, color 0.16s, transform 0.12s, box-shadow 0.16s;
-}
-.chip .lucide { width: 15px; height: 15px; color: #3fcbff; fill: #3fcbff; filter: drop-shadow(0 0 4px rgba(63, 203, 255, 0.6)); }
-.chip--note .lucide { fill: none; color: #5aa2ff; filter: none; }
-.chip:hover { background: #10283a; border-color: #2c77a6; color: #fff; box-shadow: 0 0 0 3px rgba(54, 181, 244, 0.08); }
-.chip:active { background: #0a1823; transform: scale(0.97); }
-
-.composer { margin-top: auto; padding-top: 6px; }
-.composer__box {
-  display: flex;
-  align-items: center;
-  height: 48px;
-  margin-left: 3px;
-  margin-right: -5px;
-  padding: 0 8px 0 14px;
-  background: var(--panel);
-  border: 1px solid var(--border-2);
-  border-radius: 24px;
-  transition: border-color 0.16s, box-shadow 0.16s;
-}
-.composer__box:hover { border-color: var(--border-3); }
-.composer__box:focus-within { border-color: var(--accent); box-shadow: var(--ring); }
-.composer__input {
-  flex: 1;
-  min-width: 0;
-  height: 100%;
-  background: none;
-  border: 0;
-  outline: none;
-  font-size: 14px;
-}
-.composer__input::placeholder { color: #a5b2c1; }
-.composer__send {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  color: #3f86c6;
-  transition: background-color 0.16s, color 0.16s, transform 0.12s;
-}
-.composer__send .lucide { width: 21px; height: 21px; stroke-width: 1.6; }
-.composer__send:hover { background: var(--accent-soft); color: var(--accent-bright); }
-.composer__send:active { transform: scale(0.9); background: rgba(54, 181, 244, 0.22); }
-.composer__hint { margin-top: 9px; margin-right: -2px; font-size: 10.5px; line-height: 14px; text-align: right; color: #7d8da0; }
 
 /* ==========================================================================
    Desktop aplikace (Electron): okno se táhne za horní lištu
@@ -993,8 +953,7 @@ i[data-lucide],
     grid-template-areas:
       "weather weather"
       "tasks   tasks"
-      "news    news"
-      "games   games";
+      "news    news";
   }
 }
 
@@ -1006,8 +965,6 @@ i[data-lucide],
   .brand__name,
   .nav__link span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   .nav__link { justify-content: center; padding: 0; }
-  .nav__list--secondary { margin-top: 24px; }
-  .quote-card { display: none; }
   .search { margin-right: 16px; }
 }
 
@@ -1045,7 +1002,6 @@ i[data-lucide],
   .brand__name,
   .nav__link span { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
   .nav__link { justify-content: flex-start; padding: 0 14px; }
-  .quote-card { display: block; }
   .app.is-nav-open .sidebar { transform: none; }
 
   .topbar { padding: 0 8px 0 12px; gap: 10px; }
@@ -1059,7 +1015,7 @@ i[data-lucide],
   .main { padding: 16px; }
   .dashboard {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "weather" "tasks" "news" "games";
+    grid-template-areas: "weather" "tasks" "news";
   }
   .rightbar {
     grid-template-columns: minmax(0, 1fr);

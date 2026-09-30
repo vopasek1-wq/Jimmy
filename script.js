@@ -52,19 +52,31 @@
   menuToggle.addEventListener("click", () => setNav(!app.classList.contains("is-nav-open")));
   backdrop.addEventListener("click", () => setNav(false));
 
+  /* Levé menu přepíná pohledy: přehled, nebo jedna sekce přes celou plochu. */
+  const VIEWS = ["overview", "assistant", "weather", "news", "tasks", "games"];
+  const showView = (view) => {
+    if (!VIEWS.includes(view)) view = "overview";
+    app.dataset.view = view;
+    $$(".nav__link").forEach((l) => {
+      const active = l.dataset.view === view;
+      l.classList.toggle("is-active", active);
+      if (active) l.setAttribute("aria-current", "page");
+      else l.removeAttribute("aria-current");
+    });
+    $("#main").scrollTop = 0;
+    window.scrollTo(0, 0);
+    try { sessionStorage.setItem("dashboard:view", view); } catch { /* bez úložiště */ }
+  };
+
   $$(".nav__link").forEach((link) => {
     link.title = link.textContent.trim();
     link.addEventListener("click", (e) => {
       e.preventDefault();
-      $$(".nav__link").forEach((l) => {
-        l.classList.remove("is-active");
-        l.removeAttribute("aria-current");
-      });
-      link.classList.add("is-active");
-      link.setAttribute("aria-current", "page");
+      showView(link.dataset.view);
       setNav(false);
     });
   });
+  try { showView(sessionStorage.getItem("dashboard:view") || "overview"); } catch { showView("overview"); }
 
   /* ---------- Klávesové zkratky ---------- */
   const search = $("#search");
@@ -311,80 +323,102 @@
 
   renderAll();
 
-  /* ---------- AI chat (simulované odpovědi) ---------- */
-  const chat = $("#chat");
-  const composer = $("#composer");
-  const composerInput = $("#composer-input");
+  /* ---------- Počasí: Teplice (Open-Meteo) ---------- */
+  const forecastDayFmt = new Intl.DateTimeFormat("cs-CZ", { weekday: "short" });
+  const setIcon = (use, id) => use.setAttribute("href", `#${id}`);
 
-  const replies = {
-    "novinky": () => (articles.length
-      ? `Nejnovější zprávy: ${articles.slice(0, 3).map((a) => `„${a.title}“ (${a.sourceName})`).join(", ")}.`
-      : "Zprávy se zatím nenačetly – zkus to za chvilku."),
-    "počasí": "Zítra v Praze polojasno, přes den kolem 16 °C, v noci 8 °C. Deštník zatím není potřeba – déšť přijde až v pátek.",
-    "hry": "Ve 20:00 máš v kalendáři Diablo IV – Season push. League of Legends naposledy před 2 dny (Gold II, 45 LP).",
-    "úkol": () => {
-      const open = tasksFor(todayKey()).filter((t) => !t.done);
-      if (!open.length) return "Na dnes nemáš žádné nesplněné úkoly. 🎉";
-      return `Dnes máš ${open.length} nesplněné úkoly: ${open.map((t) => (t.time ? `${t.title} (${t.time})` : t.title)).join(", ")}.`;
-    },
-    "připomín": "Jasně! Napiš, co ti mám připomenout a kdy – třeba „Zavolat do banky zítra v 10:00“.",
-  };
-  const fallback = "Rozumím. Tohle je ukázkové UI – po napojení na AI backend tu uvidíš skutečnou odpověď.";
+  const renderWeather = (w) => {
+    const c = w.current;
+    $("#wx-place").textContent = w.place;
+    $("#wx-temp").textContent = c.temperature;
+    $("#wx-cond").textContent = c.text;
+    $("#wx-meta").innerHTML = "";
+    $("#wx-meta").append(
+      `Vlhkost: ${c.humidity}%`,
+      Object.assign(document.createElement("span"), { className: "dot-sep", textContent: "•", ariaHidden: "true" }),
+      `Vítr: ${c.wind} km/h`,
+    );
+    setIcon($("#wx-icon"), c.icon);
 
-  const addBubble = (text, who) => {
-    const div = document.createElement("div");
-    div.className = who === "user" ? "bubble bubble--user" : "bubble bubble--bot bubble--reply";
-    div.textContent = text;
-    chat.append(div);
-    chat.scrollTop = chat.scrollHeight;
-    return div;
-  };
-
-  const send = (text) => {
-    const message = text.trim();
-    if (!message) return;
-    addBubble(message, "user");
-    composerInput.value = "";
-
-    const typing = document.createElement("div");
-    typing.className = "bubble bubble--bot bubble--typing";
-    typing.setAttribute("aria-label", "Asistent píše…");
-    typing.innerHTML = "<span></span><span></span><span></span>";
-    chat.append(typing);
-    chat.scrollTop = chat.scrollHeight;
-
-    const lower = message.toLowerCase();
-    const key = Object.keys(replies).find((k) => lower.includes(k));
-    setTimeout(() => {
-      typing.remove();
-      const reply = typeof replies[key] === "function" ? replies[key]() : replies[key];
-      addBubble(reply || fallback, "bot");
-    }, 700);
+    $("#wx-forecast").replaceChildren(...w.daily.map((d, i) => {
+      const li = document.createElement("li");
+      li.className = "forecast__day";
+      li.title = d.text;
+      li.innerHTML = `
+        <span class="forecast__name"></span>
+        <svg class="forecast__icon" role="img"><use></use></svg>
+        <span class="forecast__hi"></span><span class="forecast__lo"></span>`;
+      const name = i === 0 ? "Dnes" : i === 1 ? "Zítra" : capitalize(forecastDayFmt.format(new Date(`${d.date}T12:00`)));
+      $(".forecast__name", li).textContent = name;
+      $("svg", li).setAttribute("aria-label", d.text);
+      setIcon($("use", li), d.icon);
+      $(".forecast__hi", li).textContent = `${d.max}°`;
+      $(".forecast__lo", li).textContent = `${d.min}°`;
+      return li;
+    }));
   };
 
-  composer.addEventListener("submit", (e) => {
-    e.preventDefault();
-    send(composerInput.value);
-  });
-  // Ctrl + Enter (dle nápovědy pod polem) – Enter funguje také
-  composerInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-      e.preventDefault();
-      send(composerInput.value);
+  async function loadWeather() {
+    if (!window.desktop?.fetchWeather) {
+      $("#wx-cond").textContent = "Počasí se načítá jen v desktopové aplikaci.";
+      return;
     }
-  });
+    try {
+      renderWeather(await window.desktop.fetchWeather());
+    } catch {
+      if ($("#wx-temp").textContent === "–") $("#wx-cond").textContent = "Počasí se nepodařilo načíst.";
+    }
+  }
+  setInterval(loadWeather, 30 * 60 * 1000); // každých 30 minut
 
-  $$("#suggestions .chip").forEach((chip) => {
-    chip.addEventListener("click", () => {
-      const text = chip.textContent.trim();
-      if (text.endsWith("...")) {
-        composerInput.value = text.replace(/\.\.\.$/, " ");
-        composerInput.focus();
-      } else {
-        send(text);
-      }
+  /* ---------- AI asistent: Gemini ve webview ---------- */
+  const setupGemini = () => {
+    const host = $("#gemini");
+    const status = $("#gemini-status");
+    const setStatus = (text, state) => {
+      status.innerHTML = `<span class="status-dot${state ? ` status-dot--${state}` : ""}"></span>`;
+      status.append(`Gemini · ${text}`);
+    };
+
+    const view = document.createElement("webview");
+    view.className = "gemini__view";
+    view.setAttribute("partition", "persist:gemini"); // trvalé úložiště → přihlášení vydrží
+    view.setAttribute("src", "https://gemini.google.com/app");
+    view.setAttribute("allowpopups", "");
+    host.replaceChildren(view);
+
+    // Hláška místo prázdné (bílé) plochy, když se Gemini nenačte.
+    const error = document.createElement("div");
+    error.className = "gemini__error";
+    error.hidden = true;
+    error.innerHTML = `
+      <p>Gemini se nepodařilo načíst. Zkontroluj připojení k internetu.</p>
+      <div class="gemini__error-actions">
+        <button class="btn btn--primary btn--sm" type="button" data-gemini="retry">Zkusit znovu</button>
+        <button class="pill-btn" type="button" data-gemini="external">Otevřít v prohlížeči</button>
+      </div>`;
+    host.append(error);
+    $('[data-gemini="retry"]', error).addEventListener("click", () => view.reload());
+    $('[data-gemini="external"]', error).addEventListener("click", () => window.desktop.openGeminiExternal());
+
+    let failed = false;
+    view.addEventListener("did-start-loading", () => {
+      failed = false;
+      error.hidden = true;
+      setStatus("načítám…");
     });
-  });
+    view.addEventListener("did-fail-load", (e) => {
+      if (!e.isMainFrame || e.errorCode === -3) return; // -3 = přerušeno přesměrováním, není chyba
+      failed = true;
+    });
+    view.addEventListener("did-stop-loading", () => {
+      error.hidden = !failed;
+      setStatus(failed ? "nedostupné" : "online", failed ? "" : "green");
+    });
+
+    $("#gemini-reload").addEventListener("click", () => view.reload());
+    $("#gemini-external").addEventListener("click", () => window.desktop.openGeminiExternal());
+  };
 
   /* ---------- Desktop (Electron): ovládání okna ---------- */
   const desktop = window.desktop;
@@ -405,6 +439,8 @@
   }
 
   loadNews();
+  loadWeather();
+  if (desktop) setupGemini();
 
   renderIcons();
 })();

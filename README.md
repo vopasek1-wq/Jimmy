@@ -16,15 +16,20 @@ varování → **Další informace** → **Přesto spustit**.
 
 ## Co funguje „naostro“
 
-- **Ovládání okna** z vlastní titulní lišty (minimalizace, maximalizace/obnovení, zavření).
+- **Levé menu** přepíná pohledy: Přehled, AI asistent (Gemini přes celou šířku), Počasí, Novinky,
+  Úkoly a Herní přehled (jednotlivé sekce přes celou plochu).
+- **AI asistent** = [Gemini](https://gemini.google.com/app) vložené v pravém panelu (Electron `<webview>`,
+  vlastní trvalé úložiště → přihlášení Google účtem vydrží i po restartu). Odkazy z odpovědí se otevírají
+  ve výchozím prohlížeči; tlačítka v hlavičce: znovu načíst / otevřít v prohlížeči.
+- **Počasí pro Teplice** živě z Open-Meteo (aktuální stav + předpověď na 5 dní, obnova každých 30 min),
+  hodiny a datum v téže kartě.
 - **Novinky** se načítají živě z RSS webů Seznam Zprávy, Novinky.cz a iDNES.cz (každých 15 minut
   nebo tlačítkem obnovit). Zdroje se střídají a stejná událost z více webů se zobrazí jen jednou
   (porovnání klíčových slov titulku a perexu). Kliknutí otevře článek v prohlížeči.
-- **Úkoly – týdenní kalendář:** vpravo dny v týdnu (šipkami se přepíná týden, klik na datum vrátí
-  na dnešek), vlevo úkoly vybraného dne s možností přidat (i s časem), odškrtnout a smazat.
+- **Úkoly – týdenní kalendář:** dny v týdnu (šipkami se přepíná týden, klik na datum vrátí
+  na dnešek) a úkoly vybraného dne s možností přidat (i s časem), odškrtnout a smazat.
 - **Ukládání:** úkoly zůstávají i po restartu aplikace.
-- Vyhledávání a odkazy se otevírají ve výchozím prohlížeči; ikony a písmo jsou přibalené.
-- Počasí, herní přehled a odpovědi AI asistenta jsou zatím ukázková data.
+- Herní přehled obsahuje zatím ukázková data.
 
 ## Vývoj
 
@@ -36,12 +41,13 @@ npm run dist         # sestaví portable .exe do složky dist/ (na Windows)
 
 | Soubor | Obsah |
 | --- | --- |
-| `main.js` | Hlavní proces Electronu: okno bez rámečku, načítání zpráv |
+| `main.js` | Hlavní proces Electronu: okno bez rámečku, zprávy, počasí, zabezpečení webview s Gemini |
 | `news.js` | Stažení a zpracování RSS, odstranění duplicitních témat |
+| `weather.js` | Počasí z Open-Meteo (Teplice) |
 | `preload.js` | Bezpečný most mezi stránkou a hlavním procesem (`window.desktop`) |
 | `index.html` | Markup dashboardu |
 | `styles.css` | Design tokeny (`:root`), layout, komponenty, stavy hover/active/focus |
-| `script.js` | Hodiny, novinky, týdenní kalendář úkolů, chat, ovládání okna |
+| `script.js` | Pohledy z menu, hodiny, počasí, novinky, týdenní kalendář, Gemini, ovládání okna |
 | `assets/img/` | Náhradní (placeholder) SVG obrázky |
 | `vendor/` | Lokální kopie ikon Lucide a písma Roboto |
 | `build/icon.png` | Ikona aplikace |
@@ -49,9 +55,8 @@ npm run dist         # sestaví portable .exe do složky dist/ (na Windows)
 ## Layout
 
 - **Shell:** CSS Grid `sidebar | obsah`, horní lišta je `sticky`.
-- **Střed:** vlevo Počasí s hodinami a pod ním Novinky, vpravo Úkoly (týdenní kalendář) přes oba řádky,
-  dole Herní přehled přes celou šířku.
-- **Vpravo:** AI asistent na celou výšku okna.
+- **Přehled:** vlevo Počasí s hodinami a pod ním Úkoly, vpravo Novinky přes celou výšku.
+- **Vpravo:** AI asistent (Gemini) na celou výšku okna.
 - **Container queries** přizpůsobují vnitřek karet jejich šířce (předpověď počasí pod teplotu,
   herní karty ve vodorovném posuvníku).
 
@@ -72,7 +77,7 @@ stavy `:hover`, `:active` a `:focus-visible`; animace respektují `prefers-reduc
 
 ## Poznámky
 
-- Obrázky v `assets/img/` (hory v sidebaru, hry) jsou jen zástupné ilustrace – nahraďte je skutečnými.
+- Obrázky her v `assets/img/` jsou jen zástupné ilustrace – nahraďte je skutečnými.
 - Hodiny v kartě Počasí ukazují aktuální čas a datum (česky).
 - Dva překlepy z návrhu jsou opravené: „Herni přehled“ → „Herní přehled“,
   „Které hry dneska hrajú?“ → „Které hry dneska hrají?“.

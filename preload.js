@@ -11,4 +11,6 @@ contextBridge.exposeInMainWorld("desktop", {
     ipcRenderer.on("win:maximized", (_event, maximized) => callback(Boolean(maximized)));
   },
   fetchNews: () => ipcRenderer.invoke("news:fetch"),
+  fetchWeather: () => ipcRenderer.invoke("weather:fetch"),
+  openGeminiExternal: () => ipcRenderer.send("gemini:open-external"),
 });

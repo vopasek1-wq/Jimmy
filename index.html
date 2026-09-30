@@ -93,21 +93,57 @@
       </g>
     </symbol>
 
-    <symbol id="i-dots" viewBox="0 0 24 24">
-      <circle cx="5" cy="5" r="2.4" fill="#ff5c8a"/>
-      <circle cx="12" cy="5" r="2.4" fill="#ffb020"/>
-      <circle cx="19" cy="5" r="2.4" fill="#34d399"/>
-      <circle cx="5" cy="12" r="2.4" fill="#38bdf8"/>
-      <circle cx="12" cy="12" r="2.4" fill="#a78bfa"/>
-      <circle cx="19" cy="12" r="2.4" fill="#ff5c8a"/>
-      <circle cx="5" cy="19" r="2.4" fill="#34d399"/>
-      <circle cx="12" cy="19" r="2.4" fill="#38bdf8"/>
-      <circle cx="19" cy="19" r="2.4" fill="#ffb020"/>
+    <symbol id="wx-sun" viewBox="0 0 64 48">
+      <circle cx="32" cy="24" r="17" fill="#ffc233" opacity=".18"/>
+      <circle cx="32" cy="24" r="12.5" fill="url(#g-sun)"/>
+    </symbol>
+
+    <symbol id="wx-cloud" viewBox="0 0 64 48">
+      <g fill="url(#g-cloud-grey)">
+        <circle cx="19" cy="26" r="9"/>
+        <circle cx="31" cy="19" r="12"/>
+        <circle cx="44" cy="25" r="9"/>
+        <rect x="19" y="24" width="25" height="11"/>
+      </g>
+    </symbol>
+
+    <symbol id="wx-fog" viewBox="0 0 64 48">
+      <g fill="url(#g-cloud-grey)" opacity=".75">
+        <circle cx="19" cy="26" r="9"/>
+        <circle cx="31" cy="19" r="12"/>
+        <circle cx="44" cy="25" r="9"/>
+        <rect x="19" y="24" width="25" height="11"/>
+      </g>
+      <g stroke="#c6d2df" stroke-width="3" stroke-linecap="round">
+        <path d="M14 39h36M20 45h26"/>
+      </g>
+    </symbol>
+
+    <symbol id="wx-snow" viewBox="0 0 64 48">
+      <g fill="url(#g-cloud)">
+        <circle cx="19" cy="26" r="9"/>
+        <circle cx="31" cy="19" r="12"/>
+        <circle cx="44" cy="25" r="9"/>
+        <rect x="19" y="24" width="25" height="11"/>
+      </g>
+      <g fill="#e8f6ff">
+        <circle cx="23" cy="41" r="2.4"/><circle cx="32" cy="44" r="2.4"/><circle cx="41" cy="41" r="2.4"/>
+      </g>
+    </symbol>
+
+    <symbol id="wx-storm" viewBox="0 0 64 48">
+      <g fill="url(#g-cloud-grey)">
+        <circle cx="19" cy="26" r="9"/>
+        <circle cx="31" cy="19" r="12"/>
+        <circle cx="44" cy="25" r="9"/>
+        <rect x="19" y="24" width="25" height="11"/>
+      </g>
+      <path d="M34 33 27 42h6l-3 6 9-10h-6l3-5Z" fill="#ffc233"/>
     </symbol>
 
   </svg>
 
-  <div class="app" id="app">
+  <div class="app" id="app" data-view="overview">
 
     <!-- ============ LEVÝ SIDEBAR ============ -->
     <aside class="sidebar" id="sidebar" aria-label="Hlavní navigace">
@@ -118,21 +154,14 @@
 
       <nav class="nav">
         <ul class="nav__list">
-          <li><a class="nav__link is-active" href="#" aria-current="page"><i data-lucide="house"></i><span>Přehled</span></a></li>
-          <li><a class="nav__link" href="#"><i data-lucide="message-circle-more"></i><span>AI asistent</span></a></li>
-          <li><a class="nav__link" href="#"><i data-lucide="cloud-sun"></i><span>Počasí</span></a></li>
-          <li><a class="nav__link" href="#"><i data-lucide="newspaper"></i><span>Novinky</span></a></li>
-          <li><a class="nav__link" href="#"><i data-lucide="calendar-check"></i><span>Úkoly</span></a></li>
-          <li><a class="nav__link" href="#"><i data-lucide="gamepad-2"></i><span>Herní přehled</span></a></li>
-        </ul>
-        <ul class="nav__list nav__list--secondary">
-          <li><a class="nav__link" href="#"><i data-lucide="settings"></i><span>Nastavení</span></a></li>
+          <li><a class="nav__link is-active" href="#" data-view="overview" aria-current="page"><i data-lucide="house"></i><span>Přehled</span></a></li>
+          <li><a class="nav__link" href="#" data-view="assistant"><i data-lucide="message-circle-more"></i><span>AI asistent</span></a></li>
+          <li><a class="nav__link" href="#" data-view="weather"><i data-lucide="cloud-sun"></i><span>Počasí</span></a></li>
+          <li><a class="nav__link" href="#" data-view="news"><i data-lucide="newspaper"></i><span>Novinky</span></a></li>
+          <li><a class="nav__link" href="#" data-view="tasks"><i data-lucide="calendar-check"></i><span>Úkoly</span></a></li>
+          <li><a class="nav__link" href="#" data-view="games"><i data-lucide="gamepad-2"></i><span>Herní přehled</span></a></li>
         </ul>
       </nav>
-
-      <figure class="quote-card">
-        <img src="assets/img/quote-mountain.svg" width="166" height="197" alt="">
-      </figure>
     </aside>
 
     <div class="sidebar-backdrop" id="sidebar-backdrop" hidden></div>
@@ -168,13 +197,13 @@
           <div class="weather__layout">
           <div class="weather__info">
             <h2 class="card__title" id="weather-title"><i data-lucide="house"></i>Počasí</h2>
-            <p class="weather__place"><i data-lucide="map-pin"></i>Praha</p>
+            <p class="weather__place"><i data-lucide="map-pin"></i><span id="wx-place">Teplice</span></p>
             <div class="weather__now">
-              <svg class="weather__icon" aria-hidden="true"><use href="#wx-partly"/></svg>
-              <p class="weather__temp">14<span>°C</span></p>
+              <svg class="weather__icon" aria-hidden="true"><use id="wx-icon" href="#wx-partly"/></svg>
+              <p class="weather__temp"><span id="wx-temp">–</span><span class="weather__unit">°C</span></p>
             </div>
-            <p class="weather__cond">Polojasno</p>
-            <p class="weather__meta">Vlhkost: 68% <span class="dot-sep" aria-hidden="true">•</span> Vítr: 12 km/h</p>
+            <p class="weather__cond" id="wx-cond">Načítám počasí…</p>
+            <p class="weather__meta" id="wx-meta">&nbsp;</p>
           </div>
 
           <div class="weather__side">
@@ -182,33 +211,7 @@
             <time class="weather__time" id="clock-time" datetime="15:42">15:42</time>
             <span class="weather__date" id="clock-date">Středa, 30. dubna 2025</span>
           </div>
-          <ol class="forecast" aria-label="Předpověď na 5 dní">
-            <li class="forecast__day">
-              <span class="forecast__name">Dnes</span>
-              <svg class="forecast__icon" role="img" aria-label="Polojasno"><use href="#wx-partly"/></svg>
-              <span class="forecast__hi">14°</span><span class="forecast__lo">7°</span>
-            </li>
-            <li class="forecast__day">
-              <span class="forecast__name">Zítra</span>
-              <svg class="forecast__icon" role="img" aria-label="Polojasno"><use href="#wx-partly"/></svg>
-              <span class="forecast__hi">16°</span><span class="forecast__lo">8°</span>
-            </li>
-            <li class="forecast__day">
-              <span class="forecast__name">Čt</span>
-              <svg class="forecast__icon forecast__icon--sm" role="img" aria-label="Polojasno"><use href="#wx-partly"/></svg>
-              <span class="forecast__hi">17°</span><span class="forecast__lo">9°</span>
-            </li>
-            <li class="forecast__day">
-              <span class="forecast__name">Pá</span>
-              <svg class="forecast__icon" role="img" aria-label="Déšť"><use href="#wx-rain"/></svg>
-              <span class="forecast__hi">15°</span><span class="forecast__lo">8°</span>
-            </li>
-            <li class="forecast__day">
-              <span class="forecast__name">So</span>
-              <svg class="forecast__icon" role="img" aria-label="Přeháňky"><use href="#wx-showers"/></svg>
-              <span class="forecast__hi">13°</span><span class="forecast__lo">6°</span>
-            </li>
-          </ol>
+          <ol class="forecast" id="wx-forecast" aria-label="Předpověď na 5 dní"></ol>
           </div>
           </div>
         </section>
@@ -250,12 +253,12 @@
           </ul>
         </section>
 
+
         <!-- Herní přehled -->
         <section class="card games" aria-labelledby="games-title">
           <header class="card__header">
             <h2 class="card__title" id="games-title"><i data-lucide="gamepad-2" class="text-accent"></i>Herní přehled</h2>
-            <a class="pill-btn" href="#">Všechny hry <i data-lucide="arrow-right"></i></a>
-          </header>
+                      </header>
           <ul class="game-list">
             <li>
               <a class="game" href="#">
@@ -297,38 +300,21 @@
       <!-- ============ PRAVÝ SIDEBAR ============ -->
       <aside class="rightbar" aria-label="Asistent a nástroje">
 
-        <!-- AI asistent chat -->
+        <!-- AI asistent: Gemini (gemini.google.com/app) -->
         <section class="card assistant" aria-labelledby="assistant-title">
           <header class="assistant__header">
-            <span class="assistant__avatar" aria-hidden="true"><i data-lucide="bot"></i></span>
+            <span class="assistant__avatar" aria-hidden="true"><i data-lucide="sparkles"></i></span>
             <div class="assistant__who">
               <h2 class="assistant__name" id="assistant-title">AI asistent</h2>
-              <span class="assistant__status"><span class="status-dot status-dot--green"></span>Online</span>
+              <span class="assistant__status" id="gemini-status"><span class="status-dot"></span>Gemini · načítám…</span>
             </div>
-            <button class="icon-btn icon-btn--sm" type="button" aria-label="Možnosti chatu"><i data-lucide="ellipsis-vertical"></i></button>
+            <button class="icon-btn icon-btn--sm" type="button" id="gemini-reload" aria-label="Znovu načíst Gemini" title="Znovu načíst"><i data-lucide="refresh-cw"></i></button>
+            <button class="icon-btn icon-btn--sm" type="button" id="gemini-external" aria-label="Otevřít Gemini v prohlížeči" title="Otevřít v prohlížeči"><i data-lucide="external-link"></i></button>
           </header>
-
-          <div class="chat" id="chat" role="log" aria-live="polite">
-            <div class="bubble bubble--bot">
-              <p>Ahoj Jakube! 👋</p>
-              <p>S čím ti dnes můžu pomoci?</p>
-            </div>
-            <ul class="suggestions" id="suggestions">
-              <li><button class="chip" type="button"><i data-lucide="sparkle"></i>Shrň mi dnešní novinky</button></li>
-              <li><button class="chip" type="button"><i data-lucide="sparkle"></i>Jaké bude zítra počasí?</button></li>
-              <li><button class="chip" type="button"><i data-lucide="sparkle"></i>Které hry dneska hrají?</button></li>
-              <li><button class="chip" type="button"><i data-lucide="sparkle"></i>Mám nějaké důležité úkoly?</button></li>
-              <li><button class="chip chip--note" type="button"><i data-lucide="notebook-pen"></i>Napiš mi připomínku...</button></li>
-            </ul>
+          <div class="gemini" id="gemini">
+            <p class="gemini__fallback">Gemini se zobrazí jen v desktopové aplikaci.
+              <a href="https://gemini.google.com/app" target="_blank" rel="noopener">Otevřít gemini.google.com</a></p>
           </div>
-
-          <form class="composer" id="composer">
-            <div class="composer__box">
-              <input class="composer__input" id="composer-input" type="text" placeholder="Napiš zprávu..." aria-label="Zpráva pro AI asistenta" autocomplete="off">
-              <button class="composer__send" type="submit" aria-label="Odeslat zprávu"><i data-lucide="send-horizontal"></i></button>
-            </div>
-            <p class="composer__hint">Použij Ctrl + Enter pro odeslání</p>
-          </form>
         </section>
 
       </aside>

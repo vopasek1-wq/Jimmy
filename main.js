@@ -1,12 +1,25 @@
 // AI Dashboard – hlavní proces Electronu (Windows desktop aplikace).
 "use strict";
 
-const { app, BrowserWindow, ipcMain, shell, screen, net } = require("electron");
+const { app, BrowserWindow, ipcMain, shell, screen, net, session } = require("electron");
 const path = require("node:path");
 const { fetchNews } = require("./news");
+const { fetchWeather } = require("./weather");
 
 const DESIGN_SIZE = { width: 1536, height: 1024 };
 const isHttpUrl = (url) => /^https?:\/\//i.test(url);
+
+/* Gemini se vkládá přes <webview> (gemini.google.com zakazuje vložení do iframe). */
+const GEMINI_URL = "https://gemini.google.com/app";
+const GEMINI_PARTITION = "persist:gemini"; // vlastní trvalé úložiště → přihlášení vydrží
+const isGoogleUrl = (url) => {
+  try {
+    const { protocol, hostname } = new URL(url);
+    return protocol === "https:" && /(^|\.)(google\.com|google\.cz|gstatic\.com|googleusercontent\.com)$/.test(hostname);
+  } catch {
+    return false;
+  }
+};
 
 let mainWindow = null;
 
@@ -32,7 +45,20 @@ function createWindow() {
       nodeIntegration: false,
       sandbox: true,
       spellcheck: false,
+      webviewTag: true,
     },
+  });
+
+  // Povolit jen webview s Gemini a vždy s bezpečným nastavením (bez preloadu a Node).
+  mainWindow.webContents.on("will-attach-webview", (event, webPreferences, params) => {
+    if (!params.src.startsWith(GEMINI_URL) || params.partition !== GEMINI_PARTITION) {
+      event.preventDefault();
+      return;
+    }
+    delete webPreferences.preload;
+    webPreferences.nodeIntegration = false;
+    webPreferences.contextIsolation = true;
+    webPreferences.sandbox = true;
   });
 
   if (width < DESIGN_SIZE.width || height < DESIGN_SIZE.height) mainWindow.maximize();
@@ -72,6 +98,32 @@ ipcMain.on("win:close", (e) => senderWindow(e)?.close());
 // Stahuje hlavní proces přes síťový stack Chromia (systémové proxy a certifikáty Windows).
 ipcMain.handle("news:fetch", () => fetchNews((url, init) => net.fetch(url, init)));
 
+/* ---------- Počasí (Open-Meteo) ---------- */
+ipcMain.handle("weather:fetch", () => fetchWeather((url, init) => net.fetch(url, init)));
+
+/* ---------- Gemini ve webview ---------- */
+// Google blokuje přihlášení v prohlížečích, které se hlásí jako Electron → běžný Chrome UA
+// (z identifikace se odstraní vše kromě Mozilla/AppleWebKit/Chrome/Safari).
+const chromeUserAgent = () => app.userAgentFallback
+  .replace(/\s(?!(?:AppleWebKit|Chrome|Safari)\/)[\w.-]+\/\S+/g, "");
+
+app.on("web-contents-created", (_event, contents) => {
+  if (contents.getType() !== "webview") return;
+  contents.setUserAgent(chromeUserAgent());
+  // Stránky Googlu (Gemini, přihlášení) zůstávají v panelu, vše ostatní jde do prohlížeče.
+  contents.on("will-navigate", (event, url) => {
+    if (isGoogleUrl(url)) return;
+    event.preventDefault();
+    if (isHttpUrl(url)) shell.openExternal(url);
+  });
+  contents.setWindowOpenHandler(({ url }) => {
+    if (isHttpUrl(url)) shell.openExternal(url);
+    return { action: "deny" };
+  });
+});
+
+ipcMain.on("gemini:open-external", () => shell.openExternal(GEMINI_URL));
+
 /* ---------- Životní cyklus ---------- */
 if (!app.requestSingleInstanceLock()) {
   app.quit();
@@ -84,6 +136,7 @@ if (!app.requestSingleInstanceLock()) {
 
   app.whenReady().then(() => {
     app.setAppUserModelId("cz.jimmy.aidashboard");
+    session.fromPartition(GEMINI_PARTITION).setUserAgent(chromeUserAgent());
     createWindow();
     app.on("activate", () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow();
