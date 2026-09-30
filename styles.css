@@ -654,7 +654,21 @@ i[data-lucide],
   text-decoration-color: rgba(200, 212, 226, 0.7);
 }
 
-.task-add { grid-area: add; display: flex; gap: 8px; }
+.task-add { grid-area: add; display: flex; flex-wrap: wrap; gap: 8px; }
+.task-add #task-input { flex: 1 1 100%; }
+.input--select {
+  flex: 1 1 110px;
+  padding: 0 28px 0 10px;
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--panel) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c9d3de' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") right 8px center / 14px no-repeat;
+  color: var(--text);
+  cursor: pointer;
+  color-scheme: dark;
+}
+.input--select option { background: var(--card); color: var(--text); }
+.task__repeat { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; color: var(--accent); }
+.task__repeat .lucide { width: 12px; height: 12px; }
 .task-add .input { height: 32px; font-size: 12.5px; }
 .input--time { flex: 0 0 96px; padding: 0 6px; color-scheme: dark; font-variant-numeric: tabular-nums; }
 .btn.btn--icon { width: 32px; height: 32px; padding: 0; flex: none; }

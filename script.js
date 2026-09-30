@@ -212,7 +212,27 @@
   const taskList = $("#task-list");
   const weekEl = $("#week");
   const byTime = (a, b) => (a.time || "99").localeCompare(b.time || "99") || a.title.localeCompare(b.title, "cs");
-  const tasksFor = (key) => tasks.filter((t) => t.date === key).sort(byTime);
+
+  /* Opakování: "none" | "daily" (každý den) | "weekly" (každý týden ve stejný den).
+     U opakovaných úkolů se splnění ukládá zvlášť pro každý den (doneDates). */
+  const REPEAT_LABEL = { daily: "každý den", weekly: "každý týden" };
+  const weekdayOf = (key) => new Date(`${key}T00:00`).getDay();
+  const occursOn = (t, key) => {
+    if (!t.repeat || t.repeat === "none") return t.date === key;
+    if (key < t.date) return false;
+    return t.repeat === "daily" || weekdayOf(key) === weekdayOf(t.date);
+  };
+  const isDone = (t, key) => (t.repeat && t.repeat !== "none" ? (t.doneDates || []).includes(key) : Boolean(t.done));
+  const setDone = (t, key, done) => {
+    if (t.repeat && t.repeat !== "none") {
+      const dates = new Set(t.doneDates || []);
+      if (done) dates.add(key); else dates.delete(key);
+      t.doneDates = [...dates];
+    } else {
+      t.done = done;
+    }
+  };
+  const tasksFor = (key) => tasks.filter((t) => occursOn(t, key)).sort(byTime);
 
   const renderDay = () => {
     const d = new Date(`${selectedDay}T00:00`);
@@ -232,11 +252,21 @@
         </label>
         <button class="task__delete icon-btn icon-btn--xs" type="button" aria-label="Smazat úkol"><i data-lucide="x"></i></button>`;
       $(".task__title", li).textContent = task.title;
-      $(".task__due", li).textContent = task.time || "Kdykoliv";
+      const due = $(".task__due", li);
+      due.textContent = task.time || "Kdykoliv";
+      if (REPEAT_LABEL[task.repeat]) {
+        const rep = document.createElement("span");
+        rep.className = "task__repeat";
+        rep.innerHTML = `<i data-lucide="repeat"></i>`;
+        rep.append(REPEAT_LABEL[task.repeat]);
+        due.append(rep);
+      }
       const box = $(".checkbox", li);
-      box.checked = task.done;
-      box.addEventListener("change", () => { task.done = box.checked; saveTasks(); renderWeek(); });
+      box.checked = isDone(task, selectedDay);
+      box.addEventListener("change", () => { setDone(task, selectedDay, box.checked); saveTasks(); renderWeek(); });
       $(".task__delete", li).addEventListener("click", () => {
+        if (REPEAT_LABEL[task.repeat]
+          && !window.confirm(`Smazat opakovaný úkol „${task.title}“ včetně všech opakování?`)) return;
         tasks = tasks.filter((t) => t !== task);
         saveTasks();
         renderAll();
@@ -263,7 +293,7 @@
       const d = addDays(weekStart, i);
       const key = dateKey(d);
       const list = tasksFor(key);
-      const open = list.filter((t) => !t.done);
+      const open = list.filter((t) => !isDone(t, key));
       const li = document.createElement("li");
       li.innerHTML = `
         <button class="day" type="button">
@@ -304,7 +334,9 @@
     const time = $("#task-time");
     const title = input.value.trim();
     if (!title) return;
-    tasks.push({ id: `${Date.now()}`, title, date: selectedDay, time: time.value, done: false });
+    const repeat = $("#task-repeat");
+    tasks.push({ id: `${Date.now()}`, title, date: selectedDay, time: time.value, repeat: repeat.value, done: false, doneDates: [] });
+    repeat.value = "none";
     saveTasks();
     input.value = "";
     time.value = "";

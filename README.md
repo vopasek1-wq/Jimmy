@@ -28,6 +28,8 @@ varování → **Další informace** → **Přesto spustit**.
   (porovnání klíčových slov titulku a perexu). Kliknutí otevře článek v prohlížeči.
 - **Úkoly – týdenní kalendář:** dny v týdnu (šipkami se přepíná týden, klik na datum vrátí
   na dnešek) a úkoly vybraného dne s možností přidat (i s časem), odškrtnout a smazat.
+  Úkol lze nastavit na opakování **každý den** nebo **každý týden** (ve stejný den v týdnu);
+  opakovaný úkol se odškrtává zvlášť pro každý den, smazání odstraní celou řadu.
 - **Ukládání:** úkoly zůstávají i po restartu aplikace.
 - Herní přehled obsahuje zatím ukázková data.
 

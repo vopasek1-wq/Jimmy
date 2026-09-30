@@ -237,6 +237,11 @@
             <form class="task-add" id="task-add">
               <input class="input" id="task-input" type="text" placeholder="Nový úkol…" aria-label="Název nového úkolu" autocomplete="off">
               <input class="input input--time" id="task-time" type="time" aria-label="Čas (nepovinný)">
+<select class="input input--select" id="task-repeat" aria-label="Opakování">
+  <option value="none">Neopakovat</option>
+  <option value="daily">Každý den</option>
+  <option value="weekly">Každý týden</option>
+</select>
               <button class="btn btn--primary btn--icon" type="submit" aria-label="Přidat úkol"><i data-lucide="plus"></i></button>
             </form>
           </div>
