@@ -496,7 +496,7 @@
             <span class="clip-item__meta"></span>
           </button>
           <div class="clip-item__tools">
-            <button class="icon-btn icon-btn--xs" type="button" data-act="paste" aria-label="Vložit do předchozí aplikace" title="Vložit"><i data-lucide="clipboard-paste"></i></button>
+            <button class="icon-btn icon-btn--xs" type="button" data-act="paste" aria-label="Zkopírovat a přepnout zpět (pak Ctrl+V)" title="Zkopírovat a přepnout zpět (pak Ctrl+V)"><i data-lucide="clipboard-paste"></i></button>
             <button class="icon-btn icon-btn--xs" type="button" data-act="pin"><i data-lucide="${it.pinned ? "pin-off" : "pin"}"></i></button>
             <button class="icon-btn icon-btn--xs clip-item__del" type="button" data-act="delete" aria-label="Smazat" title="Smazat"><i data-lucide="trash-2"></i></button>
           </div>`;

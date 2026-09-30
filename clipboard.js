@@ -2,7 +2,6 @@
 "use strict";
 
 const { app, clipboard, ipcMain, net, safeStorage, globalShortcut } = require("electron");
-const { execFile } = require("node:child_process");
 const path = require("node:path");
 const fs = require("node:fs");
 
@@ -95,16 +94,11 @@ function copy(text) {
   if (item && !paused) add(text);
 }
 
-// Vloží text do okna, které bylo aktivní před aplikací: schová okno a pošle Ctrl+V.
+// „Vložit“: zkopíruje text a schová aplikaci, aby se vrátilo předchozí okno – tam stačí Ctrl+V.
+// (Záměrně bez simulace kláves – antiviry a Chrome to považují za podezřelé chování.)
 function pasteToPreviousApp(text) {
   copy(text);
-  const win = getWindow();
-  if (process.platform !== "win32") return false;
-  win?.minimize();
-  execFile("powershell.exe", [
-    "-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-Command",
-    "Add-Type -AssemblyName System.Windows.Forms; Start-Sleep -Milliseconds 250; [System.Windows.Forms.SendKeys]::SendWait('^v')",
-  ], { windowsHide: true }, () => {});
+  getWindow()?.minimize();
   return true;
 }
 

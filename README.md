@@ -33,8 +33,8 @@ varování → **Další informace** → **Přesto spustit**.
   Úkol lze nastavit na opakování **každý den** nebo **každý týden** (ve stejný den v týdnu);
   opakovaný úkol se odškrtává zvlášť pro každý den, smazání odstraní celou řadu.
 - **Chytrá schránka:** historie kopírovaného textu z celého Windows (vyhledávání, připnutí, mazání,
-  pozastavení záznamu), klik = zkopírovat zpět, **Vložit** = schová aplikaci a vloží text do předchozího
-  okna (Ctrl+V). Zkratka **Alt+Shift+V** otevře schránku odkudkoliv. **AI úprava textu** (oprava pravopisu,
+  pozastavení záznamu), klik = zkopírovat zpět, **Zkopírovat a přepnout zpět** = zkopíruje text a schová aplikaci,
+  v předchozím okně pak stačí Ctrl+V. Zkratka **Alt+Shift+V** otevře schránku odkudkoliv. **AI úprava textu** (oprava pravopisu,
   zkrácení, formálněji, překlad, shrnutí, vlastní pokyn) přes Gemini API s vlastním bezplatným klíčem
   z [aistudio.google.com/apikey](https://aistudio.google.com/apikey) (uložen šifrovaně); bez klíče se
   zadání připraví do schránky a otevře se Gemini.
