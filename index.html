@@ -26,6 +26,10 @@
         <stop offset=".75" stop-color="#1a8fd6"/>
         <stop offset="1" stop-color="#0b4a7c"/>
       </radialGradient>
+      <linearGradient id="g-moon" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#fbf7dc"/>
+        <stop offset="1" stop-color="#c3c7d6"/>
+      </linearGradient>
       <radialGradient id="g-sun" cx="40%" cy="35%" r="70%">
         <stop offset="0" stop-color="#fff2a8"/>
         <stop offset=".55" stop-color="#ffc233"/>
@@ -88,6 +92,23 @@
     <symbol id="wx-sun" viewBox="0 0 64 48">
       <circle cx="32" cy="24" r="17" fill="#ffc233" opacity=".18"/>
       <circle cx="32" cy="24" r="12.5" fill="url(#g-sun)"/>
+    </symbol>
+
+    <symbol id="wx-moon" viewBox="0 0 64 48">
+      <circle cx="32" cy="24" r="17" fill="#c7d2fe" opacity=".1"/>
+      <path d="M36 8a16 16 0 1 0 12 27A13 13 0 0 1 36 8Z" fill="url(#g-moon)"/>
+      <g fill="#e8edff"><circle cx="15" cy="12" r="1.2"/><circle cx="52" cy="10" r="1"/><circle cx="54" cy="40" r="1.1"/></g>
+    </symbol>
+
+    <symbol id="wx-partly-night" viewBox="0 0 64 48">
+      <circle cx="42" cy="16" r="14" fill="#c7d2fe" opacity=".1"/>
+      <path d="M44 4a11.5 11.5 0 1 0 8.5 19.5A9.5 9.5 0 0 1 44 4Z" fill="url(#g-moon)"/>
+      <g fill="url(#g-cloud)">
+        <circle cx="17" cy="32" r="9"/>
+        <circle cx="29" cy="25" r="12"/>
+        <circle cx="42" cy="31" r="9"/>
+        <rect x="17" y="30" width="25" height="11"/>
+      </g>
     </symbol>
 
     <symbol id="wx-cloud" viewBox="0 0 64 48">

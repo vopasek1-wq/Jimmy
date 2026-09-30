@@ -5,11 +5,11 @@ const PLACE = { name: "Teplice", latitude: 50.6404, longitude: 13.8245 };
 
 const URL_BASE = "https://api.open-meteo.com/v1/forecast";
 
-// WMO kódy počasí → česky + ikona ze sprite v index.html
-function describe(code) {
-  if (code === 0) return { text: "Jasno", icon: "wx-sun" };
-  if (code === 1) return { text: "Skoro jasno", icon: "wx-partly" };
-  if (code === 2) return { text: "Polojasno", icon: "wx-partly" };
+// WMO kódy počasí → česky + ikona ze sprite v index.html (v noci měsíc místo slunce)
+function describe(code, isDay = true) {
+  if (code === 0) return { text: "Jasno", icon: isDay ? "wx-sun" : "wx-moon" };
+  if (code === 1) return { text: "Skoro jasno", icon: isDay ? "wx-partly" : "wx-partly-night" };
+  if (code === 2) return { text: "Polojasno", icon: isDay ? "wx-partly" : "wx-partly-night" };
   if (code === 3) return { text: "Zataženo", icon: "wx-cloud" };
   if (code === 45 || code === 48) return { text: "Mlha", icon: "wx-fog" };
   if (code >= 51 && code <= 57) return { text: "Mrholení", icon: "wx-rain" };
@@ -24,7 +24,7 @@ async function fetchWeather(fetchImpl, place = PLACE) {
   const params = new URLSearchParams({
     latitude: place.latitude,
     longitude: place.longitude,
-    current: "temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code",
+    current: "temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code,is_day",
     daily: "weather_code,temperature_2m_max,temperature_2m_min",
     timezone: "Europe/Prague",
     forecast_days: "5",
@@ -40,7 +40,8 @@ async function fetchWeather(fetchImpl, place = PLACE) {
       feelsLike: Math.round(c.apparent_temperature),
       humidity: Math.round(c.relative_humidity_2m),
       wind: Math.round(c.wind_speed_10m),
-      ...describe(c.weather_code),
+      isDay: c.is_day !== 0,
+      ...describe(c.weather_code, c.is_day !== 0),
     },
     daily: data.daily.time.map((date, i) => ({
       date,
