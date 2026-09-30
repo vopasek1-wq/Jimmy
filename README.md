@@ -6,16 +6,10 @@ dvojklik pro maximalizaci, tlačítka minimalizovat / maximalizovat / zavřít.
 
 <img src="docs/preview-desktop.png" alt="Náhled aplikace" width="100%">
 
-## Stažení a instalace
+## Stažení
 
-**Stažení:** [github.com/vopasek1-wq/Jimmy/releases/latest](https://github.com/vopasek1-wq/Jimmy/releases/latest)
-(soubory jsou také v GitHub Actions → workflow **Windows build** → artefakt `AI-Dashboard-Windows`):
-
-| Soubor | Použití |
-| --- | --- |
-| `AI-Dashboard-Setup-1.0.0.exe` | Instalátor (zástupce na ploše a v nabídce Start) |
-| `AI-Dashboard-1.0.0-portable.exe` | Přenosná verze – jeden soubor, bez instalace |
-| `AI-Dashboard-1.0.0-win-x64.zip` | Rozbalit a spustit `AI Dashboard.exe` |
+Sestavený soubor je v GitHub Actions → workflow **Windows build** → artefakt `AI-Dashboard-Windows`:
+`AI-Dashboard-1.0.0-portable.exe` – stačí stáhnout a spustit, bez instalace.
 
 Aplikace není digitálně podepsaná, takže Windows SmartScreen může při prvním spuštění zobrazit
 varování → **Další informace** → **Přesto spustit**.
@@ -28,7 +22,6 @@ varování → **Další informace** → **Přesto spustit**.
   (porovnání klíčových slov titulku a perexu). Kliknutí otevře článek v prohlížeči.
 - **Úkoly – týdenní kalendář:** vpravo dny v týdnu (šipkami se přepíná týden, klik na datum vrátí
   na dnešek), vlevo úkoly vybraného dne s možností přidat (i s časem), odškrtnout a smazat.
-  Dnešní nesplněné úkoly se ukazují v kartě s hodinami.
 - **Ukládání:** úkoly zůstávají i po restartu aplikace.
 - Vyhledávání a odkazy se otevírají ve výchozím prohlížeči; ikony a písmo jsou přibalené.
 - Počasí, herní přehled a odpovědi AI asistenta jsou zatím ukázková data.
@@ -38,8 +31,7 @@ varování → **Další informace** → **Přesto spustit**.
 ```bash
 npm install
 npm start            # spustí aplikaci
-npm run dist         # sestaví instalátor, portable .exe a zip do složky dist/ (na Windows)
-npm run dist:zip     # jen zip – jde sestavit i na Linuxu/macOS
+npm run dist         # sestaví portable .exe do složky dist/ (na Windows)
 ```
 
 | Soubor | Obsah |

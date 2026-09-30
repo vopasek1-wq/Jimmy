@@ -220,7 +220,7 @@
       $(".task__due", li).textContent = task.time || "Kdykoliv";
       const box = $(".checkbox", li);
       box.checked = task.done;
-      box.addEventListener("change", () => { task.done = box.checked; saveTasks(); renderWeek(); renderAgenda(); });
+      box.addEventListener("change", () => { task.done = box.checked; saveTasks(); renderWeek(); });
       $(".task__delete", li).addEventListener("click", () => {
         tasks = tasks.filter((t) => t !== task);
         saveTasks();
@@ -273,24 +273,7 @@
     }));
   };
 
-  const renderAgenda = () => {
-    const agenda = $("#agenda");
-    const upcoming = tasksFor(todayKey()).filter((t) => !t.done).slice(0, 2);
-    if (!upcoming.length) {
-      agenda.innerHTML = `<li class="agenda__item agenda__item--empty">Na dnes nic dalšího</li>`;
-      return;
-    }
-    agenda.replaceChildren(...upcoming.map((t) => {
-      const li = document.createElement("li");
-      li.className = "agenda__item";
-      li.innerHTML = "<time></time><span></span>";
-      $("time", li).textContent = t.time || "—";
-      $("span", li).textContent = t.title;
-      return li;
-    }));
-  };
-
-  const renderAll = () => { renderWeek(); renderDay(); renderAgenda(); };
+  const renderAll = () => { renderWeek(); renderDay(); };
 
   $("#week-prev").addEventListener("click", () => { weekStart = addDays(weekStart, -7); renderWeek(); });
   $("#week-next").addEventListener("click", () => { weekStart = addDays(weekStart, 7); renderWeek(); });
