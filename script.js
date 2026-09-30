@@ -89,7 +89,7 @@
     if (e.key === "Escape") setNav(false);
   });
 
-  /* ---------- Novinky: Seznam Zprávy, Novinky.cz, iDNES.cz (živě z RSS) ---------- */
+  /* ---------- Zprávy: Seznam Zprávy, Novinky.cz, iDNES.cz (živě z RSS) ---------- */
   const newsList = $("#news-list");
   const newsRefresh = $("#news-refresh");
   let articles = [];

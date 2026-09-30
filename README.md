@@ -16,14 +16,14 @@ varování → **Další informace** → **Přesto spustit**.
 
 ## Co funguje „naostro“
 
-- **Levé menu** přepíná pohledy: Přehled, AI asistent (Gemini přes celou šířku), Počasí, Novinky,
+- **Levé menu** přepíná pohledy: Přehled, AI asistent (Gemini přes celou šířku), Počasí, Zprávy,
   Úkoly a Herní přehled (jednotlivé sekce přes celou plochu).
 - **AI asistent** = [Gemini](https://gemini.google.com/app) vložené v pravém panelu (Electron `<webview>`,
   vlastní trvalé úložiště → přihlášení Google účtem vydrží i po restartu). Odkazy z odpovědí se otevírají
   ve výchozím prohlížeči; tlačítka v hlavičce: znovu načíst / otevřít v prohlížeči.
 - **Počasí pro Teplice** živě z Open-Meteo (aktuální stav + předpověď na 5 dní, obnova každých 30 min),
   hodiny a datum v téže kartě.
-- **Novinky** se načítají živě z RSS webů Seznam Zprávy, Novinky.cz a iDNES.cz (každých 15 minut
+- **Zprávy** se načítají živě z RSS webů Seznam Zprávy, Novinky.cz a iDNES.cz (každých 15 minut
   nebo tlačítkem obnovit). Zdroje se střídají a stejná událost z více webů se zobrazí jen jednou
   (porovnání klíčových slov titulku a perexu). Kliknutí otevře článek v prohlížeči.
 - **Úkoly – týdenní kalendář:** dny v týdnu (šipkami se přepíná týden, klik na datum vrátí
@@ -47,7 +47,7 @@ npm run dist         # sestaví portable .exe do složky dist/ (na Windows)
 | `preload.js` | Bezpečný most mezi stránkou a hlavním procesem (`window.desktop`) |
 | `index.html` | Markup dashboardu |
 | `styles.css` | Design tokeny (`:root`), layout, komponenty, stavy hover/active/focus |
-| `script.js` | Pohledy z menu, hodiny, počasí, novinky, týdenní kalendář, Gemini, ovládání okna |
+| `script.js` | Pohledy z menu, hodiny, počasí, zprávy, týdenní kalendář, Gemini, ovládání okna |
 | `assets/img/` | Náhradní (placeholder) SVG obrázky |
 | `vendor/` | Lokální kopie ikon Lucide a písma Roboto |
 | `build/icon.png` | Ikona aplikace |
@@ -55,7 +55,7 @@ npm run dist         # sestaví portable .exe do složky dist/ (na Windows)
 ## Layout
 
 - **Shell:** CSS Grid `sidebar | obsah`, horní lišta je `sticky`.
-- **Přehled:** vlevo Počasí s hodinami a pod ním Úkoly, vpravo Novinky přes celou výšku.
+- **Přehled:** vlevo Počasí s hodinami a pod ním Úkoly, vpravo širší Zprávy přes celou výšku.
 - **Vpravo:** AI asistent (Gemini) na celou výšku okna.
 - **Container queries** přizpůsobují vnitřek karet jejich šířce (předpověď počasí pod teplotu,
   herní karty ve vodorovném posuvníku).

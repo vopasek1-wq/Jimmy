@@ -288,10 +288,10 @@ i[data-lucide],
   min-width: 0;
 }
 
-/* Přehled: vlevo Počasí + hodiny a pod ním Úkoly, vpravo Novinky přes oba řádky. */
+/* Přehled: vlevo Počasí + hodiny a pod ním Úkoly, vpravo Zprávy přes oba řádky. */
 .dashboard {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); /* užší Počasí + Úkoly, širší Zprávy */
   grid-template-rows: auto 1fr;
   grid-template-areas:
     "weather news"
@@ -428,8 +428,19 @@ i[data-lucide],
 
 @container (max-width: 445px) {
   .weather__layout { grid-template-columns: minmax(0, 1fr); }
-  .weather__side { margin-top: 18px; }
-  .weather__clock { justify-content: flex-start; }
+  .weather__side { margin-top: 14px; }
+  /* V úzké kartě jsou hodiny vpravo nahoře vedle nadpisu. */
+  .weather__clock {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0;
+    min-height: 0;
+  }
+  .weather__time { font-size: 30px; line-height: 34px; }
+  .weather__date { font-size: 12px; }
 }
 
 /* ---------- Hodiny v kartě Počasí ---------- */
