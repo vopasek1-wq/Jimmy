@@ -390,13 +390,126 @@
     }));
   };
 
+  /* Hodinový graf (Chart.js): teplota = křivka, pravděpodobnost srážek = sloupce */
+  let wxChart = null;
+  const renderWeatherChart = (hourly) => {
+    const canvas = $("#wx-chart");
+    if (!window.Chart || !canvas) return;
+    const labels = hourly.map((h) => `${h.hour}h`);
+    const temps = hourly.map((h) => h.temp);
+    const pops = hourly.map((h) => h.pop);
+    if (wxChart) {
+      wxChart.data.labels = labels;
+      wxChart.data.datasets[0].data = temps;
+      wxChart.data.datasets[1].data = pops;
+      wxChart.update();
+      return;
+    }
+    const grid = "rgba(148, 176, 214, 0.08)";
+    wxChart = new window.Chart(canvas, {
+      data: {
+        labels,
+        datasets: [
+          {
+            type: "line", label: "Teplota (°C)", data: temps, yAxisID: "y",
+            borderColor: "#56cbff", backgroundColor: "rgba(86, 203, 255, 0.12)", fill: true,
+            tension: 0.35, borderWidth: 2, pointRadius: 0, pointHoverRadius: 4,
+          },
+          {
+            type: "bar", label: "Srážky (%)", data: pops, yAxisID: "y1",
+            backgroundColor: "rgba(59, 143, 240, 0.45)", borderRadius: 3, barPercentage: 0.8,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 300 },
+        interaction: { mode: "index", intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              title: (items) => `${items[0].label.replace("h", "")}:00`,
+              label: (ctx) => (ctx.dataset.yAxisID === "y" ? ` ${ctx.parsed.y} °C` : ` srážky ${ctx.parsed.y} %`),
+            },
+          },
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: "#8d9cae", font: { size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } },
+          y: { position: "left", grid: { color: grid }, ticks: { color: "#8d9cae", font: { size: 10 }, callback: (v) => `${v}°` } },
+          y1: { position: "right", min: 0, max: 100, grid: { display: false }, ticks: { color: "#5f7ea8", font: { size: 10 }, stepSize: 50, callback: (v) => `${v}%` } },
+        },
+      },
+    });
+  };
+
+  /* Doporučení: Gemini (s API klíčem), jinak pravidla z hodinových dat */
+  const ruleTip = (w) => {
+    const today = w.hourly.slice(0, 16); // příštích 16 hodin
+    const wet = today.filter((h) => h.pop >= 50 || h.precip >= 0.3);
+    const maybe = today.filter((h) => h.pop >= 30);
+    const temps = today.map((h) => h.temp);
+    const min = Math.round(Math.min(...temps));
+    const max = Math.round(Math.max(...temps));
+    const range = (list) => (list.length === 1 ? `kolem ${list[0].hour} h` : `mezi ${list[0].hour} a ${list[list.length - 1].hour + 1} h`);
+    const parts = [];
+    if (wet.length) {
+      const peak = Math.max(...wet.map((h) => h.pop));
+      const snow = wet.some((h) => h.icon === "wx-snow");
+      parts.push(`${snow ? "Bude sněžit" : "Zmokneš"} ${range(wet)} (až ${peak} %) – ${snow ? "obleč se tepleji a počítej s náledím" : "vezmi si deštník"}.`);
+    } else if (maybe.length) {
+      parts.push(`Možná přeháňka ${range(maybe)} – deštník se může hodit.`);
+    } else {
+      parts.push("Srážky se nečekají, deštník můžeš nechat doma.");
+    }
+    if (today.some((h) => h.icon === "wx-storm")) parts.push("Pozor na bouřky.");
+    else if (max >= 28) parts.push(`Bude horko (až ${max} °C) – pij dost vody.`);
+    else if (w.current.feelsLike <= 3) parts.push(`Je chladno (pocitově ${w.current.feelsLike} °C) – obleč se teple.`);
+    else parts.push(`Teploty ${min}–${max} °C.`);
+    if (w.current.wind >= 40) parts.push("Fouká silný vítr.");
+    return parts.join(" ");
+  };
+
+  let tipKey = "";
+  const renderWeatherTip = async (w) => {
+    const tip = $("#wx-tip");
+    const badge = $("#wx-tip-badge");
+    const text = $("#wx-tip-text");
+    tip.hidden = false;
+    // Nejdřív hned tip z pravidel, pak (pokud je klíč) přepsat textem od Gemini – max. jednou za hodinu.
+    const key = `${w.place}-${w.hourly[0]?.time}`;
+    if (tipKey === key) return;
+    tipKey = key;
+    badge.textContent = "Tip";
+    badge.classList.remove("is-ai");
+    text.textContent = ruleTip(w);
+    if (!window.desktop?.weatherSummary) return;
+    const brief = [
+      `Místo: ${w.place}. Teď: ${w.current.temperature} °C (pocitově ${w.current.feelsLike} °C), ${w.current.text}, vítr ${w.current.wind} km/h.`,
+      "Hodinová předpověď (hodina: teplota, pravděpodobnost srážek, srážky mm, stav):",
+      ...w.hourly.map((h) => `${h.hour}:00: ${h.temp} °C, ${h.pop} %, ${h.precip} mm, ${h.text}`),
+    ].join("\n");
+    const res = await window.desktop.weatherSummary(brief);
+    if (res?.ok && tipKey === key) {
+      badge.textContent = "AI";
+      badge.classList.add("is-ai");
+      text.textContent = res.text;
+    }
+  };
+
   async function loadWeather() {
     if (!window.desktop?.fetchWeather) {
       $("#wx-cond").textContent = "Počasí se načítá jen v desktopové aplikaci.";
       return;
     }
     try {
-      renderWeather(await window.desktop.fetchWeather());
+      const w = await window.desktop.fetchWeather();
+      renderWeather(w);
+      if (w.hourly?.length) {
+        renderWeatherChart(w.hourly);
+        renderWeatherTip(w);
+      }
     } catch {
       if ($("#wx-temp").textContent === "–") $("#wx-cond").textContent = "Počasí se nepodařilo načíst.";
     }

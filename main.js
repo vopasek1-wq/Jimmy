@@ -11,7 +11,7 @@ const legacyUserData = path.join(app.getPath("appData"), "AI Dashboard");
 if (fs.existsSync(legacyUserData)) app.setPath("userData", legacyUserData);
 const { fetchNews } = require("./news");
 const { fetchWeather } = require("./weather");
-const { setupClipboard } = require("./clipboard");
+const { setupClipboard, askGemini, hasGeminiKey } = require("./clipboard");
 
 const DESIGN_SIZE = { width: 1536, height: 1024 };
 const isHttpUrl = (url) => /^https?:\/\//i.test(url);
@@ -107,6 +107,21 @@ ipcMain.handle("news:fetch", () => fetchNews((url, init) => net.fetch(url, init)
 
 /* ---------- Počasí (Open-Meteo) ---------- */
 ipcMain.handle("weather:fetch", () => fetchWeather((url, init) => net.fetch(url, init)));
+
+// AI doporučení k počasí (Gemini API, stejný klíč jako v Chytré schránce).
+ipcMain.handle("weather:ai-summary", async (_e, brief) => {
+  if (!hasGeminiKey()) return { ok: false, error: "NO_KEY" };
+  try {
+    const text = await askGemini(
+      "Jsi stručný osobní asistent. Na základě hodinové předpovědi napiš 1–2 krátké věty česky, " +
+      "v tykání, s praktickým doporučením na dnešek (deštník, oblečení, kdy je nejlepší čas ven). " +
+      "Bez úvodu, bez emoji navíc, max. 220 znaků.\n\n" + String(brief).slice(0, 4000),
+    );
+    return { ok: true, text };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
 
 /* ---------- Gemini ve webview ---------- */
 // Google blokuje přihlášení v prohlížečích, které se hlásí jako Electron → běžný Chrome UA

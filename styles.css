@@ -503,6 +503,43 @@ i[data-lucide],
   .weather__date { font-size: 12px; }
 }
 
+/* ---------- Počasí: AI/tip a hodinový graf ---------- */
+.weather { display: flex; flex-direction: column; }
+.weather__extra { display: flex; flex-direction: column; flex: 1; min-height: 0; margin-top: 12px; gap: 10px; }
+.weather__tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--panel);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-md);
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--text);
+}
+.weather__tip-badge {
+  flex: none;
+  margin-top: 1px;
+  padding: 0 7px;
+  border-radius: 9px;
+  background: #1c2a39;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 17px;
+  color: var(--text-2);
+}
+.weather__tip-badge.is-ai { background: linear-gradient(90deg, #1b6dff, #36b5f4); color: #fff; }
+.weather__chart { position: relative; flex: 1 1 110px; min-height: 90px; }
+.weather__chart canvas { position: absolute; inset: 0; }
+.app[data-view="weather"] .weather__chart { flex: none; height: 300px; }
+/* V mřížce Přehledu kompaktnější předpověď, aby se vešel graf */
+.board .forecast { padding: 8px 0 6px; }
+.board .forecast__icon { margin: 6px 0 8px; }
+.board .week { overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border-3) transparent; }
+.board .week > li { flex: 1 0 auto; }
+.board .day__tasks { -webkit-line-clamp: 2; line-clamp: 2; }
+
 /* ---------- Hodiny v kartě Počasí ---------- */
 .weather__side { display: flex; flex-direction: column; min-width: 0; }
 .weather__clock {
@@ -743,7 +780,7 @@ i[data-lucide],
   align-items: center;
   gap: 10px;
   width: 100%;
-  min-height: 38px;
+  min-height: 30px;
   padding: 0 10px 0 10px;
   background: var(--panel);
   border: 1px solid var(--border);

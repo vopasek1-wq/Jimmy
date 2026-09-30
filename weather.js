@@ -26,6 +26,8 @@ async function fetchWeather(fetchImpl, place = PLACE) {
     longitude: place.longitude,
     current: "temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code,is_day",
     daily: "weather_code,temperature_2m_max,temperature_2m_min",
+    hourly: "temperature_2m,precipitation_probability,precipitation,weather_code,is_day",
+    forecast_hours: "24", // hodinová data od aktuální hodiny
     timezone: "Europe/Prague",
     forecast_days: "5",
   });
@@ -48,6 +50,14 @@ async function fetchWeather(fetchImpl, place = PLACE) {
       max: Math.round(data.daily.temperature_2m_max[i]),
       min: Math.round(data.daily.temperature_2m_min[i]),
       ...describe(data.daily.weather_code[i]),
+    })),
+    hourly: data.hourly.time.map((time, i) => ({
+      time,                                                     // "2026-09-30T14:00"
+      hour: Number(time.slice(11, 13)),
+      temp: Math.round(data.hourly.temperature_2m[i] * 10) / 10,
+      pop: data.hourly.precipitation_probability[i] ?? 0,       // pravděpodobnost srážek v %
+      precip: data.hourly.precipitation[i] ?? 0,                // mm
+      ...describe(data.hourly.weather_code[i], data.hourly.is_day[i] !== 0),
     })),
     fetchedAt: Date.now(),
   };

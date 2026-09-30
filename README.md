@@ -27,7 +27,9 @@ varování → **Další informace** → **Přesto spustit**.
   vlastní trvalé úložiště → přihlášení Google účtem vydrží i po restartu). Odkazy z odpovědí se otevírají
   ve výchozím prohlížeči; tlačítka v hlavičce: znovu načíst / otevřít v prohlížeči.
 - **Počasí pro Teplice** živě z Open-Meteo (aktuální stav + předpověď na 5 dní, obnova každých 30 min;
-  v noci se u jasna a polojasna ukazuje měsíc místo slunce),
+  v noci se u jasna a polojasna ukazuje měsíc místo slunce), **hodinový graf** na 24 h (Chart.js: teplota
+  + pravděpodobnost srážek) a **doporučení** – s Gemini API klíčem ho píše AI (štítek „AI“), jinak se sestaví
+  z hodinových dat (štítek „Tip“, např. „Zmokneš mezi 14 a 17 h – vezmi si deštník“),
   hodiny a datum v téže kartě.
 - **Zprávy** se načítají živě z RSS webů Seznam Zprávy, Novinky.cz a iDNES.cz (každých 15 minut
   nebo tlačítkem obnovit). Zdroje se střídají a stejná událost z více webů se zobrazí jen jednou
@@ -64,7 +66,7 @@ npm run dist         # sestaví portable .exe do složky dist/ (na Windows)
 | `styles.css` | Design tokeny (`:root`), layout, komponenty, stavy hover/active/focus |
 | `script.js` | Pohledy z menu, hodiny, počasí, zprávy, týdenní kalendář, Gemini, ovládání okna |
 | `assets/img/` | Náhradní (placeholder) SVG obrázky |
-| `vendor/` | Lokální kopie ikon Lucide, písma Roboto a GridStack.js |
+| `vendor/` | Lokální kopie ikon Lucide, písma Roboto, GridStack.js a Chart.js |
 | `build/icon.png` | Ikona aplikace |
 
 ## Layout

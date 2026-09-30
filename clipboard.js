@@ -122,10 +122,10 @@ function writeKey(key) {
   fs.writeFileSync(target, data);
 }
 
-async function transform({ text, instruction }) {
+// Obecné volání Gemini API (používá ho i shrnutí počasí).
+async function askGemini(prompt) {
   const key = readKey();
   if (!key) throw new Error("NO_KEY");
-  const prompt = `${instruction}\n\nVrať pouze upravený text, bez komentářů, úvodu a uvozovek.\n\nText:\n${text}`;
   const res = await net.fetch(GEMINI_API, {
     method: "POST",
     headers: { "content-type": "application/json", "x-goog-api-key": key },
@@ -136,6 +136,10 @@ async function transform({ text, instruction }) {
   const out = data.candidates?.[0]?.content?.parts?.map((p) => p.text || "").join("").trim();
   if (!out) throw new Error("Gemini nevrátil žádný text.");
   return out;
+}
+
+function transform({ text, instruction }) {
+  return askGemini(`${instruction}\n\nVrať pouze upravený text, bez komentářů, úvodu a uvozovek.\n\nText:\n${text}`);
 }
 
 /* ---------- Napojení ---------- */
@@ -180,4 +184,4 @@ function setupClipboard(windowGetter) {
   app.on("will-quit", () => globalShortcut.unregisterAll());
 }
 
-module.exports = { setupClipboard };
+module.exports = { setupClipboard, askGemini, hasGeminiKey: () => Boolean(readKey()) };

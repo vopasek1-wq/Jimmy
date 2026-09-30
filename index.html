@@ -15,6 +15,7 @@
   <!-- Ikony: Lucide 1.48.0 (https://lucide.dev), lokální kopie – aplikace funguje i offline -->
   <script defer src="vendor/lucide.min.js"></script>
   <script defer src="vendor/gridstack-all.js"></script>
+  <script defer src="vendor/chart.umd.min.js"></script>
   <script defer src="script.js"></script>
 </head>
 <body>
@@ -210,7 +211,7 @@
       <h1 class="sr-only">Přehled</h1>
       <!-- Přehled: přizpůsobitelná mřížka (GridStack) – bloky jde přetahovat a měnit jejich velikost -->
       <div class="grid-stack board" id="board">
-        <div class="grid-stack-item" gs-id="weather" gs-x="0" gs-y="0" gs-w="4" gs-h="4" gs-min-w="3" gs-min-h="3">
+        <div class="grid-stack-item" gs-id="weather" gs-x="0" gs-y="0" gs-w="4" gs-h="7" gs-min-w="3" gs-min-h="3">
           <div class="grid-stack-item-content">
         <!-- Počasí -->
         <section class="card weather" aria-labelledby="weather-title">
@@ -234,10 +235,19 @@
           <ol class="forecast" id="wx-forecast" aria-label="Předpověď na 5 dní"></ol>
           </div>
           </div>
+          <div class="weather__extra">
+            <p class="weather__tip" id="wx-tip" hidden>
+              <span class="weather__tip-badge" id="wx-tip-badge">Tip</span>
+              <span id="wx-tip-text"></span>
+            </p>
+            <div class="weather__chart">
+              <canvas id="wx-chart" role="img" aria-label="Hodinová předpověď teploty a srážek na 24 hodin"></canvas>
+            </div>
+          </div>
         </section>
           </div>
         </div>
-        <div class="grid-stack-item" gs-id="tasks" gs-x="0" gs-y="4" gs-w="4" gs-h="8" gs-min-w="3" gs-min-h="5">
+        <div class="grid-stack-item" gs-id="tasks" gs-x="0" gs-y="7" gs-w="4" gs-h="5" gs-min-w="3" gs-min-h="5">
           <div class="grid-stack-item-content">
         <!-- Úkoly – týdenní kalendář -->
         <section class="card tasks" aria-labelledby="tasks-title">
