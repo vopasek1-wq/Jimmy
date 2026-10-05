@@ -373,6 +373,9 @@ i[data-lucide],
   min-height: 0;
   transform: none !important;
 }
+/* Pevné sloupce – GridStack mění pořadí bloků v DOM, automatické umístění by je prohazovalo. */
+.app:not([data-view="overview"]) .board > .grid-stack-item { grid-row: 1; grid-column: 1; }
+.app:is([data-view="weather"], [data-view="news"], [data-view="tasks"]) .board > [gs-id="assistant"] { grid-column: 2; }
 .app:not([data-view="overview"]) .board > .grid-stack-item > .grid-stack-item-content { inset: 0 !important; }
 .app:not([data-view="overview"]) .board > .grid-stack-item > .ui-resizable-handle { display: none; }
 
