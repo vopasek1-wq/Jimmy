@@ -16,16 +16,28 @@ const { setupClipboard, askGemini, hasGeminiKey } = require("./clipboard");
 const DESIGN_SIZE = { width: 1536, height: 1024 };
 const isHttpUrl = (url) => /^https?:\/\//i.test(url);
 
-/* Gemini se vkládá přes <webview> (gemini.google.com zakazuje vložení do iframe). */
-const GEMINI_URL = "https://gemini.google.com/app";
-const GEMINI_PARTITION = "persist:gemini"; // vlastní trvalé úložiště → přihlášení vydrží
-const isGoogleUrl = (url) => {
+/* Gemini a ChatGPT se vkládají přes <webview> (oba weby zakazují vložení do iframe).
+   Každý má vlastní trvalé úložiště (přihlášení vydrží) a seznam domén, které smí zůstat v panelu. */
+const httpsHostMatches = (url, pattern) => {
   try {
     const { protocol, hostname } = new URL(url);
-    return protocol === "https:" && /(^|\.)(google\.com|google\.cz|gstatic\.com|googleusercontent\.com)$/.test(hostname);
+    return protocol === "https:" && pattern.test(hostname);
   } catch {
     return false;
   }
+};
+const WEBVIEWS = {
+  gemini: {
+    url: "https://gemini.google.com/app",
+    partition: "persist:gemini",
+    allowed: /(^|\.)(google\.com|google\.cz|gstatic\.com|googleusercontent\.com)$/,
+  },
+  chatgpt: {
+    url: "https://chatgpt.com/",
+    partition: "persist:chatgpt",
+    // OpenAI + přihlášení přes Google, Microsoft a Apple
+    allowed: /(^|\.)(chatgpt\.com|openai\.com|oaistatic\.com|oaiusercontent\.com|google\.com|gstatic\.com|live\.com|microsoftonline\.com|microsoft\.com|apple\.com)$/,
+  },
 };
 
 let mainWindow = null;
@@ -56,9 +68,10 @@ function createWindow() {
     },
   });
 
-  // Povolit jen webview s Gemini a vždy s bezpečným nastavením (bez preloadu a Node).
+  // Povolit jen webview s Gemini / ChatGPT a vždy s bezpečným nastavením (bez preloadu a Node).
   mainWindow.webContents.on("will-attach-webview", (event, webPreferences, params) => {
-    if (!params.src.startsWith(GEMINI_URL) || params.partition !== GEMINI_PARTITION) {
+    const known = Object.values(WEBVIEWS).some((w) => params.src.startsWith(w.url) && params.partition === w.partition);
+    if (!known) {
       event.preventDefault();
       return;
     }
@@ -123,7 +136,7 @@ ipcMain.handle("weather:ai-summary", async (_e, brief) => {
   }
 });
 
-/* ---------- Gemini ve webview ---------- */
+/* ---------- Gemini a ChatGPT ve webview ---------- */
 // Google blokuje přihlášení v prohlížečích, které se hlásí jako Electron → běžný Chrome UA
 // (z identifikace se odstraní vše kromě Mozilla/AppleWebKit/Chrome/Safari).
 const chromeUserAgent = () => app.userAgentFallback
@@ -132,9 +145,10 @@ const chromeUserAgent = () => app.userAgentFallback
 app.on("web-contents-created", (_event, contents) => {
   if (contents.getType() !== "webview") return;
   contents.setUserAgent(chromeUserAgent());
-  // Stránky Googlu (Gemini, přihlášení) zůstávají v panelu, vše ostatní jde do prohlížeče.
+  const site = Object.values(WEBVIEWS).find((w) => contents.session === session.fromPartition(w.partition));
+  // Stránky služby (a přihlášení) zůstávají v panelu, vše ostatní jde do prohlížeče.
   contents.on("will-navigate", (event, url) => {
-    if (isGoogleUrl(url)) return;
+    if (site && httpsHostMatches(url, site.allowed)) return;
     event.preventDefault();
     if (isHttpUrl(url)) shell.openExternal(url);
   });
@@ -144,7 +158,8 @@ app.on("web-contents-created", (_event, contents) => {
   });
 });
 
-ipcMain.on("gemini:open-external", () => shell.openExternal(GEMINI_URL));
+ipcMain.on("gemini:open-external", () => shell.openExternal(WEBVIEWS.gemini.url));
+ipcMain.on("chatgpt:open-external", () => shell.openExternal(WEBVIEWS.chatgpt.url));
 
 /* ---------- Životní cyklus ---------- */
 if (!app.requestSingleInstanceLock()) {
@@ -158,7 +173,7 @@ if (!app.requestSingleInstanceLock()) {
 
   app.whenReady().then(() => {
     app.setAppUserModelId("cz.jimmy.aidashboard");
-    session.fromPartition(GEMINI_PARTITION).setUserAgent(chromeUserAgent());
+    Object.values(WEBVIEWS).forEach((w) => session.fromPartition(w.partition).setUserAgent(chromeUserAgent()));
     createWindow();
     setupClipboard(() => mainWindow);
     app.on("activate", () => {

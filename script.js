@@ -53,7 +53,7 @@
   backdrop.addEventListener("click", () => setNav(false));
 
   /* Levé menu přepíná pohledy: přehled, nebo jedna sekce přes celou plochu. */
-  const VIEWS = ["overview", "assistant", "weather", "news", "tasks", "clipboard", "games"];
+  const VIEWS = ["overview", "assistant", "chatgpt", "weather", "news", "tasks", "clipboard", "games"];
   const showView = (view) => {
     if (!VIEWS.includes(view)) view = "overview";
     app.dataset.view = view;
@@ -566,35 +566,33 @@
   }
   setInterval(loadWeather, 30 * 60 * 1000); // každých 30 minut
 
-  /* ---------- AI asistent: Gemini ve webview ---------- */
-  const setupGemini = () => {
-    const host = $("#gemini");
-    const status = $("#gemini-status");
+  /* ---------- AI asistenti ve webview: Gemini a ChatGPT ---------- */
+  const setupWebAssistant = ({ name, host, status, reload, external, src, partition, openExternal }) => {
     const setStatus = (text, state) => {
       status.innerHTML = `<span class="status-dot${state ? ` status-dot--${state}` : ""}"></span>`;
-      status.append(`Gemini · ${text}`);
+      status.append(text);
     };
 
     const view = document.createElement("webview");
     view.className = "gemini__view";
-    view.setAttribute("partition", "persist:gemini"); // trvalé úložiště → přihlášení vydrží
-    view.setAttribute("src", "https://gemini.google.com/app");
+    view.setAttribute("partition", partition); // trvalé úložiště → přihlášení vydrží
+    view.setAttribute("src", src);
     view.setAttribute("allowpopups", "");
     host.replaceChildren(view);
 
-    // Hláška místo prázdné (bílé) plochy, když se Gemini nenačte.
+    // Hláška místo prázdné (bílé) plochy, když se stránka nenačte.
     const error = document.createElement("div");
     error.className = "gemini__error";
     error.hidden = true;
     error.innerHTML = `
-      <p>Gemini se nepodařilo načíst. Zkontroluj připojení k internetu.</p>
+      <p>${name} se nepodařilo načíst. Zkontroluj připojení k internetu.</p>
       <div class="gemini__error-actions">
-        <button class="btn btn--primary btn--sm" type="button" data-gemini="retry">Zkusit znovu</button>
-        <button class="pill-btn" type="button" data-gemini="external">Otevřít v prohlížeči</button>
+        <button class="btn btn--primary btn--sm" type="button" data-web="retry">Zkusit znovu</button>
+        <button class="pill-btn" type="button" data-web="external">Otevřít v prohlížeči</button>
       </div>`;
     host.append(error);
-    $('[data-gemini="retry"]', error).addEventListener("click", () => view.reload());
-    $('[data-gemini="external"]', error).addEventListener("click", () => window.desktop.openGeminiExternal());
+    $('[data-web="retry"]', error).addEventListener("click", () => view.reload());
+    $('[data-web="external"]', error).addEventListener("click", openExternal);
 
     let failed = false;
     view.addEventListener("did-start-loading", () => {
@@ -611,8 +609,32 @@
       setStatus(failed ? "nedostupné" : "online", failed ? "" : "green");
     });
 
-    $("#gemini-reload").addEventListener("click", () => view.reload());
-    $("#gemini-external").addEventListener("click", () => window.desktop.openGeminiExternal());
+    reload.addEventListener("click", () => view.reload());
+    external.addEventListener("click", openExternal);
+  };
+
+  const setupGemini = () => setupWebAssistant({
+    name: "Gemini",
+    host: $("#gemini"), status: $("#gemini-status"), reload: $("#gemini-reload"), external: $("#gemini-external"),
+    src: "https://gemini.google.com/app", partition: "persist:gemini",
+    openExternal: () => window.desktop.openGeminiExternal(),
+  });
+
+  // ChatGPT se načte až při prvním otevření záložky (šetří paměť i síť).
+  const setupChatGPT = () => {
+    let started = false;
+    const start = () => {
+      if (started || app.dataset.view !== "chatgpt") return;
+      started = true;
+      setupWebAssistant({
+        name: "ChatGPT",
+        host: $("#chatgpt"), status: $("#chatgpt-status"), reload: $("#chatgpt-reload"), external: $("#chatgpt-external"),
+        src: "https://chatgpt.com/", partition: "persist:chatgpt",
+        openExternal: () => window.desktop.openChatGPTExternal(),
+      });
+    };
+    new MutationObserver(start).observe(app, { attributes: true, attributeFilter: ["data-view"] });
+    start();
   };
 
   /* ---------- Chytrá schránka ---------- */
@@ -778,13 +800,13 @@
     // Výška řádku tak, aby 12 řádků vyplnilo okno pod horní lištou.
     const rowHeight = () => {
       const top = $(".topbar").getBoundingClientRect().height;
-      return Math.max(40, Math.floor((window.innerHeight - top - 26) / ROWS));
+      return Math.max(40, Math.floor((window.innerHeight - top - 8) / ROWS));
     };
 
     const grid = GS.init({
       column: 12,
       cellHeight: rowHeight(),
-      margin: 8,
+      margin: 4,                     // 8 px mezi bloky
       float: false,
       animate: true,
       staticGrid: true,              // mimo režim úprav je mřížka zamčená
@@ -822,9 +844,12 @@
     const DEFAULT_NAV = navItems().map(viewOf);
     const applyNavOrder = (order) => {
       const byView = new Map(navItems().map((li) => [viewOf(li), li]));
-      // položky chybějící v uloženém pořadí (např. nové) přijdou na konec
-      [...order.filter((v) => byView.has(v)), ...DEFAULT_NAV.filter((v) => !order.includes(v))]
-        .forEach((v) => navList.append(byView.get(v)));
+      const list = order.filter((v) => byView.has(v));
+      // nové položky (v uloženém pořadí chybí) za svého výchozího předchůdce
+      DEFAULT_NAV.forEach((v, i) => {
+        if (!list.includes(v)) list.splice(i === 0 ? 0 : list.indexOf(DEFAULT_NAV[i - 1]) + 1, 0, v);
+      });
+      list.forEach((v) => navList.append(byView.get(v)));
     };
     const saveNavOrder = () => store.set("nav-order", navItems().map(viewOf));
     const savedNav = store.get("nav-order");
@@ -905,6 +930,7 @@
   loadWeather();
   if (desktop) {
     setupGemini();
+    setupChatGPT();
     setupClipboard();
     desktop.onShowView((view) => showView(view));
   }

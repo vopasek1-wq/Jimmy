@@ -171,7 +171,8 @@
       <nav class="nav">
         <ul class="nav__list">
           <li><a class="nav__link is-active" href="#" data-view="overview" aria-current="page"><i data-lucide="house"></i><span>Přehled</span></a></li>
-          <li><a class="nav__link" href="#" data-view="assistant"><i data-lucide="message-circle-more"></i><span>AI asistent</span></a></li>
+          <li><a class="nav__link" href="#" data-view="assistant"><i data-lucide="message-circle-more"></i><span>Gemini</span></a></li>
+          <li><a class="nav__link" href="#" data-view="chatgpt"><i data-lucide="bot"></i><span>ChatGPT</span></a></li>
           <li><a class="nav__link" href="#" data-view="weather"><i data-lucide="cloud-sun"></i><span>Počasí</span></a></li>
           <li><a class="nav__link" href="#" data-view="news"><i data-lucide="newspaper"></i><span>Zprávy</span></a></li>
           <li><a class="nav__link" href="#" data-view="tasks"><i data-lucide="calendar-check"></i><span>Úkoly</span></a></li>
@@ -303,8 +304,8 @@
           <header class="assistant__header">
             <span class="assistant__avatar" aria-hidden="true"><i data-lucide="sparkles"></i></span>
             <div class="assistant__who">
-              <h2 class="assistant__name" id="assistant-title">AI asistent</h2>
-              <span class="assistant__status" id="gemini-status"><span class="status-dot"></span>Gemini · načítám…</span>
+              <h2 class="assistant__name" id="assistant-title">Gemini</h2>
+              <span class="assistant__status" id="gemini-status"><span class="status-dot"></span>načítám…</span>
             </div>
             <button class="icon-btn icon-btn--sm" type="button" id="gemini-reload" aria-label="Znovu načíst Gemini" title="Znovu načíst"><i data-lucide="refresh-cw"></i></button>
             <button class="icon-btn icon-btn--sm" type="button" id="gemini-external" aria-label="Otevřít Gemini v prohlížeči" title="Otevřít v prohlížeči"><i data-lucide="external-link"></i></button>
@@ -320,6 +321,23 @@
 
       <!-- Samostatné stránky z levého menu -->
       <div class="pages">
+        <!-- ChatGPT (chatgpt.com) – načte se až při prvním otevření záložky -->
+        <section class="card assistant chatgpt" aria-labelledby="chatgpt-title">
+          <header class="assistant__header">
+            <span class="assistant__avatar assistant__avatar--gpt" aria-hidden="true"><i data-lucide="bot"></i></span>
+            <div class="assistant__who">
+              <h2 class="assistant__name" id="chatgpt-title">ChatGPT</h2>
+              <span class="assistant__status" id="chatgpt-status"><span class="status-dot"></span>načítám…</span>
+            </div>
+            <button class="icon-btn icon-btn--sm" type="button" id="chatgpt-reload" aria-label="Znovu načíst ChatGPT" title="Znovu načíst"><i data-lucide="refresh-cw"></i></button>
+            <button class="icon-btn icon-btn--sm" type="button" id="chatgpt-external" aria-label="Otevřít ChatGPT v prohlížeči" title="Otevřít v prohlížeči"><i data-lucide="external-link"></i></button>
+          </header>
+          <div class="gemini" id="chatgpt">
+            <p class="gemini__fallback">ChatGPT se zobrazí jen v desktopové aplikaci.
+              <a href="https://chatgpt.com/" target="_blank" rel="noopener">Otevřít chatgpt.com</a></p>
+          </div>
+        </section>
+
         <!-- Chytrá schránka: historie kopírovaného textu, rychlé vkládání, AI úpravy -->
         <section class="card clipboard" aria-labelledby="clip-title">
           <header class="card__header">
@@ -355,7 +373,7 @@
                 <form class="ai-key" id="ai-key-form" hidden>
                   <p>Pro úpravy přímo v aplikaci vlož bezplatný Gemini API klíč z
                     <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>.
-                    Klíč se uloží šifrovaně jen v tomto počítači. Bez klíče se zadání připraví pro Gemini v záložce AI asistent.</p>
+                    Klíč se uloží šifrovaně jen v tomto počítači. Bez klíče se zadání připraví pro Gemini v záložce Gemini.</p>
                   <div class="ai-key__row">
                     <input class="input" id="ai-key" type="password" placeholder="Gemini API klíč" autocomplete="off" aria-label="Gemini API klíč">
                     <button class="btn btn--primary btn--sm" type="submit">Uložit</button>

@@ -284,6 +284,7 @@ i[data-lucide],
   min-width: 0;
   padding: 9px 8px 8px 9px;
 }
+.app[data-view="overview"] .main { padding: 4px; } /* + okraj 4 px kolem bloků = 8 px od krajů i mezi bloky */
 
 /* ---------- Přehled: mřížka GridStack (12 sloupců × 12 řádků) ---------- */
 .board { min-height: 100%; }
@@ -352,7 +353,8 @@ i[data-lucide],
 /* ---------- Pohledy z levého menu ---------- */
 .pages { display: none; }
 .app[data-view="clipboard"] .pages,
-.app[data-view="games"] .pages { display: block; }
+.app[data-view="games"] .pages,
+.app[data-view="chatgpt"] .pages { display: block; }
 
 /* Mimo Přehled se mřížka chová jako obyčejné rozvržení: vybraný blok + Gemini vpravo. */
 .app:not([data-view="overview"]) .board {
@@ -397,7 +399,14 @@ i[data-lucide],
 .app[data-view="games"] .board { grid-column: 2; grid-row: 1; grid-template-columns: minmax(0, 1fr); }
 .pages { grid-column: 1; grid-row: 1; min-width: 0; padding: 8px 0 0 8px; }
 .app[data-view="clipboard"] .pages > .card:not(.clipboard),
-.app[data-view="games"] .pages > .card:not(.games) { display: none; }
+.app[data-view="games"] .pages > .card:not(.games),
+.app[data-view="chatgpt"] .pages > .card:not(.chatgpt) { display: none; }
+
+/* ChatGPT: stejně jako Gemini přes celou šířku */
+.app[data-view="chatgpt"] .board { display: none; }
+.app[data-view="chatgpt"] .pages { padding-right: 8px; }
+.pages .chatgpt { height: calc(100dvh - var(--topbar-h) - 25px); min-height: 520px; max-height: none; }
+.assistant__avatar.assistant__avatar--gpt { background: linear-gradient(135deg, #10a37f, #0d8a6b); }
 .app[data-view="clipboard"] .clipboard { height: calc(100dvh - var(--topbar-h) - 25px); min-height: 520px; }
 
 .app[data-view="news"] .news__list {

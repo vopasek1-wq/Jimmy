@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld("desktop", {
   fetchWeather: () => ipcRenderer.invoke("weather:fetch"),
   weatherSummary: (brief) => ipcRenderer.invoke("weather:ai-summary", brief),
   openGeminiExternal: () => ipcRenderer.send("gemini:open-external"),
+  openChatGPTExternal: () => ipcRenderer.send("chatgpt:open-external"),
   onShowView: (callback) => ipcRenderer.on("view:show", (_event, view) => callback(view)),
 
   // Chytrá schránka

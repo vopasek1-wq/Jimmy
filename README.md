@@ -22,11 +22,13 @@ varování → **Další informace** → **Přesto spustit**.
   – bloky Počasí, Úkoly, Zprávy a AI asistent jde přetahovat za nadpis a měnit jejich velikost za okraje/rohy;
   v tomtéž režimu jde přetažením měnit i pořadí položek levého menu.
   Rozložení se ukládá, **Výchozí rozložení** vrátí bloky i menu. Mimo režim úprav je vše zamčené.
-- **Levé menu** přepíná pohledy: Přehled, AI asistent (Gemini přes celou šířku), Počasí, Zprávy,
+- **Levé menu** přepíná pohledy: Přehled, Gemini a ChatGPT (přes celou šířku), Počasí, Zprávy,
   Úkoly, Chytrá schránka a Herní přehled (jednotlivé sekce přes celou plochu).
 - **AI asistent** = [Gemini](https://gemini.google.com/app) vložené v pravém panelu (Electron `<webview>`,
   vlastní trvalé úložiště → přihlášení Google účtem vydrží i po restartu). Odkazy z odpovědí se otevírají
   ve výchozím prohlížeči; tlačítka v hlavičce: znovu načíst / otevřít v prohlížeči.
+- **ChatGPT** = [chatgpt.com](https://chatgpt.com/) ve vlastní záložce, funguje stejně jako Gemini
+  (vlastní trvalé úložiště pro přihlášení, načte se až při prvním otevření záložky).
 - **Počasí pro Teplice** živě z Open-Meteo (aktuální stav + předpověď na 5 dní, obnova každých 30 min;
   v noci se u jasna a polojasna ukazuje měsíc místo slunce), **hodinový graf** na 24 h (Chart.js: teplota
   + pravděpodobnost srážek) a **doporučení** – s Gemini API klíčem ho píše AI (štítek „AI“), jinak se sestaví
@@ -59,14 +61,14 @@ npm run dist         # sestaví portable .exe do složky dist/ (na Windows)
 
 | Soubor | Obsah |
 | --- | --- |
-| `main.js` | Hlavní proces Electronu: okno bez rámečku, zprávy, počasí, zabezpečení webview s Gemini |
+| `main.js` | Hlavní proces Electronu: okno bez rámečku, zprávy, počasí, zabezpečení webview s Gemini a ChatGPT |
 | `news.js` | Stažení a zpracování RSS, odstranění duplicitních témat |
 | `weather.js` | Počasí z Open-Meteo (Teplice) |
 | `clipboard.js` | Chytrá schránka: historie, vkládání, AI úpravy přes Gemini API |
 | `preload.js` | Bezpečný most mezi stránkou a hlavním procesem (`window.desktop`) |
 | `index.html` | Markup dashboardu |
 | `styles.css` | Design tokeny (`:root`), layout, komponenty, stavy hover/active/focus |
-| `script.js` | Pohledy z menu, hodiny, počasí, zprávy, týdenní kalendář, Gemini, ovládání okna |
+| `script.js` | Pohledy z menu, hodiny, počasí, zprávy, týdenní kalendář, Gemini, ChatGPT, ovládání okna |
 | `assets/img/` | Náhradní (placeholder) SVG obrázky |
 | `vendor/` | Lokální kopie ikon Lucide, písma Roboto, GridStack.js a Chart.js |
 | `build/icon.png` | Ikona aplikace |
