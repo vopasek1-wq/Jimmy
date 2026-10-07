@@ -471,6 +471,11 @@ i[data-lucide],
   line-height: 18px;
 }
 .weather__place .lucide { width: 15px; height: 15px; }
+/* Na Přehledu bez nadpisu – ukáže se jen v režimu úprav jako úchyt pro přetažení */
+.app[data-view="overview"]:not(.is-editing) .weather .card__title { display: none; }
+/* Na Přehledu bez místa a bez AI tipu (zůstávají v záložce Počasí) */
+.app[data-view="overview"] .weather__place,
+.app[data-view="overview"] .weather__tip { display: none; }
 .weather__now { display: flex; align-items: center; gap: 12px; margin-top: 16px; height: 50px; }
 .weather__icon { width: 70px; height: 52px; filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.35)); }
 .weather__temp {
