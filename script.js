@@ -790,21 +790,23 @@
     const boardEl = $("#board");
     if (!GS || !boardEl) return;
 
-    const ROWS = 12;
+    // Jemná mřížka 24 × 48, aby šla velikost bloků měnit po malých krocích.
+    const COLUMNS = 24;
+    const ROWS = 48;
     const DEFAULT_LAYOUT = $$(".grid-stack-item", boardEl).map((el) => ({
       id: el.getAttribute("gs-id"),
       x: +el.getAttribute("gs-x"), y: +el.getAttribute("gs-y"),
       w: +el.getAttribute("gs-w"), h: +el.getAttribute("gs-h"),
     }));
 
-    // Výška řádku tak, aby 12 řádků vyplnilo okno pod horní lištou.
+    // Výška řádku tak, aby všechny řádky přesně vyplnily okno pod horní lištou.
     const rowHeight = () => {
       const top = $(".topbar").getBoundingClientRect().height;
-      return Math.max(40, Math.floor((window.innerHeight - top - 8) / ROWS));
+      return Math.max(10, Math.round(((window.innerHeight - top - 8) / ROWS) * 100) / 100);
     };
 
     const grid = GS.init({
-      column: 12,
+      column: COLUMNS,
       cellHeight: rowHeight(),
       margin: 4,                     // 8 px mezi bloky
       float: false,
@@ -815,7 +817,12 @@
       draggable: { cancel: "button, input, textarea, select, a, webview" },
     }, boardEl);
 
-    const saved = store.get("board-layout");
+    // Rozložení z dřívější hrubé mřížky 12 × 12 převést na 24 × 48.
+    let saved = store.get("board-layout-24");
+    const legacy = store.get("board-layout");
+    if (!saved && Array.isArray(legacy)) {
+      saved = legacy.map(({ id, x, y, w, h }) => ({ id, x: x * 2, y: y * 4, w: w * 2, h: h * 4 }));
+    }
     const num = (v, fallback) => (Number.isFinite(v) && v >= 0 ? v : fallback);
     const applyLayout = (layout) => {
       grid.batchUpdate();
@@ -830,7 +837,7 @@
     if (Array.isArray(saved)) applyLayout(saved);
 
     // Pozice brát přímo z GridStacku (grid.save() vynechává hodnoty rovné minimu).
-    const saveLayout = () => store.set("board-layout",
+    const saveLayout = () => store.set("board-layout-24",
       grid.engine.nodes.map(({ id, x, y, w, h }) => ({ id, x, y, w, h })));
     grid.on("change", saveLayout);
     $$(".nav__link").forEach((l) => { l.draggable = false; });
