@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  actions: write # mazání starých buildů (artefaktů)
 
 jobs:
   build:
@@ -38,10 +39,21 @@ jobs:
           Stop-Process -Id $p.Id -Force
           Write-Host "Aplikace běží."
 
+      # Uchovat jen 5 posledních verzí: před nahráním nové nechat 4 nejnovější.
+      - name: Smazat starší buildy
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/${{ github.repository }}/actions/artifacts?per_page=100" \
+            --jq '.artifacts | sort_by(.created_at) | reverse | .[4:] | .[].id' |
+          while read -r id; do
+            gh api -X DELETE "repos/${{ github.repository }}/actions/artifacts/$id" && echo "Smazán artefakt $id"
+          done
+
       - uses: actions/upload-artifact@v4
         with:
           name: JIMMY-Windows
           path: |
             dist/*.exe
           if-no-files-found: error
-          retention-days: 3 # starší buildy se mažou samy (limit úložiště artefaktů)
