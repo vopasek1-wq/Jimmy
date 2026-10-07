@@ -44,3 +44,4 @@ jobs:
           path: |
             dist/*.exe
           if-no-files-found: error
+          retention-days: 3 # starší buildy se mažou samy (limit úložiště artefaktů)
