@@ -10,8 +10,10 @@ dvojklik pro maximalizaci, tlačítka minimalizovat / maximalizovat / zavřít.
 
 ## Stažení
 
-Sestavený soubor je v GitHub Actions → workflow **Windows build** → artefakt `JIMMY-Windows`:
-`JIMMY-1.0.0-portable.exe` – stačí stáhnout a spustit, bez instalace.
+Nejnovější verze je vždy v **[Releases](https://github.com/vopasek1-wq/Jimmy/releases/latest)** jako jeden soubor
+`JIMMY.exe` – stačí stáhnout (např. na plochu) a spustit, bez instalace.
+Přímý odkaz: <https://github.com/vopasek1-wq/Jimmy/releases/latest/download/JIMMY.exe>.
+Každé sestavení přidá nové vydání, uchovává se 5 posledních verzí.
 
 Aplikace není digitálně podepsaná, takže Windows SmartScreen může při prvním spuštění zobrazit
 varování → **Další informace** → **Přesto spustit**.

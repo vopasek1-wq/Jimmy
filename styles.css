@@ -286,7 +286,7 @@ i[data-lucide],
 }
 .app[data-view="overview"] .main { padding: 4px; } /* + okraj 4 px kolem bloků = 8 px od krajů i mezi bloky */
 
-/* ---------- Přehled: mřížka GridStack (12 sloupců × 12 řádků) ---------- */
+/* ---------- Přehled: mřížka GridStack (24 sloupců × 48 řádků) ---------- */
 .board { min-height: 100%; }
 .board > .grid-stack-item > .grid-stack-item-content { display: flex; overflow: hidden !important; }
 .board > .grid-stack-item > .grid-stack-item-content > .card { flex: 1; min-width: 0; min-height: 0; }

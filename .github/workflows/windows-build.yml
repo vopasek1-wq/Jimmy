@@ -7,8 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  actions: write # mazání starých buildů (artefaktů)
+  contents: write # vydání (Releases) s hotovým JIMMY.exe
 
 jobs:
   build:
@@ -39,21 +38,35 @@ jobs:
           Stop-Process -Id $p.Id -Force
           Write-Host "Aplikace běží."
 
-      # Uchovat jen 5 posledních verzí: před nahráním nové nechat 4 nejnovější.
-      - name: Smazat starší buildy
+      # Každá verze jako vydání (Releases): jeden soubor JIMMY.exe ke stažení.
+      # Vydání se nepočítají do limitu úložiště artefaktů Actions.
+      - name: Vydání na GitHubu
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: build-${{ github.run_number }}
+        run: |
+          cp dist/JIMMY-*-portable.exe dist/JIMMY.exe
+          {
+            echo "Sestaveno $(date -u +'%d.%m.%Y %H:%M') UTC z commitu ${GITHUB_SHA::7}."
+            echo
+            echo "**Změna:** $(git log -1 --pretty=%s)"
+            echo
+            echo "Stáhni **JIMMY.exe** a spusť – bez instalace. Pokud Windows SmartScreen zobrazí varování: Další informace → Přesto spustit."
+          } > notes.md
+          # opakované spuštění téhož běhu vydání nahradí
+          gh release delete "$TAG" --cleanup-tag --yes 2>/dev/null || true
+          gh release create "$TAG" dist/JIMMY.exe --target "$GITHUB_SHA" \
+            --title "J.I.M.M.Y. – verze ${{ github.run_number }}" --notes-file notes.md --latest
+
+      # Uchovat jen 5 posledních verzí.
+      - name: Smazat starší vydání
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh api "repos/${{ github.repository }}/actions/artifacts?per_page=100" \
-            --jq '.artifacts | sort_by(.created_at) | reverse | .[4:] | .[].id' |
-          while read -r id; do
-            gh api -X DELETE "repos/${{ github.repository }}/actions/artifacts/$id" && echo "Smazán artefakt $id"
+          gh api "repos/${{ github.repository }}/releases?per_page=100" \
+            --jq 'sort_by(.created_at) | reverse | .[5:] | .[].tag_name' | tr -d '\r' |
+          while read -r tag; do
+            gh release delete "$tag" --cleanup-tag --yes && echo "Smazáno vydání $tag"
           done
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: JIMMY-Windows
-          path: |
-            dist/*.exe
-          if-no-files-found: error
