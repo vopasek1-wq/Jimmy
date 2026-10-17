@@ -6,10 +6,15 @@ Je určený kutilům a domácím uživatelům: vysvětluje jednoduše, bez zbyte
 Čistý HTML, CSS a JavaScript. Žádný build ani server – stačí otevřít `index.html` v prohlížeči.
 
 ```
-index.html              obsah a sekce stránky
-assets/css/style.css    veškeré styly (barvy a rozměry jsou v proměnných na začátku souboru)
+index.html              verze 1 – vlastní ilustrace (bez cizích obrázků)
+index-foto.html         verze 2 – fotografie a vizualizace ze zdrojů (hero, karty dílů, galerie)
+assets/css/style.css    veškeré styly obou verzí (barvy a rozměry jsou v proměnných na začátku souboru)
 assets/js/main.js       navigace, filtr komponent, galerie, konfigurátor, ilustrace lešení
+assets/img/             fotografie a vizualizace pro verzi 2 (WebP, celkem asi 0,5 MB)
 ```
+
+Obě verze mají stejný obsah, liší se jen obrázky. Verze 2 (`index-foto.html`) je odvozená z verze 1:
+změny textu dělejte v obou souborech.
 
 ## Sekce webu
 
@@ -41,7 +46,27 @@ Veškerý věcný obsah pochází z těchto zdrojů:
 
 Design (tmavá břidlicová paleta s azurovým akcentem, písmo Open Sans, rozložení sekcí, karty s jemným zvednutím při najetí) se inspiruje webem <https://www.movitech.cz/>. Texty ani obrázky odtud nejsou převzaty.
 
-## Co je zástupné a je potřeba nahradit
+## Verze 2: fotografie ze zdrojů
+
+`index-foto.html` používá obrázky z původních zdrojů. Nic jsem nevytvářel ani neupravoval kromě ořezu, změny velikosti
+a převodu do WebP.
+
+| Soubory v `assets/img/` | Původ |
+|---|---|
+| `dily/` (23 fotografií dílů) | Technický katalog výrobce, strany 18–25 (fotografie dílů v ceníku). U kolečka 5 kN a 10 kN jsem z obrázku odstranil německé popisky. Rozšiřující sada je z přehledu dílů (geruest-welt.de) |
+| `sestavy/mobilo-800.webp`, `mobilo-1400.webp` | Vizualizace sestav z webu výrobce (scafom-rux.ch/de/mobilo-800 a mobilo-1400) |
+| `sestavy/podvozek-detail.webp`, `plosina-detail.webp` | Vizualizace z katalogu výrobce, strana 8 |
+| `foto/zebrikove-ramy.webp`, `plosiny.webp` | Fotografie z katalogu výrobce, strana 5 |
+
+Zdroje **neobsahují fotografie lešení při domácím použití** (jen záběry velkých stavebních lešení). Scény v části „Kde se Mobilo hodí“
+proto zůstaly jako vlastní ilustrace a jsou označené štítkem „Ilustrace“. Fotografie a vizualizace jsou označené „Fotografie“ a „Vizualizace“
+a na webu je uveden zdroj.
+
+**Práva k obrázkům:** obrázky patří výrobci Scafom-Rux, případně provozovateli shopu geruest-welt.de. Před veřejným spuštěním
+si ověřte, že je smíte použít (například písemným souhlasem výrobce). Do webu jsem nepřevzal žádné logo. Z obrázku kolečka na webu shopu,
+na kterém je logo výrobce, jsem proto kolečko vzal z katalogu.
+
+## Co je zástupné a je potřeba nahradit (verze 1)
 
 - **Všech 9 obrázků v galerii** a ilustrace v hero jsou vlastní vektorové kresby. Nahraďte je fotografiemi, jakmile budou k dispozici (včetně práv k jejich použití).
 - **Kontaktní údaje** v horní liště a v patičce.

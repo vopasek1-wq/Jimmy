@@ -696,3 +696,47 @@ body::before {
   .results { grid-template-columns: 1fr; }
   .part__meta div { grid-template-columns: 74px 1fr; }
 }
+
+
+/* ==========================================================================
+   16. VERZE S FOTOGRAFIEMI (index-foto.html)
+   Styly se použijí jen tam, kde jsou fotografie; index.html se jich netýká.
+   ========================================================================== */
+
+/* Hero: vizualizace sestavy a štítky pod ní */
+.hero__visual--photo { display: flex; flex-direction: column; }
+.hero__visual--photo > img {
+  width: 100%; height: auto; max-height: 480px; object-fit: contain; padding: 22px 20px 0;
+}
+.hero__pills {
+  list-style: none; margin: 0; padding: 14px 16px 44px;
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+}
+.hero__pills li {
+  display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px 7px 10px;
+  font-size: .75rem; font-weight: 700; line-height: 1.25; color: var(--c-ink);
+  background: var(--c-white); border-radius: 100px; box-shadow: 0 4px 12px rgba(30, 34, 38, .14);
+}
+.hero__pills .icon { width: 18px; height: 18px; color: var(--c-accent-ink); }
+
+/* Označení zdroje fotografie */
+.photo-credit {
+  position: absolute; left: 14px; bottom: 12px;
+  font-size: .6875rem; font-weight: 600; letter-spacing: .03em; color: var(--c-steel);
+}
+
+/* Karty komponent s fotografií dílu */
+.part--photo { padding: 0; overflow: hidden; }
+.part__photo {
+  position: relative; margin: 0; aspect-ratio: 733 / 485; overflow: hidden;
+  background: linear-gradient(180deg, #e9eff3, #d9e2e8);
+}
+.part__photo img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
+.part--photo:hover .part__photo img { transform: scale(1.05); }
+.part__photo .tag { position: absolute; left: 12px; top: 12px; background: rgba(255, 255, 255, .92); }
+.part__content { display: flex; flex-direction: column; flex: 1; padding: 20px 24px 24px; }
+
+/* Galerie: vizualizace (celý obrázek na studiovém pozadí) a fotografie (vyplní kartu) */
+.shot__media--studio { background: linear-gradient(180deg, #f6f9fb, #dde6ec); }
+.shot__media--studio > img { object-fit: contain; padding: 12px 0; }
+.shot__media--photo > img { object-position: center 62%; }
