@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mobilo – pojízdné lešení pro domácí práce</title>
+  <meta name="description" content="Srozumitelný přehled pojízdného lešení Mobilo od výrobce Scafom-Rux: komponenty, technické parametry, postup montáže a oficiální katalog ke stažení. Pro kutily a domácí uživatele.">
+  <meta name="theme-color" content="#1e2226">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="cs_CZ">
+  <meta property="og:title" content="Mobilo – pojízdné lešení pro domácí práce">
+  <meta property="og:description" content="Bezpečné, snadno smontovatelné a univerzální pojízdné lešení. Komponenty, parametry a katalog ke stažení.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231e2226'/%3E%3Cpath d='M10 6v20M22 6v20M10 11h12M10 17h12M10 23h12' stroke='%2370cfe3' stroke-width='2.4' stroke-linecap='round' fill='none'/%3E%3C/svg%3E">
+
+  <!-- Písmo Open Sans (při offline použití se automaticky nahradí systémovým písmem) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="assets/css/style.css">
+  <!-- Třída .js zapíná animace fade-in; bez JavaScriptu zůstane všechno viditelné -->
+  <script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+  <a class="skip-link" href="#obsah">Přeskočit na obsah</a>
+
+  <!-- =====================================================================
+       SPRITE IKON A ILUSTRAČNÍCH PRVKŮ (neviditelný, používá se přes <use>)
+       ===================================================================== -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id="g-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c9e3ee"/><stop offset="1" stop-color="#f4f8fa"/></linearGradient>
+      <linearGradient id="g-neutral" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6f9fb"/><stop offset="1" stop-color="#dde6ec"/></linearGradient>
+      <pattern id="p-grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="#b9c7d0" stroke-width=".6"/></pattern>
+    </defs>
+
+    <!-- Ikony rozhraní (24×24) -->
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v13M6 11l6 6 6-6M4 21h16"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+    <symbol id="i-prev" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
+    <symbol id="i-next" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+    <symbol id="i-zoom" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4M11 8v6M8 11h6"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24"><path d="M3 6h18v12H3zM3 7l9 6 9-6"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+    <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h.01"/></symbol>
+    <symbol id="i-ladder" viewBox="0 0 24 24"><path d="M7 3v18M17 3v18M7 8h10M7 13h10M7 18h10"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></symbol>
+    <symbol id="i-plug" viewBox="0 0 24 24"><path d="M9 3v4M15 3v4M6 7h12v4a6 6 0 0 1-12 0zM12 17v4"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5zM3 12.5l9 5 9-5M3 16.5l9 5 9-5"/></symbol>
+    <symbol id="i-cube" viewBox="0 0 24 24"><path d="M3 8l9-5 9 5v9l-9 5-9-5zM3 8l9 5 9-5M12 13v9"/></symbol>
+    <symbol id="i-height" viewBox="0 0 24 24"><path d="M12 3v18M7 8l5-5 5 5M7 16l5 5 5-5"/></symbol>
+    <symbol id="i-load" viewBox="0 0 24 24"><path d="M7 21h10l2-11H5zM9 10V8a3 3 0 0 1 6 0v2"/></symbol>
+    <symbol id="i-width" viewBox="0 0 24 24"><path d="M3 12h18M7 8l-4 4 4 4M17 8l4 4-4 4"/></symbol>
+    <symbol id="i-ruler" viewBox="0 0 24 24"><path d="M3 8h18v8H3zM7 8v3M11 8v4M15 8v3M19 8v4"/></symbol>
+    <symbol id="i-hex" viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-cert" viewBox="0 0 24 24"><circle cx="12" cy="9" r="6"/><path d="M8.5 14.5L7 21l5-2.5 5 2.5-1.5-6.5M9.5 9l2 2 3.5-4"/></symbol>
+    <symbol id="i-scale" viewBox="0 0 24 24"><path d="M12 4v16M7 20h10M4 7h16M7 7l-3 7h6zM17 7l-3 7h6z"/></symbol>
+    <symbol id="i-person" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.5"/><path d="M12 8v7M7 11h10M12 15l-3 6M12 15l3 6"/></symbol>
+
+    <!-- Ikony komponentů (48×48) -->
+    <symbol id="p-frame" viewBox="0 0 48 48"><path d="M14 5v38M34 5v38M14 12h20M14 20h20M14 28h20M14 36h20"/></symbol>
+    <symbol id="p-deck-hatch" viewBox="0 0 48 48"><path d="M4 30h40v7H4zM10 37v6M38 37v6M16 30l4-9h12l4 9"/></symbol>
+    <symbol id="p-deck" viewBox="0 0 48 48"><path d="M4 24h40v8H4zM12 24v8M20 24v8M28 24v8M36 24v8M8 32v8M40 32v8"/></symbol>
+    <symbol id="p-wheel" viewBox="0 0 48 48"><circle cx="24" cy="33" r="9"/><circle cx="24" cy="33" r="2.5"/><path d="M24 6v16M15 6h18M18 22h12"/></symbol>
+    <symbol id="p-beam" viewBox="0 0 48 48"><path d="M3 22h42v9H3zM10 31v8M38 31v8M7 26.5h5M36 26.5h5"/></symbol>
+    <symbol id="p-arm" viewBox="0 0 48 48"><path d="M4 17h24v11H4zM28 20.5h14v4H28zM42 24.5v13M37 37.5h10M9 22.5h.01M14 22.5h.01"/></symbol>
+    <symbol id="p-spindle" viewBox="0 0 48 48"><path d="M24 4v32M19 8h10M19 13h10M19 18h10M19 23h10M19 28h10M12 36h24v6H12z"/></symbol>
+    <symbol id="p-weight" viewBox="0 0 48 48"><path d="M8 41h32l-3-21H11zM18 20v-3a6 6 0 0 1 12 0v3M24 27v7"/></symbol>
+    <symbol id="p-rail" viewBox="0 0 48 48"><path d="M6 8v34M42 8v34M6 15h36M6 28h36"/></symbol>
+    <symbol id="p-railframe" viewBox="0 0 48 48"><path d="M6 12h36v26H6zM6 25h36M24 12v26"/></symbol>
+    <symbol id="p-toe" viewBox="0 0 48 48"><path d="M3 28h42v10H3zM3 28l5-6h32l5 6M9 33h.01M39 33h.01"/></symbol>
+    <symbol id="p-vdiag" viewBox="0 0 48 48"><path d="M10 6v36M38 6v36M10 40L38 8"/><circle cx="10" cy="40" r="2"/><circle cx="38" cy="8" r="2"/></symbol>
+    <symbol id="p-hdiag" viewBox="0 0 48 48"><path d="M6 16h36v16H6zM6 16l36 16M42 16L6 32"/></symbol>
+    <symbol id="p-pin" viewBox="0 0 48 48"><circle cx="33" cy="15" r="7"/><path d="M28 20L8 40M8 40l-2 3"/></symbol>
+    <symbol id="p-bolt" viewBox="0 0 48 48"><path d="M4 24h28M32 17v14M32 17h10v14H32zM10 20v8"/></symbol>
+    <symbol id="p-ladder" viewBox="0 0 48 48"><path d="M14 44L20 4M30 44L36 4M15.2 36h16M16.4 28h16M17.6 20h16M18.8 12h16"/></symbol>
+    <symbol id="p-kit" viewBox="0 0 48 48"><path d="M6 17h36v24H6zM6 17l6-9h24l6 9M24 24v11M18.5 29.5h11"/></symbol>
+    <symbol id="p-helmet" viewBox="0 0 48 48"><path d="M8 31c0-9 7-17 16-17s16 8 16 17M3 31h42v5H3zM24 14v17"/></symbol>
+  </svg>
+
+
+  <!-- =====================================================================
+       HORNÍ LIŠTA  (kontakty jsou ZÁSTUPNÉ – nahraďte vlastními)
+       ===================================================================== -->
+  <div class="topbar">
+    <div class="container topbar__inner">
+      <span>Pojízdné lešení pro domácí práce · systém Mobilo od výrobce Scafom-Rux</span>
+      <div class="topbar__links">
+        <a href="tel:+420000000000"><svg class="icon" aria-hidden="true"><use href="#i-phone"/></svg>+420 000 000 000</a>
+        <a href="mailto:kontakt@example.com"><svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg>kontakt@example.com</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       HLAVIČKA S NAVIGACÍ (na mobilu hamburger menu)
+       ===================================================================== -->
+  <header class="site-header">
+    <div class="container site-header__inner">
+      <a class="logo" href="#uvod" aria-label="Mobilo – úvod">
+        <span class="logo__mark"><svg class="icon" aria-hidden="true"><use href="#i-ladder"/></svg></span>
+        <span class="logo__text"><span class="logo__name">MOBILO</span><span class="logo__sub">pojízdné lešení</span></span>
+      </a>
+
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="hlavni-navigace" aria-label="Otevřít menu">
+        <svg class="icon icon-open" aria-hidden="true"><use href="#i-menu"/></svg>
+        <svg class="icon icon-close" aria-hidden="true"><use href="#i-close"/></svg>
+      </button>
+
+      <nav class="nav" id="hlavni-navigace" aria-label="Hlavní navigace">
+        <ul class="nav__list">
+          <li><a class="nav__link" href="#uvod">Úvod</a></li>
+          <li><a class="nav__link" href="#vyhody">Výhody</a></li>
+          <li><a class="nav__link" href="#komponenty">Komponenty</a></li>
+          <li><a class="nav__link" href="#montaz">Montáž</a></li>
+          <li><a class="nav__link" href="#parametry">Parametry</a></li>
+          <li><a class="nav__link" href="#galerie">Galerie</a></li>
+          <li class="nav__item--cta"><a class="btn btn--dark btn--sm" href="#stazeni">Ke stažení</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="obsah">
+
+    <!-- =====================================================================
+         1. HERO / ÚVOD
+         ===================================================================== -->
+    <section class="hero" id="uvod" aria-labelledby="hero-nadpis">
+      <div class="container hero__inner">
+        <div class="hero__text">
+          <p class="kicker">Systém od evropského výrobce Scafom-Rux</p>
+          <h1 id="hero-nadpis">Pojízdné lešení <em>Mobilo</em></h1>
+          <p class="hero__subtitle"><span>Bezpečné</span><span>Snadné na montáž</span><span>Univerzální</span></p>
+          <p class="hero__lead">Malujete fasádu, opravujete okapy nebo měníte světla v hale? Mobilo je hliníkové lešení na kolečkách, které složíte z lehkých dílů bez nářadí. Zábradlí, brzdy a ověřená konstrukce vám dají jistotu i ve výšce.</p>
+          <div class="hero__cta">
+            <a class="btn btn--primary btn--lg" href="#komponenty">Prohlédnout komponenty <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+            <a class="btn btn--ghost btn--lg" href="#stazeni">Stáhnout technické podklady</a>
+          </div>
+          <ul class="hero__stats">
+            <li><strong>až 14 m</strong><span>pracovní výška uvnitř budov</span></li>
+            <li><strong>200 kg/m²</strong><span>nosnost plošiny</span></li>
+            <li><strong>Bez nářadí</strong><span>zacvakávací a zásuvné spoje</span></li>
+          </ul>
+        </div>
+
+        <!-- Ilustrace (kreslí ji main.js) – lze nahradit fotografií -->
+        <div class="hero__visual">
+          <svg viewBox="0 0 440 500" role="img" aria-label="Ilustrace pojízdného lešení Mobilo se dvěma plošinami, zábradlím a postavou v přilbě">
+            <rect width="440" height="500" fill="url(#p-grid)" opacity=".55"/>
+            <rect y="462" width="440" height="38" fill="#c9d3d9"/>
+            <line x1="0" y1="462" x2="440" y2="462" stroke="#7b8c96" stroke-width="2"/>
+            <ellipse cx="220" cy="466" rx="120" ry="7" fill="#1e2226" opacity=".12"/>
+            <g data-scaffold data-model="800" data-step="4" data-length="2.6" data-person transform="translate(135 462) scale(1.34)"></g>
+          </svg>
+          <span class="hero__chip hero__chip--1"><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg>Zábradlí 1 m nad plošinou</span>
+          <span class="hero__chip hero__chip--2"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Brzda na každém kolečku</span>
+          <span class="hero__chip hero__chip--3"><svg class="icon" aria-hidden="true"><use href="#i-plug"/></svg>Díly zacvaknete bez nářadí</span>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- =====================================================================
+         VÝHODY (bezpečnost · snadná montáž · univerzálnost) + porovnání šířek
+         ===================================================================== -->
+    <section class="section" id="vyhody" aria-labelledby="vyhody-nadpis">
+      <div class="container">
+        <header class="section__head" data-reveal>
+          <p class="kicker">Proč Mobilo</p>
+          <h2 id="vyhody-nadpis">Navržené tak, aby se na něm stálo jistě</h2>
+          <p>Mobilo je stavebnice z hliníkových dílů. Jednoduše se skládá, pevně stojí a po práci zabere málo místa.</p>
+        </header>
+
+        <div class="grid grid--4">
+          <article class="benefit" data-reveal>
+            <span class="benefit__icon"><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg></span>
+            <h3>Bezpečnost na prvním místě</h3>
+            <p>Zábradlí chrání ze všech stran a každé kolečko má brzdu. Lešení odpovídá evropské normě EN 1004 a má certifikát ověřené bezpečnosti GS od TÜV Nord.</p>
+          </article>
+          <article class="benefit" data-reveal style="--d:.08s">
+            <span class="benefit__icon"><svg class="icon" aria-hidden="true"><use href="#i-plug"/></svg></span>
+            <h3>Snadná montáž</h3>
+            <p>Zábradlí a diagonály zacvaknete, žebříkové rámy zasunete do sebe. Nepotřebujete klíče ani šroubováky. Na stavbu se ale vždy pusťte ve dvou.</p>
+          </article>
+          <article class="benefit" data-reveal style="--d:.16s">
+            <span class="benefit__icon"><svg class="icon" aria-hidden="true"><use href="#i-layers"/></svg></span>
+            <h3>Univerzální použití</h3>
+            <p>Dvě šířky, tři délky a pracovní výška od 3,5 do 14 metrů. Hodí se dovnitř i ven. Většinu dílů použijete pro obě šířky.</p>
+          </article>
+          <article class="benefit" data-reveal style="--d:.24s">
+            <span class="benefit__icon"><svg class="icon" aria-hidden="true"><use href="#i-cube"/></svg></span>
+            <h3>Lehké a skladné</h3>
+            <p>Hlavní díly jsou z hliníku, takže se s nimi dobře manipuluje. Komponenty jsou navržené pro snadnou přepravu a úsporné skladování.</p>
+          </article>
+        </div>
+
+        <div class="versions">
+          <h3 class="versions__title" data-reveal>Dvě šířky, jeden systém</h3>
+          <p class="versions__lead" data-reveal>Vyberte si šířku podle toho, kolik místa máte a kolik prostoru na práci potřebujete.</p>
+          <div class="grid grid--2">
+            <article class="version" data-num="800" data-reveal>
+              <h3>Mobilo 800</h3>
+              <p class="version__claim">Úzká varianta – flexibilní využití</p>
+              <ul>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span><strong>Šířka 0,8 m</strong>, délka 1,8 / 2,1 / 2,6 m</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span>Jedna plošina, <strong>55 cm</strong> prostoru pro stání</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span>Pracovní výška <strong>3,5 až 14 m</strong></span></li>
+              </ul>
+              <p class="version__for"><strong>Hodí se:</strong> do užších prostor a všude tam, kde je méně místa.</p>
+            </article>
+            <article class="version version--wide" data-num="1400" data-reveal style="--d:.1s">
+              <h3>Mobilo 1400</h3>
+              <p class="version__claim">Široká varianta – více pracovní plochy</p>
+              <ul>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span><strong>Šířka 1,4 m</strong>, délka 2,6 m</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span>Dvě plošiny vedle sebe, <strong>110 cm</strong> pro stání</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span>Pracovní výška <strong>3,5 až 14 m</strong></span></li>
+              </ul>
+              <p class="version__for"><strong>Hodí se:</strong> na delší práce na jednom místě, kde potřebujete víc prostoru.</p>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- =====================================================================
+         2. PŘEHLED KOMPONENTŮ
+         Novou kartu přidáte zkopírováním libovolného <article class="part">.
+         Atribut data-cat určuje kategorii (frames, decks, base, guards, links, extras).
+         ===================================================================== -->
+    <section class="section section--snow" id="komponenty" aria-labelledby="komponenty-nadpis">
+      <div class="container">
+        <header class="section__head" data-reveal>
+          <p class="kicker">Z čeho se Mobilo skládá</p>
+          <h2 id="komponenty-nadpis">Přehled komponentů</h2>
+          <p>Mobilo je stavebnice. Každý díl má svůj úkol a většina dílů se hodí do obou šířek. Podívejte se, co v ní najdete, a vyberte si podle kategorie.</p>
+        </header>
+
+        <div class="chips" role="group" aria-label="Filtr podle kategorie" data-reveal>
+          <button class="chip is-active" type="button" data-filter="all" aria-pressed="true">Vše <span class="chip__count"></span></button>
+          <button class="chip" type="button" data-filter="frames" aria-pressed="false">Rámy <span class="chip__count"></span></button>
+          <button class="chip" type="button" data-filter="decks" aria-pressed="false">Plošiny <span class="chip__count"></span></button>
+          <button class="chip" type="button" data-filter="base" aria-pressed="false">Kolečka a podvozek <span class="chip__count"></span></button>
+          <button class="chip" type="button" data-filter="guards" aria-pressed="false">Zábradlí a zábrany <span class="chip__count"></span></button>
+          <button class="chip" type="button" data-filter="links" aria-pressed="false">Spojovací prvky <span class="chip__count"></span></button>
+          <button class="chip" type="button" data-filter="extras" aria-pressed="false">Příslušenství <span class="chip__count"></span></button>
+        </div>
+        <p class="visually-hidden" id="filter-status" role="status" aria-live="polite"></p>
+
+        <div class="parts" id="seznam-komponentu">
+
+          <!-- ---- RÁMY ---- -->
+          <article class="part" data-cat="frames" data-reveal>
+            <div class="part__top"><span class="part__icon"><svg aria-hidden="true"><use href="#p-frame"/></svg></span><span class="tag">Rámy</span></div>
+            <h3>Žebříkový rám 2,0 m</h3>
+            <p class="part__text">Svislý nosný díl, který je zároveň žebříkem. Rámy nasazujete na sebe a zajistíte kolíkem. Příčky mají rýhovaný protiskluzový povrch.</p>
+            <dl class="part__meta">
+              <div><dt>Rozměr</dt><dd>výška 2,0 m · šířka 0,8 / 1,4 m</dd></div>
+              <div><dt>Hmotnost</dt><dd>asi 9,6 / 14,4 kg</dd></div>
+            </dl>
+            <p class="part__code">Kat. č. 02458 (800) · 02497 (1400)</p>
+          </article>
+
+          <article class="part" data-cat="frames" data-reveal>
+            <div class="part__top"><span class="part__icon"><svg aria-hidden="true"><use href="#p-frame"/></svg></span><span class="tag">Rámy</span></div>
+            <h3>Žebříkový rám 1,5 m</h3>
+            <p class="part__text">Střední rám. Kombinací různě vysokých rámů si nastavíte přesně takovou výšku, jakou potřebujete.</p>
+            <dl class="part__meta">
+              <div><dt>Rozměr</dt><dd>výška 1,5 m · šířka 0,8 / 1,4 m</dd></div>
+              <div><dt>Hmotnost</dt><dd>asi 7,0 / 11,0 kg</dd></div>
+            </dl>
+            <p class="part__code">Kat. č. 02612 (800) · 02499 (1400)</p>
+          </article>
+
+          <article class="part" data-cat="frames" data-reveal>
+            <div class="part__top"><span class="part__icon"><svg aria-hidden="true"><use href="#p-frame"/></svg></span><span class="tag">Rámy</span></div>
+            <h3>Žebříkový rám 1,0 m</h3>
+            <p class="part__text">Nejkratší rám. Přidá poslední kousek výšky nebo slouží jako horní zakončení sestavy.</p>
+            <dl class="part__meta">
+              <div><dt>Rozměr</dt><dd>výška 1,0 m · šířka 0,8 / 1,4 m</dd></div>
+              <div><dt>Hmotnost</dt><dd>asi 5,2 / 7,4 kg</dd></div>
+            </dl>
+            <p class="part__code">Kat. č. 02459 (800) · 02498 (1400)</p>
+          </article>
+
+          <!-- ---- PLOŠINY ---- -->
+          <article class="part" data-cat="decks" data-reveal>
+            <div class="part__top"><span class="part__icon"><svg aria-hidden="true"><use href="#p-deck-hatch"/></svg></span><span class="tag">Plošiny</span></div>
+            <h3>Plošina s průlezným poklopem</h3>
+            <p class="part__text">Hliníkový rám s vodovzdornou 9vrstvou překližkou. Poklopem prolezete na vyšší plošinu, aniž byste museli lešení opustit. Pojistka proti nadzvednutí je součástí.</p>
+            <dl class="part__meta">
+              <div><dt>Rozměr</dt><dd>1,8 / 2,1 / 2,6 m × 0,6 m</dd></div>
+              <div><dt>Hmotnost</dt><dd>asi 14,8 / 17,4 / 21,0 kg</dd></div>
+            </dl>
+            <p class="part__code">Kat. č. 02613 · 02447 · 02546</p>
+          </article>
+
+          <article class="part" data-cat="decks" data-reveal>
+            <div class="part__top"><span class="part__icon"><svg aria-hidden="true"><use href="#p-deck"/></svg></span><span class="tag">Plošiny</span></div>
+            <h3>Plošina bez poklopu</h3>
+            <p class="part__text">Druhá polovina podlahy u široké varianty Mobilo 1400. Spolu s plošinou s poklopem vytvoří 110 cm prostoru pro stání.</p>
+            <dl class="part__meta">
+              <div><dt>Rozměr</dt><dd>2,6 m × 0,6 m</dd></div>
+              <div><dt>Hmotnost</dt><dd>asi 20,2 kg</dd></div>
+            </dl>
+            <p class="part__code">Kat. č. 02543</p>
+          </article>
+
+          <!-- ---- KOLEČKA A PODVOZEK ---- -->
+          <article class="part" data-cat="base" data-reveal>
+            <div class="part__top"><span class="part__icon"><svg aria-hidden="true"><use href="#p-wheel"/></svg></span><span class="tag">Kolečka</span></div>
+            <h3>Otočné kolo s brzdou 5 kN</h3>
+            <p class="part__text">Výškově nastavitelné kolo s brzdou. Nylonový povrch šetří podlahu, proto se hodí i na citlivé povrchy v domácnosti.</p>
+            <dl class="part__meta">
+              <div><dt>Parametr</dt><dd>nosnost 5 kN</dd></div>
+              <div><dt>Hmotnost</dt><dd>asi 6 kg</dd></div>
+            </dl>
+            <p class="part__code">Kat. č. 02448</p>
+          </article>
+
+          <article class="part" data-cat="base" data-reveal>
+            <div class="part__top"><span class="part__icon"><svg aria-hidden="true"><use href="#p-wheel"/></svg></span><span class="tag">Kolečka</span></div>
+            <h3>Otočné kolo s brzdou 10 kN</h3>
+            <p class="part__text">Silnější kolo do interiéru i exteriéru, odpovídá normě EN 1004. Brzdu uvolníte nožní pákou, výškou kola lešení srovnáte.</p>
+            <dl class="part__meta">
+              <div><dt>Rozměr</dt><dd>průměr 200 mm · nosnost 10 kN</dd></div>
+              <div><dt>Hmotnost</dt><dd>asi 6 kg</dd></div>
+            </dl>
+            <p class="part__code">Kat. č. 05507</p>
+          </article>
+
+          <article class="part" data-cat="base" data-reveal>
+            <div class="part__top"><span class="part__icon"><svg aria-hidden="true"><use href="#p-beam"/></svg></span><span class="tag">Podvozek</span></div>
+            <h3>Jízdní nosník 1,2 m (Mobilo 800)</h3>
+            <p class="part__text">Pozinkovaný ocelový nosník, který rozšiřuje základnu lešení pro vyšší stabilitu. Kolečka se přidávají zvlášť.</p>
+            <dl class="part__meta">
+              <div><dt>Rozměr</dt><dd>délka 1,2 m</dd></div>
+              <div><dt>Hmotnost</dt><dd>asi 20,9 kg</dd></div>
+            </dl>
+            <p class="part__code">Kat. č. 04975</p>
+          </article>
+
+          <article class="part" data-cat="base" data-reveal>
+            <div class="part__top"><span class="part__icon"><svg aria-hidden="true"><use href="#p-beam"/></svg></span><span class="tag">Podvozek</span></div>
+            <h3>Jízdní nosník 1,8 m (Mobilo 1400)</h3>
+            <p class="part__text">Totéž pro širší lešení. Pozinkovaná ocel, pevný základ pro vyšší sestavy.</p>
+            <dl class="part__meta">
+              <div><dt>Rozměr</dt><dd>délka 1,8 m</dd></div>
+              <div><dt>Hmotnost</dt><dd>asi 27,4 kg</dd></div>
+            </dl>
+            <p class="part__code">Kat. č. 05307</p>
+          </article>
+
+          <article class="part" data-cat="base" data-reveal>
+            <div class="part__top"><span class="part__icon"><svg aria-hidden="true"><use href="#p-arm"/></svg></span><span class="tag">Podvozek</span></div>
+            <h3>Teleskopické rameno</h3>
+            <p class="part__text">Zasune se do jízdního nosníku a vysune na potřebnou délku. Širší opora znamená vyšší stabilitu. Při plně vysunutých ramenech se přitěžovací závaží nepoužívají.</p>
+            <dl class="part__meta">
+              <div><dt>Rozměr</dt><dd>délka 1,1 m</dd></div>
+              <div><dt>Hmotnost</dt><dd>asi 8,0 kg</dd></div>
+            </dl>
+            <p class="part__code">Kat. č. 02562</p>
+          </article>
+
+          <article class="part" data-cat="base" data-reveal>
+            <div class="part__top"><span class="part__icon"><svg aria-hidden="true"><use href="#p-spindle"/></svg></span><span class="tag">Podvozek</span></div>
+            <h3>Stavěcí závitová tyč</h3>
+            <p class="part__text">Šroub na konci teleskopického ramena. Vytočíte ho tak, aby rameno pevně stálo na zemi bez vůle. Dodává se se dvěma křídlovými maticemi.</p>
+            <dl class="part__meta">
+              <div><dt>Rozměr</dt><dd>průměr 38 mm · délka 780 mm</dd></div>
+              <div><dt>Hmotnost</dt><dd>asi 5,2 kg</dd></div>
+            </dl>
+            <p class="part__code">Kat. č. 02564</p>
+          </article>
+
+          <article class="part" data-cat="base" data-reveal>
+            <div class="part__top"><span class="part__icon"><svg aria-hidden="true"><use href="#p-weight"/></svg></span><span class="tag">Podvozek</span></div>
+            <h3>Přitěžovací závaží</h3>
+            <p class="part__text">Dodává lešení stabilitu, když nepoužíváte teleskopická ramena. Počet závaží určuje výška lešení a to, zda pracujete uvnitř, nebo venku.</p>
+            <dl class="part__meta">
+              <div><dt>Parametr</dt><dd>počet podle tabulek v katalogu</dd></div>
+            </dl>
+            <p class="part__code">Kat. č. 02555</p>
+          </article>
+
+          <!-- ---- ZÁBRADLÍ A ZÁBRANY ---- -->
+          <article class="part" data-cat="guards" data-reveal>
+            <div class="part__top"><span class="part__icon"><svg aria-hidden="true"><use href="#p-rail"/></svg></span><span class="tag">Zábradlí</span></div>
+            <h3>Hliníkové zábradlí</h3>
+            <p class="part__text">Pevné boční zábradlí, které prostě zacvaknete. Poznáte ho podle zeleného značení.</p>
+            <dl class="part__meta">
+              <div><dt>Rozměr</dt><dd>délka 1,8 / 2,1 / 2,6 m</dd></div>
+              <div><dt>Hmotnost</dt><dd>asi 2,2 / 2,5 / 2,7 kg</dd></div>
+            </dl>
+            <p class="part__code">Kat. č. 02616 · 02617 · 02549</p>
+          </article>
+
+          <article class="part" data-cat="guards" data-reveal>
+            <div class="part__top"><span class="part__icon"><svg aria-hidden="true"><use href="#p-railframe"/></svg></span><span class="tag">Zábradlí</span></div>
+            <h3>Rámové zábradlí</h3>
+            <p class="part__text">Zábradlí v podobě pevného rámu s mezipolem. Stabilní boční ochrana pro práci na plošině.</p>
+            <dl class="part__meta">
+              <div><dt>Rozměr</dt><dd>1,8 / 2,1 / 2,6 m × 0,5 m</dd></div>
+              <div><dt>Hmotnost</dt><dd>asi 6,6 / 7,2 / 8,2 kg</dd></div>
+            </dl>
+            <p class="part__code">Kat. č. 02614 · 02600 · 02594</p>
+          </article>
+
+          <article class="part" data-cat="guards" data-reveal>
+            <div class="part__top"><span class="part__icon"><svg aria-hidden="true"><use href="#p-toe"/></svg></span><span class="tag">Zábrany</span></div>
+            <h3>Patní lišta podélná</h3>
+            <p class="part__text">Dřevěná lišta na delší straně plošiny. Zabrání pádu nářadí nebo materiálu z lešení. Je červeně impregnovaná.</p>
+            <dl class="part__meta">
+              <div><dt>Rozměr</dt><dd>1,8 / 2,1 / 2,6 m × 15 cm</dd></div>
+              <div><dt>Hmotnost</dt><dd>asi 4,8 / 5,4 / 6,4 kg</dd></div>
+            </dl>
+            <p class="part__code">Kat. č. 02593 · 02604 · 02592</p>
+          </article>
+
+          <article class="part" data-cat="guards" data-reveal>
+            <div class="part__top"><span class="part__icon"><svg aria-hidden="true"><use href="#p-toe"/></svg></span><span class="tag">Zábrany</span></div>
+            <h3>Patní lišta příčná</h3>
+            <p class="part__text">Totéž pro kratší (čelní) stranu plošiny. Uzavře podlahu ze všech čtyř stran.</p>
+            <dl class="part__meta">
+              <div><dt>Rozměr</dt><dd>0,8 / 1,4 m × 15 cm</dd></div>
+              <div><dt>Hmotnost</dt><dd>asi 1,3 / 2,2 kg</dd></div>
+            </dl>
+            <p class="part__code">Kat. č. 02462 (800) · 02501 (1400)</p>
+          </article>
+
+          <!-- ---- SPOJOVACÍ PRVKY ---- -->
+          <article class="part" data-cat="links" data-reveal>
+            <div class="part__top"><span class="part__icon"><svg aria-hidden="true"><use href="#p-vdiag"/></svg></span><span class="tag">Spojovací</span></div>
+            <h3>Svislá diagonála</h3>
+            <p class="part__text">Ztužuje konstrukci, aby se nekývala. Zacvaknete ji bez nářadí. Poznáte ji podle červeného značení.</p>
+            <dl class="part__meta">
+              <div><dt>Rozměr</dt><dd>pro délku 1,8 / 2,1 / 2,6 m</dd></div>
+              <div><dt>Hmotnost</dt><dd>asi 2,6 / 3,0 / 3,2 kg</dd></div>
+            </dl>
+            <p class="part__code">Kat. č. 02441 · 02440 · 02548</p>
+          </article>
+
+          <article class="part" data-cat="links" data-reveal>
+            <div class="part__top"><span class="part__icon"><svg aria-hidden="true"><use href="#p-hdiag"/></svg></span><span class="tag">Spojovací</span></div>
+            <h3>Vodorovná diagonála</h3>
+            <p class="part__text">Zpevňuje spodní část lešení ve vodorovné rovině. Najdete ji podle černého značení.</p>
+            <dl class="part__meta">
+              <div><dt>Rozměr</dt><dd>800: 1,8 / 2,1 / 2,6 m · 1400: 2,6 m</dd></div>
+              <div><dt>Hmotnost</dt><dd>asi 2,2 / 2,4 / 2,8 kg · 3,0 kg</dd></div>
+            </dl>
+            <p class="part__code">Kat. č. 02443 · 02442 · 02457 · 02496</p>
+          </article>
+
+          <article class="part" data-cat="links" data-reveal>
+            <div class="part__top"><span class="part__icon"><svg aria-hidden="true"><use href="#p-pin"/></svg></span><span class="tag">Spojovací</span></div>
+            <h3>Pojistný kolík</h3>
+            <p class="part__text">Malý, ale důležitý: zajistí žebříkový rám proti rozpojení. Při převozu ho zasunete do zvláštního otvoru v rámu, aby se neztratil.</p>
+            <dl class="part__meta">
+              <div><dt>Rozměr</dt><dd>délka 8 cm</dd></div>
+              <div><dt>Hmotnost</dt><dd>asi 0,07 kg</dd></div>
+            </dl>
+            <p class="part__code">Kat. č. 02560</p>
+          </article>
+
+          <article class="part" data-cat="links" data-reveal>
+            <div class="part__top"><span class="part__icon"><svg aria-hidden="true"><use href="#p-bolt"/></svg></span><span class="tag">Spojovací</span></div>
+            <h3>Zajišťovací čep</h3>
+            <p class="part__text">Připevní teleskopické rameno k jízdnímu nosníku na zvolené délce vysunutí.</p>
+            <dl class="part__meta">
+              <div><dt>Rozměr</dt><dd>délka 12 cm</dd></div>
+              <div><dt>Hmotnost</dt><dd>asi 0,22 kg</dd></div>
+            </dl>
+            <p class="part__code">Kat. č. 02558</p>
+          </article>
+
+          <!-- ---- PŘÍSLUŠENSTVÍ ---- -->
+          <article class="part" data-cat="extras" data-reveal>
+            <div class="part__top"><span class="part__icon"><svg aria-hidden="true"><use href="#p-ladder"/></svg></span><span class="tag">Příslušenství</span></div>
+            <h3>Hliníkový žebřík</h3>
+            <p class="part__text">Pomůcka při montáži, případně i pro výstup na hotové lešení. Zavěsí se do příček rámu.</p>
+            <dl class="part__meta">
+              <div><dt>Rozměr</dt><dd>délka 2,1 / 3,1 / 4,1 m</dd></div>
+              <div><dt>Hmotnost</dt><dd>asi 7,2 / 9,4 / 11,4 kg</dd></div>
+            </dl>
+            <p class="part__code">Kat. č. 02565 · 02566 · 02567</p>
+          </article>
+
+          <article class="part" data-cat="extras" data-reveal>
+            <div class="part__top"><span class="part__icon"><svg aria-hidden="true"><use href="#p-kit"/></svg></span><span class="tag">Příslušenství</span></div>
+            <h3>Rozšiřující sada</h3>
+            <p class="part__text">Hotová sada dílů pro rozšíření základní sestavy. Existují varianty pro Mobilo 800, Mobilo 1400 i pro použití v interiéru.</p>
+            <dl class="part__meta">
+              <div><dt>Parametr</dt><dd>obsah podle zvolené varianty</dd></div>
+            </dl>
+            <p class="part__code">Podrobnosti ve zdrojích na konci stránky</p>
+          </article>
+
+          <article class="part" data-cat="extras" data-reveal>
+            <div class="part__top"><span class="part__icon"><svg aria-hidden="true"><use href="#p-helmet"/></svg></span><span class="tag">Příslušenství</span></div>
+            <h3>Ochranná přilba</h3>
+            <p class="part__text">Lehká přilba, kterou při práci ve výšce oceníte. Splňuje normu EN 397, má větrací otvory a nastavitelný podbradní pásek.</p>
+            <dl class="part__meta">
+              <div><dt>Rozměr</dt><dd>obvod hlavy 51–63 cm</dd></div>
+              <div><dt>Hmotnost</dt><dd>asi 390 g</dd></div>
+            </dl>
+            <p class="part__code">Kat. č. 07133 a další barvy</p>
+          </article>
+        </div>
+
+        <p class="parts-foot">Rozměry a hmotnosti jsou orientační a pocházejí z katalogu výrobce. Katalogové číslo (kat. č.) vám pomůže najít díl v PDF katalogu níže.</p>
+      </div>
+    </section>
+
+
+    <!-- =====================================================================
+         JAK SE MOBILO SKLÁDÁ + BEZPEČNOST
+         ===================================================================== -->
+    <section class="section section--dark" id="montaz" aria-labelledby="montaz-nadpis">
+      <div class="container">
+        <header class="section__head" data-reveal>
+          <p class="kicker">Jak se Mobilo skládá</p>
+          <h2 id="montaz-nadpis">Pět kroků od země nahoru</h2>
+          <p>Základní princip je jednoduchý. Níže najdete stručný postup. Přesný návod a tabulky pro svoji výšku vždy dohledejte v katalogu výrobce.</p>
+        </header>
+
+        <ol class="steps">
+          <li class="step" data-reveal>
+            <h3>Postavte základ</h3>
+            <p>Nasaďte čtyři kolečka (u vyšších sestav jízdní nosníky). Zacvakněte spodní zábradlí a vodorovnou diagonálu. Všechna kolečka zabrzděte.</p>
+          </li>
+          <li class="step" data-reveal style="--d:.07s">
+            <h3>Nasaďte rámy</h3>
+            <p>Nasuňte první dva žebříkové rámy a zajistěte je kolíky. Zacvakněte svislé diagonály a lešení srovnejte.</p>
+          </li>
+          <li class="step" data-reveal style="--d:.14s">
+            <h3>Vložte plošinu</h3>
+            <p>Zavěste plošinu na čtvrtou příčku od spodu (asi 1 m) a pojistěte ji proti nadzvednutí. Zábradlí máte stále 1 m nad sebou.</p>
+          </li>
+          <li class="step" data-reveal style="--d:.21s">
+            <h3>Pokračujte nahoru</h3>
+            <p>Přidávejte další rámy, diagonály a zábradlí. Při šplhání musíte mít vždy zábradlí aspoň 1 m nad sebou.</p>
+          </li>
+          <li class="step" data-reveal style="--d:.28s">
+            <h3>Dokončete a zkontrolujte</h3>
+            <p>Doplňte patní lišty a zábradlí 0,5 m nad podlahou. Zkontrolujte, že všechny díly zaklaply, lešení stojí rovně a kolečka jsou zabrzděná.</p>
+          </li>
+        </ol>
+
+        <div class="mounting-extra">
+          <div class="panel" data-reveal>
+            <h3>Poznáte podle barvy</h3>
+            <p>Zacvakávací čelisti dílů mají barevné značení, takže se nespletete.</p>
+            <ul class="colors">
+              <li><span class="swatch swatch--green"></span><span><strong>Zelená</strong> – zábradlí</span></li>
+              <li><span class="swatch swatch--red"></span><span><strong>Červená</strong> – svislá diagonála</span></li>
+              <li><span class="swatch swatch--black"></span><span><strong>Černá</strong> – vodorovná diagonála</span></li>
+            </ul>
+          </div>
+
+          <div class="panel" data-reveal style="--d:.1s">
+            <h3>Zlatá pravidla bezpečné práce</h3>
+            <p>Výběr nejdůležitějších pokynů výrobce.</p>
+            <ul class="rules">
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span><strong>Montujte ve dvou.</strong> Výrobce požaduje při montáži i demontáži nejméně dvě osoby.</span></li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span><strong>Brzdy mějte zabrzděné.</strong> Vždy, kromě samotného přejíždění.</span></li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span><strong>Rovně a pevně.</strong> Jen na rovném, dost pevném podkladu. Sklon pod 1 %, všechna kolečka i podpěry pevně na zemi.</span></li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span><strong>Při pojíždění nikdo nahoře.</strong> Na lešení nesmí být lidé ani materiál. Jezděte pomalu.</span></li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span><strong>Přitížení podle tabulky.</strong> Počet závaží určuje výška a prostředí. Bez výjimek.</span></li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span><strong>Silný vítr = dolů.</strong> Od 6. stupně Beaufortovy stupnice (vítr vás znatelně brzdí při chůzi) lešení opusťte a zajistěte.</span></li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span><strong>Žádné triky s výškou.</strong> Plošinu nezvyšujte žebříkem ani bednou, nepodpírejte se o zábradlí a neskákejte.</span></li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span><strong>Jen originální a nepoškozené díly.</strong> Po každé montáži a přesunu zkontrolujte, že vše drží.</span></li>
+            </ul>
+            <div class="note">
+              <svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg>
+              <p>Toto je jen stručný výběr. Úplná pravidla najdete v návodu výrobce (katalog, str. 28–29). Výrobce také uvádí, že lešení má před použitím zkontrolovat způsobilá osoba.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- =====================================================================
+         3. TECHNICKÉ SPECIFIKACE
+         ===================================================================== -->
+    <section class="section" id="parametry" aria-labelledby="parametry-nadpis">
+      <div class="container">
+        <header class="section__head" data-reveal>
+          <p class="kicker">Technické specifikace</p>
+          <h2 id="parametry-nadpis">Čísla, která vás zajímají</h2>
+          <p>Všechna čísla pocházejí z katalogu výrobce a platí pro Mobilo 800 i 1400, pokud není uvedeno jinak.</p>
+        </header>
+
+        <div class="grid grid--4">
+          <article class="spec" data-reveal>
+            <span class="spec__icon"><svg class="icon" aria-hidden="true"><use href="#i-height"/></svg></span>
+            <p class="spec__label">Pracovní výška</p>
+            <p class="spec__value">až 14 <small>m</small></p>
+            <p class="spec__note">Uvnitř budov od 3,5 do 14 m. Venku od 3,5 do 10 m. Pracovní výška je zhruba o 2 m víc než výška podlahy, na které stojíte.</p>
+          </article>
+          <article class="spec" data-reveal style="--d:.06s">
+            <span class="spec__icon"><svg class="icon" aria-hidden="true"><use href="#i-load"/></svg></span>
+            <p class="spec__label">Nosnost plošiny</p>
+            <p class="spec__value">200 <small>kg/m²</small></p>
+            <p class="spec__note">Skupina lešení 3 podle normy EN 1004.</p>
+          </article>
+          <article class="spec" data-reveal style="--d:.12s">
+            <span class="spec__icon"><svg class="icon" aria-hidden="true"><use href="#i-width"/></svg></span>
+            <p class="spec__label">Šířka lešení</p>
+            <p class="spec__value">0,8 / 1,4 <small>m</small></p>
+            <p class="spec__note">Dvě varianty: úzké Mobilo 800 a široké Mobilo 1400 (rozměr bez jízdních nosníků).</p>
+          </article>
+          <article class="spec" data-reveal style="--d:.18s">
+            <span class="spec__icon"><svg class="icon" aria-hidden="true"><use href="#i-ruler"/></svg></span>
+            <p class="spec__label">Délka lešení</p>
+            <p class="spec__value spec__value--long">1,8 / 2,1 / <span class="nowrap">2,6 <small>m</small></span></p>
+            <p class="spec__note">Mobilo 800 se skládá ve třech délkách. Mobilo 1400 v délce 2,6 m.</p>
+          </article>
+          <article class="spec" data-reveal>
+            <span class="spec__icon"><svg class="icon" aria-hidden="true"><use href="#i-hex"/></svg></span>
+            <p class="spec__label">Materiál</p>
+            <p class="spec__value">Hliník</p>
+            <p class="spec__note">Hlavní díly jsou hliníkové. Podvozek (jízdní nosníky a teleskopická ramena) je z pozinkované oceli.</p>
+          </article>
+          <article class="spec" data-reveal style="--d:.06s">
+            <span class="spec__icon"><svg class="icon" aria-hidden="true"><use href="#i-cert"/></svg></span>
+            <p class="spec__label">Normy a certifikace</p>
+            <p class="spec__value">EN 1004</p>
+            <p class="spec__note">Klasifikace 3 8/12 XXCD. Certifikát ověřené bezpečnosti GS od TÜV Nord.</p>
+          </article>
+          <article class="spec spec--dark" data-reveal style="--d:.12s">
+            <span class="spec__icon"><svg class="icon" aria-hidden="true"><use href="#i-scale"/></svg></span>
+            <p class="spec__label">Hmotnost typické sestavy</p>
+            <p class="spec__value">ca. 75 <small>kg</small></p>
+            <p class="spec__note">Mobilo 800, nejnižší sestava (pracovní výška 3,5 m, délka 1,8 m). Mobilo 1400 v délce 2,6 m: ca. 115 kg.</p>
+          </article>
+          <article class="spec spec--dark" data-reveal style="--d:.18s">
+            <span class="spec__icon"><svg class="icon" aria-hidden="true"><use href="#i-person"/></svg></span>
+            <p class="spec__label">Prostor pro stání</p>
+            <p class="spec__value">55 / 110 <small>cm</small></p>
+            <p class="spec__note">Šířka podlahy: jedna plošina u Mobilo 800, dvě plošiny vedle sebe u Mobilo 1400.</p>
+          </article>
+        </div>
+
+        <!-- Srovnávací tabulka -->
+        <div class="table-wrap" data-reveal>
+          <h3>Mobilo 800 a Mobilo 1400 vedle sebe</h3>
+          <div class="table-scroll" tabindex="0" role="region" aria-label="Srovnávací tabulka parametrů, lze posouvat do stran">
+            <table class="table">
+              <thead>
+                <tr><th scope="col">Parametr</th><th scope="col">Mobilo 800</th><th scope="col">Mobilo 1400</th></tr>
+              </thead>
+              <tbody>
+                <tr><th scope="row">Šířka lešení</th><td>0,8 m</td><td>1,4 m</td></tr>
+                <tr><th scope="row">Délka lešení</th><td>1,8 / 2,1 / 2,6 m</td><td>2,6 m</td></tr>
+                <tr><th scope="row">Podlaha</th><td>jedna plošina, 55 cm pro stání</td><td>dvě plošiny, 110 cm pro stání</td></tr>
+                <tr><th scope="row">Pracovní výška uvnitř budov</th><td>3,5 až 14 m</td><td>3,5 až 14 m</td></tr>
+                <tr><th scope="row">Pracovní výška venku</th><td>3,5 až 10 m</td><td>3,5 až 10 m</td></tr>
+                <tr><th scope="row">Nosnost</th><td>200 kg/m² (skupina 3)</td><td>200 kg/m² (skupina 3)</td></tr>
+                <tr><th scope="row">Klasifikace</th><td>EN 1004 – 3 8/12 XXCD</td><td>EN 1004 – 3 8/12 XXCD</td></tr>
+                <tr><th scope="row">Jízdní nosníky v sestavě od výšky</th><td>6,6 m (nosník 1,2 m)</td><td>9,6 m (nosník 1,8 m)</td></tr>
+                <tr><th scope="row">Žebříkový rám 2,0 m</th><td>asi 9,6 kg</td><td>asi 14,4 kg</td></tr>
+                <tr><th scope="row">Nejnižší sestava (3,5 m)</th><td>ca. 75 kg (délka 1,8 m)</td><td>ca. 115 kg (délka 2,6 m)</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Konfigurátor sestavy (kreslí a počítá main.js) -->
+        <div class="config" id="konfigurator" data-reveal>
+          <div class="config__controls">
+            <p class="kicker">Vyzkoušejte si</p>
+            <h3>Spočítejte si svou sestavu</h3>
+            <p>Posuňte jezdec a uvidíte, kolik dílů budete potřebovat a kolik lešení váží. Je to orientační přehled podle kusovníků výrobce.</p>
+
+            <div class="field">
+              <span class="field__label" id="cfg-model-label">Šířka lešení</span>
+              <div class="seg" role="radiogroup" aria-labelledby="cfg-model-label">
+                <input type="radio" name="cfg-model" id="cfg-m800" value="800" checked><label for="cfg-m800">Mobilo 800 · 0,8 m</label>
+                <input type="radio" name="cfg-model" id="cfg-m1400" value="1400"><label for="cfg-m1400">Mobilo 1400 · 1,4 m</label>
+              </div>
+            </div>
+
+            <div class="field">
+              <span class="field__label" id="cfg-length-label">Délka lešení</span>
+              <div class="seg" role="radiogroup" aria-labelledby="cfg-length-label">
+                <input type="radio" name="cfg-length" id="cfg-l18" value="1.8"><label for="cfg-l18">1,8 m</label>
+                <input type="radio" name="cfg-length" id="cfg-l21" value="2.1"><label for="cfg-l21">2,1 m</label>
+                <input type="radio" name="cfg-length" id="cfg-l26" value="2.6" checked><label for="cfg-l26">2,6 m</label>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="cfg-height">Pracovní výška</label>
+              <div class="config__height"><output id="cfg-height-out" for="cfg-height">5,5</output><span>m</span></div>
+              <input class="range" id="cfg-height" type="range" min="0" max="11" step="1" value="2" aria-describedby="cfg-height-scale">
+              <div class="range-scale" id="cfg-height-scale"><span>3,5 m</span><span>14 m</span></div>
+            </div>
+
+            <div class="results" aria-live="polite">
+              <div class="result"><span>Výška podlahy</span><strong id="cfg-floor">3,5 m</strong></div>
+              <div class="result"><span>Plošiny</span><strong id="cfg-decks">1 ks</strong></div>
+              <div class="result"><span>Hmotnost dílů</span><strong id="cfg-weight">ca. 150 kg</strong></div>
+              <div class="result"><span>Podvozek</span><strong id="cfg-base">Jen kolečka</strong></div>
+            </div>
+          </div>
+
+          <div class="config__visual">
+            <svg id="cfg-svg" viewBox="0 0 300 300" role="img" aria-label="Ilustrace sestavy Mobilo"></svg>
+          </div>
+
+          <div class="config__parts">
+            <h4>Seznam dílů</h4>
+            <ul class="parts-list" id="cfg-parts"></ul>
+            <p class="config__note" id="cfg-note"></p>
+            <p class="config__note">Hmotnost je součet hmotností dílů z katalogu bez přitěžovacích závaží. Pro skutečnou montáž vždy použijte návod výrobce.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- =====================================================================
+         4. GALERIE
+         Místo ilustrace (<svg>) lze do .shot__media vložit fotografii:
+           <img src="assets/img/fasada.jpg" alt="Malování fasády z lešení Mobilo" loading="lazy">
+         ===================================================================== -->
+    <section class="section section--snow" id="galerie" aria-labelledby="galerie-nadpis">
+      <div class="container">
+        <header class="section__head" data-reveal>
+          <p class="kicker">Galerie</p>
+          <h2 id="galerie-nadpis">Sestavy a použití v praxi</h2>
+          <p>Podívejte se, jak může lešení Mobilo vypadat a kde se vám bude hodit. Kliknutím obrázek zvětšíte.</p>
+        </header>
+
+        <div class="gallery-group">
+          <h3 data-reveal>Typické sestavy</h3>
+          <div class="gallery">
+
+            <button type="button" class="shot" data-reveal>
+              <span class="shot__media">
+                <svg viewBox="0 0 400 280" role="img" aria-label="Ilustrace nízké sestavy Mobilo 800 s pracovní výškou 3,5 metru">
+                  <rect width="400" height="280" fill="url(#g-neutral)"/><rect width="400" height="280" fill="url(#p-grid)" opacity=".7"/>
+                  <rect y="236" width="400" height="44" fill="#c9d3d9"/><line x1="0" y1="236" x2="400" y2="236" stroke="#7b8c96" stroke-width="2"/>
+                  <g data-scaffold data-model="800" data-step="0" data-length="2.6" data-person transform="translate(200 236) scale(1.45)"></g>
+                </svg>
+                <span class="tag shot__badge">Ilustrace</span>
+                <span class="shot__zoom"><svg class="icon" aria-hidden="true"><use href="#i-zoom"/></svg></span>
+              </span>
+              <span class="shot__body"><span class="shot__title">Nízká sestava · 3,5 m</span><span class="shot__text">Mobilo 800 s jednou plošinou. Základ pro práce v místnosti nebo u nízké zdi.</span></span>
+            </button>
+
+            <button type="button" class="shot" data-reveal style="--d:.08s">
+              <span class="shot__media">
+                <svg viewBox="0 0 400 280" role="img" aria-label="Ilustrace střední sestavy Mobilo 1400 s pracovní výškou 5,5 metru">
+                  <rect width="400" height="280" fill="url(#g-neutral)"/><rect width="400" height="280" fill="url(#p-grid)" opacity=".7"/>
+                  <rect y="236" width="400" height="44" fill="#c9d3d9"/><line x1="0" y1="236" x2="400" y2="236" stroke="#7b8c96" stroke-width="2"/>
+                  <g data-scaffold data-model="1400" data-step="2" data-length="2.6" data-person transform="translate(200 236) scale(.95)"></g>
+                </svg>
+                <span class="tag shot__badge">Ilustrace</span>
+                <span class="shot__zoom"><svg class="icon" aria-hidden="true"><use href="#i-zoom"/></svg></span>
+              </span>
+              <span class="shot__body"><span class="shot__title">Střední sestava · 5,5 m</span><span class="shot__text">Široké Mobilo 1400 se dvěma plošinami vedle sebe. Víc místa pro práci na fasádě.</span></span>
+            </button>
+
+            <button type="button" class="shot" data-reveal style="--d:.16s">
+              <span class="shot__media">
+                <svg viewBox="0 0 400 280" role="img" aria-label="Ilustrace vysoké sestavy Mobilo 800 s pracovní výškou 9,6 metru a jízdními nosníky">
+                  <rect width="400" height="280" fill="url(#g-neutral)"/><rect width="400" height="280" fill="url(#p-grid)" opacity=".7"/>
+                  <rect y="236" width="400" height="44" fill="#c9d3d9"/><line x1="0" y1="236" x2="400" y2="236" stroke="#7b8c96" stroke-width="2"/>
+                  <g data-scaffold data-model="800" data-step="6" data-length="2.6" data-person transform="translate(200 236) scale(.55)"></g>
+                </svg>
+                <span class="tag shot__badge">Ilustrace</span>
+                <span class="shot__zoom"><svg class="icon" aria-hidden="true"><use href="#i-zoom"/></svg></span>
+              </span>
+              <span class="shot__body"><span class="shot__title">Vysoká sestava · 9,6 m</span><span class="shot__text">Mobilo 800 s jízdními nosníky a teleskopickými rameny pro větší stabilitu.</span></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="gallery-group">
+          <h3 data-reveal>Kde se Mobilo hodí</h3>
+          <div class="gallery">
+
+            <!-- Malování fasády -->
+            <button type="button" class="shot" data-reveal>
+              <span class="shot__media">
+                <svg viewBox="0 0 400 280" role="img" aria-label="Ilustrace: lešení Mobilo před fasádou, z poloviny natřenou novou barvou">
+                  <rect width="400" height="280" fill="url(#g-sky)"/>
+                  <rect x="30" y="34" width="370" height="198" fill="#efe6d5"/>
+                  <rect x="30" y="34" width="168" height="198" fill="#b9d8e3"/>
+                  <rect x="22" y="22" width="378" height="16" fill="#4a5662"/>
+                  <g fill="#fff" stroke="#cfc6b3" stroke-width="2"><rect x="52" y="76" width="46" height="62"/><rect x="236" y="76" width="46" height="62"/><rect x="326" y="76" width="46" height="62"/></g>
+                  <g fill="#9fd0e0"><rect x="57" y="81" width="36" height="52"/><rect x="241" y="81" width="36" height="52"/><rect x="331" y="81" width="36" height="52"/></g>
+                  <rect y="232" width="400" height="48" fill="#c9d3d9"/><line x1="0" y1="232" x2="400" y2="232" stroke="#7b8c96" stroke-width="2"/>
+                  <g data-scaffold data-model="800" data-step="2" data-length="2.6" data-person transform="translate(150 232) scale(.85)"></g>
+                </svg>
+                <span class="tag shot__badge">Ilustrace</span>
+                <span class="shot__zoom"><svg class="icon" aria-hidden="true"><use href="#i-zoom"/></svg></span>
+              </span>
+              <span class="shot__body"><span class="shot__title">Malování fasády</span><span class="shot__text">Lešení se přesouvá podél zdi na kolečkách, takže nemusíte pořád stavět znovu.</span></span>
+            </button>
+
+            <!-- Oprava střechy a okapů -->
+            <button type="button" class="shot" data-reveal style="--d:.08s">
+              <span class="shot__media">
+                <svg viewBox="0 0 400 280" role="img" aria-label="Ilustrace: lešení Mobilo u okapu rodinného domu">
+                  <rect width="400" height="280" fill="url(#g-sky)"/>
+                  <rect y="28" width="400" height="88" fill="#55616c"/>
+                  <g stroke="#47525c" stroke-width="2"><path d="M0 46H400M0 64H400M0 82H400M0 100H400"/></g>
+                  <rect y="114" width="400" height="9" fill="#39424a"/>
+                  <rect y="123" width="400" height="7" rx="3" fill="#aab6be"/><rect x="354" y="126" width="9" height="106" fill="#aab6be"/>
+                  <rect y="130" width="400" height="102" fill="#e6dccb"/>
+                  <g fill="#fff" stroke="#cfc6b3" stroke-width="2"><rect x="60" y="156" width="50" height="58"/><rect x="262" y="156" width="50" height="58"/></g>
+                  <g fill="#9fd0e0"><rect x="65" y="161" width="40" height="48"/><rect x="267" y="161" width="40" height="48"/></g>
+                  <rect y="232" width="400" height="48" fill="#c9d3d9"/><line x1="0" y1="232" x2="400" y2="232" stroke="#7b8c96" stroke-width="2"/>
+                  <g data-scaffold data-model="800" data-step="2" data-length="2.6" data-person transform="translate(190 232) scale(.64)"></g>
+                </svg>
+                <span class="tag shot__badge">Ilustrace</span>
+                <span class="shot__zoom"><svg class="icon" aria-hidden="true"><use href="#i-zoom"/></svg></span>
+              </span>
+              <span class="shot__body"><span class="shot__title">Oprava střechy a okapů</span><span class="shot__text">Bezpečná plošina se zábradlím u okapu. Hodí se na čištění, nátěry i drobné opravy.</span></span>
+            </button>
+
+            <!-- Interiérové práce -->
+            <button type="button" class="shot" data-reveal style="--d:.16s">
+              <span class="shot__media">
+                <svg viewBox="0 0 400 280" role="img" aria-label="Ilustrace: lešení Mobilo v místnosti při malování stropu">
+                  <rect width="400" height="280" fill="#e9eef1"/>
+                  <rect width="400" height="26" fill="#fbfcfd"/><rect y="26" width="400" height="3" fill="#d6dde2"/>
+                  <rect x="32" y="64" width="84" height="110" fill="#fff" stroke="#c4cdd3" stroke-width="3"/><rect x="38" y="70" width="72" height="98" fill="#bfe3f0"/><path d="M74 70v98M38 119h72" stroke="#fff" stroke-width="3"/>
+                  <rect x="300" y="112" width="62" height="103" fill="#cdb892"/><rect x="306" y="118" width="50" height="40" fill="#bfa77c" opacity=".6"/><circle cx="350" cy="168" r="3" fill="#8a6a3a"/>
+                  <path d="M240 26v10" stroke="#7b8c96" stroke-width="2"/><circle cx="240" cy="42" r="9" fill="#ffe9a8" stroke="#d9b64a" stroke-width="2"/>
+                  <rect y="207" width="400" height="8" fill="#fff"/>
+                  <rect y="215" width="400" height="65" fill="#d8c7a8"/><g stroke="#c4b18e" stroke-width="1.5"><path d="M0 235H400M0 255H400M70 215V280M190 215V280M310 215V280"/></g>
+                  <g data-scaffold data-model="800" data-step="0" data-length="2.1" data-person transform="translate(180 215) scale(1.35)"></g>
+                </svg>
+                <span class="tag shot__badge">Ilustrace</span>
+                <span class="shot__zoom"><svg class="icon" aria-hidden="true"><use href="#i-zoom"/></svg></span>
+              </span>
+              <span class="shot__body"><span class="shot__title">Interiérové práce</span><span class="shot__text">Malování stropů, štukování nebo výměna světel. Kolečka šetří podlahu.</span></span>
+            </button>
+
+            <!-- Výměna oken -->
+            <button type="button" class="shot" data-reveal>
+              <span class="shot__media">
+                <svg viewBox="0 0 400 280" role="img" aria-label="Ilustrace: lešení Mobilo vedle velkého okna při jeho výměně">
+                  <rect width="400" height="280" fill="#e8dfd0"/>
+                  <rect x="140" y="46" width="150" height="128" fill="url(#g-sky)" stroke="#fff" stroke-width="9"/>
+                  <path d="M215 46v128M140 110h150" stroke="#fff" stroke-width="6"/>
+                  <rect x="126" y="176" width="178" height="9" fill="#cfc6b3"/>
+                  <rect x="320" y="150" width="62" height="82" fill="#9fd0e0" fill-opacity=".55" stroke="#fff" stroke-width="6"/><path d="M351 150v82" stroke="#fff" stroke-width="4"/>
+                  <rect y="232" width="400" height="48" fill="#c9d3d9"/><line x1="0" y1="232" x2="400" y2="232" stroke="#7b8c96" stroke-width="2"/>
+                  <g data-scaffold data-model="800" data-step="2" data-length="2.6" data-person transform="translate(72 232) scale(.8)"></g>
+                </svg>
+                <span class="tag shot__badge">Ilustrace</span>
+                <span class="shot__zoom"><svg class="icon" aria-hidden="true"><use href="#i-zoom"/></svg></span>
+              </span>
+              <span class="shot__body"><span class="shot__title">Výměna oken a žaluzií</span><span class="shot__text">Stabilní plošina vedle okna, ze které dosáhnete na rám i parapet.</span></span>
+            </button>
+
+            <!-- Hala, sklad, garáž -->
+            <button type="button" class="shot" data-reveal style="--d:.08s">
+              <span class="shot__media">
+                <svg viewBox="0 0 400 280" role="img" aria-label="Ilustrace: lešení Mobilo ve skladu při výměně svítidla pod stropem">
+                  <rect width="400" height="280" fill="#dfe5e9"/>
+                  <rect y="16" width="400" height="202" fill="#cfd8de"/>
+                  <g stroke="#bcc8d0" stroke-width="2"><path d="M20 16V218M40 16V218M60 16V218M80 16V218M100 16V218M120 16V218M140 16V218M160 16V218M180 16V218M200 16V218M220 16V218M240 16V218M260 16V218M280 16V218M300 16V218M320 16V218M340 16V218M360 16V218M380 16V218"/></g>
+                  <path d="M0 16L200 0L400 16" fill="none" stroke="#55616c" stroke-width="5"/><rect y="14" width="400" height="7" fill="#55616c"/>
+                  <g><path d="M200 21V38M80 21V38M320 21V38" stroke="#55616c" stroke-width="2"/>
+                    <path d="M200 38l-16 10h32zM80 38l-16 10h32zM320 38l-16 10h32z" fill="#ffe9a8"/>
+                    <path d="M184 48L152 120h96L216 48z" fill="#ffe9a8" opacity=".28"/></g>
+                  <g><rect x="12" y="84" width="6" height="134" fill="#3f8fb5"/><rect x="70" y="84" width="6" height="134" fill="#3f8fb5"/>
+                    <rect x="12" y="110" width="64" height="6" fill="#f2a33a"/><rect x="12" y="150" width="64" height="6" fill="#f2a33a"/><rect x="12" y="190" width="64" height="6" fill="#f2a33a"/>
+                    <rect x="20" y="124" width="22" height="26" fill="#c9a36a"/><rect x="46" y="130" width="22" height="20" fill="#d6b77f"/><rect x="24" y="164" width="30" height="26" fill="#d6b77f"/></g>
+                  <g><rect x="326" y="84" width="6" height="134" fill="#3f8fb5"/><rect x="384" y="84" width="6" height="134" fill="#3f8fb5"/>
+                    <rect x="326" y="110" width="64" height="6" fill="#f2a33a"/><rect x="326" y="150" width="64" height="6" fill="#f2a33a"/><rect x="326" y="190" width="64" height="6" fill="#f2a33a"/>
+                    <rect x="334" y="126" width="30" height="24" fill="#d6b77f"/><rect x="340" y="164" width="24" height="26" fill="#c9a36a"/></g>
+                  <rect y="218" width="400" height="62" fill="#b7c1c8"/><path d="M0 252H400" stroke="#ffb422" stroke-width="3" stroke-dasharray="14 10"/>
+                  <g data-scaffold data-model="1400" data-step="5" data-length="2.6" data-person transform="translate(200 236) scale(.56)"></g>
+                </svg>
+                <span class="tag shot__badge">Ilustrace</span>
+                <span class="shot__zoom"><svg class="icon" aria-hidden="true"><use href="#i-zoom"/></svg></span>
+              </span>
+              <span class="shot__body"><span class="shot__title">Garáž, dílna a sklad</span><span class="shot__text">Výměna svítidel, údržba rozvodů nebo úklid vysokých regálů.</span></span>
+            </button>
+
+            <!-- Zahrada -->
+            <button type="button" class="shot" data-reveal style="--d:.16s">
+              <span class="shot__media">
+                <svg viewBox="0 0 400 280" role="img" aria-label="Ilustrace: lešení Mobilo na zahradě vedle stromu a pergoly">
+                  <rect width="400" height="280" fill="url(#g-sky)"/>
+                  <circle cx="64" cy="52" r="26" fill="#ffd66b" opacity=".85"/>
+                  <g fill="#8a6a4a"><rect x="40" y="96" width="9" height="136"/><rect x="170" y="96" width="9" height="136"/><rect x="30" y="86" width="160" height="10"/></g>
+                  <g fill="#8a6a4a"><rect x="36" y="72" width="6" height="16"/><rect x="66" y="72" width="6" height="16"/><rect x="96" y="72" width="6" height="16"/><rect x="126" y="72" width="6" height="16"/><rect x="156" y="72" width="6" height="16"/><rect x="180" y="72" width="6" height="16"/></g>
+                  <rect x="334" y="120" width="14" height="112" fill="#8a6a4a"/>
+                  <g fill="#5fae6e"><circle cx="341" cy="96" r="44"/><circle cx="310" cy="124" r="30"/><circle cx="376" cy="122" r="28"/></g>
+                  <rect y="232" width="400" height="48" fill="#a4cf93"/><line x1="0" y1="232" x2="400" y2="232" stroke="#7fb06f" stroke-width="2"/>
+                  <g data-scaffold data-model="800" data-step="1" data-length="2.6" data-person transform="translate(262 232) scale(.95)"></g>
+                </svg>
+                <span class="tag shot__badge">Ilustrace</span>
+                <span class="shot__zoom"><svg class="icon" aria-hidden="true"><use href="#i-zoom"/></svg></span>
+              </span>
+              <span class="shot__body"><span class="shot__title">Zahrada a dvůr</span><span class="shot__text">Prořezávání stromů, nátěr pergoly nebo plotu. Na rovné zpevněné ploše.</span></span>
+            </button>
+          </div>
+        </div>
+
+        <p class="gallery-note" data-reveal>Obrázky jsou ilustrace vytvořené pro tento web. Jde o zástupné scény, které můžete nahradit vlastními fotografiemi.</p>
+      </div>
+    </section>
+
+
+    <!-- =====================================================================
+         5. KE STAŽENÍ
+         ===================================================================== -->
+    <section class="section" id="stazeni" aria-labelledby="stazeni-nadpis">
+      <div class="container">
+        <div class="download" data-reveal>
+          <div>
+            <p class="kicker">Ke stažení</p>
+            <h2 id="stazeni-nadpis">Oficiální technický katalog Mobilo</h2>
+            <p>V katalogu najdete všechny podrobnosti, které jsme na webu zjednodušili. Je to ověřený zdroj údajů přímo od výrobce.</p>
+            <ul class="download__list">
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span>Kusovníky lešení pro pracovní výšky od 3,5 do 14 m</span></li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span>Tabulky přitížení pro Mobilo 800 i Mobilo 1400</span></li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span>Rozměry a hmotnosti všech dílů</span></li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span>Návod na montáž a pravidla bezpečného použití</span></li>
+            </ul>
+            <div class="download__cta">
+              <a class="btn btn--primary btn--lg" href="https://www.scafom-rux.ch/files/default/public/companies/de/downloads/details/SMART_DETAILS_MOBILO_v16_2_scr.pdf" target="_blank" rel="noopener noreferrer">
+                <svg class="icon" aria-hidden="true"><use href="#i-download"/></svg>Stáhnout PDF katalog <span class="visually-hidden">(otevře se v novém okně)</span>
+              </a>
+              <a class="btn btn--ghost btn--lg" href="https://www.scafom-rux.ch/de/rollgerueste" target="_blank" rel="noopener noreferrer">
+                Přehled produktů u výrobce <svg class="icon" aria-hidden="true"><use href="#i-external"/></svg><span class="visually-hidden">(otevře se v novém okně)</span>
+              </a>
+            </div>
+            <p class="download__meta">PDF · 56 stran · asi 12 MB · v němčině (originál výrobce) · stav 07/2018. Aktuální informace si prosím ověřte u výrobce.</p>
+          </div>
+
+          <!-- Ilustrační „obálka“ dokumentu -->
+          <div class="doc" aria-hidden="true">
+            <span class="doc__bar"></span>
+            <span class="doc__title">MOBILO</span>
+            <span class="doc__sub">Technický katalog</span>
+            <span class="doc__art"><svg class="icon"><use href="#i-ladder"/></svg></span>
+            <span class="doc__line"></span><span class="doc__line"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- =====================================================================
+         ČASTÉ DOTAZY
+         ===================================================================== -->
+    <section class="section section--snow" id="dotazy" aria-labelledby="dotazy-nadpis">
+      <div class="container">
+        <header class="section__head section__head--center" data-reveal>
+          <p class="kicker">Časté dotazy</p>
+          <h2 id="dotazy-nadpis">Co se lidé ptají nejčastěji</h2>
+        </header>
+
+        <div class="faq" data-reveal>
+          <details>
+            <summary>Zvládnu lešení Mobilo postavit sám? <svg class="icon" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+            <div class="faq__answer"><p>Jednotlivé díly jsou lehké a skládají se bez nářadí. Výrobce ale uvádí, že montáž a demontáž mají provádět nejméně dvě osoby, které se seznámily s návodem. U vyšších sestav proto počítejte s pomocníkem a pečlivě sledujte pokyny.</p></div>
+          </details>
+          <details>
+            <summary>Jak vysoko se dostanu? <svg class="icon" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+            <div class="faq__answer"><p>Pracovní výška je 3,5 až 14 m uvnitř budov a 3,5 až 10 m venku. Pracovní výška je výška, kam dosáhnete rukama. Je zhruba o 2 m větší než výška podlahy, na které stojíte.</p></div>
+          </details>
+          <details>
+            <summary>K čemu je přitížení a kdy ho potřebuji? <svg class="icon" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+            <div class="faq__answer"><p>Lešení se stabilizuje závažími nebo teleskopickými rameny na jízdních nosnících. Při plně vysunutých ramenech se závaží nepoužívají. Přesný počet závaží najdete v tabulkách v katalogu podle výšky a podle toho, zda pracujete uvnitř, nebo venku.</p></div>
+          </details>
+          <details>
+            <summary>Můžu s lešením jezdit, když na něm někdo stojí? <svg class="icon" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+            <div class="faq__answer"><p>Ne. Při přejíždění nesmí být na lešení žádní lidé ani materiál. Jezděte pomalu a po zastavení vždy znovu zabrzděte všechna kolečka a zkontrolujte, že lešení stojí rovně.</p></div>
+          </details>
+          <details>
+            <summary>Hodí se Mobilo dovnitř i ven? <svg class="icon" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+            <div class="faq__answer"><p>Ano. Venku je ale nižší nejvyšší pracovní výška (10 m) a při silném větru musíte lešení opustit. Kolečka 10 kN jsou určena pro venkovní i vnitřní použití, lehčí kolečka 5 kN jsou vhodná pro citlivé podlahy.</p></div>
+          </details>
+          <details>
+            <summary>Z čeho je Mobilo vyrobeno? <svg class="icon" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+            <div class="faq__answer"><p>Hlavní díly jsou z hliníku, takže jsou lehké. Podvozek (jízdní nosníky a teleskopická ramena) je z pozinkované oceli. Plošiny mají hliníkový rám a vodovzdornou překližku.</p></div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+
+  <!-- =======================================================================
+       6. PATIČKA
+       ======================================================================= -->
+  <footer class="site-footer">
+    <div class="container footer__main">
+      <div>
+        <a class="logo" href="#uvod" aria-label="Mobilo – nahoru na úvod">
+          <span class="logo__mark"><svg class="icon" aria-hidden="true"><use href="#i-ladder"/></svg></span>
+          <span class="logo__text"><span class="logo__name">MOBILO</span><span class="logo__sub">pojízdné lešení</span></span>
+        </a>
+        <p>Mobilo je systém hliníkového pojízdného lešení od evropského výrobce Scafom-Rux. Na tomto webu jsme jeho komponenty a parametry shrnuli srozumitelně pro domácí uživatele.</p>
+      </div>
+
+      <div>
+        <h3>Navigace</h3>
+        <ul class="footer__list">
+          <li><a href="#vyhody">Výhody</a></li>
+          <li><a href="#komponenty">Komponenty</a></li>
+          <li><a href="#montaz">Montáž a bezpečnost</a></li>
+          <li><a href="#parametry">Technické parametry</a></li>
+          <li><a href="#galerie">Galerie</a></li>
+          <li><a href="#stazeni">Ke stažení</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3>Zdroje a výrobce</h3>
+        <ul class="footer__list">
+          <li><svg class="icon" aria-hidden="true"><use href="#i-external"/></svg><a href="https://www.scafom-rux.ch/de/rollgerueste" target="_blank" rel="noopener noreferrer">Výrobce Scafom-Rux – pojízdná lešení</a></li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-external"/></svg><a href="https://www.scafom-rux.ch/files/default/public/companies/de/downloads/details/SMART_DETAILS_MOBILO_v16_2_scr.pdf" target="_blank" rel="noopener noreferrer">Technický katalog Mobilo (PDF)</a></li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-external"/></svg><a href="https://geruest-welt.de/Produkte-Geruest-Welt/Rollgeruest/Einzelteile-Zubehoer/Einzelteile-Rux-Mobilo/?pgNr=1" target="_blank" rel="noopener noreferrer">Přehled jednotlivých dílů Mobilo</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3>Kontakt <span class="placeholder-mark">zástupný text</span></h3>
+        <ul class="footer__list">
+          <li><svg class="icon" aria-hidden="true"><use href="#i-phone"/></svg><a href="tel:+420000000000">+420 000 000 000</a></li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg><a href="mailto:kontakt@example.com">kontakt@example.com</a></li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg><span>Ulice 123, 000 00 Město</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer__bottom">
+      <div class="container">
+        <p>© <span id="rok">2026</span> · Informativní web o systému Mobilo. Obsah vychází z technického katalogu výrobce Scafom-Rux (stav 07/2018) a ze zdrojů uvedených výše. Údaje jsou orientační, pro montáž vždy použijte aktuální návod výrobce.</p>
+        <p>Názvy Mobilo a Scafom-Rux patří jejich vlastníkům. Ilustrace na webu jsou vlastní zástupné kresby.</p>
+      </div>
+    </div>
+  </footer>
+
+
+  <!-- Tlačítko zpět nahoru -->
+  <button class="to-top" type="button" aria-label="Zpět nahoru"><svg class="icon" aria-hidden="true"><use href="#i-up"/></svg></button>
+
+  <!-- Lightbox galerie (nativní <dialog>) -->
+  <dialog class="lightbox" id="lightbox" aria-label="Zvětšený obrázek galerie">
+    <button type="button" class="icon-btn lightbox__close" aria-label="Zavřít"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
+    <div class="lightbox__media"></div>
+    <div class="lightbox__bar">
+      <div class="lightbox__caption"><h3></h3><p></p></div>
+      <div class="lightbox__nav">
+        <button type="button" class="icon-btn lightbox__prev" aria-label="Předchozí obrázek"><svg class="icon" aria-hidden="true"><use href="#i-prev"/></svg></button>
+        <button type="button" class="icon-btn lightbox__next" aria-label="Další obrázek"><svg class="icon" aria-hidden="true"><use href="#i-next"/></svg></button>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="assets/js/main.js" defer></script>
+</body>
+</html>
