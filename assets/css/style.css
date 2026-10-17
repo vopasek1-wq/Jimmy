@@ -194,8 +194,14 @@ a:hover { text-decoration-thickness: 2px; }
 .topbar a:hover { color: var(--c-accent); }
 .topbar__links { display: none; gap: 24px; }
 
+/* Pruh nad hlavičkou pod systémovou lištou telefonu (na počítači má nulovou výšku) */
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto; z-index: 120;
+  height: env(safe-area-inset-top, 0px); background: var(--c-white);
+}
+
 .site-header {
-  position: sticky; top: 0; z-index: 100;
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 100;
   background: rgba(255, 255, 255, .97);
   -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--c-line);
@@ -620,7 +626,7 @@ a:hover { text-decoration-thickness: 2px; }
 .placeholder-mark { padding: 1px 6px; border-radius: 3px; background: rgba(255, 180, 34, .16); color: #ffcf70; font-size: .75rem; }
 
 .to-top {
-  position: fixed; right: 18px; bottom: 18px; z-index: 90; display: grid; place-items: center; width: 48px; height: 48px;
+  position: fixed; right: calc(18px + env(safe-area-inset-right, 0px)); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 90; display: grid; place-items: center; width: 48px; height: 48px;
   color: var(--c-ink); background: var(--c-accent); border: 0; border-radius: 50%; cursor: pointer;
   box-shadow: 0 8px 20px rgba(30, 34, 38, .28);
   opacity: 0; visibility: hidden; transform: translateY(12px);
