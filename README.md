@@ -37,7 +37,7 @@ s `.exe`. Pro zkoušení lze složku přesměrovat proměnnou prostředí `TIPST
 ## Ovládání
 
 Levé menu: **Přehled** (tabulka tipů, detail a úspěšnost; rozložení lze upravit), **Tipy** (tabulka a detail
-přes celou plochu) a **Historie**. Stav zdrojů se ukazuje jen v pruhu nahoře, když nějaký selže.
+přes celou plochu), **Živé zápasy** (právě hrané zápasy ze SofaScore; po kliknutí hřiště se střelami, momentum zápasu, branky a karty a statistiky; obnovuje se každých 30 s) a **Historie**. Stav zdrojů se ukazuje jen v pruhu nahoře, když nějaký selže.
 
 * **Dnes / Zítra / Dnes a zítra / Vše**, *Skrýt zahájené* a *Potvrzené Forebetem* – filtry nad tabulkou
   (volba se pamatuje).
@@ -117,7 +117,7 @@ Potřebujete Node.js 22+ (aplikace používá vestavěné `node:sqlite` z Electr
 cd desktop
 npm install
 npm start          :: spustí aplikaci
-npm test           :: 75 testů (parsery, filtry, databáze, pipeline, HTTP)
+npm test           :: 82 testů (parsery, filtry, databáze, pipeline, HTTP)
 npm run dist       :: portable .exe do desktop\dist (na Windows)
 ```
 

@@ -129,7 +129,7 @@
     `<div class="stat ${cls}"><div class="stat__value">${esc(value)}</div><div class="stat__label" title="${esc(label)}">${esc(label)}</div></div>`;
 
   /* ---------- Navigace ---------- */
-  const VIEWS = ["overview", "tips", "history"];
+  const VIEWS = ["overview", "tips", "live", "history"];
   const showView = (view) => {
     if (!VIEWS.includes(view)) view = "overview";
     app.dataset.view = view;
@@ -143,6 +143,8 @@
     window.scrollTo(0, 0);
     try { sessionStorage.setItem("tips:view", view); } catch { /* bez úložiště */ }
     if (view === "history") loadHistory();
+    if (view === "live") startLive();
+    else stopLive();
   };
 
   $$(".nav__link").forEach((link) => {
@@ -718,6 +720,180 @@
     await loadHistory();
     loadMini();
   });
+
+
+  /* ---------- Živé zápasy (SofaScore) ---------- */
+  const live = { list: [], all: store.get("live-all") === true, selected: null, detail: null, timer: 0, error: null, loaded: false };
+  const liveListEl = $("#live-list");
+  const liveDetailEl = $("#live-detail");
+
+  const tipsOfMatch = (id) => (state.payload?.tips || []).filter((t) => t.sofascoreId === id);
+
+  function renderLiveList() {
+    $("#live-all").setAttribute("aria-pressed", String(live.all));
+    const shown = live.all ? live.list : live.list.filter((m) => m.tracked);
+    $("#live-note").textContent = live.loaded ? `${shown.length} ${shown.length === 1 ? "zápas" : shown.length < 5 && shown.length ? "zápasy" : "zápasů"}` : "";
+    if (!shown.length) {
+      liveListEl.innerHTML = `<p class="empty">${esc(live.error ? `Živé zápasy se nepodařilo načíst: ${live.error}` : !live.loaded ? "Načítám živé zápasy…"
+        : live.all ? "Právě se nehraje žádný zápas." : "Právě se nehraje žádný zápas ve sledovaných soutěžích. Zkus „Všechny soutěže“.")}</p>`;
+      return;
+    }
+    let group = "";
+    liveListEl.innerHTML = shown.map((m) => {
+      const head = `${m.country} – ${m.tournament}`;
+      const title = head !== group ? `<h3 class="live-group">${esc(head)}</h3>` : "";
+      group = head;
+      const tips = tipsOfMatch(m.id);
+      return `${title}<button type="button" class="live-row${m.id === live.selected ? " is-selected" : ""}" data-id="${m.id}">
+        <span class="live-row__min"><i class="live-dot"></i>${esc(m.minute)}</span>
+        <span class="live-row__teams"><span>${esc(m.home)}</span><span>${esc(m.away)}</span></span>
+        <span class="live-row__score"><span>${m.homeScore}</span><span>${m.awayScore}</span></span>
+        ${tips.length ? `<span class="live-row__tip">Tip: ${esc(tips.map((t) => t.tipLabel).join(", "))}</span>` : ""}</button>`;
+    }).join("");
+  }
+
+  const PITCH_LINES = `<g fill="none" stroke="rgba(255,255,255,.75)" stroke-width=".35">
+    <rect x=".3" y=".3" width="104.4" height="67.4"/><line x1="52.5" y1=".3" x2="52.5" y2="67.7"/><circle cx="52.5" cy="34" r="9.15"/>
+    <rect x=".3" y="13.84" width="16.5" height="40.32"/><rect x=".3" y="24.84" width="5.5" height="18.32"/>
+    <rect x="88.2" y="13.84" width="16.5" height="40.32"/><rect x="99.2" y="24.84" width="5.5" height="18.32"/></g>
+    <g fill="rgba(255,255,255,.75)"><circle cx="52.5" cy="34" r=".5"/><circle cx="11" cy="34" r=".5"/><circle cx="94" cy="34" r=".5"/></g>`;
+
+  /** Hřiště se střelami: domácí útočí doprava, hosté doleva. */
+  function pitchSvg(shots) {
+    const stripes = Array.from({ length: 10 }, (_, i) => `<rect x="${i * 10.5}" y="0" width="10.5" height="68" fill="${i % 2 ? "#3d7a3a" : "#43853f"}"/>`).join("");
+    const dots = shots.slice().sort((a, b) => (a.type === "goal") - (b.type === "goal")).map((sh) => {
+      const dist = (sh.x / 100) * 105;
+      const cx = sh.home ? 105 - dist : dist;
+      const cy = (sh.y / 100) * 68;
+      const color = sh.home ? "#36b5f4" : "#ff6b6b";
+      const names = { goal: "gól", save: "na bránu", miss: "mimo", block: "zablokovaná", post: "tyč" };
+      const tip = `${sh.minute ?? "?"}' ${sh.player} – ${names[sh.type] || sh.type}${sh.xg !== null ? `, xG ${nf2.format(sh.xg)}` : ""}`;
+      const shape = sh.type === "goal"
+        ? `<circle cx="${cx}" cy="${cy}" r="2.1" fill="#fff" stroke="${color}" stroke-width=".9"/><circle cx="${cx}" cy="${cy}" r=".8" fill="#222"/>`
+        : sh.type === "save"
+          ? `<circle cx="${cx}" cy="${cy}" r="1.4" fill="${color}" stroke="#fff" stroke-width=".35"/>`
+          : `<circle cx="${cx}" cy="${cy}" r="1.2" fill="none" stroke="${color}" stroke-width=".55"${sh.type === "block" ? ' stroke-dasharray=".8 .5"' : ""}/>`;
+      return `<g><title>${esc(tip)}</title>${shape}</g>`;
+    }).join("");
+    return `<svg class="pitch" viewBox="0 0 105 68" role="img" aria-label="Střely na hřišti">${stripes}${PITCH_LINES}${dots}</svg>`;
+  }
+
+  /** Momentum: nad osou tlak domácích, pod ní hostů; červená čára = aktuální minuta, dole branky. */
+  function momentumSvg(graph, incidents) {
+    if (!graph.length) return '<p class="empty">Momentum zatím není k dispozici.</p>';
+    const W = 300;
+    const last = graph[graph.length - 1].m;
+    const span = Math.max(90, last);
+    const X = (m) => (m / span) * W;
+    const maxAbs = Math.max(60, ...graph.map((p) => Math.abs(p.v)));
+    const k = 38 / maxAbs;
+    const area = (sign) => {
+      const pts = graph.map((p) => `${X(p.m).toFixed(1)},${(40 - sign * Math.max(0, sign * p.v) * k).toFixed(1)}`);
+      return `M${X(graph[0].m).toFixed(1)},40 L${pts.join(" L")} L${X(last).toFixed(1)},40 Z`;
+    };
+    const goals = incidents.filter((i) => i.kind === "goal").map((g) =>
+      `<circle cx="${X(g.minute).toFixed(1)}" cy="86" r="3.2" fill="#fff" stroke="${g.home ? "#36b5f4" : "#ff6b6b"}" stroke-width="1.2"><title>${g.minute}' ${esc(g.player)}</title></circle>`).join("");
+    return `<svg class="momentum" viewBox="0 0 ${W} 92" role="img" aria-label="Momentum zápasu">
+      <rect x="0" y="0" width="${W}" height="40" fill="rgba(43,210,107,.10)"/><rect x="0" y="40" width="${W}" height="40" fill="rgba(59,143,240,.12)"/>
+      <path d="${area(1)}" fill="rgba(43,210,107,.75)"/><path d="${area(-1)}" fill="rgba(59,143,240,.8)"/>
+      <line x1="0" y1="40" x2="${W}" y2="40" stroke="rgba(255,255,255,.25)" stroke-width=".5"/>
+      <line x1="${X(45)}" y1="0" x2="${X(45)}" y2="80" stroke="rgba(255,255,255,.18)" stroke-width=".5" stroke-dasharray="2 2"/>
+      <line x1="${X(last).toFixed(1)}" y1="0" x2="${X(last).toFixed(1)}" y2="80" stroke="#ff3b3b" stroke-width="1.2"/>${goals}</svg>`;
+  }
+
+  function eventsHtml(incidents) {
+    if (!incidents.length) return '<p class="empty">Zatím žádné branky ani karty.</p>';
+    const text = (i) => {
+      if (i.kind === "goal") {
+        const score = i.homeScore !== null ? ` (${i.homeScore}:${i.awayScore})` : "";
+        return `⚽ ${esc(i.player)}${i.own ? " (vlastní)" : i.penalty ? " (pen.)" : ""}${score}`;
+      }
+      return `<i class="card-mark card-mark--${i.kind}"></i>${esc(i.player)}`;
+    };
+    return `<ul class="events">${incidents.map((i) => `<li><span class="ev-home">${i.home ? text(i) : ""}</span><span class="ev-min">${i.minute}'</span><span>${i.home ? "" : text(i)}</span></li>`).join("")}</ul>`;
+  }
+
+  function statsHtml(stats) {
+    if (!stats.length) return '<p class="empty">Statistiky zatím nejsou k dispozici.</p>';
+    return stats.map((st) => {
+      const h = st.homeValue ?? 0;
+      const a = st.awayValue ?? 0;
+      const total = h + a || 1;
+      return `<div class="stat-line"><div class="stat-line__caption"><span>${esc(st.home)}</span><b>${esc(st.label)}</b><span>${esc(st.away)}</span></div>
+        <div class="stat-line__bar"><i class="h" style="flex:${h / total} 1 0"></i><i class="a" style="flex:${a / total} 1 0"></i></div></div>`;
+    }).join("");
+  }
+
+  function renderLiveDetail() {
+    const m = live.list.find((x) => x.id === live.selected);
+    $("#live-open").hidden = !m;
+    if (!m) {
+      liveDetailEl.innerHTML = '<p class="detail__empty">Vyber zápas vlevo – ukážu momentum, střely na hřišti, branky a statistiky ze SofaScore.</p>';
+      return;
+    }
+    $("#live-open").dataset.url = m.url;
+    const d = live.detail && live.detail.id === m.id ? live.detail : null;
+    const head = `<div class="live-head"><div class="live-head__team">${esc(m.home)}</div><div class="live-head__score">${m.homeScore} : ${m.awayScore}</div><div class="live-head__team">${esc(m.away)}</div>
+      <div class="live-head__meta"><i class="live-dot"></i><span>${esc(m.minute)}</span><span>${esc(m.country)} – ${esc(m.tournament)}</span></div></div>`;
+    if (!d) {
+      liveDetailEl.innerHTML = `${head}<p class="empty">${esc(live.detailError || "Načítám podrobnosti…")}</p>`;
+      return;
+    }
+    const homeShots = d.shots.filter((s) => s.home).length;
+    liveDetailEl.innerHTML = `${head}
+      <div class="live-box"><div class="live-box__title">Hřiště – střely<small>domácí ${homeShots} · hosté ${d.shots.length - homeShots}</small></div>${pitchSvg(d.shots)}
+        <div class="pitch-legend"><span><i style="background:#fff"></i>gól</span><span><i style="background:var(--text-2)"></i>na bránu</span><span><i></i>mimo</span><span><i style="border-style:dashed"></i>zablokovaná</span><span style="color:#36b5f4">● domácí</span><span style="color:#ff6b6b">● hosté</span></div></div>
+      <div class="live-box"><div class="live-box__title">Momentum zápasu</div>${momentumSvg(d.graph, d.incidents)}
+        <div class="momentum-teams"><span>▲ ${esc(m.home)}</span><span>▼ ${esc(m.away)}</span></div></div>
+      <div class="live-box"><div class="live-box__title">Branky a karty</div>${eventsHtml(d.incidents)}</div>
+      <div class="live-box"><div class="live-box__title">Statistiky</div>${statsHtml(d.stats)}</div>`;
+    renderIcons();
+  }
+
+  async function loadLiveDetail() {
+    const id = live.selected;
+    if (!desktop || id === null) return;
+    const res = await desktop.live.detail(id);
+    if (id !== live.selected) return; // mezitím vybrán jiný zápas
+    if (res.ok) { live.detail = { id, ...res.data }; live.detailError = null; } else live.detailError = res.error;
+    renderLiveDetail();
+  }
+
+  async function loadLiveList() {
+    if (!desktop) return;
+    const res = await desktop.live.list();
+    live.loaded = true;
+    if (res.ok) { live.list = res.data; live.error = null; } else live.error = res.error;
+    if (live.selected !== null && !live.list.some((m) => m.id === live.selected)) { live.selected = null; live.detail = null; }
+    renderLiveList();
+    renderLiveDetail();
+  }
+
+  function startLive() {
+    stopLive();
+    renderLiveList();
+    renderLiveDetail();
+    loadLiveList().then(loadLiveDetail);
+    live.timer = setInterval(() => { loadLiveList().then(loadLiveDetail); }, 30e3);
+  }
+  function stopLive() { clearInterval(live.timer); live.timer = 0; }
+
+  liveListEl.addEventListener("click", (e) => {
+    const row = e.target.closest(".live-row");
+    if (!row) return;
+    live.selected = Number(row.dataset.id);
+    live.detail = null;
+    live.detailError = null;
+    renderLiveList();
+    renderLiveDetail();
+    loadLiveDetail();
+  });
+  $("#live-all").addEventListener("click", () => {
+    live.all = !live.all;
+    store.set("live-all", live.all);
+    renderLiveList();
+  });
+  $("#live-open").addEventListener("click", (e) => openExternal(e.currentTarget.dataset.url));
 
   /* ---------- Vykreslení všeho ---------- */
   function renderAll() {

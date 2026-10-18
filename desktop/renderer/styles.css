@@ -395,8 +395,12 @@ i[data-lucide],
 
 /* Mimo Přehled se mřížka chová jako obyčejné rozvržení: Tipy vlevo, Detail vpravo. */
 .pages { display: none; padding: 8px; }
-.app[data-view="history"] .pages { display: block; }
-.app[data-view="history"] .board { display: none; }
+.app[data-view="history"] .pages,
+.app[data-view="live"] .pages { display: block; }
+.app[data-view="history"] .board,
+.app[data-view="live"] .board { display: none; }
+.app[data-view="live"] .page-history,
+.app[data-view="history"] .live-page { display: none; }
 
 .app[data-view="tips"] .board {
   display: grid;
@@ -716,4 +720,55 @@ i[data-lucide],
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
+
+/* ==========================================================================
+   Živé zápasy
+   ========================================================================== */
+.live-page { display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 16px; height: calc(100dvh - var(--topbar-h) - var(--notice-h, 0px) - 25px); }
+.live-page > .card { min-height: 0; overflow: hidden; }
+.live-scroll, .live-detail { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border-3) transparent; }
+.live-detail { margin-top: 12px; padding-right: 4px; }
+.live-group { margin: 14px 0 4px; font-size: 11.5px; letter-spacing: 0.3px; text-transform: uppercase; color: var(--muted); }
+.live-row { display: grid; grid-template-columns: 66px minmax(0, 1fr) auto; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; border-radius: var(--radius-md); text-align: left; transition: background-color 0.16s; }
+.live-row:hover { background: rgba(255, 255, 255, 0.04); }
+.live-row.is-selected { background: var(--accent-deep); }
+.live-row__min { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 500; color: #ff8a8a; white-space: nowrap; }
+.live-row__teams { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 13.5px; }
+.live-row__teams span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.live-row__score { display: flex; flex-direction: column; gap: 2px; align-items: flex-end; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.live-row__tip { grid-column: 2 / 4; font-size: 11.5px; color: var(--accent-bright); }
+.live-head { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 14px; text-align: center; }
+.live-head__team { font-size: 17px; font-weight: 500; overflow-wrap: anywhere; }
+.live-head__score { font-size: 34px; font-weight: 700; letter-spacing: 1px; font-variant-numeric: tabular-nums; }
+.live-head__meta { grid-column: 1 / -1; display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: -4px; font-size: 12.5px; color: var(--muted); }
+.live-head__meta .live-dot { width: 8px; height: 8px; }
+.live-box { margin-top: 16px; padding: 12px 14px 12px; background: var(--panel); border: 1px solid var(--border-2); border-radius: var(--radius-md); }
+.live-box__title { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 13.5px; font-weight: 500; }
+.live-box__title small { font-size: 11.5px; font-weight: 400; color: var(--muted); }
+.pitch { display: block; width: 100%; max-width: 520px; margin: 0 auto; border-radius: 8px; }
+.pitch-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px; font-size: 11.5px; color: var(--muted); }
+.pitch-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.pitch-legend i { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--text-2); }
+.momentum { display: block; width: 100%; }
+.momentum-teams { display: flex; justify-content: space-between; margin-top: 4px; font-size: 11.5px; color: var(--muted); }
+.events { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+.events li { display: grid; grid-template-columns: 1fr 44px 1fr; align-items: center; gap: 8px; }
+.events .ev-min { text-align: center; color: var(--muted); font-variant-numeric: tabular-nums; font-size: 12px; }
+.events .ev-home { text-align: right; }
+.card-mark { display: inline-block; width: 9px; height: 13px; margin: 0 5px -2px; border-radius: 2px; }
+.card-mark--yellow { background: #f5c542; }
+.card-mark--red { background: #ff4d4d; }
+.stat-line { margin-top: 9px; font-size: 12.5px; }
+.stat-line__caption { display: grid; grid-template-columns: 1fr auto 1fr; align-items: baseline; text-align: center; color: var(--text-2); }
+.stat-line__caption b { font-weight: 500; color: var(--text); }
+.stat-line__caption span:first-child { text-align: left; }
+.stat-line__caption span:last-child { text-align: right; }
+.stat-line__bar { display: flex; gap: 3px; height: 5px; margin-top: 3px; }
+.stat-line__bar i { display: block; border-radius: 3px; min-width: 2px; }
+.stat-line__bar .h { background: var(--accent); }
+.stat-line__bar .a { background: #ff6b6b; }
+@media (max-width: 1100px) {
+  .live-page { grid-template-columns: 1fr; height: auto; }
+  .live-page > .card { max-height: 70vh; }
 }

@@ -21,6 +21,10 @@ contextBridge.exposeInMainWorld("desktop", {
     verifyForebet: () => ipcRenderer.invoke("tips:verify-forebet"),
     onProgress: (callback) => ipcRenderer.on("tips:progress", (_event, message) => callback(String(message))),
   },
+  live: {
+    list: () => ipcRenderer.invoke("live:list"),
+    detail: (id) => ipcRenderer.invoke("live:detail", id),
+  },
   history: {
     list: (days) => ipcRenderer.invoke("history:list", days),
     setOutcome: (id, outcome) => ipcRenderer.invoke("history:set-outcome", { id, outcome }),
