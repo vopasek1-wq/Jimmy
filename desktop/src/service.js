@@ -6,6 +6,7 @@ const config = require("./config");
 const { Database } = require("./database");
 const { probabilityClass } = require("./filters");
 const { Pipeline, updateResults } = require("./pipeline");
+const { SofaScoreClient } = require("./scrapers/sofascore");
 const { resultOk } = require("./models");
 const { fmtStamp, localDate, todayLocal } = require("./timeutil");
 
@@ -75,6 +76,28 @@ class TipService {
   }
 
   /** `period` = počet dní, null (vše), nebo { from, to } z kalendáře. */
+  /**
+   * Rychlá aktualizace skóre právě hraných zápasů ze SofaScore (jeden dotaz na ligu a den).
+   * Vrací pole tipů, nebo null, když nic nehraje.
+   */
+  async refreshLive(now = new Date()) {
+    if (this.busy) return null;
+    const all = this.db.tipsOfLatestRun();
+    const HOUR = 3600e3;
+    const active = all.filter((t) => t.status !== "finished" && t.kickoff - now < 10 * 60e3 && now - t.kickoff < 4 * HOUR);
+    if (!active.length) return null;
+    this.busy = true;
+    try {
+      const sofa = new SofaScoreClient(this.http);
+      await sofa.enrich(active, () => {});
+      if (!sofa.requestsOk) return null;
+      for (const t of active) this.db.updateLive(t);
+      return this.db.tipsOfLatestRun().map(serializeTip);
+    } finally {
+      this.busy = false;
+    }
+  }
+
   history(period = null) {
     const range = period && typeof period === "object";
     const tips = range ? this.db.historyRange(period.from || null, period.to || null) : this.db.history(period);

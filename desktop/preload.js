@@ -16,6 +16,7 @@ contextBridge.exposeInMainWorld("desktop", {
 
   tips: {
     cached: () => ipcRenderer.invoke("tips:cached"),
+    live: () => ipcRenderer.invoke("tips:live"),
     refresh: () => ipcRenderer.invoke("tips:refresh"),
     verifyForebet: () => ipcRenderer.invoke("tips:verify-forebet"),
     onProgress: (callback) => ipcRenderer.on("tips:progress", (_event, message) => callback(String(message))),

@@ -204,10 +204,10 @@ test("Pipeline: zítřejší tip bez procent ze Scores24 dostane pravděpodobnos
   assert.deepEqual(r.warnings, []);
 });
 
-test("Pipeline: zítřejší tip bez procent a bez Forebetu se vynechá s varováním", async () => {
+test("Pipeline: zítřejší tip bez procent a bez Forebetu se vynechá", async () => {
   const r = await new Pipeline(tomorrowWeb({ forebetError: new SourceError("Forebet: Cloudflare kontrola neprošla.") })).run({ now: DAY_BEFORE });
   assert.equal(r.tips.length, 0);
-  assert.ok(r.warnings.some((w) => w.includes("nemá u Scores24 procenta")));
+  assert.ok(!r.warnings.some((w) => w.includes("procenta")));
 });
 
 test("Pipeline: výpadek Forebetu není fatální a objeví se ve varováních", async () => {

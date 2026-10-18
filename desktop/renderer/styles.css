@@ -582,10 +582,14 @@ i[data-lucide],
 .pill--mid { background: var(--yellow-soft); color: var(--yellow); }
 
 .state { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; white-space: nowrap; color: var(--text-2); }
-.state--live { color: var(--accent-bright); }
-.state--live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px rgba(54, 181, 244, 0.8); animation: pulse 1.6s ease-in-out infinite; }
+.state--live { color: #ff8a8a; font-weight: 500; }
+.live-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: #ff3b3b; box-shadow: 0 0 8px rgba(255, 59, 59, 0.9); animation: blink 1s ease-in-out infinite; }
+.score { font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; letter-spacing: 0.3px; }
+.trow.is-live td { background: rgba(255, 59, 59, 0.06); }
+.trow.is-live.is-selected td { background: var(--accent-deep); }
 .state--done { color: var(--faint); }
-@keyframes pulse { 50% { opacity: 0.35; } }
+.state--done .score { color: var(--text-2); }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.15; } }
 
 .empty { padding: 28px 8px; text-align: center; font-size: 13px; color: var(--muted); }
 

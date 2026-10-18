@@ -165,9 +165,7 @@ class Pipeline {
     }
 
     // 3) sloučení + povinné filtry
-    const combined = combine(s24, forebet, now);
-    const noPercent = combined.filter((t) => t.probability === null).length; // zítřejší tipy, které nikdo neohodnotil
-    let tips = applyFilters(combined);
+    let tips = applyFilters(combine(s24, forebet, now));
 
     // 4) SofaScore – přesný čas, stav, skóre
     const sofa = new SofaScoreClient(this.http);
@@ -180,11 +178,7 @@ class Pipeline {
     }
 
     result.tips = tips.sort((a, b) => a.kickoff - b.kickoff || b.probability - a.probability);
-    this._finish(result);
-    if (noPercent) {
-      result.warnings.push(`${noPercent} tipů (hlavně na zítřek) nemá u Scores24 procenta a Forebet je nedoplnil – nejsou v seznamu.`);
-    }
-    return result;
+    return this._finish(result);
   }
 
   _finish(result) {

@@ -100,6 +100,7 @@ const safe = (fn) => async (...args) => {
 };
 
 ipcMain.handle("tips:cached", safe(() => service.loadCached()));
+ipcMain.handle("tips:live", safe(() => service.refreshLive()));
 ipcMain.handle("tips:refresh", safe((event) => service.refresh(progressTo(event))));
 ipcMain.handle("tips:verify-forebet", safe((event) => service.refresh(progressTo(event), { interactiveForebet: true })));
 ipcMain.handle("history:list", safe((_e, days) => service.history(days ?? null)));

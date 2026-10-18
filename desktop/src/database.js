@@ -128,6 +128,12 @@ class Database {
     }
   }
 
+  /** Aktualizuje stav a skóre rozehraných zápasů (bez nového běhu stahování). */
+  updateLive(t) {
+    this.db.prepare("UPDATE tips SET status=?, home_score=?, away_score=?, sofascore_url=?, sofascore_id=?, updated_at=? WHERE id=?")
+      .run(t.status, t.homeScore ?? null, t.awayScore ?? null, t.sofascoreUrl || "", t.sofascoreId ?? null, new Date().toISOString(), t.id);
+  }
+
   setOutcome(tipId, outcome, source = "manual") {
     this.db.prepare("UPDATE tips SET outcome=?, outcome_source=?, updated_at=? WHERE id=?")
       .run(outcome, outcome ? source : null, new Date().toISOString(), tipId);
