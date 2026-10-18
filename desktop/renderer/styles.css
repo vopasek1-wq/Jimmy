@@ -542,9 +542,7 @@ i[data-lucide],
 .tbl .c-time { white-space: nowrap; color: var(--text-2); font-variant-numeric: tabular-nums; }
 .tbl .c-odds, .tbl .c-fb, .tbl .c-score { font-variant-numeric: tabular-nums; }
 .tbl .c-odds { font-weight: 500; }
-.tbl .c-fb, .tbl .c-src, .tbl .c-league { color: var(--text-2); }
-.tbl .c-src { white-space: nowrap; font-size: 12.5px; }
-.tbl .c-league { white-space: nowrap; }
+.tbl .c-fb { color: var(--text-2); }
 
 .trow { cursor: pointer; transition: background-color 0.16s; }
 .trow td:first-child { box-shadow: inset 3px 0 0 transparent; }
@@ -563,7 +561,7 @@ i[data-lucide],
 .trow:focus-visible { outline-offset: -2px; }
 
 .match { display: block; font-weight: 500; color: #e3eaf2; }
-.match__league { display: none; margin-top: 1px; font-size: 11.5px; font-weight: 400; color: var(--muted); }
+.match__league { display: block; margin-top: 1px; font-size: 11.5px; font-weight: 400; color: var(--muted); }
 .c-tip { color: #e3eaf2; }
 
 .pill {
@@ -590,11 +588,6 @@ i[data-lucide],
 .empty { padding: 28px 8px; text-align: center; font-size: 13px; color: var(--muted); }
 
 /* V užší kartě se skryjí méně důležité sloupce (container queries) */
-@container (max-width: 880px) {
-  .tips .c-src { display: none; }
-  .tips .match__league { display: block; }
-  .tips .c-league { display: none; }
-}
 @container (max-width: 640px) {
   .tips .c-fb { display: none; }
 }

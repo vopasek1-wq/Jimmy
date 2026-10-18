@@ -297,12 +297,10 @@
     return `<tr class="trow is-${t.probClass}${selected ? " is-selected" : ""}${ms.kind === "done" ? " is-done" : ""}" data-key="${esc(key)}" tabindex="${selected ? 0 : -1}" aria-selected="${selected}">
       <td class="c-time">${esc(fmtKickoff(t.kickoff))}</td>
       <td class="c-match"><span class="match">${esc(t.matchName)}</span><span class="match__league">${esc(t.leagueShort)}</span></td>
-      <td class="c-league">${esc(t.league)}</td>
       <td class="c-tip">${esc(t.tipLabel)}</td>
       <td class="c-prob"><span class="pill pill--${t.probClass}">${esc(fmtPct(t.probability))}</span></td>
       <td class="c-odds"${t.oddsEstimated ? ' title="Odhad z pravděpodobnosti – zdroj kurz neuvedl"' : ""}>${esc(fmtOdds(t))}</td>
       <td class="c-fb"${fb === "n/a" ? ' title="Forebet tento trh nehodnotí"' : ""}>${esc(fb)}</td>
-      <td class="c-src">${esc(t.sources.join(" + "))}</td>
       <td class="c-status"><span class="state state--${ms.kind === "live" || ms.kind === "started" ? "live" : ms.kind === "done" ? "done" : "wait"}">${esc(ms.text)}</span></td>
     </tr>`;
   };
@@ -617,13 +615,11 @@
       const sel = t.id === state.hselected;
       return `<tr class="trow${t.outcome ? ` is-${t.outcome}` : ""}${sel ? " is-selected" : ""}" data-key="${esc(t.id)}" tabindex="${sel ? 0 : -1}" aria-selected="${sel}">
         <td class="c-time">${esc(fmtKickoff(t.kickoff))}</td>
-        <td class="c-match"><span class="match">${esc(t.matchName)}</span></td>
-        <td class="c-league">${esc(t.league)}</td>
+        <td class="c-match"><span class="match">${esc(t.matchName)}</span><span class="match__league">${esc(t.leagueShort)}</span></td>
         <td class="c-tip">${esc(t.tipLabel)}</td>
         <td class="c-prob"><span class="pill pill--${t.probClass}">${esc(fmtPct(t.probability))}</span></td>
         <td class="c-odds">${esc(fmtOdds(t))}</td>
         <td class="c-score">${esc(fmtScore(t) || "–")}</td>
-        <td class="c-src">${esc(t.sources.join(" + "))}</td>
         <td class="c-outcome">${outcome}</td></tr>`;
     }).join("");
     if (list.length && !$(`tr[tabindex="0"]`, histBody)) histBody.firstElementChild.tabIndex = 0;
