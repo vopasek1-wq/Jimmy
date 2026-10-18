@@ -32,7 +32,6 @@
           <li><a class="nav__link is-active" href="#" data-view="overview" aria-current="page"><i data-lucide="house"></i><span>Přehled</span></a></li>
           <li><a class="nav__link" href="#" data-view="tips"><i data-lucide="goal"></i><span>Tipy</span></a></li>
           <li><a class="nav__link" href="#" data-view="history"><i data-lucide="history"></i><span>Historie</span></a></li>
-          <li><a class="nav__link" href="#" data-view="sources"><i data-lucide="database"></i><span>Zdroje a pravidla</span></a></li>
         </ul>
       </nav>
     </aside>
@@ -67,7 +66,7 @@
       <!-- Přehled: přizpůsobitelná mřížka (GridStack) – bloky jde přetahovat a měnit jejich velikost -->
       <div class="grid-stack board" id="board">
 
-        <div class="grid-stack-item" gs-id="tips" gs-x="0" gs-y="0" gs-w="15" gs-h="38" gs-min-w="9" gs-min-h="14">
+        <div class="grid-stack-item" gs-id="tips" gs-x="0" gs-y="0" gs-w="15" gs-h="48" gs-min-w="9" gs-min-h="14">
           <div class="grid-stack-item-content">
             <section class="card tips" aria-labelledby="tips-title">
               <header class="card__header">
@@ -111,7 +110,7 @@
           </div>
         </div>
 
-        <div class="grid-stack-item" gs-id="hist" gs-x="0" gs-y="38" gs-w="15" gs-h="10" gs-min-w="8" gs-min-h="8">
+        <div class="grid-stack-item" gs-id="hist" gs-x="15" gs-y="30" gs-w="9" gs-h="18" gs-min-w="6" gs-min-h="8">
           <div class="grid-stack-item-content">
             <section class="card hist-mini" aria-labelledby="hist-title">
               <header class="card__header">
@@ -123,7 +122,7 @@
           </div>
         </div>
 
-        <div class="grid-stack-item" gs-id="detail" gs-x="15" gs-y="0" gs-w="9" gs-h="22" gs-min-w="6" gs-min-h="12">
+        <div class="grid-stack-item" gs-id="detail" gs-x="15" gs-y="0" gs-w="9" gs-h="30" gs-min-w="6" gs-min-h="12">
           <div class="grid-stack-item-content">
             <section class="card detail-card" aria-labelledby="detail-title">
               <header class="card__header">
@@ -134,28 +133,6 @@
           </div>
         </div>
 
-        <div class="grid-stack-item" gs-id="dist" gs-x="15" gs-y="22" gs-w="9" gs-h="13" gs-min-w="6" gs-min-h="9">
-          <div class="grid-stack-item-content">
-            <section class="card dist" aria-labelledby="dist-title">
-              <header class="card__header">
-                <h2 class="card__title" id="dist-title"><i data-lucide="activity"></i>Rozložení</h2>
-              </header>
-              <div class="stat-row stat-row--4" id="dist-stats"></div>
-              <div class="bars" id="dist-bars"></div>
-            </section>
-          </div>
-        </div>
-
-        <div class="grid-stack-item" gs-id="sources" gs-x="15" gs-y="35" gs-w="9" gs-h="13" gs-min-w="5" gs-min-h="8">
-          <div class="grid-stack-item-content">
-            <section class="card sources-mini" aria-labelledby="sources-title">
-              <header class="card__header">
-                <h2 class="card__title" id="sources-title"><i data-lucide="plug-zap"></i>Zdroje dat</h2>
-              </header>
-              <ul class="sources" id="sources-mini"></ul>
-            </section>
-          </div>
-        </div>
       </div>
 
       <!-- Samostatné stránky z levého menu -->
@@ -204,43 +181,6 @@
           <p class="card__foot"><span class="card__foot-text">Výsledky lze zadat ručně, nebo je doplní „Vyhodnotit automaticky“ podle SofaScore (jen běžné trhy; ruční výsledek se nikdy nepřepisuje). Zisk a ROI se počítají při vkladu 1 na tip, jen z tipů se skutečným kurzem.</span></p>
         </section>
 
-        <section class="card page-sources" aria-labelledby="sources-page-title">
-          <header class="card__header">
-            <h2 class="card__title" id="sources-page-title"><i data-lucide="database"></i>Zdroje a pravidla</h2>
-            <span class="card__note" id="data-dir"></span>
-          </header>
-          <div class="sources-grid">
-            <div class="panel">
-              <h3 class="panel__title"><i data-lucide="plug-zap"></i>Stav zdrojů</h3>
-              <ul class="sources sources--wide" id="sources-page"></ul>
-            </div>
-            <div class="panel">
-              <h3 class="panel__title"><i data-lucide="funnel"></i>Jak se tipy filtrují</h3>
-              <ul class="rules">
-                <li>Pravděpodobnost je <strong>větší než 60 %</strong> (přesně 60 % neprojde).</li>
-                <li>Kurz je <strong>alespoň 1,50</strong>. Když zdroj kurz neuvede, odhadne se z pravděpodobnosti (marže 6 %) a v tabulce je označen vlnovkou, např. <span class="mono">~1,52</span>.</li>
-                <li>Soutěž je mezi sledovanými: top 5 lig, Liga mistrů, Evropská a Konferenční liga, Eredivisie, Liga Portugal, belgická Pro League, Süper Lig, skotská Premiership a česká 1. liga.</li>
-                <li>Řádek je <span class="pill pill--high">zelený</span> nad 75 %, <span class="pill pill--mid">žlutý</span> v pásmu 60–75 %.</li>
-              </ul>
-            </div>
-            <div class="panel">
-              <h3 class="panel__title"><i data-lucide="info"></i>Jak číst pravděpodobnost</h3>
-              <ul class="rules">
-                <li><strong>Pravděp.</strong> je údaj ze Scores24 – míra shody jejich tipu, <strong>ne kalibrovaná pravděpodobnost</strong> výsledku. Může být i velmi vysoká, proto je většina řádků zelená.</li>
-                <li><strong>Forebet</strong> je statistický model. Dává jen výsledek zápasu 1 / X / 2 a dvojitou šanci; pro Over/Under a oba týmy skórují hodnotu nemá.</li>
-                <li>Kurzy jsou orientační. <strong>Tipsport</strong> nemá veřejné API, proto je aplikace nestahuje – před vsazením je ověřte přímo u něj.</li>
-              </ul>
-            </div>
-            <div class="panel panel--warn">
-              <h3 class="panel__title"><i data-lucide="shield-alert"></i>Upozornění</h3>
-              <ul class="rules">
-                <li>Hazardní hry jsou jen pro osoby starší 18 let. Sázej jen peníze, které si můžeš dovolit prohrát.</li>
-                <li>Pomoc je zdarma: Národní linka pro odvykání <strong>800 350 000</strong> (všední dny 10–18), <a href="https://www.chciodvykat.cz/odvykani-hrani" data-external>chciodvykat.cz</a>.</li>
-                <li>Tipy nejsou záruka výhry. Zdroje mohou kdykoli změnit strukturu stránek.</li>
-              </ul>
-            </div>
-          </div>
-        </section>
       </div>
 
       <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>

@@ -208,3 +208,39 @@ test("SofaScore: výpadek není fatální", async () => {
   assert.equal(client.requestsOk, 0);
   assert.deepEqual(client.errors, ["HTTP 403"]);
 });
+
+// --- Forebet: pravděpodobnosti gólů na stránce zápasu (struktura NEOVĚŘENÁ – syntetická ukázka) -------------
+const { parseGoals } = require("../src/scrapers/forebet");
+const { goalsProbability } = require("../src/markets");
+
+const goalsPage = `<html><body><script>var over = "Over 2.5 99 %";</script>
+  <div class="prediction"><h3>Over/Under 2.5 goals</h3>
+    <div><span>Under 2.5</span><span>43%</span></div><div><span>Over 2.5</span><span class="b">57%</span></div></div>
+  <div><span>Over 3.5</span> <span>odds 2.40</span> <span>31 %</span></div>
+  <div><h3>Both teams to score</h3><span>Yes</span><span>62%</span><span>No</span><span>38%</span></div>
+</body></html>`;
+
+test("Forebet: pravděpodobnosti gólů ze stránky zápasu", () => {
+  const g = parseGoals(goalsPage);
+  assert.deepEqual(g.over, { "2.5": 57, "3.5": 31 });
+  assert.deepEqual(g.under, { "2.5": 43 });
+  assert.deepEqual(g.btts, { yes: 62, no: 38 });
+});
+
+test("Forebet: stránka bez gólů → null", () => {
+  assert.equal(parseGoals("<html><body><p>Nothing here 1.85</p></body></html>"), null);
+  assert.equal(parseGoals("<html><body>Over 2.5 odds 1.85</body></html>"), null);
+});
+
+test("Forebet: goalsProbability pro BTTS a Over/Under", () => {
+  const g = { over: { "2.5": 57 }, under: { "2.5": 43 }, btts: { yes: 62, no: 38 } };
+  assert.equal(goalsProbability("O2.5", g), 57);
+  assert.equal(goalsProbability("U2.5", g), 43);
+  assert.equal(goalsProbability("O3.5", g), null);
+  assert.equal(goalsProbability("BTTS", g), 62);
+  assert.equal(goalsProbability("NOBTTS", g), 38);
+  assert.equal(goalsProbability("BTTS", { btts: { no: 40 } }), 60); // dopočet z druhé strany
+  assert.equal(goalsProbability("1", g), null);
+  assert.equal(goalsProbability("HO1.5", g), null);
+  assert.equal(goalsProbability("BTTS", null), null);
+});

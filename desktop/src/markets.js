@@ -127,6 +127,23 @@ function forebetProbability(code, p1, px, p2) {
   return Object.prototype.hasOwnProperty.call(table, code) ? table[code] : null;
 }
 
+/**
+ * Pravděpodobnost trhu „góly“ ze stránky zápasu na Forebetu (BTTS a Over/Under celého zápasu);
+ * jinak null. `goals` = { over: {"2.5": 55}, under: {"2.5": 45}, btts: { yes: 52, no: 48 } }.
+ */
+function goalsProbability(code, goals) {
+  if (!goals) return null;
+  const pick = (a, b) => (a ?? null) !== null ? a : ((b ?? null) !== null ? 100 - b : null);
+  if (code === "BTTS") return pick(goals.btts?.yes, goals.btts?.no);
+  if (code === "NOBTTS") return pick(goals.btts?.no, goals.btts?.yes);
+  const m = /^([OU])(\d+(?:\.\d+)?)$/.exec(code);
+  if (!m) return null;
+  const line = String(Number(m[2]));
+  const over = goals.over?.[line];
+  const under = goals.under?.[line];
+  return m[1] === "O" ? pick(over, under) : pick(under, over);
+}
+
 const TOTAL_CODE = /^([HA]?)([OU])(\d+(?:\.\d+)?)$/;
 const AH_CODE = /^AH([12]):([+-]?\d+(?:\.\d+)?)$/;
 
@@ -167,4 +184,4 @@ function evaluate(code, homeGoals, awayGoals) {
   return null;
 }
 
-module.exports = { WIN, LOSS, VOID, normalizePick, resultMarket, forebetProbability, evaluate };
+module.exports = { WIN, LOSS, VOID, normalizePick, resultMarket, forebetProbability, goalsProbability, evaluate };

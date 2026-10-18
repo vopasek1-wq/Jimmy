@@ -1,6 +1,7 @@
 // Služba aplikace: spojuje databázi, stahování a vyhodnocení výsledků a připravuje data pro okno.
 "use strict";
 
+const path = require("node:path");
 const config = require("./config");
 const { Database } = require("./database");
 const { probabilityClass } = require("./filters");
@@ -25,6 +26,7 @@ function serializeTip(t) {
 class TipService {
   constructor({ dbFile, http, browser }) {
     this.db = new Database(dbFile);
+    this.dataDir = path.dirname(dbFile);
     this.http = http;
     this.browser = browser;
     this.busy = false;
@@ -50,7 +52,7 @@ class TipService {
     if (this.busy) throw new Error("Stahování už běží.");
     this.busy = true;
     try {
-      const result = await new Pipeline({ http: this.http, browser: this.browser }).run({ progress, interactiveForebet });
+      const result = await new Pipeline({ http: this.http, browser: this.browser, debugDir: path.join(this.dataDir, "ladeni") }).run({ progress, interactiveForebet });
       if (resultOk(result)) {
         this.db.saveRun(result);
         return this._payload({

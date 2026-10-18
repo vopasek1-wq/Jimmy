@@ -127,13 +127,14 @@ test("combine: Forebet z jiné ligy se nesloučí", () => {
 // --- celý běh se zástupnými zdroji ---------------------------------------------------------------------------------
 const TS = Math.floor(KO.getTime() / 1000);
 /** HTTP a prohlížeč podle URL – nahradí tři skutečné weby. */
-function fakeWeb({ scores24Html, forebetHtml, forebetError, sofaEvents, scores24Error }) {
+function fakeWeb({ scores24Html, forebetHtml, forebetError, sofaEvents, scores24Error, goalsHtml }) {
   const calls = [];
   const http = {
     async getText(url) {
       calls.push(url);
       if (url.includes("scores24")) { if (scores24Error) throw scores24Error; return scores24Html; }
       if (forebetError) throw forebetError;
+      if (url.includes("/football/matches/")) return goalsHtml ?? "<html><body>nic</body></html>";
       return forebetHtml;
     },
     async getJson(url) {
@@ -163,6 +164,30 @@ test("Pipeline: filtry, sloučení a obohacení", async () => {
   assert.deepEqual([t.sofascoreId, t.probForebet, t.sources], [7, 70, [SOURCE_SCORES24, SOURCE_FOREBET]]);
   assert.deepEqual(Object.values(r.statuses).map((s) => s.state), ["ok", "ok", "ok"]);
   assert.deepEqual(r.warnings, []);
+});
+
+const goalsPageHtml = "<html><body><h3>Both teams to score</h3><span>Yes</span><span>62%</span><span>No</span><span>38%</span></body></html>";
+const goalsScenario = (goalsHtml) => fakeWeb({
+  scores24Html: epl([s24Row({ home: "Nottingham Forest", away: "Arsenal", pick: "Both Teams to Score – (Yes)", percent: "85", odds: "1.9" })]),
+  forebetHtml: forebetPage([forebetRow({ home: "Nottingham Forest", away: "Arsenal", p: [10, 20, 70], pick: "2", href: "/en/football/matches/nottingham-forest-arsenal-1" })]),
+  goalsHtml, sofaEvents: [],
+});
+
+test("Pipeline: pravděpodobnost gólů z Forebetu u BTTS tipu", async () => {
+  const web = goalsScenario(goalsPageHtml);
+  const r = await new Pipeline(web).run({ now: new Date(Date.UTC(2026, 9, 18, 12)) });
+  assert.equal(r.tips[0].tipCode, "BTTS");
+  assert.equal(r.tips[0].probForebet, 62);
+  assert.equal(r.statuses[SOURCE_FOREBET].state, "ok");
+  assert.match(r.statuses[SOURCE_FOREBET].message, /góly u 1 z 1/);
+  assert.ok(web.calls.some((u) => u === "https://www.forebet.com/en/football/matches/nottingham-forest-arsenal-1"));
+});
+
+test("Pipeline: stránka zápasu bez gólů → Forebet částečně, tip zůstane bez hodnoty", async () => {
+  const r = await new Pipeline(goalsScenario(undefined)).run({ now: new Date(Date.UTC(2026, 9, 18, 12)) });
+  assert.equal(r.tips[0].probForebet, null);
+  assert.equal(r.statuses[SOURCE_FOREBET].state, "partial");
+  assert.ok(r.warnings.some((w) => w.includes("pravděpodobnosti gólů")));
 });
 
 test("Pipeline: výpadek Forebetu není fatální a objeví se ve varováních", async () => {

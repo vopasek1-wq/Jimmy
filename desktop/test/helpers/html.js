@@ -37,11 +37,11 @@ function s24Page(blocks, { menu = true } = {}) {
   return `<html><head><title>Soccer predictions</title></head><body>${nav}<div class='list'>${blocks.join("")}</div></body></html>`;
 }
 
-function forebetRow({ home, away, p, pick, when = "2026-10-18 15:30:00", odds = ["1.85", "3.40", "4.20"] }) {
+function forebetRow({ home, away, p, pick, when = "2026-10-18 15:30:00", odds = ["1.85", "3.40", "4.20"], href = "" }) {
   const o = odds ? odds.map((x) => `<span class="lscrsp">${x}</span>`).join("") : "";
   return `
 <div class="rcnt tr_0">
-  <div class="tnms"><div class="tnmscn">
+  <div class="tnms">${href ? `<a class="tnmscn" href="${href}">zápas</a>` : ""}<div class="tnmscn">
     <span class="homeTeam"><span itemprop="name">${home}</span></span>
     <span class="awayTeam"><span itemprop="name">${away}</span></span>
     <time itemprop="startDate" datetime="${when}"><span class="date_bah">18/10/2026 15:30</span></time>

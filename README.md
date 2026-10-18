@@ -8,7 +8,7 @@ a jako cílovou sázkovou kancelář počítá s **Tipsportem**. Vzhled a ovlád
 | Zdroj | K čemu slouží | Jak se čte |
 |---|---|---|
 | [Scores24](https://scores24.live/en) | tipy, míra shody (%) a kurzy | HTTP; sbalené ligy se rozbalí ve skrytém okně aplikace |
-| [Forebet](https://www.forebet.com/) | statistické pravděpodobnosti 1 / X / 2 | HTTP, jinak okno aplikace (je za Cloudflare) |
+| [Forebet](https://www.forebet.com/) | statistické pravděpodobnosti 1 / X / 2 a gólů (Over/Under, oba týmy skórují) | HTTP, jinak okno aplikace (je za Cloudflare) |
 | [SofaScore](https://www.sofascore.com/cs) | přesný začátek, stav, skóre, výsledky | veřejný JSON endpoint webu |
 
 Aplikace žije ve složce [`desktop/`](desktop). Původní verze v Pythonu (Tkinter) zůstává v kořeni repozitáře
@@ -36,8 +36,8 @@ s `.exe`. Pro zkoušení lze složku přesměrovat proměnnou prostředí `TIPST
 
 ## Ovládání
 
-Levé menu: **Přehled** (všechny karty, rozložení lze upravit), **Tipy** (tabulka a detail přes celou plochu),
-**Historie** a **Zdroje a pravidla**.
+Levé menu: **Přehled** (tabulka tipů, detail a úspěšnost; rozložení lze upravit), **Tipy** (tabulka a detail
+přes celou plochu) a **Historie**. Stav zdrojů se ukazuje jen v pruhu nahoře, když nějaký selže.
 
 * **Dnes / Zítra / Dnes a zítra / Vše**, *Skrýt zahájené* a *Potvrzené Forebetem* – filtry nad tabulkou
   (volba se pamatuje).
@@ -67,9 +67,10 @@ skončené jsou ztlumené.
 * **„Pravděp.“** je údaj ze Scores24 – míra shody jejich tipu, **ne kalibrovaná pravděpodobnost** výsledku.
   U tipovaných zápasů bývá velmi vysoká, proto je většina řádků zelená. Scores24 občas ukáže i hodnotu nad 100
   (naměřeno 101) – v aplikaci se omezí na 100 %.
-* **Sloupec „Forebet“** je statistický model. Je dostupný jen pro trhy 1 / X / 2 a dvojitou šanci (1X, X2, 12);
-  pro Over/Under či oba týmy skórují hodnotu nemá (v tabulce „n/a“). Filtr *Potvrzené Forebetem* nechá jen tipy,
-  které model také hodnotí nad 60 %.
+* **Sloupec „Forebet“** je statistický model. Pro 1 / X / 2 a dvojitou šanci (1X, X2, 12) se bere z přehledu
+  Forebetu; pro **Over/Under a oba týmy skórují** aplikace otevře stránku zápasu na Forebetu (až 25 stránek za běh)
+  a přečte z ní pravděpodobnosti gólů. Týmové totaly a handicapy Forebet nehodnotí (v tabulce „n/a“).
+  Filtr *Potvrzené Forebetem* nechá jen tipy, které model také hodnotí nad 60 %.
 * Když Forebet doporučí výsledek s pravděpodobností nad 60 %, který Scores24 nemá, přidá se jako samostatný
   tip se zdrojem „Forebet“.
 
@@ -92,8 +93,7 @@ Ručně zadaný výsledek se nikdy nepřepíše. Zisk a ROI se počítají při 
 
 * Po startu se hned ukážou poslední uložená data (v horní liště je štítek „z mezipaměti“).
 * Bez internetu nebo při selhání Scores24 zůstanou na obrazovce poslední uložená data a nahoře se objeví pruh
-  s důvodem. Selhání Forebetu nebo SofaScore nic nerozbije – tip se zobrazí i bez nich. Stav zdrojů je na Přehledu
-  a na stránce **Zdroje a pravidla**.
+  s důvodem. Selhání Forebetu nebo SofaScore nic nerozbije – tip se zobrazí i bez nich. Selhání se ukáže v pruhu nahoře.
 * Požadavky mají pauzy mezi dotazy na stejný server, opakování při chybě a rozpoznání ochrany proti robotům.
 
 ## Forebet a Cloudflare
@@ -102,11 +102,12 @@ Forebet je chráněný Cloudflare. Aplikace nejdřív zkusí obyčejný dotaz, p
 objeví se pruh s tlačítkem **Ověřit Forebet**: otevře se okno, ve kterém kontrolu dokončíte (až 90 s), a aplikace
 si ověření pamatuje.
 
-> **Poctivě k Forebetu:** Cloudflare při vývoji nepustil Forebet ani skutečný prohlížeč z datacentrové IP, proto
-> parser Forebetu **nebyl ověřen na živých datech** – je napsán podle známé struktury stránky a otestován na
-> ukázkovém HTML. Na běžném domácím internetu Cloudflare často projde. Když ne, aplikace funguje dál jen se
-> Scores24 a SofaScore. Pokud Forebet změnil strukturu stránky, uvidíte „změnila se struktura webu“ a oprava
-> je v `desktop/src/scrapers/forebet.js`.
+> **Poctivě k Forebetu:** Cloudflare při vývoji nepustil Forebet ani skutečný prohlížeč z datacentrové IP.
+> Seznam zápasů (1 / X / 2) se u uživatele na běžném domácím internetu načetl (130 zápasů), ale **čtení
+> pravděpodobností gólů ze stránky zápasu nebylo ověřeno na živé stránce** – hledá se podle viditelného textu
+> („Over 2.5 … 55 %“, „Both teams to score … Yes … No …“), ne podle tříd. Když na stránce zápasu nic takového
+> nenajde, ukáže se nahoře upozornění a první stažená stránka se uloží do `%APPDATA%\FotbalTipy\ladeni\forebet-zapas.html`
+> – s ní jde parser opravit (`parseGoals` v `desktop/src/scrapers/forebet.js`).
 
 ## Vývoj
 
@@ -116,7 +117,7 @@ Potřebujete Node.js 22+ (aplikace používá vestavěné `node:sqlite` z Electr
 cd desktop
 npm install
 npm start          :: spustí aplikaci
-npm test           :: 70 testů (parsery, filtry, databáze, pipeline, HTTP)
+npm test           :: 75 testů (parsery, filtry, databáze, pipeline, HTTP)
 npm run dist       :: portable .exe do desktop\dist (na Windows)
 ```
 
@@ -160,6 +161,7 @@ než u Electron verze).
 |---|---|
 | Okno se otevře, ale tabulka je prázdná | Podívejte se na pruh nahoře a na stav zdrojů; filtr *Dnes* ukazuje jen dnešní zápasy – zkuste *Dnes a zítra* nebo *Vše*. |
 | „Forebet: Cloudflare kontrola neprošla“ | Klikněte na **Ověřit Forebet**, nebo Forebet nechte být. |
+| „Forebet: … pravděpodobnosti gólů“ nahoře | Struktura stránky zápasu se liší od předpokladu – pošlete soubor `ladeni\forebet-zapas.html` (viz výše). |
 | Windows SmartScreen aplikaci blokuje | *Další informace → Přesto spustit* (aplikace není podepsaná). |
 | Zápasy mají posunutý čas | Časy se převádějí z UTC do `Europe/Prague`; zkontrolujte systémové datum a čas. |
 | „Struktura webu se změnila“ | Weby se mění; parsery jsou v `desktop/src/scrapers/`, testy ukazují očekávaný tvar dat. |

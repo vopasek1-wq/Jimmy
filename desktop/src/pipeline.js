@@ -12,7 +12,7 @@ const config = require("./config");
 const { applyFilters } = require("./filters");
 const { NetworkError, SourceError } = require("./http");
 const { BrowserUnavailable } = require("./browser");
-const { evaluate, forebetProbability, resultMarket } = require("./markets");
+const { evaluate, forebetProbability, goalsProbability, resultMarket } = require("./markets");
 const {
   UPCOMING, FINISHED, SOURCE_SCORES24, SOURCE_FOREBET, SOURCE_SOFASCORE, newResult, resultOk,
 } = require("./models");
@@ -61,7 +61,7 @@ function combine(s24, forebet, now) {
   for (const t of tips) {
     const m = findForebet(t.home, t.away, t.leagueKey, t.kickoff, forebet);
     if (!m) continue;
-    t.probForebet = forebetProbability(t.tipCode, m.p1, m.px, m.p2);
+    t.probForebet = forebetProbability(t.tipCode, m.p1, m.px, m.p2) ?? goalsProbability(t.tipCode, m.goals);
     if (m.pick === t.tipCode) { // oba zdroje doporučují totéž
       t.sources = [SOURCE_SCORES24, SOURCE_FOREBET];
       used.add(m);
@@ -95,10 +95,14 @@ function combine(s24, forebet, now) {
 
 const setStatus = (result, name, state, message = "") => { result.statuses[name] = { name, state, message }; };
 
+/** Trhy, které Forebet z přehledu nepokryje, ale jeho stránka zápasu ano: góly celého zápasu a BTTS. */
+const needsGoalsPage = (code) => code === "BTTS" || code === "NOBTTS" || /^[OU]\d+(?:\.\d+)?$/.test(code);
+
 class Pipeline {
-  constructor({ http, browser }) {
+  constructor({ http, browser, debugDir = null }) {
     this.http = http;
     this.browser = browser;
+    this.debugDir = debugDir;
   }
 
   /** @param {object} [opts] { progress, now, interactiveForebet } */
@@ -126,8 +130,29 @@ class Pipeline {
 
     // 2) Forebet – pravděpodobnosti (volitelný zdroj)
     try {
-      forebet = await new ForebetScraper(this.http, this.browser).fetch(progress, { interactive: interactiveForebet });
-      setStatus(result, SOURCE_FOREBET, "ok", `${forebet.length} zápasů`);
+      const scraper = new ForebetScraper(this.http, this.browser);
+      forebet = await scraper.fetch(progress, { interactive: interactiveForebet });
+      let message = `${forebet.length} zápasů`;
+      let state = "ok";
+
+      // Pravděpodobnosti gólů (Over/Under, oba týmy skórují) jsou jen na stránce zápasu.
+      const wanted = new Set();
+      for (const t of s24.tips) {
+        if (!needsGoalsPage(t.tipCode)) continue;
+        const m = findForebet(t.home, t.away, t.leagueKey, t.kickoff, forebet);
+        if (m && m.url) wanted.add(m);
+      }
+      if (wanted.size) {
+        const g = await scraper.fetchGoals([...wanted], progress, { debugDir: this.debugDir });
+        message += `, góly u ${g.parsed} z ${g.wanted} zápasů`;
+        if (g.parsed < g.wanted) {
+          state = "partial";
+          message += g.parsed === 0 && !g.errors.length
+            ? " – na stránkách zápasů nejsou rozpoznatelné pravděpodobnosti gólů (změnila se struktura?)"
+            : g.errors.length ? ` – chyby: ${g.errors[0]}` : "";
+        }
+      }
+      setStatus(result, SOURCE_FOREBET, state, message);
     } catch (err) {
       const known = err instanceof SourceError || err instanceof BrowserUnavailable;
       setStatus(result, SOURCE_FOREBET, "failed", known ? err.message : `Neočekávaná chyba: ${err.message}`);

@@ -55,13 +55,9 @@
   };
 
   /* ---------- Stav aplikace ---------- */
-  const FOREBET_CODES = new Set(["1", "X", "2", "1X", "X2", "12"]);
-  const SOURCES = [
-    { name: "Scores24", role: "Tipy a pravděpodobnosti – hlavní zdroj" },
-    { name: "Forebet", role: "Statistický model – potvrzení 1 / X / 2" },
-    { name: "SofaScore", role: "Skóre a výsledky zápasů" },
-  ];
-  const STATE_TEXT = { ok: "V pořádku", partial: "Částečně", failed: "Selhal", skipped: "Přeskočeno", pending: "Čeká" };
+  const FOREBET_CODES = new Set(["1", "X", "2", "1X", "X2", "12", "BTTS", "NOBTTS"]);
+  // Forebet hodnotí 1X2, dvojitou šanci, BTTS a Over/Under celého zápasu (týmové totaly a handicapy ne).
+  const forebetCovers = (code) => FOREBET_CODES.has(code) || /^[OU]\d+(?:\.\d+)?$/.test(code);
   const DAYS = ["today", "tomorrow", "both", "all"];
 
   const state = {
@@ -131,7 +127,7 @@
     `<div class="stat ${cls}"><div class="stat__value">${esc(value)}</div><div class="stat__label" title="${esc(label)}">${esc(label)}</div></div>`;
 
   /* ---------- Navigace ---------- */
-  const VIEWS = ["overview", "tips", "history", "sources"];
+  const VIEWS = ["overview", "tips", "history"];
   const showView = (view) => {
     if (!VIEWS.includes(view)) view = "overview";
     app.dataset.view = view;
@@ -297,7 +293,7 @@
     const ms = matchState(t, now);
     const key = tipUid(t);
     const selected = key === state.selected;
-    const fb = t.probForebet !== null ? fmtPct(t.probForebet) : (FOREBET_CODES.has(t.tipCode) ? "–" : "n/a");
+    const fb = t.probForebet !== null ? fmtPct(t.probForebet) : (forebetCovers(t.tipCode) ? "–" : "n/a");
     return `<tr class="trow is-${t.probClass}${selected ? " is-selected" : ""}${ms.kind === "done" ? " is-done" : ""}" data-key="${esc(key)}" tabindex="${selected ? 0 : -1}" aria-selected="${selected}">
       <td class="c-time">${esc(fmtKickoff(t.kickoff))}</td>
       <td class="c-match"><span class="match">${esc(t.matchName)}</span><span class="match__league">${esc(t.leagueShort)}</span></td>
@@ -350,7 +346,6 @@
       : (total ? `${state.visible.length} z ${total}` : "");
 
     renderDetail();
-    renderDist();
   }
 
   const selectTip = (key, { focus = false } = {}) => {
@@ -406,7 +401,7 @@
 
   function forebetFact(t) {
     if (t.probForebet !== null) return `${fmtPct(t.probForebet)}${t.probForebet > state.limits.minProbability ? " – potvrzuje" : " – nepotvrzuje"}`;
-    if (!FOREBET_CODES.has(t.tipCode)) return "tento trh nehodnotí";
+    if (!forebetCovers(t.tipCode)) return "tento trh nehodnotí";
     const fb = state.payload?.statuses?.Forebet;
     if (fb && (fb.state === "failed" || fb.state === "skipped")) return "zdroj není dostupný";
     return "zápas nenalezen";
@@ -471,62 +466,7 @@
     }
   });
 
-  /* ---------- Rozložení (karta na Přehledu) ---------- */
-  function renderDist() {
-    const list = state.visible;
-    const now = Date.now();
-    const high = list.filter((t) => t.probClass === "high").length;
-    const mid = list.length - high;
-    const odds = list.filter((t) => t.odds).map((t) => t.odds);
-    const avg = odds.length ? odds.reduce((a, b) => a + b, 0) / odds.length : null;
-    const confirmed = list.filter((t) => t.probForebet !== null && t.probForebet > state.limits.minProbability).length;
-    $("#dist-stats").innerHTML = [
-      stat(String(list.length), "tipů", "stat--accent"),
-      stat(String(high), `nad ${state.limits.highProbability} %`),
-      stat(avg === null ? "–" : nf2.format(avg), "prům. kurz"),
-      stat(String(confirmed), "s Forebetem"),
-    ].join("");
-
-    const count = { wait: 0, live: 0, done: 0 };
-    for (const t of list) {
-      const k = matchState(t, now).kind;
-      count[k === "started" || k === "live" ? "live" : k]++;
-    }
-    const bar = (title, parts) => {
-      const total = parts.reduce((sum, p) => sum + p.n, 0);
-      const segs = parts.filter((p) => p.n > 0)
-        .map((p) => `<span class="seg seg--${p.cls}" style="flex:${p.n} 1 0" title="${esc(p.label)}: ${p.n}">${p.n}</span>`).join("");
-      return `<div class="bar-line"><span class="bar-line__caption" title="${esc(title)}: ${total}">${esc(title)}</span><div class="bar">${segs}</div></div>`;
-    };
-    $("#dist-bars").innerHTML =
-      bar("Pravděpodobnost", [{ n: high, cls: "high", label: `nad ${state.limits.highProbability} %` }, { n: mid, cls: "mid", label: `${state.limits.minProbability}–${state.limits.highProbability} %` }]) +
-      bar("Stav zápasů", [{ n: count.wait, cls: "wait", label: "před zápasem" }, { n: count.live, cls: "live", label: "probíhá / zahájeno" }, { n: count.done, cls: "done", label: "skončilo" }]);
-  }
-
-  /* ---------- Zdroje a upozornění ---------- */
-  function sourceItems({ withButton, compact = false }) {
-    const statuses = state.payload?.statuses || {};
-    return SOURCES.map(({ name, role }) => {
-      const st = statuses[name];
-      const s = st?.state || "none";
-      const label = st ? (STATE_TEXT[s] || s) : "Zatím nestaženo";
-      const msg = st?.message || "";
-      const dot = s === "ok" ? "ok" : s === "partial" ? "partial" : s === "failed" ? "failed" : "";
-      const verify = withButton && name === "Forebet" && s === "failed" && desktop
-        ? '<button class="btn btn--ghost btn--sm" type="button" data-act="verify" style="align-self:flex-start;margin-top:6px"><i data-lucide="shield-check"></i>Ověřit Forebet</button>' : "";
-      return `<li><span class="status-dot${dot ? ` status-dot--${dot}` : ""}"></span><div class="source__body">
-        <span class="source__name">${esc(name)} <span class="source__role">· ${esc(label)}</span></span>
-        ${compact ? "" : `<span class="source__role">${esc(role)}</span>`}
-        ${msg ? `<span class="source__msg${s === "failed" ? " is-failed" : ""}">${esc(msg)}</span>` : ""}${verify}</div></li>`;
-    }).join("");
-  }
-
-  function renderSources() {
-    $("#sources-mini").innerHTML = sourceItems({ withButton: false, compact: true });
-    $("#sources-page").innerHTML = sourceItems({ withButton: true });
-    renderIcons();
-  }
-
+  /* ---------- Upozornění (zdroj selhal, bez internetu…) ---------- */
   const noticeEl = $("#notice");
   function renderNotice() {
     const warnings = [];
@@ -546,9 +486,7 @@
     syncLayoutMetrics();
   }
 
-  const onVerify = (e) => { if (e.target.closest("button[data-act='verify']")) refresh({ verify: true }); };
-  noticeEl.addEventListener("click", onVerify);
-  $("#sources-page").addEventListener("click", onVerify);
+  noticeEl.addEventListener("click", (e) => { if (e.target.closest("button[data-act='verify']")) refresh({ verify: true }); });
 
   const cacheChip = $("#cache-chip");
   function renderChip() {
@@ -757,7 +695,6 @@
   /* ---------- Vykreslení všeho ---------- */
   function renderAll() {
     renderTips();
-    renderSources();
     renderNotice();
     renderChip();
   }
@@ -815,11 +752,11 @@
       });
       grid.batchUpdate(false);
     };
-    const saved = store.get("board-layout-24");
+    const saved = store.get("board-layout-v2-24");
     if (Array.isArray(saved)) applyLayout(saved);
 
     // Pozice brát přímo z GridStacku (grid.save() vynechává hodnoty rovné minimu).
-    const saveLayout = () => store.set("board-layout-24",
+    const saveLayout = () => store.set("board-layout-v2-24",
       grid.engine.nodes.map(({ id, x, y, w, h }) => ({ id, x, y, w, h })));
     grid.on("change", saveLayout);
     $$(".nav__link").forEach((l) => { l.draggable = false; });
@@ -929,8 +866,6 @@
     if (info) {
       state.limits = { ...state.limits, ...info.limits };
       state.tipsportUrl = info.tipsportUrl || state.tipsportUrl;
-      $("#data-dir").textContent = `verze ${info.version} · data: ${info.dataDir}`;
-      $("#data-dir").title = info.dataDir;
     }
     const cached = await desktop.tips.cached();
     if (cached.ok) state.payload = cached.data;

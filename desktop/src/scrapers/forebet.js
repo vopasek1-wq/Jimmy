@@ -13,7 +13,9 @@
 const config = require("../config");
 const { BlockedError, SourceError, looksBlocked } = require("../http");
 const { parseOdds } = require("../odds");
-const { load, collapse } = require("../dom");
+const fs = require("node:fs");
+const path = require("node:path");
+const { load, collapse, strippedStrings } = require("../dom");
 
 const text = ($el) => (($el && $el.length) ? collapse($el.text()) : "");
 const toInt = (s) => { const m = /\d{1,3}/.exec(s); return m ? Number(m[0]) : null; };
@@ -58,6 +60,18 @@ function leagueKeyOf(tagText) {
   return lg ? lg.key : null;
 }
 
+/** Odkaz na stránku zápasu (tam jsou i pravděpodobnosti gólů). */
+function matchUrl($, row) {
+  const a = row.find("a.tnmscn[href], a[href*='/football/matches/']").first();
+  const href = (a.attr("href") || "").trim();
+  if (!href) return "";
+  try {
+    return new URL(href, config.FOREBET_URL).toString();
+  } catch {
+    return "";
+  }
+}
+
 function parseRow($, row) {
   const [home, away] = teamNames($, row);
   const probs = row.find(".fprc span").toArray().map((s) => toInt(text($(s)))).filter((p) => p !== null);
@@ -72,7 +86,7 @@ function parseRow($, row) {
 
   const lt = leagueText($, row);
   return {
-    home, away, kickoff: kickoff($, row), p1, px, p2, pick, odds, leagueKey: leagueKeyOf(lt), leagueText: lt,
+    url: matchUrl($, row), home, away, kickoff: kickoff($, row), p1, px, p2, pick, odds, leagueKey: leagueKeyOf(lt), leagueText: lt,
     pickProbability: { 1: p1, X: px, 2: p2 }[pick],
   };
 }
@@ -91,6 +105,39 @@ function parsePage(html) {
     }
   }
   return out;
+}
+
+// --- stránka zápasu: pravděpodobnosti gólů -------------------------------------------------------------------
+// !!! Neověřeno na živé stránce (Cloudflare mě nepustil): hledá se podle viditelného textu („Over 2.5 … 55 %“,
+// „Both teams to score … Yes 52 % No 48 %“), ne podle názvů tříd, aby to přežilo změny značek.
+
+const num = (s) => Number(String(s).replace(",", "."));
+
+function parseGoals(html) {
+  const $ = load(html);
+  const text = strippedStrings($.root()).join(" ");
+  const goals = { over: {}, under: {}, btts: {} };
+
+  const ou = /\b(over|under)\s*(\d(?:[.,]\d)?)\b/gi;
+  for (let m = ou.exec(text); m; m = ou.exec(text)) {
+    const pct = /(\d{1,3}(?:[.,]\d+)?)\s*%/.exec(text.slice(m.index + m[0].length, m.index + m[0].length + 45));
+    const value = pct ? num(pct[1]) : null;
+    if (value === null || value > 100) continue;
+    const bucket = m[1].toLowerCase() === "over" ? goals.over : goals.under;
+    const line = String(num(m[2]));
+    if (!(line in bucket)) bucket[line] = value; // platí první výskyt (hlavní blok předpovědi)
+  }
+
+  const label = /both teams to score|\bbtts\b/i.exec(text);
+  if (label) {
+    const win = text.slice(label.index, label.index + 170);
+    const yes = /\byes\b\D{0,15}?(\d{1,3}(?:[.,]\d+)?)\s*%/i.exec(win);
+    const no = /\bno\b\D{0,15}?(\d{1,3}(?:[.,]\d+)?)\s*%/i.exec(win);
+    if (yes && num(yes[1]) <= 100) goals.btts.yes = num(yes[1]);
+    if (no && num(no[1]) <= 100) goals.btts.no = num(no[1]);
+  }
+  const found = Object.keys(goals.over).length + Object.keys(goals.under).length + Object.keys(goals.btts).length;
+  return found ? goals : null;
 }
 
 const pageReady = (html) => !looksBlocked(200, html) && (html.includes("rcnt") || html.includes("fprc"));
@@ -126,6 +173,46 @@ class ForebetScraper {
     if (!matches.length) throw new SourceError("Forebet: na stránce nejsou rozpoznatelné zápasy (změnila se struktura webu?).");
     return matches;
   }
+
+  /**
+   * Doplní `goals` k zápasům ze seznamu načtením jejich stránek (max. `limit`).
+   * Vrací { wanted, parsed, errors } – chyby jednotlivých stránek nic neshodí.
+   */
+  async fetchGoals(matches, progress = () => {}, { limit = 25, debugDir = null } = {}) {
+    const todo = [...new Set(matches.filter((m) => m && m.url))].slice(0, limit);
+    const summary = { wanted: todo.length, parsed: 0, errors: [] };
+    let useBrowser = false;
+    let dumped = false;
+    for (const [i, m] of todo.entries()) {
+      progress(`Forebet: pravděpodobnosti gólů (${i + 1}/${todo.length})…`);
+      try {
+        let html = "";
+        if (!useBrowser) {
+          try {
+            html = await this.http.getText(m.url);
+          } catch (err) {
+            if (!(err instanceof BlockedError)) throw err;
+            useBrowser = true;
+          }
+        }
+        if (useBrowser) html = await this.browser.loadHtml(m.url, { ready: (h) => !looksBlocked(200, h) && h.length > 20000, waitMs: 12000 });
+        if (looksBlocked(200, html)) throw new BlockedError("Cloudflare");
+        m.goals = parseGoals(html);
+        if (m.goals) summary.parsed += 1;
+        else if (debugDir && !dumped) {
+          dumped = true;
+          try {
+            fs.mkdirSync(debugDir, { recursive: true });
+            fs.writeFileSync(path.join(debugDir, "forebet-zapas.html"), html);
+          } catch { /* ladicí soubor je jen bonus */ }
+        }
+      } catch (err) {
+        summary.errors.push(err.message || String(err));
+        if (summary.errors.length >= 3 && !summary.parsed) break; // zjevně to nejde – nezdržovat
+      }
+    }
+    return summary;
+  }
 }
 
-module.exports = { ForebetScraper, parsePage, pageReady };
+module.exports = { ForebetScraper, parsePage, parseGoals, pageReady };

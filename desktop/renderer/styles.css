@@ -116,7 +116,6 @@ button:disabled { cursor: default; }
 i[data-lucide],
 .lucide { display: inline-block; flex: none; width: 18px; height: 18px; }
 .lucide { stroke-width: 1.75; }
-.mono { font-family: var(--mono); font-size: 0.95em; }
 
 /* ==========================================================================
    Shell aplikace
@@ -394,12 +393,8 @@ i[data-lucide],
 
 /* Mimo Přehled se mřížka chová jako obyčejné rozvržení: Tipy vlevo, Detail vpravo. */
 .pages { display: none; padding: 8px; }
-.app[data-view="history"] .pages,
-.app[data-view="sources"] .pages { display: block; }
-.app[data-view="history"] .board,
-.app[data-view="sources"] .board { display: none; }
-.app[data-view="history"] .page-sources,
-.app[data-view="sources"] .page-history { display: none; }
+.app[data-view="history"] .pages { display: block; }
+.app[data-view="history"] .board { display: none; }
 
 .app[data-view="tips"] .board {
   display: grid;
@@ -422,9 +417,7 @@ i[data-lucide],
 .app[data-view="tips"] .board > [gs-id="detail"] { grid-column: 2; }
 .app[data-view="tips"] .board > .grid-stack-item > .grid-stack-item-content { inset: 0 !important; }
 .app[data-view="tips"] .board > .grid-stack-item > .ui-resizable-handle { display: none; }
-.app[data-view="tips"] .board > [gs-id="hist"],
-.app[data-view="tips"] .board > [gs-id="dist"],
-.app[data-view="tips"] .board > [gs-id="sources"] { display: none; }
+.app[data-view="tips"] .board > [gs-id="hist"] { display: none; }
 
 /* ---------- Karta ---------- */
 .card {
@@ -458,7 +451,6 @@ i[data-lucide],
 .legend__dot--high { background: var(--green); }
 .legend__dot--mid { background: var(--yellow); }
 
-.panel { background: var(--panel); border: 1px solid var(--border-2); border-radius: var(--radius-md); }
 
 /* ---------- Panel s upozorněním (zdroj selhal, offline…) ---------- */
 .notice {
@@ -646,36 +638,8 @@ i[data-lucide],
 .stat--pos .stat__value { color: var(--green); }
 .stat--neg .stat__value { color: var(--red); }
 .stat--accent .stat__value { color: var(--accent-bright); }
-.stat-row--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-.dist .stat { padding: 8px 10px 7px; }
-.dist .stat__value { font-size: 21px; }
-.dist .bars { margin-top: 12px; gap: 8px; }
+.hist-mini .stat-row { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
 .stat-row--5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-
-.bars { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
-.bar-line { display: grid; grid-template-columns: minmax(70px, 108px) minmax(0, 1fr); align-items: center; gap: 10px; }
-.bar-line__caption { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bar { display: flex; gap: 2px; height: 22px; overflow: hidden; border-radius: 6px; background: var(--panel); border: 1px solid var(--border-2); }
-.bar .seg { display: flex; align-items: center; justify-content: center; min-width: 0; font-size: 11.5px; font-weight: 500; font-variant-numeric: tabular-nums; color: #04131d; transition: flex-grow 0.3s var(--ease); }
-.seg--high { background: var(--green); }
-.seg--mid { background: var(--yellow); }
-.seg--wait { background: var(--accent); }
-.seg--live { background: var(--orange); }
-.seg--done { background: #5b6b7f; color: #fff !important; }
-
-.sources { display: flex; flex-direction: column; margin-top: 10px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border-3) transparent; }
-.sources li { display: flex; align-items: flex-start; gap: 11px; padding: 9px 2px; border-top: 1px solid var(--line); }
-.sources li:first-child { border-top: 0; }
-.status-dot { flex: none; width: 9px; height: 9px; margin-top: 5px; border-radius: 50%; background: #7b8796; }
-.status-dot--ok { background: var(--green); box-shadow: 0 0 6px rgba(43, 210, 107, 0.7); }
-.status-dot--partial { background: var(--yellow); box-shadow: 0 0 6px rgba(245, 197, 66, 0.6); }
-.status-dot--failed { background: var(--red); box-shadow: 0 0 6px rgba(255, 107, 107, 0.6); }
-.source__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
-.source__name { font-size: 13.5px; font-weight: 500; }
-.source__role { font-size: 12px; color: var(--muted); }
-.source__msg { font-size: 12px; line-height: 1.4; color: var(--text-2); overflow-wrap: anywhere; }
-.source__msg.is-failed { color: #ffb3b3; }
-.sources--wide li { padding: 11px 2px; }
 
 /* ==========================================================================
    Historie, Zdroje a pravidla
@@ -698,19 +662,6 @@ i[data-lucide],
 .outcome--void { color: var(--text-2); }
 .outcome--none { color: var(--faint); }
 .outcome__auto { font-size: 11px; color: var(--muted); }
-
-.sources-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 14px; margin-top: 14px; }
-.panel { padding: 14px 16px 12px; }
-.panel__title { display: flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 500; }
-.panel__title .lucide { width: 18px; height: 18px; color: var(--accent-bright); }
-.panel--warn { border-color: rgba(255, 106, 61, 0.35); background: var(--orange-soft); }
-.panel--warn .panel__title .lucide { color: var(--orange); }
-.rules { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; font-size: 13px; line-height: 1.5; color: var(--text-2); }
-.rules li { position: relative; padding-left: 14px; }
-.rules li::before { content: ""; position: absolute; left: 0; top: 0.6em; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
-.rules strong { color: var(--text); font-weight: 500; }
-.rules a { color: var(--accent-bright); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
-.rules .pill { height: 20px; min-width: 0; padding: 0 8px; font-size: 12px; vertical-align: 1px; }
 
 /* ---------- Oznámení ---------- */
 .toast {
