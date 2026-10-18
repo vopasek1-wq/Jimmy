@@ -62,6 +62,11 @@ function combine(s24, forebet, now) {
     const m = findForebet(t.home, t.away, t.leagueKey, t.kickoff, forebet);
     if (!m) continue;
     t.probForebet = forebetProbability(t.tipCode, m.p1, m.px, m.p2) ?? goalsProbability(t.tipCode, m.goals);
+    if (t.probability === null && t.probForebet !== null) { // Scores24 procento neuvedl → bere se z Forebetu
+      t.probability = t.probForebet;
+      t.probSource = SOURCE_FOREBET;
+      t.sources = [SOURCE_SCORES24, SOURCE_FOREBET];
+    }
     if (m.pick === t.tipCode) { // oba zdroje doporučují totéž
       t.sources = [SOURCE_SCORES24, SOURCE_FOREBET];
       used.add(m);
@@ -116,7 +121,7 @@ class Pipeline {
     try {
       s24 = await new Scores24Scraper(this.http, this.browser).fetch(now, progress);
       setStatus(result, SOURCE_SCORES24, s24.warnings.length ? "partial" : "ok",
-        s24.warnings.length ? s24.warnings.join(" ") : `${s24.tips.length} tipů s procenty`);
+        s24.warnings.length ? s24.warnings.join(" ") : `${s24.tips.length} tipů`);
     } catch (err) {
       if (err instanceof NetworkError) result.offline = Boolean(err.offline);
       const known = err instanceof SourceError || err instanceof BrowserUnavailable;
@@ -137,7 +142,8 @@ class Pipeline {
 
       // Pravděpodobnosti gólů (Over/Under, oba týmy skórují) jsou jen na stránce zápasu.
       const wanted = new Set();
-      for (const t of s24.tips) {
+      const byNeed = [...s24.tips].sort((a, b) => (a.probability === null ? 0 : 1) - (b.probability === null ? 0 : 1));
+      for (const t of byNeed) {
         if (!needsGoalsPage(t.tipCode)) continue;
         const m = findForebet(t.home, t.away, t.leagueKey, t.kickoff, forebet);
         if (m && m.url) wanted.add(m);
@@ -159,7 +165,9 @@ class Pipeline {
     }
 
     // 3) sloučení + povinné filtry
-    let tips = applyFilters(combine(s24, forebet, now));
+    const combined = combine(s24, forebet, now);
+    const noPercent = combined.filter((t) => t.probability === null).length; // zítřejší tipy, které nikdo neohodnotil
+    let tips = applyFilters(combined);
 
     // 4) SofaScore – přesný čas, stav, skóre
     const sofa = new SofaScoreClient(this.http);
@@ -172,7 +180,11 @@ class Pipeline {
     }
 
     result.tips = tips.sort((a, b) => a.kickoff - b.kickoff || b.probability - a.probability);
-    return this._finish(result);
+    this._finish(result);
+    if (noPercent) {
+      result.warnings.push(`${noPercent} tipů (hlavně na zítřek) nemá u Scores24 procenta a Forebet je nedoplnil – nejsou v seznamu.`);
+    }
+    return result;
   }
 
   _finish(result) {

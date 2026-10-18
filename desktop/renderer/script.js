@@ -76,6 +76,8 @@
     history: null,            // { tips, stats } pro vybrané období
     mini: null,               // totéž za 30 dní (karta na Přehledu)
     period: ["7", "30", "all"].includes(store.get("period")) ? store.get("period") : "30",
+    from: "",                 // rozsah dnů z kalendáře (RRRR-MM-DD); prázdný = platí „Období“
+    to: "",
     hsort: store.get("hsort") || { key: "time", dir: "desc" },
     hselected: null,          // id vybraného řádku historie
   };
@@ -298,7 +300,7 @@
       <td class="c-time">${esc(fmtKickoff(t.kickoff))}</td>
       <td class="c-match"><span class="match">${esc(t.matchName)}</span><span class="match__league">${esc(t.leagueShort)}</span></td>
       <td class="c-tip">${esc(t.tipLabel)}</td>
-      <td class="c-prob"><span class="pill pill--${t.probClass}">${esc(fmtPct(t.probability))}</span></td>
+      <td class="c-prob"><span class="pill pill--${t.probClass}"${t.probSource !== "Scores24" ? ` title="Scores24 procento neuvedl – hodnota z ${esc(t.probSource)}"` : ""}>${esc(fmtPct(t.probability))}</span></td>
       <td class="c-odds"${t.oddsEstimated ? ' title="Odhad z pravděpodobnosti – zdroj kurz neuvedl"' : ""}>${esc(fmtOdds(t))}</td>
       <td class="c-fb"${fb === "n/a" ? ' title="Forebet tento trh nehodnotí"' : ""}>${esc(fb)}</td>
       <td class="c-status"><span class="state state--${ms.kind === "live" || ms.kind === "started" ? "live" : ms.kind === "done" ? "done" : "wait"}">${esc(ms.text)}</span></td>
@@ -417,7 +419,7 @@
     const when = `${fmtKickoff(t.kickoff)}${ms.kind === "wait" ? ` (${untilText(kickoff - now)})` : ""}`;
     const facts = [
       ["Začátek", `${when} · ${ms.text}`],
-      ["Pravděpodobnost (Scores24)", fmtPct(t.probability), true],
+      [`Pravděpodobnost (${t.probSource})`, fmtPct(t.probability), true],
       ["Kurz", t.odds ? `${nf2.format(t.odds)}${t.oddsEstimated ? " – odhad z pravděpodobnosti" : " – orientační"}` : "není k dispozici", true],
       ["Forebet", forebetFact(t)],
       ["Zdroje", t.sources.join(" + ")],
@@ -546,14 +548,14 @@
   };
 
   const days = (period) => (period === "all" ? null : Number(period));
-  const fetchHistory = async (period) => {
+  const fetchHistory = async (period, range = null) => {
     if (!desktop) return null;
-    const res = await desktop.history.list(days(period));
+    const res = await desktop.history.list(range || days(period));
     return res.ok ? res.data : null;
   };
 
   async function loadHistory() {
-    const data = await fetchHistory(state.period);
+    const data = await fetchHistory(state.period, state.from || state.to ? { from: state.from, to: state.to } : null);
     if (data) state.history = data;
     renderHistory();
   }
@@ -584,7 +586,11 @@
 
   function renderHistory() {
     const h = state.history;
-    $("#period").value = state.period;
+    const custom = Boolean(state.from || state.to);
+    $("#period").value = custom ? "custom" : state.period;
+    $("#date-from").value = state.from;
+    $("#date-to").value = state.to;
+    $("#date-clear").hidden = !custom;
     markSort($("#history-table"), "data-hsort", state.hsort);
     if (!h) {
       $("#history-stats").innerHTML = "";
@@ -608,9 +614,8 @@
     if (!list.some((t) => t.id === state.hselected)) state.hselected = null;
     histBody.innerHTML = list.map((t) => {
       const ov = OUTCOME_VIEW[t.outcome];
-      const auto = t.outcome && t.outcomeSource && t.outcomeSource !== "manual" ? ' <span class="outcome__auto">auto</span>' : "";
       const outcome = ov
-        ? `<span class="outcome outcome--${t.outcome}"><i data-lucide="${ov.icon}"></i>${ov.text}</span>${auto}`
+        ? `<span class="outcome outcome--${t.outcome}"><i data-lucide="${ov.icon}"></i>${ov.text}</span>`
         : '<span class="outcome outcome--none">—</span>';
       const sel = t.id === state.hselected;
       return `<tr class="trow${t.outcome ? ` is-${t.outcome}` : ""}${sel ? " is-selected" : ""}" data-key="${esc(t.id)}" tabindex="${sel ? 0 : -1}" aria-selected="${sel}">
@@ -658,7 +663,23 @@
   });
   bindSort($("#history-table"), "data-hsort", () => state.hsort, (s) => { state.hsort = s; store.set("hsort", s); }, () => renderHistory());
 
+  const onDates = () => {
+    state.from = $("#date-from").value;
+    state.to = $("#date-to").value;
+    if (state.from && state.to && state.from > state.to) [state.from, state.to] = [state.to, state.from];
+    loadHistory();
+  };
+  $("#date-from").addEventListener("change", onDates);
+  $("#date-to").addEventListener("change", onDates);
+  $("#date-clear").addEventListener("click", () => {
+    state.from = "";
+    state.to = "";
+    loadHistory();
+  });
+
   $("#period").addEventListener("change", (e) => {
+    state.from = "";
+    state.to = "";
     state.period = e.target.value;
     store.set("period", state.period);
     loadHistory();

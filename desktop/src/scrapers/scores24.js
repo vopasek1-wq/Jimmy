@@ -186,9 +186,12 @@ function kickoffOf(row, now) {
   return utcDateTime(day, hh, mm);
 }
 
-/** Převede řádek na tip; null, pokud nejde o použitelný tip. */
+/**
+ * Převede řádek na tip; null, pokud nejde o použitelný tip. Řádek bez procent (Scores24 je u zítřejších zápasů
+ * neuvádí) zůstane kandidátem s `probability: null` – procenta mu může doplnit Forebet, jinak ho odfiltrují filtry.
+ */
 function rowToTip(row, now) {
-  if (row.leagueKey === null || row.percent === null || !row.pickLabel) return null;
+  if (row.leagueKey === null || !row.pickLabel) return null;
   const kickoff = kickoffOf(row, now);
   if (kickoff === null) return null;
   const league = config.leagueByKey(row.leagueKey);
@@ -196,7 +199,7 @@ function rowToTip(row, now) {
   return {
     home: row.home, away: row.away, leagueKey: league.key, league: league.nameCs, kickoff,
     tipCode: market.code, tipLabel: market.labelCs, rawLabel: row.pickLabel,
-    probability: row.percent, odds: row.odds, oddsEstimated: false, sources: [SOURCE_SCORES24],
+    probability: row.percent, probSource: row.percent === null ? null : SOURCE_SCORES24, odds: row.odds, oddsEstimated: false, sources: [SOURCE_SCORES24],
     probForebet: null, status: classifyStatus(row.statusToken) || UPCOMING,
     homeScore: row.homeScore, awayScore: row.awayScore, url: row.url, sofascoreUrl: "", sofascoreId: null,
     id: null, outcome: null, outcomeSource: null,

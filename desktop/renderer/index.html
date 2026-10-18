@@ -147,8 +147,12 @@
                 <option value="7">Posledních 7 dní</option>
                 <option value="30" selected>Posledních 30 dní</option>
                 <option value="all">Vše</option>
+                <option value="custom" hidden>Vybrané dny</option>
               </select>
             </label>
+            <label class="select-field"><span>Od</span><input class="input input--date" type="date" id="date-from" aria-label="Od data"></label>
+            <label class="select-field"><span>Do</span><input class="input input--date" type="date" id="date-to" aria-label="Do data"></label>
+            <button class="icon-btn" type="button" id="date-clear" title="Zrušit výběr dnů" aria-label="Zrušit výběr dnů" hidden><i data-lucide="x"></i></button>
             <div class="seg-control seg-control--outcome" role="group" aria-label="Označit výsledek vybraného tipu">
               <button type="button" data-outcome="win"><i data-lucide="circle-check"></i>Výhra</button>
               <button type="button" data-outcome="loss"><i data-lucide="circle-x"></i>Prohra</button>

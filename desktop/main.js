@@ -6,6 +6,7 @@ const path = require("node:path");
 
 // ASCII název složky s daty (%APPDATA%\FotbalTipy); pro zkoušení jde přesměrovat proměnnou TIPSTER_DATA_DIR.
 app.setName("FotbalTipy");
+app.commandLine.appendSwitch("lang", "cs"); // české názvy v kalendáři a formát data
 if (process.env.TIPSTER_DATA_DIR) app.setPath("userData", process.env.TIPSTER_DATA_DIR);
 
 const config = require("./src/config");

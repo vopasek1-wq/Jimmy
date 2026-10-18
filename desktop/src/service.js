@@ -16,7 +16,7 @@ function serializeTip(t) {
     id: t.id, home: t.home, away: t.away, matchName: `${t.home} – ${t.away}`, leagueKey: t.leagueKey, league: t.league,
     leagueShort: (lg && lg.short) || t.league,
     kickoff: t.kickoff.toISOString(), day: localDate(t.kickoff), tipCode: t.tipCode, tipLabel: t.tipLabel,
-    probability: t.probability, probClass: probabilityClass(t.probability), odds: t.odds ?? null,
+    probability: t.probability, probSource: t.probSource || "Scores24", probClass: probabilityClass(t.probability), odds: t.odds ?? null,
     oddsEstimated: Boolean(t.oddsEstimated), sources: t.sources, probForebet: t.probForebet ?? null,
     status: t.status, homeScore: t.homeScore ?? null, awayScore: t.awayScore ?? null,
     url: t.url || "", sofascoreUrl: t.sofascoreUrl || "", outcome: t.outcome ?? null, outcomeSource: t.outcomeSource ?? null,
@@ -74,8 +74,11 @@ class TipService {
     }
   }
 
-  history(days = null) {
-    return { tips: this.db.history(days).map(serializeTip), stats: this.db.stats(days) };
+  /** `period` = počet dní, null (vše), nebo { from, to } z kalendáře. */
+  history(period = null) {
+    const range = period && typeof period === "object";
+    const tips = range ? this.db.historyRange(period.from || null, period.to || null) : this.db.history(period);
+    return { tips: tips.map(serializeTip), stats: this.db.stats(null, tips) };
   }
 
   setOutcome(id, outcome) {

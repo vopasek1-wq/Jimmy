@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS tips (
     odds_estimated  INTEGER NOT NULL DEFAULT 0,
     sources         TEXT NOT NULL,
     prob_forebet    REAL,
+    prob_source     TEXT,
     status          TEXT NOT NULL DEFAULT 'upcoming',
     home_score      INTEGER,
     away_score      INTEGER,
@@ -59,15 +60,15 @@ CREATE INDEX IF NOT EXISTS idx_tips_run ON tips(last_run_id);
 // outcome a outcome_source se při aktualizaci záměrně nemění
 const UPSERT = `
 INSERT INTO tips (key, tip_date, kickoff_utc, home, away, league_key, league, tip_code, tip_label, raw_label,
-                  probability, odds, odds_estimated, sources, prob_forebet, status, home_score, away_score,
+                  probability, odds, odds_estimated, sources, prob_forebet, prob_source, status, home_score, away_score,
                   url, sofascore_url, sofascore_id, last_run_id, created_at, updated_at)
 VALUES (:key, :tip_date, :kickoff_utc, :home, :away, :league_key, :league, :tip_code, :tip_label, :raw_label,
-        :probability, :odds, :odds_estimated, :sources, :prob_forebet, :status, :home_score, :away_score,
+        :probability, :odds, :odds_estimated, :sources, :prob_forebet, :prob_source, :status, :home_score, :away_score,
         :url, :sofascore_url, :sofascore_id, :run_id, :now, :now)
 ON CONFLICT(key) DO UPDATE SET
     tip_date=excluded.tip_date, kickoff_utc=excluded.kickoff_utc, tip_label=excluded.tip_label,
     probability=excluded.probability, odds=excluded.odds, odds_estimated=excluded.odds_estimated,
-    sources=excluded.sources, prob_forebet=excluded.prob_forebet, status=excluded.status,
+    sources=excluded.sources, prob_forebet=excluded.prob_forebet, prob_source=excluded.prob_source, status=excluded.status,
     home_score=excluded.home_score, away_score=excluded.away_score, url=excluded.url,
     sofascore_url=excluded.sofascore_url, sofascore_id=excluded.sofascore_id,
     last_run_id=excluded.last_run_id, updated_at=excluded.updated_at
@@ -78,7 +79,7 @@ function rowToTip(r) {
     id: Number(r.id), home: r.home, away: r.away, leagueKey: r.league_key, league: r.league,
     kickoff: new Date(r.kickoff_utc), tipCode: r.tip_code, tipLabel: r.tip_label, rawLabel: r.raw_label,
     probability: r.probability, odds: r.odds, oddsEstimated: Boolean(r.odds_estimated),
-    sources: r.sources.split("|"), probForebet: r.prob_forebet, status: r.status,
+    sources: r.sources.split("|"), probForebet: r.prob_forebet, probSource: r.prob_source || "Scores24", status: r.status,
     homeScore: r.home_score, awayScore: r.away_score, url: r.url, sofascoreUrl: r.sofascore_url,
     sofascoreId: r.sofascore_id, outcome: r.outcome, outcomeSource: r.outcome_source,
   };
@@ -90,6 +91,10 @@ class Database {
     this.db = new DatabaseSync(file);
     this.db.exec("PRAGMA journal_mode = WAL");
     this.db.exec(SCHEMA);
+    // databáze z dřívějších verzí nemá sloupec prob_source
+    if (!this.db.prepare("PRAGMA table_info(tips)").all().some((c) => c.name === "prob_source")) {
+      this.db.exec("ALTER TABLE tips ADD COLUMN prob_source TEXT");
+    }
   }
 
   close() { this.db.close(); }
@@ -110,7 +115,7 @@ class Database {
           key: tipKey(t), tip_date: localDate(t.kickoff), kickoff_utc: t.kickoff.toISOString(), home: t.home, away: t.away,
           league_key: t.leagueKey, league: t.league, tip_code: t.tipCode, tip_label: t.tipLabel, raw_label: t.rawLabel || "",
           probability: t.probability, odds: t.odds ?? null, odds_estimated: t.oddsEstimated ? 1 : 0,
-          sources: t.sources.join("|"), prob_forebet: t.probForebet ?? null, status: t.status,
+          sources: t.sources.join("|"), prob_forebet: t.probForebet ?? null, prob_source: t.probSource ?? null, status: t.status,
           home_score: t.homeScore ?? null, away_score: t.awayScore ?? null, url: t.url || "",
           sofascore_url: t.sofascoreUrl || "", sofascore_id: t.sofascoreId ?? null, run_id: runId, now: stamp,
         });
@@ -146,6 +151,16 @@ class Database {
   }
 
   /** Všechny uložené tipy (nejnovější první), volitelně jen za posledních `days` dní. */
+  /** Tipy z rozsahu místních dnů „od–do“ (RRRR-MM-DD, kterýkoli konec může chybět). */
+  historyRange(from = null, to = null) {
+    const where = [];
+    const args = [];
+    if (from) { where.push("tip_date >= ?"); args.push(from); }
+    if (to) { where.push("tip_date <= ?"); args.push(to); }
+    const sql = `SELECT * FROM tips ${where.length ? `WHERE ${where.join(" AND ")}` : ""} ORDER BY kickoff_utc DESC`;
+    return this.db.prepare(sql).all(...args).map(rowToTip);
+  }
+
   history(days = null) {
     if (days === null || days === undefined) {
       return this.db.prepare("SELECT * FROM tips ORDER BY kickoff_utc DESC").all().map(rowToTip);
@@ -160,8 +175,7 @@ class Database {
       .all(kickedOffBefore.toISOString()).map(rowToTip);
   }
 
-  stats(days = null) {
-    const tips = this.history(days);
+  stats(days = null, tips = this.history(days)) {
     const s = { total: tips.length, evaluated: 0, wins: 0, losses: 0, voids: 0, avgOdds: null, profit: null, roiPct: null, hitRate: null };
     const decidedReal = [];
     for (const t of tips) {

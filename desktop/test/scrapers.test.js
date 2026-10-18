@@ -40,11 +40,13 @@ test("Scores24: pole řádku a procenta bez znaku %", () => {
   assert.equal(r.url, "https://scores24.live/en/soccer/m-17-10-2026-a-b-prediction");
 });
 
-test("Scores24: řádek bez procent není tip", () => {
+test("Scores24: řádek bez procent je kandidát bez pravděpodobnosti", () => {
   const r = firstRow([s24Row({ home: "Spurs", away: "Coventry", percent: null, status: "tomorrow" })]);
   assert.equal(r.percent, null);
   assert.equal(r.odds, 1.71);
-  assert.equal(scores24.rowToTip(r, NOW), null);
+  const t = scores24.rowToTip(r, NOW);
+  assert.equal(t.probability, null);
+  assert.equal(t.probSource, null);
 });
 
 test("Scores24: americké kurzy a procenta nad 100", () => {

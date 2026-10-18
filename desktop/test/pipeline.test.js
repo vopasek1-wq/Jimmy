@@ -190,6 +190,26 @@ test("Pipeline: stránka zápasu bez gólů → Forebet částečně, tip zůsta
   assert.ok(r.warnings.some((w) => w.includes("pravděpodobnosti gólů")));
 });
 
+const tomorrowWeb = (opts = {}) => fakeWeb({
+  scores24Html: epl([s24Row({ home: "Nottingham Forest", away: "Arsenal", status: "tomorrow", percent: null, odds: "1.8" })]),
+  forebetHtml: forebetPage([forebetRow({ home: "Nottingham Forest", away: "Arsenal", p: [10, 20, 70], pick: "2" })]),
+  sofaEvents: [], ...opts,
+});
+const DAY_BEFORE = new Date(Date.UTC(2026, 9, 17, 12));
+
+test("Pipeline: zítřejší tip bez procent ze Scores24 dostane pravděpodobnost z Forebetu", async () => {
+  const r = await new Pipeline(tomorrowWeb()).run({ now: DAY_BEFORE });
+  assert.equal(r.tips.length, 1);
+  assert.deepEqual([r.tips[0].probability, r.tips[0].probSource, r.tips[0].sources], [70, SOURCE_FOREBET, [SOURCE_SCORES24, SOURCE_FOREBET]]);
+  assert.deepEqual(r.warnings, []);
+});
+
+test("Pipeline: zítřejší tip bez procent a bez Forebetu se vynechá s varováním", async () => {
+  const r = await new Pipeline(tomorrowWeb({ forebetError: new SourceError("Forebet: Cloudflare kontrola neprošla.") })).run({ now: DAY_BEFORE });
+  assert.equal(r.tips.length, 0);
+  assert.ok(r.warnings.some((w) => w.includes("nemá u Scores24 procenta")));
+});
+
 test("Pipeline: výpadek Forebetu není fatální a objeví se ve varováních", async () => {
   const web = fakeWeb({ scores24Html: epl([s24Row({ home: "Nottingham Forest", away: "Arsenal" })]), forebetError: new SourceError("Forebet: Cloudflare kontrola neprošla."), sofaEvents: [] });
   const r = await new Pipeline(web).run({ now: new Date(Date.UTC(2026, 9, 18, 12)) });
@@ -268,4 +288,18 @@ test("Scores24 parse → pipeline: stejný tvar tipu, jaký očekává databáze
   const db = memDb();
   db.saveRun(okResult([tip]));
   assert.equal(db.history().length, 1);
+});
+
+test("DB: historie podle rozsahu dnů z kalendáře", () => {
+  const db = memDb();
+  const day = (d) => new Date(Date.UTC(2026, 9, d, 15, 30));
+  db.saveRun(okResult([mk({ home: "A", away: "B", kickoff: day(10) }), mk({ home: "C", away: "D", kickoff: day(15) }), mk({ home: "E", away: "F", kickoff: day(20) })]));
+  const homes = (a, b) => db.historyRange(a, b).map((t) => t.home).sort();
+  assert.deepEqual(homes("2026-10-12", "2026-10-18"), ["C"]);
+  assert.deepEqual(homes("2026-10-15", null), ["C", "E"]);
+  assert.deepEqual(homes(null, "2026-10-15"), ["A", "C"]);
+  assert.deepEqual(homes(null, null), ["A", "C", "E"]);
+  const tips = db.historyRange("2026-10-10", "2026-10-10");
+  db.setOutcome(tips[0].id, "win", "manual");
+  assert.equal(db.stats(null, db.historyRange("2026-10-10", "2026-10-10")).wins, 1);
 });
