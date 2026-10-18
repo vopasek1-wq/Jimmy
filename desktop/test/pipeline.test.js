@@ -1,0 +1,246 @@
+// Databáze, sloučení zdrojů, celý běh pipeline (se zástupnými scrapery) a vyhodnocení výsledků.
+"use strict";
+
+const test = require("node:test");
+const assert = require("node:assert/strict");
+
+const { Database } = require("../src/database");
+const { Pipeline, combine, updateResults } = require("../src/pipeline");
+const { NetworkError, SourceError } = require("../src/http");
+const { SOURCE_SCORES24, SOURCE_FOREBET, newResult, tipKey } = require("../src/models");
+const scores24 = require("../src/scrapers/scores24");
+const { s24Row, s24Block, s24Page, forebetRow, forebetPage, sofaEvent } = require("./helpers/html");
+
+const KO = new Date(Date.UTC(2026, 9, 18, 15, 30));
+const mk = (o = {}) => ({
+  home: "Nottingham Forest", away: "Arsenal", leagueKey: "EPL", league: "Anglie – Premier League", kickoff: KO, tipCode: "2", tipLabel: "tip 2",
+  rawLabel: "", probability: 80, odds: 1.7, oddsEstimated: false, sources: [SOURCE_SCORES24], probForebet: null, status: "upcoming",
+  homeScore: null, awayScore: null, url: "", sofascoreUrl: "", sofascoreId: null, id: null, outcome: null, outcomeSource: null, ...o,
+});
+const okResult = (tips) => ({ ...newResult(new Date()), tips, finishedAt: new Date(), statuses: { [SOURCE_SCORES24]: { name: SOURCE_SCORES24, state: "ok", message: "" } } });
+const memDb = () => new Database(":memory:");
+
+// --- databáze --------------------------------------------------------------------------------------------------
+test("DB: uložení a pohled na poslední běh", () => {
+  const db = memDb();
+  assert.equal(db.latestRun(), null);
+  assert.deepEqual(db.tipsOfLatestRun(), []);
+  db.saveRun(okResult([mk(), mk({ home: "A", away: "B", tipCode: "1", probability: 70, odds: 1.6 })]));
+  const got = db.tipsOfLatestRun();
+  assert.deepEqual(new Set(got.map((t) => t.home)), new Set(["Nottingham Forest", "A"]));
+  const t = got.find((x) => x.home === "Nottingham Forest");
+  assert.equal(t.kickoff.getTime(), KO.getTime());
+  assert.deepEqual(t.sources, [SOURCE_SCORES24]);
+  assert.ok(t.id > 0);
+  assert.equal(db.latestRun().statuses[SOURCE_SCORES24].state, "ok");
+});
+
+test("DB: opakované uložení aktualizuje, ale ruční výsledek zůstane", () => {
+  const db = memDb();
+  db.saveRun(okResult([mk({ probability: 80, odds: 1.7 })]));
+  db.setOutcome(db.history()[0].id, "win", "manual");
+  db.saveRun(okResult([mk({ probability: 77, odds: 1.65 })]));
+  const hist = db.history();
+  assert.equal(hist.length, 1);
+  assert.deepEqual([hist[0].probability, hist[0].odds, hist[0].outcome, hist[0].outcomeSource], [77, 1.65, "win", "manual"]);
+});
+
+test("DB: pohled na poslední běh skryje už nevrácené tipy, historie je drží", () => {
+  const db = memDb();
+  db.saveRun(okResult([mk(), mk({ home: "A", away: "B", tipCode: "1" })]));
+  db.saveRun(okResult([mk()]));
+  assert.equal(db.tipsOfLatestRun().length, 1);
+  assert.equal(db.history().length, 2);
+});
+
+test("DB: smazání výsledku", () => {
+  const db = memDb();
+  db.saveRun(okResult([mk()]));
+  const id = db.history()[0].id;
+  db.setOutcome(id, "loss", "manual");
+  assert.equal(db.history()[0].outcome, "loss");
+  db.setOutcome(id, null);
+  const h = db.history()[0];
+  assert.deepEqual([h.outcome, h.outcomeSource], [null, null]);
+});
+
+test("DB: statistiky (úspěšnost, zisk jen ze skutečných kurzů, push se nepočítá)", () => {
+  const db = memDb();
+  const tips = [mk({ away: "1", odds: 2.0 }), mk({ away: "2", odds: 1.5 }), mk({ away: "3", odds: 1.8 }), mk({ away: "4", odds: 1.6, oddsEstimated: true })];
+  db.saveRun(okResult(tips));
+  const by = Object.fromEntries(db.history().map((t) => [t.away, t.id]));
+  db.setOutcome(by["1"], "win"); db.setOutcome(by["2"], "loss"); db.setOutcome(by["3"], "void"); db.setOutcome(by["4"], "win");
+  const s = db.stats();
+  assert.deepEqual([s.total, s.evaluated, s.wins, s.losses, s.voids], [4, 4, 2, 1, 1]);
+  assert.ok(Math.abs(s.hitRate - 200 / 3) < 1e-9);
+  assert.ok(Math.abs(s.profit - 0) < 1e-9); // +1,0 (kurz 2,0) a −1 (prohra); odhad a push se nepočítají
+  assert.ok(Math.abs(s.roiPct - 0) < 1e-9);
+});
+
+test("DB: tipy čekající na vyhodnocení jsou jen staré a bez výsledku", () => {
+  const db = memDb();
+  const old = new Date(Date.now() - 6 * 3600e3);
+  const fresh = new Date(Date.now() + 3600e3);
+  db.saveRun(okResult([mk({ home: "Old", away: "X", kickoff: old }), mk({ home: "Fresh", away: "Y", kickoff: fresh })]));
+  assert.deepEqual(db.pendingResults(new Date(Date.now() - 3 * 3600e3)).map((t) => t.home), ["Old"]);
+});
+
+test("DB: klíč tipu je stabilní vůči názvům s diakritikou a zkratkami", () => {
+  assert.equal(tipKey(mk({ home: "FC Köln", away: "Atlético" })), tipKey(mk({ home: "Koln", away: "Atletico" })));
+});
+
+// --- sloučení Scores24 + Forebet -----------------------------------------------------------------------------------
+const fb = (o = {}) => ({
+  home: "Nottingham Forest", away: "Arsenal", kickoff: KO, p1: 10, px: 20, p2: 70, pick: "2", odds: {}, leagueKey: null, pickProbability: 70, ...o,
+});
+
+test("combine: Forebet doplní pravděpodobnost a shodu", () => {
+  const t = combine({ tips: [mk({ tipCode: "2" })], rows: [] }, [fb()], KO)[0];
+  assert.equal(t.probForebet, 70);
+  assert.deepEqual(t.sources, [SOURCE_SCORES24, SOURCE_FOREBET]);
+});
+test("combine: nesouhlas Forebetu nemění zdroj, ale ukáže pravděpodobnost (1X = 1 + X)", () => {
+  let t = combine({ tips: [mk({ tipCode: "BTTS" })], rows: [] }, [fb()], KO)[0];
+  assert.equal(t.probForebet, null);
+  assert.deepEqual(t.sources, [SOURCE_SCORES24]);
+  t = combine({ tips: [mk({ tipCode: "1X" })], rows: [] }, [fb()], KO)[0];
+  assert.equal(t.probForebet, 30);
+  assert.deepEqual(t.sources, [SOURCE_SCORES24]);
+});
+test("combine: vlastní tip Forebetu, když ligu známe z řádku Scores24 (názvy ze Scores24)", () => {
+  const row = { href: "/en/soccer/m-x-prediction", url: "https://scores24.live/x", home: "Nottingham Forest", away: "Arsenal FC", timeStr: "15:30", statusToken: "today", leagueKey: "EPL" };
+  const tips = combine({ tips: [], rows: [row] }, [fb({ away: "Arsenal", odds: { 2: 1.65 } })], new Date(Date.UTC(2026, 9, 18, 12)));
+  assert.equal(tips.length, 1);
+  const t = tips[0];
+  assert.deepEqual([t.sources, t.probability, t.odds, t.away, t.leagueKey, t.tipCode], [[SOURCE_FOREBET], 70, 1.65, "Arsenal FC", "EPL", "2"]);
+});
+test("combine: tip Forebetu se zahodí bez ligy nebo pod prahem (přesně 60 % neprojde)", () => {
+  assert.deepEqual(combine({ tips: [], rows: [] }, [fb()], KO), []);
+  assert.deepEqual(combine({ tips: [], rows: [] }, [fb({ p1: 30, px: 30, p2: 40, leagueKey: "EPL", pickProbability: 40 })], KO), []);
+  assert.deepEqual(combine({ tips: [], rows: [] }, [fb({ p1: 20, px: 20, p2: 60, leagueKey: "EPL", pickProbability: 60 })], KO), []);
+});
+test("combine: Forebet z jiné ligy se nesloučí", () => {
+  const t = combine({ tips: [mk({ leagueKey: "EPL" })], rows: [] }, [fb({ leagueKey: "LALIGA" })], KO)[0];
+  assert.equal(t.probForebet, null);
+});
+
+// --- celý běh se zástupnými zdroji ---------------------------------------------------------------------------------
+const TS = Math.floor(KO.getTime() / 1000);
+/** HTTP a prohlížeč podle URL – nahradí tři skutečné weby. */
+function fakeWeb({ scores24Html, forebetHtml, forebetError, sofaEvents, scores24Error }) {
+  const calls = [];
+  const http = {
+    async getText(url) {
+      calls.push(url);
+      if (url.includes("scores24")) { if (scores24Error) throw scores24Error; return scores24Html; }
+      if (forebetError) throw forebetError;
+      return forebetHtml;
+    },
+    async getJson(url) {
+      calls.push(url);
+      if (sofaEvents instanceof Error) throw sofaEvents;
+      return { events: sofaEvents || [] };
+    },
+  };
+  return { http, browser: { expandScores24: async () => { throw new Error("nemělo být potřeba"); }, loadHtml: async () => "<html></html>" }, calls };
+}
+const epl = (rows) => s24Page([s24Block("England", "Premier League", "england-premier-league", rows.length, rows)]);
+
+test("Pipeline: filtry, sloučení a obohacení", async () => {
+  const web = fakeWeb({
+    scores24Html: epl([
+      s24Row({ home: "Nottingham Forest", away: "Arsenal", pick: "Arsenal to Win", percent: "80", odds: "1.7" }),
+      s24Row({ home: "Low", away: "Prob", percent: "55", odds: "1.9", slug: "l-p", pick: "Both Teams to Score – (Yes)" }),
+      s24Row({ home: "Low", away: "Odds", percent: "85", odds: "1.3", slug: "l-o", pick: "Both Teams to Score – (Yes)" }),
+    ]),
+    forebetHtml: forebetPage([forebetRow({ home: "Nottingham Forest", away: "Arsenal", p: [10, 20, 70], pick: "2" })]),
+    sofaEvents: [sofaEvent(7, "Nottingham Forest", "Arsenal", TS, "notstarted")],
+  });
+  const now = new Date(Date.UTC(2026, 9, 18, 12, 0));
+  const r = await new Pipeline(web).run({ now });
+  assert.deepEqual(r.tips.map((t) => t.home), ["Nottingham Forest"]); // filtry odstranily dva tipy
+  const t = r.tips[0];
+  assert.deepEqual([t.sofascoreId, t.probForebet, t.sources], [7, 70, [SOURCE_SCORES24, SOURCE_FOREBET]]);
+  assert.deepEqual(Object.values(r.statuses).map((s) => s.state), ["ok", "ok", "ok"]);
+  assert.deepEqual(r.warnings, []);
+});
+
+test("Pipeline: výpadek Forebetu není fatální a objeví se ve varováních", async () => {
+  const web = fakeWeb({ scores24Html: epl([s24Row({ home: "Nottingham Forest", away: "Arsenal" })]), forebetError: new SourceError("Forebet: Cloudflare kontrola neprošla."), sofaEvents: [] });
+  const r = await new Pipeline(web).run({ now: new Date(Date.UTC(2026, 9, 18, 12)) });
+  assert.equal(r.tips.length, 1);
+  assert.equal(r.statuses[SOURCE_FOREBET].state, "failed");
+  assert.ok(r.warnings.some((w) => w.includes("Cloudflare")));
+});
+
+test("Pipeline: bez internetu se ostatní zdroje přeskočí", async () => {
+  const web = fakeWeb({ scores24Error: new NetworkError("Nelze se připojit k scores24.live.", true) });
+  const r = await new Pipeline(web).run();
+  assert.equal(r.offline, true);
+  assert.deepEqual(r.tips, []);
+  assert.equal(r.statuses[SOURCE_FOREBET].state, "skipped");
+  assert.equal(r.statuses.SofaScore.state, "skipped");
+  assert.equal(web.calls.length, 1); // nic dalšího se nestahovalo
+});
+
+test("Pipeline: neočekávaná chyba parseru neshodí aplikaci", async () => {
+  const web = fakeWeb({ scores24Error: new TypeError("rozbitý parser") });
+  const r = await new Pipeline(web).run();
+  assert.equal(r.statuses[SOURCE_SCORES24].state, "failed");
+  assert.match(r.statuses[SOURCE_SCORES24].message, /rozbitý parser/);
+});
+
+test("Pipeline: výpadek SofaScore → tipy zůstanou, zdroj je označen jako nedostupný", async () => {
+  const web = fakeWeb({ scores24Html: epl([s24Row({ home: "Nottingham Forest", away: "Arsenal" })]), forebetHtml: forebetPage([]), sofaEvents: new SourceError("HTTP 403") });
+  const r = await new Pipeline(web).run({ now: new Date(Date.UTC(2026, 9, 18, 12)) });
+  assert.equal(r.tips.length, 1);
+  assert.equal(r.statuses.SofaScore.state, "failed");
+});
+
+// --- automatické vyhodnocení ----------------------------------------------------------------------------------------------
+test("updateResults: vyhodnotí jen skončené zápasy a známé trhy, ruční výsledky nechá", async () => {
+  const db = memDb();
+  const ko = new Date(Date.now() - 5 * 3600e3);
+  const ts = Math.floor(ko.getTime() / 1000);
+  db.saveRun(okResult([
+    mk({ home: "Nottingham Forest", away: "Arsenal", tipCode: "2", kickoff: ko }), mk({ home: "Chelsea", away: "Everton", tipCode: "BTTS", kickoff: ko }),
+    mk({ home: "Fulham", away: "Hull City", tipCode: "O2.5", kickoff: ko }), mk({ home: "Leeds", away: "Villa", tipCode: "OTHER:corners", kickoff: ko }),
+    mk({ home: "Brentford", away: "Spurs", tipCode: "1", kickoff: ko }),
+  ]));
+  const manualId = db.history().find((t) => t.home === "Brentford").id;
+  db.setOutcome(manualId, "loss", "manual");
+  const http = { getJson: async () => ({ events: [
+    sofaEvent(1, "Nottingham Forest", "Arsenal", ts, "finished", 0, 2), sofaEvent(2, "Chelsea", "Everton", ts, "finished", 1, 0),
+    sofaEvent(3, "Fulham", "Hull City", ts, "inprogress", 1, 1), sofaEvent(4, "Leeds", "Villa", ts, "finished", 1, 1),
+    sofaEvent(5, "Brentford", "Spurs", ts, "finished", 3, 0),
+  ] }) };
+  const { done, message } = await updateResults(db, http);
+  const by = Object.fromEntries(db.history().map((t) => [t.home, t]));
+  assert.equal(done, 2);
+  assert.deepEqual([by["Nottingham Forest"].outcome, by["Nottingham Forest"].outcomeSource], ["win", "auto"]);
+  assert.equal(by.Chelsea.outcome, "loss"); // BTTS při 1:0 prohrává
+  assert.deepEqual([by.Fulham.outcome, by.Leeds.outcome], [null, null]);
+  assert.deepEqual([by.Brentford.outcome, by.Brentford.outcomeSource], ["loss", "manual"]); // ruční výsledek se nepřepsal
+  assert.match(message, /Vyhodnoceno 2/);
+});
+
+test("updateResults: nedostupný SofaScore se nahlásí", async () => {
+  const db = memDb();
+  db.saveRun(okResult([mk({ kickoff: new Date(Date.now() - 5 * 3600e3) })]));
+  const { done, message } = await updateResults(db, { getJson: async () => { throw new SourceError("HTTP 403"); } });
+  assert.equal(done, 0);
+  assert.match(message, /nedostupný/);
+});
+
+test("updateResults: bez čekajících tipů nic nedělá", async () => {
+  const { done, message } = await updateResults(memDb(), { getJson: async () => { throw new Error("nemělo se volat"); } });
+  assert.deepEqual([done, message], [0, "Žádné tipy nečekají na vyhodnocení."]);
+});
+
+test("Scores24 parse → pipeline: stejný tvar tipu, jaký očekává databáze", () => {
+  const html = epl([s24Row({ home: "Arsenal", away: "Chelsea" })]);
+  const tip = scores24.parsePage(html, new Date(Date.UTC(2026, 9, 18, 12))).flatMap((b) => b.rows).map((r) => scores24.rowToTip(r, new Date(Date.UTC(2026, 9, 18, 12))))[0];
+  const db = memDb();
+  db.saveRun(okResult([tip]));
+  assert.equal(db.history().length, 1);
+});

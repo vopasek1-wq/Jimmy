@@ -1,0 +1,42 @@
+// Povinné filtry tipů (ze zadání). Tip se zobrazí, jen když platí všechno z toho:
+//   1. soutěž je ve sledovaném seznamu (config.LEAGUES),
+//   2. pravděpodobnost je STRIKTNĚ vyšší než 60 %,
+//   3. kurz je alespoň 1,50 (ze zdroje, nebo – když chybí – odhadnutý z pravděpodobnosti).
+"use strict";
+
+const config = require("./config");
+const { estimateOdds } = require("./odds");
+
+const HIGH = "high";
+const MID = "mid";
+
+/** Doplní odhad kurzu, pokud zdroj žádný neuvedl (a označí ho jako odhad). */
+function ensureOdds(tip) {
+  if (tip.odds === null || tip.odds === undefined) {
+    const est = estimateOdds(tip.probability);
+    if (est !== null) {
+      tip.odds = est;
+      tip.oddsEstimated = true;
+    }
+  }
+  return tip;
+}
+
+function passesFilters(tip) {
+  const league = config.leagueByKey(tip.leagueKey);
+  if (!league || !league.enabled) return false;
+  if (tip.probability === null || tip.probability === undefined || !(tip.probability > config.MIN_PROBABILITY)) return false;
+  return tip.odds !== null && tip.odds !== undefined && tip.odds >= config.MIN_ODDS;
+}
+
+/** Zpracuje kurzy a nechá jen tipy, které splní všechny povinné podmínky. */
+function applyFilters(tips) {
+  return tips.map(ensureOdds).filter(passesFilters);
+}
+
+/** Zelená nad 75 %, žlutá v pásmu 60–75 % (včetně 75). */
+function probabilityClass(probability) {
+  return probability > config.HIGH_PROBABILITY ? HIGH : MID;
+}
+
+module.exports = { HIGH, MID, ensureOdds, passesFilters, applyFilters, probabilityClass };

@@ -1,64 +1,66 @@
 # Fotbalové tipy
 
-Desktopová aplikace pro Windows (Python + Tkinter), která po spuštění sama stáhne fotbalové tipy,
-vyfiltruje je podle kvality a ukáže je v přehledné tabulce. Zaměřuje se na top evropské ligy
-a poháry UEFA a jako cílovou sázkovou kancelář počítá s **Tipsportem**.
+Desktopová aplikace pro Windows (**Electron, `.exe` bez instalace**), která po spuštění sama stáhne fotbalové tipy,
+vyfiltruje je podle kvality a ukáže je v přehledné tabulce. Zaměřuje se na top evropské ligy a poháry UEFA
+a jako cílovou sázkovou kancelář počítá s **Tipsportem**. Vzhled a ovládání jsou ve stejném systému jako
+**J.I.M.M.Y.** (tmavé téma, okno bez rámečku, levé menu, karty, „Upravit rozložení“).
 
 | Zdroj | K čemu slouží | Jak se čte |
 |---|---|---|
-| [Scores24](https://scores24.live/en) | tipy, míra shody (%) a kurzy | HTTP; sbalené ligy se rozbalí v prohlížeči (Selenium) |
-| [Forebet](https://www.forebet.com/) | statistické pravděpodobnosti 1 / X / 2 | HTTP, jinak Selenium (je za Cloudflare) |
+| [Scores24](https://scores24.live/en) | tipy, míra shody (%) a kurzy | HTTP; sbalené ligy se rozbalí ve skrytém okně aplikace |
+| [Forebet](https://www.forebet.com/) | statistické pravděpodobnosti 1 / X / 2 | HTTP, jinak okno aplikace (je za Cloudflare) |
 | [SofaScore](https://www.sofascore.com/cs) | přesný začátek, stav, skóre, výsledky | veřejný JSON endpoint webu |
 
-## Spuštění (Windows)
+Aplikace žije ve složce [`desktop/`](desktop). Původní verze v Pythonu (Tkinter) zůstává v kořeni repozitáře
+– viz [Starší verze](#starší-verze-python--tkinter).
 
-1. Nainstalujte **Python 3.10 nebo novější** z <https://www.python.org/downloads/>
-   (při instalaci zaškrtněte *Add python.exe to PATH*).
-2. Dvakrát klikněte na **`run.bat`**. Při prvním spuštění si sám vytvoří složku `.venv`
-   a nainstaluje balíčky z `requirements.txt` (potřebuje internet, trvá to chvíli).
-3. Okno se otevře hned a tipy se stáhnou automaticky na pozadí (obvykle 10–40 s).
+## Stažení a spuštění (Windows)
 
-Ruční postup, pokud nechcete `run.bat`:
+`.exe` se sestavuje na GitHubu (Actions → **Fotbalové tipy – Windows build**) a po každém sestavení se nahraje do
+vydání **`tipy-latest`**:
 
-```bat
-py -3 -m venv .venv
-.venv\Scripts\pip install -r requirements.txt
-.venv\Scripts\python main.py
-```
+> `https://github.com/vopasek1-wq/Jimmy/releases/download/tipy-latest/FotbalTipy.exe`
 
-Pro ladění existuje i konzolový režim bez okna: `python main.py --cli` (volitelně `--save` uloží výsledek
-do databáze a `-v` zapne podrobný log).
+1. Stáhněte `FotbalTipy.exe` a dvakrát na něj klikněte. Nic se neinstaluje.
+2. Pokud Windows SmartScreen zobrazí varování (aplikace není podepsaná): **Další informace → Přesto spustit**.
+3. Okno se otevře hned s posledními uloženými daty a tipy se na pozadí stáhnou (obvykle 20–40 s). Když jsou
+   uložená data mladší než 15 minut, znovu se nestahuje.
 
-## Vzhled
+Data (databáze `tipy.sqlite3`, nastavení okna) jsou ve `%APPDATA%\FotbalTipy`; vydání se nijak neváže na složku
+s `.exe`. Pro zkoušení lze složku přesměrovat proměnnou prostředí `TIPSTER_DATA_DIR`.
 
-Okno používá stejný design systém jako **Value Bet Kalkulačka**: stejné barevné tokeny (teal akcent, okrový signál,
-zelená / červená / žlutá „soft“ pozadí), nadpisy v písmu Palatino, text v Segoe UI, čísla v Cascadia Mono / Consolas,
-hranaté rohy, dvoupixelová linka pod hlavičkou a sekce s akcentní horní linkou a písmenem. Rozvržení kopíruje kalkulačku:
-hlavička s kickerem, nadpisem a perexem, pás ukazatelů (počet tipů, nad 75 %, průměrný kurz, nejbližší zápas
-a rozložení), vlevo sekce **A** s tabulkou a vpravo karty *Detail tipu* a *Zdroje dat*.
+> Vydání `tipy-latest` není označené jako „Latest“, takže nepřebije odkaz `/releases/latest/download/JIMMY.exe`.
+> Workflow aplikace J.I.M.M.Y. ale uchovává jen 5 nejnovějších vydání **všech** druhů – po pěti jejích dalších
+> sestaveních může vydání `tipy-latest` zmizet. Stačí pak spustit *Actions → Fotbalové tipy – Windows build →
+> Run workflow*.
 
-**Světlý i tmavý režim**: tlačítko v pravém horním rohu je přepíná, volba se pamatuje (`data/settings.json`).
-Při prvním spuštění se ve Windows použije režim systému. Kdyby některé písmo ve vašem systému chybělo, použije se
-náhradní (pořadí je v `tipster/theme.py`). Hodnoty barev jsou tamtéž a odpovídají CSS kalkulačky.
+## Ovládání
+
+Levé menu: **Přehled** (všechny karty, rozložení lze upravit), **Tipy** (tabulka a detail přes celou plochu),
+**Historie** a **Zdroje a pravidla**.
+
+* **Dnes / Zítra / Dnes a zítra / Vše**, *Skrýt zahájené* a *Potvrzené Forebetem* – filtry nad tabulkou
+  (volba se pamatuje).
+* Kliknutí na záhlaví sloupce řadí (pravděpodobnost, kurz, čas, …); hledání v horní liště (**Ctrl + K**) filtruje
+  podle týmu, soutěže nebo tipu.
+* Řádek vybereš kliknutím nebo šipkami ↑ ↓; **dvojklik / Enter** otevře zápas na Scores24.
+* Karta **Detail tipu**: pravděpodobnost, kurz, Forebet, zdroje, tlačítko *Najít v Tipsportu* (zkopíruje název
+  zápasu a otevře Tipsport) a *Kopírovat tip*.
+* **Obnovit tipy** stáhne data znovu. **Upravit rozložení** umožní přetahovat a měnit velikost karet na Přehledu
+  i přesouvat položky menu (*Hotovo* nebo Esc to ukončí, *Výchozí rozložení* vrátí původní stav).
 
 ## Co aplikace zobrazí
 
-Tip se objeví, **jen když platí všechno** z následujícího (konstanty jsou v `tipster/config.py`):
+Tip se objeví, **jen když platí všechno** z následujícího (konstanty jsou v `desktop/src/config.js`):
 
 * soutěž je mezi sledovanými – Premier League, La Liga, Serie A, Bundesliga, Ligue 1, Liga mistrů,
   Evropská liga, Konferenční liga, Eredivisie, Liga Portugal, belgická Pro League, Süper Lig,
-  skotská Premiership a česká 1. liga (seznam upravíte v `LEAGUES`, ligu vypnete `enabled=False`),
+  skotská Premiership a česká 1. liga (seznam upravíte v `LEAGUES`),
 * pravděpodobnost je **striktně větší než 60 %**,
 * kurz je **alespoň 1,50**.
 
-Řádek je **zelený** při pravděpodobnosti nad 75 %, **žlutý** v pásmu 60–75 %. Živé zápasy jsou modře,
-skončené šedě. Horní počítadlo ukazuje počet tipů po filtraci. Tabulku lze řadit kliknutím na záhlaví
-(pravděpodobnost, kurz, soutěž, čas, …), přepínat Dnes / Zítra / Vše, skrýt už zahájené zápasy
-a ručně obnovit tlačítkem *Obnovit tipy*. Dvojklik otevře zápas na Scores24, pravé tlačítko nabídne
-SofaScore a „Zkopírovat zápas a otevřít Tipsport“.
-
-Ke každému tipu: zápas, soutěž, začátek (pražský čas), typ tipu, pravděpodobnost, kurz, pravděpodobnost
-z Forebetu (pokud je k dispozici), zdroj a stav zápasu.
+Řádek je **zelený** při pravděpodobnosti nad 75 %, **žlutý** v pásmu 60–75 %. Živé zápasy mají modrou tečku,
+skončené jsou ztlumené.
 
 ### Jak číst pravděpodobnost (důležité)
 
@@ -66,99 +68,107 @@ z Forebetu (pokud je k dispozici), zdroj a stav zápasu.
   U tipovaných zápasů bývá velmi vysoká, proto je většina řádků zelená. Scores24 občas ukáže i hodnotu nad 100
   (naměřeno 101) – v aplikaci se omezí na 100 %.
 * **Sloupec „Forebet“** je statistický model. Je dostupný jen pro trhy 1 / X / 2 a dvojitou šanci (1X, X2, 12);
-  pro Over/Under či oba týmy skórují Forebet hodnotu nedává. Zaškrtnutím *Jen potvrzené Forebetem (> 60 %)*
-  necháte jen tipy, které model také hodnotí nad 60 %.
+  pro Over/Under či oba týmy skórují hodnotu nemá (v tabulce „n/a“). Filtr *Potvrzené Forebetem* nechá jen tipy,
+  které model také hodnotí nad 60 %.
 * Když Forebet doporučí výsledek s pravděpodobností nad 60 %, který Scores24 nemá, přidá se jako samostatný
   tip se zdrojem „Forebet“.
 
 ### Kurzy a Tipsport
 
 Tipsport nemá veřejné API, a proto aplikace jeho kurzy **nestahuje**. Kurz v tabulce je orientační
-(Scores24, resp. Forebet) a **vždy ho ověřte přímo u Tipsportu** – tlačítko *Otevřít Tipsport* a pravé tlačítko
-na řádku (zkopíruje název zápasu) vám to usnadní. Když zdroj kurz neuvede, odhadne se z pravděpodobnosti
-(férový kurz zmenšený o marži 6 %) a v tabulce je označen vlnovkou, např. `~1.52`.
+(Scores24, resp. Forebet) a **vždy ho ověřte přímo u Tipsportu**. Když zdroj kurz neuvede, odhadne se
+z pravděpodobnosti (férový kurz zmenšený o marži 6 %) a v tabulce je označen vlnovkou, např. `~1,52`.
 
 ## Historie a statistiky
 
-Každý nalezený tip se ukládá do SQLite (`data/tipy.sqlite3`). Záložka *Historie a statistiky* ukazuje
-všechny uložené tipy včetně pole **Výsledek**: výsledek zadáte ručně (Výhra / Prohra / Vráceno, tlačítko
-nebo pravé tlačítko myši), nebo ho podle SofaScore doplní *Vyhodnotit automaticky*. Automaticky se vyhodnocují
-běžné trhy (1X2, dvojitá šance, Over/Under, oba týmy skórují, týmové totaly, celočíselné handicapy);
-čtvrtinové linie a neznámé trhy zůstávají ručně. Ručně zadaný výsledek se nikdy nepřepíše. Zisk a ROI se
-počítají při vkladu 1 na tip, jen z tipů se skutečným (ne odhadnutým) kurzem.
+Každý nalezený tip se ukládá do SQLite. Stránka **Historie** ukazuje uložené tipy za 7 / 30 dní nebo vše,
+včetně sloupce **Výsledek**: ručně ho zadáte (*Výhra / Prohra / Vráceno* u vybraného řádku), nebo ho podle
+SofaScore doplní **Vyhodnotit automaticky**. Automaticky se vyhodnocují běžné trhy (1X2, dvojitá šance, Over/Under,
+oba týmy skórují, týmové totaly, celočíselné handicapy); čtvrtinové linie a neznámé trhy zůstávají ručně.
+Ručně zadaný výsledek se nikdy nepřepíše. Zisk a ROI se počítají při vkladu 1 na tip, jen z tipů se skutečným
+(ne odhadnutým) kurzem.
 
 ## Bez internetu a při výpadku zdroje
 
-* Po startu se hned ukáže poslední uložená data (v záhlaví s poznámkou „data z mezipaměti“) a až pak běží stahování.
-* Bez internetu nebo při selhání Scores24 zůstanou na obrazovce poslední uložená data a nahoře se objeví žlutý
-  pruh s důvodem.
-* Selhání Forebetu nebo SofaScore nic nerozbije – tip se zobrazí i bez nich. Stav jednotlivých zdrojů je dole
-  (✔ v pořádku, ◐ částečně, ✖ selhalo); kliknutím na něj se otevřou podrobnosti.
-* Požadavky mají pauzy 0,8–1,6 s mezi dotazy na stejný server, opakování při chybě a rozpoznání ochrany proti robotům.
+* Po startu se hned ukážou poslední uložená data (v horní liště je štítek „z mezipaměti“).
+* Bez internetu nebo při selhání Scores24 zůstanou na obrazovce poslední uložená data a nahoře se objeví pruh
+  s důvodem. Selhání Forebetu nebo SofaScore nic nerozbije – tip se zobrazí i bez nich. Stav zdrojů je na Přehledu
+  a na stránce **Zdroje a pravidla**.
+* Požadavky mají pauzy mezi dotazy na stejný server, opakování při chybě a rozpoznání ochrany proti robotům.
 
-## Selenium a Forebet (záložní režim)
+## Forebet a Cloudflare
 
-Selenium se spustí jen tam, kde samotné HTTP nestačí: pro **Forebet** (Cloudflare) a pro rozbalení **sbalených lig**
-na Scores24. Potřebuje nainstalovaný **Google Chrome nebo Microsoft Edge**; vhodný ovladač si stáhne Selenium Manager
-sám. Pokud prohlížeč chybí, aplikace to napíše do žlutého pruhu a ostatní zdroje dál fungují.
+Forebet je chráněný Cloudflare. Aplikace nejdřív zkusí obyčejný dotaz, pak skryté okno. Když kontrola nepřejde,
+objeví se pruh s tlačítkem **Ověřit Forebet**: otevře se okno, ve kterém kontrolu dokončíte (až 90 s), a aplikace
+si ověření pamatuje.
 
 > **Poctivě k Forebetu:** Cloudflare při vývoji nepustil Forebet ani skutečný prohlížeč z datacentrové IP, proto
 > parser Forebetu **nebyl ověřen na živých datech** – je napsán podle známé struktury stránky a otestován na
-> ukázkovém HTML. Na běžném domácím internetu Cloudflare často projde. Pokud ne, zkuste nastavit proměnnou
-> `TIPSTER_VISIBLE_BROWSER=1` (prohlížeč se zobrazí a kontrola obvykle projde, případně ji potvrdíte kliknutím).
-> Když Forebet nepůjde ani tak, aplikace funguje dál jen se Scores24 a SofaScore. Pokud Forebet změnil strukturu
-> stránky, uvidíte hlášení „změnila se struktura webu“ a oprava je v `tipster/scrapers/forebet.py`.
+> ukázkovém HTML. Na běžném domácím internetu Cloudflare často projde. Když ne, aplikace funguje dál jen se
+> Scores24 a SofaScore. Pokud Forebet změnil strukturu stránky, uvidíte „změnila se struktura webu“ a oprava
+> je v `desktop/src/scrapers/forebet.js`.
 
-Pokročilé proměnné prostředí: `TIPSTER_VISIBLE_BROWSER`, `TIPSTER_CHROME_BINARY` (cesta k prohlížeči),
-`TIPSTER_CHROME_ARGS` (další argumenty), `TIPSTER_DATA_DIR` (kam ukládat databázi a log).
+## Vývoj
 
-## Struktura projektu
-
-```
-main.py                 vstupní bod (okno / --cli)
-run.bat                 spuštění ve Windows (vytvoří .venv, nainstaluje balíčky)
-requirements.txt        závislosti aplikace      requirements-dev.txt  + pytest
-tipster/
-  config.py             prahy filtrů, seznam lig, adresy zdrojů, časování
-  models.py             Tip, SourceStatus, ScrapeResult
-  filters.py            povinné filtry (60 % / 1,50 / ligy)
-  markets.py            typy tipů: překlad ze Scores24, české popisky, vyhodnocení výsledku
-  odds.py, names.py     převod kurzů (US/zlomky → desetinné), párování názvů týmů
-  http.py, browser.py   HTTP klient (pauzy, opakování, detekce blokace) a Selenium
-  scrapers/             scores24.py, forebet.py, sofascore.py
-  pipeline.py           sloučení zdrojů → filtry → obohacení; automatické vyhodnocení výsledků
-  database.py           SQLite: běhy, tipy, historie, statistiky
-  ui.py, theme.py       okno (Tkinter) a vzhled: palety světlý/tmavý, písma, volba motivu
-  timeutil.py           práce s časem
-tests/                  pytest (parsery, filtry, databáze, pipeline, HTTP, GUI smoke test)
-```
-
-## Testy
+Potřebujete Node.js 22+ (aplikace používá vestavěné `node:sqlite` z Electronu).
 
 ```bat
-.venv\Scripts\pip install -r requirements-dev.txt
-.venv\Scripts\python -m pytest
+cd desktop
+npm install
+npm start          :: spustí aplikaci
+npm test           :: 70 testů (parsery, filtry, databáze, pipeline, HTTP)
+npm run dist       :: portable .exe do desktop\dist (na Windows)
 ```
 
-Testy parserů běží na ukázkových stránkách ve struktuře živých webů. GUI test se bez displeje sám přeskočí
-(na Linuxu `xvfb-run pytest`).
+`npm run dist` sestaví Windows `.exe`; na jiném systému to nejde bez Wine, proto ho sestavuje GitHub Actions
+(`.github/workflows/tipy-windows.yml`: testy → sestavení → zkušební spuštění → vydání `tipy-latest`).
+
+```
+desktop/
+  main.js, preload.js     hlavní proces Electronu (okno bez rámečku, IPC) a bezpečný most do okna
+  src/
+    config.js             prahy filtrů, seznam lig, adresy zdrojů
+    markets.js, odds.js,  typy tipů a vyhodnocení výsledku, převod kurzů, párování názvů týmů
+    names.js, filters.js, models.js, timeutil.js
+    http.js, browser.js   HTTP klient (pauzy, opakování, detekce blokace) a skryté okno místo Selenia
+    scrapers/             scores24.js, forebet.js, sofascore.js
+    pipeline.js           sloučení zdrojů → filtry → obohacení; automatické vyhodnocení výsledků
+    database.js           SQLite: běhy, tipy, historie, statistiky
+    service.js            propojení všeho pro okno
+  renderer/               rozhraní (index.html, styles.css, script.js, vendor/ = GridStack, Lucide, Roboto)
+  test/                   node:test + ukázkové stránky ve struktuře živých webů
+```
+
+## Starší verze (Python + Tkinter)
+
+Původní verze (stejné zdroje a pravidla, vlastní okno v Tkinteru) zůstává v kořeni: `main.py`, složka `tipster/`,
+`run.bat`, testy v `tests/` (pytest). Potřebuje Python 3.10+ a pro Forebet / rozbalení lig Chrome nebo Edge
+(Selenium). Spouští se `run.bat`, nebo ručně:
+
+```bat
+py -3 -m venv .venv
+.venv\Scripts\pip install -r requirements.txt
+.venv\Scripts\python main.py
+```
+
+Konzolový režim: `python main.py --cli` (volitelně `--save`, `-v`). Data jsou v `data\tipy.sqlite3` (jiná databáze
+než u Electron verze).
 
 ## Řešení potíží
 
 | Příznak | Co zkusit |
 |---|---|
-| Okno se otevře, ale tabulka je prázdná | Podívejte se na žlutý pruh nahoře a na stav zdrojů dole; log je v `data\tipster.log`. |
-| „Forebet: Cloudflare kontrola neprošla“ | Viz výše – `TIPSTER_VISIBLE_BROWSER=1`, nebo Forebet nechte být. |
-| „Nepodařilo se spustit Chrome ani Edge“ | Nainstalujte Google Chrome; ostatní zdroje fungují i bez něj. |
-| „Chybí databáze časových pásem“ | `pip install tzdata` (je v `requirements.txt`). |
+| Okno se otevře, ale tabulka je prázdná | Podívejte se na pruh nahoře a na stav zdrojů; filtr *Dnes* ukazuje jen dnešní zápasy – zkuste *Dnes a zítra* nebo *Vše*. |
+| „Forebet: Cloudflare kontrola neprošla“ | Klikněte na **Ověřit Forebet**, nebo Forebet nechte být. |
+| Windows SmartScreen aplikaci blokuje | *Další informace → Přesto spustit* (aplikace není podepsaná). |
 | Zápasy mají posunutý čas | Časy se převádějí z UTC do `Europe/Prague`; zkontrolujte systémové datum a čas. |
-| „Struktura webu se změnila“ | Weby se mění; parsery jsou v `tipster/scrapers/`, testy ukazují očekávaný tvar dat. |
+| „Struktura webu se změnila“ | Weby se mění; parsery jsou v `desktop/src/scrapers/`, testy ukazují očekávaný tvar dat. |
 
 ## Upozornění
 
 * Aplikace čte veřejně dostupné stránky zdrojů. Dodržujte jejich podmínky použití a nezvyšujte četnost dotazů
   (aplikace úmyslně dělá pauzy). Zdroje změní strukturu stránek bez varování, takže scrapery může být nutné opravit.
 * Tipy nejsou záruka výhry. Sázení je určeno osobám starším 18 let a může vést k závislosti – sázejte jen to,
-  o co si můžete dovolit přijít.
-* Aplikace byla vyvíjena a testována na Linuxu (Xvfb) proti živým webům Scores24 a SofaScore. `run.bat`,
-  vzhled písma a chování Selenia přímo ve Windows tu vyzkoušeny nebyly.
+  o co si můžete dovolit přijít. Pomoc: Národní linka pro odvykání 800 350 000 (všední dny 10–18).
+* Electron verze byla vyvíjena a testována na Linuxu (Xvfb) proti živým webům Scores24 a SofaScore; `.exe` se
+  sestavuje až v GitHub Actions a přímo ve Windows tu vyzkoušeno nebylo.

@@ -1,0 +1,170 @@
+// Typy tipů: převod textů ze Scores24 na kanonické kódy, české popisky a vyhodnocení výsledku.
+//
+// Kanonické kódy:
+//   1  X  2            výsledek zápasu (domácí / remíza / hosté)
+//   1X  X2  12         dvojitá šance
+//   O2.5  U3           celkový počet gólů – více / méně než linie
+//   BTTS  NOBTTS       oba týmy skórují – ano / ne
+//   HO1.5  AU0.5       góly jednoho týmu (H = domácí, A = hosté; O = over, U = under)
+//   AH1:+1.5  AH2:0    handicap týmu 1/2 (linie 0 = sázka bez remízy)
+//   OTHER:<text>       trh, který neumíme interpretovat (zobrazí se původní text)
+"use strict";
+
+const WIN = "win";
+const LOSS = "loss";
+const VOID = "void";
+
+const lineOf = (text) => {
+  const n = Number(String(text).replace(",", ".").replace("+", ""));
+  return Number.isFinite(n) && String(text).trim() !== "" ? n : null;
+};
+const numCs = (x) => String(x).replace(".", ","); // 2.5 → „2,5“, 3 → „3“
+const signed = (x) => (x === 0 ? "0" : x > 0 ? `+${x}` : String(x));
+
+const BTTS_RE = /^both teams to score\s*[–-]?\s*\(?\s*(yes|no)\s*\)?$/i;
+const TOTAL_RE = /^total goals\s+(over|under)\s*\(\s*([\d.,]+)\s*\)$/i;
+const HANDICAP_RE = /^handicap\s*\(\s*([+-]?[\d.,]+)\s*\)$/i;
+
+function totalMarket(direction, lineText, side, home, away) {
+  const line = lineOf(lineText);
+  if (line === null) return null;
+  const over = direction.toLowerCase() === "over";
+  const word = over ? "over" : "under";
+  if (side === null) {
+    return { code: `${over ? "O" : "U"}${line}`, labelCs: `${word[0].toUpperCase()}${word.slice(1)} ${numCs(line)} gólu` };
+  }
+  const prefix = (side === "1" ? "H" : "A") + (over ? "O" : "U");
+  const team = side === "1" ? home : away;
+  return { code: `${prefix}${line}`, labelCs: `${team}: ${word} ${numCs(line)} gólu` };
+}
+
+function splitTeam(text, home, away) {
+  // Odtrhne od textu název domácích/hostů; vrátí ['1'|'2'|null, zbytek]. Delší název má přednost.
+  const candidates = [[home, "1"], [away, "2"]].sort((p, q) => q[0].length - p[0].length);
+  for (const [name, side] of candidates) {
+    if (name && text.toLowerCase().startsWith(name.toLowerCase())) return [side, text.slice(name.length).trim()];
+  }
+  return [null, text];
+}
+
+function sideOf(name, home, away) {
+  const n = name.trim().toLowerCase();
+  if (n === home.trim().toLowerCase()) return "1";
+  if (n === away.trim().toLowerCase()) return "2";
+  return null;
+}
+
+function doubleChance(side, home, away) {
+  return side === "1" ? { code: "1X", labelCs: `1X – ${home} neprohraje` } : { code: "X2", labelCs: `X2 – ${away} neprohraje` };
+}
+
+/**
+ * Přeloží anglický popis tipu ze Scores24 na {code, labelCs}.
+ * Příklady vstupů: „Arsenal to Win“, „Both Teams to Score – (Yes)“, „Total goals Over (2,5)“,
+ * „Brighton Total goals Under (1,5)“, „Como 1907 Handicap (+1,5)“. Neznámý trh nezahazujeme –
+ * vrátí se jako OTHER s původním textem.
+ */
+function normalizePick(label, home, away) {
+  const text = String(label).replace(/\s+/g, " ").trim();
+  const other = { code: `OTHER:${text}`, labelCs: text };
+  if (!text) return other;
+  let m;
+
+  if ((m = BTTS_RE.exec(text))) {
+    return m[1].toLowerCase() === "yes"
+      ? { code: "BTTS", labelCs: "Oba týmy dají gól – ano" }
+      : { code: "NOBTTS", labelCs: "Oba týmy dají gól – ne" };
+  }
+  if ((m = TOTAL_RE.exec(text))) return totalMarket(m[1], m[2], null, home, away) || other;
+  if (/^draw$/i.test(text)) return { code: "X", labelCs: "X – remíza" };
+
+  // „Cagliari will not lose“
+  if ((m = /^(.+?)\s+(?:will not lose|not to lose)$/i.exec(text))) {
+    const side = sideOf(m[1], home, away);
+    if (side) return doubleChance(side, home, away);
+  }
+  // „Draw or Arsenal“
+  if ((m = /^draw or (.+)$/i.exec(text))) {
+    const side = sideOf(m[1], home, away);
+    if (side) return doubleChance(side, home, away);
+  }
+  // „Arsenal or Draw“ / „Arsenal to Win or Draw“ / „Arsenal or Tottenham“
+  if ((m = /^(.+?)\s+(?:to win\s+)?or\s+(.+)$/i.exec(text))) {
+    const left = sideOf(m[1], home, away);
+    const right = m[2].trim();
+    if (left && right.toLowerCase() === "draw") return doubleChance(left, home, away);
+    const rightSide = sideOf(right, home, away);
+    if (left && rightSide && left !== rightSide) return { code: "12", labelCs: "12 – nebude remíza" };
+  }
+
+  // Všechno ostatní začíná názvem týmu: „<tým> to Win“, „<tým> Total goals…“, „<tým> Handicap…“
+  const [side, rest] = splitTeam(text, home, away);
+  if (side && rest) {
+    const team = side === "1" ? home : away;
+    if (/^to win$/i.test(rest)) return { code: side, labelCs: `${side} – výhra ${team}` };
+    if ((m = TOTAL_RE.exec(rest))) return totalMarket(m[1], m[2], side, home, away) || other;
+    if ((m = HANDICAP_RE.exec(rest))) {
+      const h = lineOf(m[1]);
+      if (h !== null) {
+        if (h === 0) return { code: `AH${side}:0`, labelCs: `${team}: bez remízy` };
+        return { code: `AH${side}:${signed(h)}`, labelCs: `${team}: handicap ${signed(h).replace(".", ",")}` };
+      }
+    }
+  }
+  return other;
+}
+
+/** Popisek pro trhy 1 / X / 2 (používá ho Forebet, který dává jen výsledek zápasu). */
+function resultMarket(code, home, away) {
+  if (code === "1") return { code: "1", labelCs: `1 – výhra ${home}` };
+  if (code === "2") return { code: "2", labelCs: `2 – výhra ${away}` };
+  return { code: "X", labelCs: "X – remíza" };
+}
+
+/** Pravděpodobnost trhu z rozdělení 1/X/2; pro ostatní trhy null (Forebet je zde nedává). */
+function forebetProbability(code, p1, px, p2) {
+  const table = { 1: p1, X: px, 2: p2, "1X": p1 + px, X2: px + p2, 12: p1 + p2 };
+  return Object.prototype.hasOwnProperty.call(table, code) ? table[code] : null;
+}
+
+const TOTAL_CODE = /^([HA]?)([OU])(\d+(?:\.\d+)?)$/;
+const AH_CODE = /^AH([12]):([+-]?\d+(?:\.\d+)?)$/;
+
+function vsLine(diff, over, line) {
+  if ((line * 2) % 1 !== 0) return null; // čtvrtinová linie
+  if (diff === 0) return VOID; // celočíselná linie, přesně na ní → vrácená sázka
+  return (diff > 0) === over ? WIN : LOSS;
+}
+
+/**
+ * Vrátí WIN / LOSS / VOID, nebo null, když trh neumíme automaticky vyhodnotit.
+ * Čtvrtinové linie se vyhodnocují půl na půl, takže je raději nechávám ručně (null).
+ */
+function evaluate(code, homeGoals, awayGoals) {
+  const hg = homeGoals;
+  const ag = awayGoals;
+  const simple = {
+    1: hg > ag, X: hg === ag, 2: hg < ag, "1X": hg >= ag, X2: hg <= ag, 12: hg !== ag,
+    BTTS: hg > 0 && ag > 0, NOBTTS: !(hg > 0 && ag > 0),
+  };
+  if (Object.prototype.hasOwnProperty.call(simple, code)) return simple[code] ? WIN : LOSS;
+
+  let m = TOTAL_CODE.exec(code);
+  if (m) {
+    const [, who, direction, lineText] = m;
+    const line = Number(lineText);
+    const goals = who === "" ? hg + ag : who === "H" ? hg : ag;
+    return vsLine(goals - line, direction === "O", line);
+  }
+  m = AH_CODE.exec(code);
+  if (m) {
+    const h = Number(m[2]);
+    const [mine, theirs] = m[1] === "1" ? [hg, ag] : [ag, hg];
+    if ((h * 2) % 1 !== 0) return null; // čtvrtinový handicap
+    const diff = mine + h - theirs;
+    return diff > 0 ? WIN : diff === 0 ? VOID : LOSS;
+  }
+  return null;
+}
+
+module.exports = { WIN, LOSS, VOID, normalizePick, resultMarket, forebetProbability, evaluate };

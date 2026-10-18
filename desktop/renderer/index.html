@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'">
+  <title>Fotbalové tipy</title>
+  <link rel="icon" href="assets/favicon.png" type="image/png">
+
+  <link rel="stylesheet" href="vendor/fonts.css">
+  <link rel="stylesheet" href="vendor/gridstack.min.css">
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Ikony: Lucide (lokální kopie z J.I.M.M.Y.) – aplikace funguje i offline -->
+  <script defer src="vendor/lucide.min.js"></script>
+  <script defer src="vendor/gridstack-all.js"></script>
+  <script defer src="script.js"></script>
+</head>
+<body>
+  <div class="app" id="app" data-view="overview">
+
+    <!-- ============ LEVÝ SIDEBAR ============ -->
+    <aside class="sidebar" id="sidebar" aria-label="Hlavní navigace">
+      <a class="brand" href="#">
+        <img class="brand__logo" src="assets/logo.png" width="36" height="36" alt="">
+        <span class="brand__name">Fotbalové tipy</span>
+      </a>
+
+      <nav class="nav">
+        <ul class="nav__list">
+          <li><a class="nav__link is-active" href="#" data-view="overview" aria-current="page"><i data-lucide="house"></i><span>Přehled</span></a></li>
+          <li><a class="nav__link" href="#" data-view="tips"><i data-lucide="goal"></i><span>Tipy</span></a></li>
+          <li><a class="nav__link" href="#" data-view="history"><i data-lucide="history"></i><span>Historie</span></a></li>
+          <li><a class="nav__link" href="#" data-view="sources"><i data-lucide="database"></i><span>Zdroje a pravidla</span></a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- ============ HORNÍ LIŠTA ============ -->
+    <header class="topbar">
+      <form class="search" role="search" id="search-form" onsubmit="return false">
+        <i data-lucide="search"></i>
+        <input class="search__input" id="search" type="search" placeholder="Hledat zápas, ligu nebo tip... (Ctrl + K)" aria-label="Hledat v tipech" autocomplete="off">
+      </form>
+
+      <div class="topbar__actions">
+        <span class="progress-text" id="progress-text" hidden></span>
+        <span class="chip chip--warn" id="cache-chip" hidden title="Stažení se nepodařilo – zobrazují se poslední uložená data"><i data-lucide="file-clock"></i>z mezipaměti</span>
+        <button class="btn btn--primary" type="button" id="refresh" title="Stáhnout tipy znovu"><i data-lucide="refresh-cw"></i><span>Obnovit tipy</span></button>
+        <button class="layout-btn" type="button" id="layout-reset" hidden><i data-lucide="rotate-ccw"></i>Výchozí rozložení</button>
+        <button class="layout-btn" type="button" id="layout-edit" aria-pressed="false" title="Přetahovat a měnit velikost bloků na Přehledu"><i data-lucide="layout-dashboard"></i><span>Upravit rozložení</span></button>
+        <div class="window-controls">
+          <button class="icon-btn" type="button" aria-label="Minimalizovat" data-win="minimize"><i data-lucide="minus"></i></button>
+          <button class="icon-btn" type="button" aria-label="Maximalizovat" data-win="maximize"><i data-lucide="square"></i></button>
+          <button class="icon-btn icon-btn--close" type="button" aria-label="Zavřít" data-win="close"><i data-lucide="x"></i></button>
+        </div>
+      </div>
+      <div class="topbar__progress" id="topbar-progress" hidden></div>
+    </header>
+
+    <!-- ============ OBSAH ============ -->
+    <main class="main" id="main">
+      <h1 class="sr-only">Fotbalové tipy</h1>
+      <div class="notice" id="notice" role="status" hidden></div>
+
+      <!-- Přehled: přizpůsobitelná mřížka (GridStack) – bloky jde přetahovat a měnit jejich velikost -->
+      <div class="grid-stack board" id="board">
+
+        <div class="grid-stack-item" gs-id="tips" gs-x="0" gs-y="0" gs-w="15" gs-h="38" gs-min-w="9" gs-min-h="14">
+          <div class="grid-stack-item-content">
+            <section class="card tips" aria-labelledby="tips-title">
+              <header class="card__header">
+                <h2 class="card__title" id="tips-title"><i data-lucide="goal"></i>Tipy po filtraci</h2>
+                <span class="card__note" id="tips-note"></span>
+              </header>
+
+              <div class="toolbar">
+                <div class="seg-control" role="group" aria-label="Zobrazit den" id="day-control">
+                  <button type="button" data-day="today" aria-pressed="true">Dnes</button>
+                  <button type="button" data-day="tomorrow" aria-pressed="false">Zítra</button>
+                  <button type="button" data-day="both" aria-pressed="false">Dnes a zítra</button>
+                  <button type="button" data-day="all" aria-pressed="false">Vše</button>
+                </div>
+                <button class="layout-btn" type="button" id="f-started" aria-pressed="false" title="Skrýt zápasy, které už začaly nebo skončily"><i data-lucide="eye-off"></i><span>Skrýt zahájené</span></button>
+                <button class="layout-btn" type="button" id="f-confirmed" aria-pressed="false" title="Jen tipy, které Forebet také hodnotí nad 60 %"><i data-lucide="badge-check"></i><span>Potvrzené Forebetem</span></button>
+              </div>
+
+              <div class="table-wrap" id="tips-wrap">
+                <table class="tbl" id="tips-table" aria-label="Fotbalové tipy">
+                  <thead>
+                    <tr>
+                      <th class="c-time"><button type="button" data-sort="time">Začátek<i data-lucide="chevron-down"></i></button></th>
+                      <th class="c-match"><button type="button" data-sort="match">Zápas<i data-lucide="chevron-down"></i></button></th>
+                      <th class="c-league"><button type="button" data-sort="league">Soutěž<i data-lucide="chevron-down"></i></button></th>
+                      <th class="c-tip"><button type="button" data-sort="tip">Tip<i data-lucide="chevron-down"></i></button></th>
+                      <th class="c-prob"><button type="button" data-sort="prob">Pravděp.<i data-lucide="chevron-down"></i></button></th>
+                      <th class="c-odds"><button type="button" data-sort="odds">Kurz*<i data-lucide="chevron-down"></i></button></th>
+                      <th class="c-fb"><button type="button" data-sort="fb">Forebet<i data-lucide="chevron-down"></i></button></th>
+                      <th class="c-src"><button type="button" data-sort="source">Zdroj<i data-lucide="chevron-down"></i></button></th>
+                      <th class="c-status"><button type="button" data-sort="status">Stav<i data-lucide="chevron-down"></i></button></th>
+                    </tr>
+                  </thead>
+                  <tbody id="tips-body"></tbody>
+                </table>
+                <p class="empty" id="tips-empty" hidden></p>
+              </div>
+              <p class="card__foot"><span class="legend"><i class="legend__dot legend__dot--high"></i>nad 75 %</span><span class="legend"><i class="legend__dot legend__dot--mid"></i>60–75 %</span>
+                <span class="card__foot-text">* Kurzy jsou orientační (Scores24), ~ = odhad z pravděpodobnosti. Před vsazením je vždy ověřte u Tipsportu.</span></p>
+            </section>
+          </div>
+        </div>
+
+        <div class="grid-stack-item" gs-id="hist" gs-x="0" gs-y="38" gs-w="15" gs-h="10" gs-min-w="8" gs-min-h="8">
+          <div class="grid-stack-item-content">
+            <section class="card hist-mini" aria-labelledby="hist-title">
+              <header class="card__header">
+                <h2 class="card__title" id="hist-title"><i data-lucide="chart-column"></i>Úspěšnost tipů</h2>
+                <span class="card__note">posledních 30 dní</span>
+              </header>
+              <div class="stat-row" id="mini-stats"></div>
+            </section>
+          </div>
+        </div>
+
+        <div class="grid-stack-item" gs-id="detail" gs-x="15" gs-y="0" gs-w="9" gs-h="22" gs-min-w="6" gs-min-h="12">
+          <div class="grid-stack-item-content">
+            <section class="card detail-card" aria-labelledby="detail-title">
+              <header class="card__header">
+                <h2 class="card__title" id="detail-title"><i data-lucide="target"></i>Detail tipu</h2>
+              </header>
+              <div class="detail" id="detail"></div>
+            </section>
+          </div>
+        </div>
+
+        <div class="grid-stack-item" gs-id="dist" gs-x="15" gs-y="22" gs-w="9" gs-h="13" gs-min-w="6" gs-min-h="9">
+          <div class="grid-stack-item-content">
+            <section class="card dist" aria-labelledby="dist-title">
+              <header class="card__header">
+                <h2 class="card__title" id="dist-title"><i data-lucide="activity"></i>Rozložení</h2>
+              </header>
+              <div class="stat-row stat-row--4" id="dist-stats"></div>
+              <div class="bars" id="dist-bars"></div>
+            </section>
+          </div>
+        </div>
+
+        <div class="grid-stack-item" gs-id="sources" gs-x="15" gs-y="35" gs-w="9" gs-h="13" gs-min-w="5" gs-min-h="8">
+          <div class="grid-stack-item-content">
+            <section class="card sources-mini" aria-labelledby="sources-title">
+              <header class="card__header">
+                <h2 class="card__title" id="sources-title"><i data-lucide="plug-zap"></i>Zdroje dat</h2>
+              </header>
+              <ul class="sources" id="sources-mini"></ul>
+            </section>
+          </div>
+        </div>
+      </div>
+
+      <!-- Samostatné stránky z levého menu -->
+      <div class="pages">
+        <section class="card page-history" aria-labelledby="history-title">
+          <header class="card__header">
+            <h2 class="card__title" id="history-title"><i data-lucide="history"></i>Historie a statistiky</h2>
+            <span class="card__note">záznam tipů a výsledků</span>
+          </header>
+          <div class="stat-row stat-row--5" id="history-stats"></div>
+          <div class="toolbar">
+            <label class="select-field"><span>Období</span>
+              <select class="input input--select" id="period">
+                <option value="7">Posledních 7 dní</option>
+                <option value="30" selected>Posledních 30 dní</option>
+                <option value="all">Vše</option>
+              </select>
+            </label>
+            <div class="seg-control seg-control--outcome" role="group" aria-label="Označit výsledek vybraného tipu">
+              <button type="button" data-outcome="win"><i data-lucide="circle-check"></i>Výhra</button>
+              <button type="button" data-outcome="loss"><i data-lucide="circle-x"></i>Prohra</button>
+              <button type="button" data-outcome="void"><i data-lucide="rotate-ccw"></i>Vráceno</button>
+              <button type="button" data-outcome="clear"><i data-lucide="eraser"></i>Smazat</button>
+            </div>
+            <button class="btn btn--primary btn--sm toolbar__right" type="button" id="evaluate"><i data-lucide="sparkles"></i>Vyhodnotit automaticky</button>
+          </div>
+          <div class="table-wrap">
+            <table class="tbl tbl--history" id="history-table" aria-label="Historie tipů">
+              <thead>
+                <tr>
+                  <th class="c-time"><button type="button" data-hsort="time">Datum<i data-lucide="chevron-down"></i></button></th>
+                  <th class="c-match"><button type="button" data-hsort="match">Zápas<i data-lucide="chevron-down"></i></button></th>
+                  <th class="c-league"><button type="button" data-hsort="league">Soutěž<i data-lucide="chevron-down"></i></button></th>
+                  <th class="c-tip"><button type="button" data-hsort="tip">Tip<i data-lucide="chevron-down"></i></button></th>
+                  <th class="c-prob"><button type="button" data-hsort="prob">Pravděp.<i data-lucide="chevron-down"></i></button></th>
+                  <th class="c-odds"><button type="button" data-hsort="odds">Kurz*<i data-lucide="chevron-down"></i></button></th>
+                  <th class="c-score"><button type="button" data-hsort="score">Skóre<i data-lucide="chevron-down"></i></button></th>
+                  <th class="c-src"><button type="button" data-hsort="source">Zdroj<i data-lucide="chevron-down"></i></button></th>
+                  <th class="c-outcome"><button type="button" data-hsort="outcome">Výsledek<i data-lucide="chevron-down"></i></button></th>
+                </tr>
+              </thead>
+              <tbody id="history-body"></tbody>
+            </table>
+            <p class="empty" id="history-empty" hidden>V historii zatím nejsou žádné tipy.</p>
+          </div>
+          <p class="card__foot"><span class="card__foot-text">Výsledky lze zadat ručně, nebo je doplní „Vyhodnotit automaticky“ podle SofaScore (jen běžné trhy; ruční výsledek se nikdy nepřepisuje). Zisk a ROI se počítají při vkladu 1 na tip, jen z tipů se skutečným kurzem.</span></p>
+        </section>
+
+        <section class="card page-sources" aria-labelledby="sources-page-title">
+          <header class="card__header">
+            <h2 class="card__title" id="sources-page-title"><i data-lucide="database"></i>Zdroje a pravidla</h2>
+            <span class="card__note" id="data-dir"></span>
+          </header>
+          <div class="sources-grid">
+            <div class="panel">
+              <h3 class="panel__title"><i data-lucide="plug-zap"></i>Stav zdrojů</h3>
+              <ul class="sources sources--wide" id="sources-page"></ul>
+            </div>
+            <div class="panel">
+              <h3 class="panel__title"><i data-lucide="funnel"></i>Jak se tipy filtrují</h3>
+              <ul class="rules">
+                <li>Pravděpodobnost je <strong>větší než 60 %</strong> (přesně 60 % neprojde).</li>
+                <li>Kurz je <strong>alespoň 1,50</strong>. Když zdroj kurz neuvede, odhadne se z pravděpodobnosti (marže 6 %) a v tabulce je označen vlnovkou, např. <span class="mono">~1,52</span>.</li>
+                <li>Soutěž je mezi sledovanými: top 5 lig, Liga mistrů, Evropská a Konferenční liga, Eredivisie, Liga Portugal, belgická Pro League, Süper Lig, skotská Premiership a česká 1. liga.</li>
+                <li>Řádek je <span class="pill pill--high">zelený</span> nad 75 %, <span class="pill pill--mid">žlutý</span> v pásmu 60–75 %.</li>
+              </ul>
+            </div>
+            <div class="panel">
+              <h3 class="panel__title"><i data-lucide="info"></i>Jak číst pravděpodobnost</h3>
+              <ul class="rules">
+                <li><strong>Pravděp.</strong> je údaj ze Scores24 – míra shody jejich tipu, <strong>ne kalibrovaná pravděpodobnost</strong> výsledku. Může být i velmi vysoká, proto je většina řádků zelená.</li>
+                <li><strong>Forebet</strong> je statistický model. Dává jen výsledek zápasu 1 / X / 2 a dvojitou šanci; pro Over/Under a oba týmy skórují hodnotu nemá.</li>
+                <li>Kurzy jsou orientační. <strong>Tipsport</strong> nemá veřejné API, proto je aplikace nestahuje – před vsazením je ověřte přímo u něj.</li>
+              </ul>
+            </div>
+            <div class="panel panel--warn">
+              <h3 class="panel__title"><i data-lucide="shield-alert"></i>Upozornění</h3>
+              <ul class="rules">
+                <li>Hazardní hry jsou jen pro osoby starší 18 let. Sázej jen peníze, které si můžeš dovolit prohrát.</li>
+                <li>Pomoc je zdarma: Národní linka pro odvykání <strong>800 350 000</strong> (všední dny 10–18), <a href="https://www.chciodvykat.cz/odvykani-hrani" data-external>chciodvykat.cz</a>.</li>
+                <li>Tipy nejsou záruka výhry. Zdroje mohou kdykoli změnit strukturu stránek.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+    </main>
+  </div>
+</body>
+</html>
