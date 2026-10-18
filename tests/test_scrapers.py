@@ -59,6 +59,13 @@ def test_scores24_live_score_and_minute_is_not_a_date():
     assert t.status == LIVE and t.kickoff_utc == datetime(2026, 10, 18, 13, 0, tzinfo=timezone.utc)
 
 
+def test_scores24_percent_above_100_is_capped():
+    """Živě naměřeno: Scores24 ukázal u zápasu „101“ – jako procento by to byl nesmysl."""
+    r = scores24.parse_page(page_with_epl([s24_row("A", "B", percent="101")]), NOW)[0].rows[0]
+    assert r.percent == 100.0
+    assert scores24.row_to_tip(r, NOW).probability == 100.0
+
+
 @pytest.mark.parametrize("token, status", [("today", UPCOMING), ("tomorrow", UPCOMING), ("Ended", FINISHED),
                                            ("45", LIVE), ("90+3", LIVE), ("Halftime", LIVE), ("Postponed", None), ("???", None)])
 def test_scores24_status_tokens(token, status):

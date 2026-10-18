@@ -205,7 +205,9 @@ def _parse_right_part(row: Row, toks: list[str]) -> None:
         toks = toks[:-2]
     # procenta: číslo před popisem tipu
     if toks and _INT.match(toks[0]) and len(toks) >= 2:
-        row.percent = float(toks[0])
+        # Scores24 občas ukáže víc než 100 (naměřeno: 101) – je to míra shody, ne pravděpodobnost.
+        # Jako procento nad 100 by to bylo nesmysl, proto se omezí na 100.
+        row.percent = min(float(toks[0]), 100.0)
         toks = toks[1:]
     row.pick_label = toks[0] if toks else ""
 

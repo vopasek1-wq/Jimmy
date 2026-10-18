@@ -17,8 +17,10 @@ from tipster.timeutil import now_utc  # noqa: E402
 
 
 @pytest.fixture
-def app(tmp_path):
+def app(tmp_path, monkeypatch):
+    from tipster import theme
     from tipster.ui import App
+    monkeypatch.setattr(theme, "_SETTINGS", tmp_path / "settings.json")
     try:
         a = App(db=Database(tmp_path / "ui.sqlite3"), auto_refresh=False, pipeline_factory=lambda: FakePipeline())
     except tk.TclError as exc:
@@ -107,4 +109,6 @@ def test_history_outcome_buttons(app):
     app._refresh_history()
     app.history_table.tree.selection_set(app.history_table.tree.get_children()[0])
     app._set_outcome(WIN)
-    assert app.db.history()[0].outcome == WIN and "výhry 1" in app.lbl_stats.cget("text")
+    assert app.db.history()[0].outcome == WIN
+    assert app.hstats["evaluated"].value == "1" and "výhry 1" in app.hstats["evaluated"].caption
+    assert app.hstats["hit"].value == "100 %" and app.hstats["profit"].value == "+1,00"

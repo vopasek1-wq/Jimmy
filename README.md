@@ -29,6 +29,18 @@ py -3 -m venv .venv
 Pro ladění existuje i konzolový režim bez okna: `python main.py --cli` (volitelně `--save` uloží výsledek
 do databáze a `-v` zapne podrobný log).
 
+## Vzhled
+
+Okno používá stejný design systém jako **Value Bet Kalkulačka**: stejné barevné tokeny (teal akcent, okrový signál,
+zelená / červená / žlutá „soft“ pozadí), nadpisy v písmu Palatino, text v Segoe UI, čísla v Cascadia Mono / Consolas,
+hranaté rohy, dvoupixelová linka pod hlavičkou a sekce s akcentní horní linkou a písmenem. Rozvržení kopíruje kalkulačku:
+hlavička s kickerem, nadpisem a perexem, pás ukazatelů (počet tipů, nad 75 %, průměrný kurz, nejbližší zápas
+a rozložení), vlevo sekce **A** s tabulkou a vpravo karty *Detail tipu* a *Zdroje dat*.
+
+**Světlý i tmavý režim**: tlačítko v pravém horním rohu je přepíná, volba se pamatuje (`data/settings.json`).
+Při prvním spuštění se ve Windows použije režim systému. Kdyby některé písmo ve vašem systému chybělo, použije se
+náhradní (pořadí je v `tipster/theme.py`). Hodnoty barev jsou tamtéž a odpovídají CSS kalkulačky.
+
 ## Co aplikace zobrazí
 
 Tip se objeví, **jen když platí všechno** z následujícího (konstanty jsou v `tipster/config.py`):
@@ -51,7 +63,8 @@ z Forebetu (pokud je k dispozici), zdroj a stav zápasu.
 ### Jak číst pravděpodobnost (důležité)
 
 * **„Pravděp.“** je údaj ze Scores24 – míra shody jejich tipu, **ne kalibrovaná pravděpodobnost** výsledku.
-  U tipovaných zápasů bývá velmi vysoká, proto je většina řádků zelená.
+  U tipovaných zápasů bývá velmi vysoká, proto je většina řádků zelená. Scores24 občas ukáže i hodnotu nad 100
+  (naměřeno 101) – v aplikaci se omezí na 100 %.
 * **Sloupec „Forebet“** je statistický model. Je dostupný jen pro trhy 1 / X / 2 a dvojitou šanci (1X, X2, 12);
   pro Over/Under či oba týmy skórují Forebet hodnotu nedává. Zaškrtnutím *Jen potvrzené Forebetem (> 60 %)*
   necháte jen tipy, které model také hodnotí nad 60 %.
@@ -115,7 +128,8 @@ tipster/
   scrapers/             scores24.py, forebet.py, sofascore.py
   pipeline.py           sloučení zdrojů → filtry → obohacení; automatické vyhodnocení výsledků
   database.py           SQLite: běhy, tipy, historie, statistiky
-  ui.py, timeutil.py    okno (Tkinter) a práce s časem
+  ui.py, theme.py       okno (Tkinter) a vzhled: palety světlý/tmavý, písma, volba motivu
+  timeutil.py           práce s časem
 tests/                  pytest (parsery, filtry, databáze, pipeline, HTTP, GUI smoke test)
 ```
 
