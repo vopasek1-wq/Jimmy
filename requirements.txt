@@ -1,0 +1,9 @@
+# Základní závislosti aplikace Fotbalové tipy
+requests>=2.31
+beautifulsoup4>=4.12
+lxml>=5.0
+# Selenium je potřeba jen pro záložní režim (Forebet za Cloudflare, rozbalení lig na Scores24).
+# Ovladač prohlížeče si stáhne Selenium Manager automaticky (vyžaduje nainstalovaný Chrome nebo Edge).
+selenium>=4.15
+# Databáze časových pásem – ve Windows není součástí systému, bez ní nefunguje zoneinfo (Europe/Prague).
+tzdata>=2024.1
