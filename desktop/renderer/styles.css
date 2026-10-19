@@ -393,7 +393,7 @@ i[data-lucide],
 .board > .grid-stack-item.ui-draggable-dragging > .grid-stack-item-content,
 .board > .grid-stack-item.ui-resizable-resizing > .grid-stack-item-content { box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.8); }
 
-/* Mimo Přehled se mřížka chová jako obyčejné rozvržení: Tipy vlevo, Detail vpravo. */
+/* Mimo Přehled se místo mřížky ukazují samostatné stránky. */
 .pages { display: none; padding: 8px; }
 .app[data-view="history"] .pages,
 .app[data-view="live"] .pages { display: block; }
@@ -401,29 +401,6 @@ i[data-lucide],
 .app[data-view="live"] .board { display: none; }
 .app[data-view="live"] .page-history,
 .app[data-view="history"] .live-page { display: none; }
-
-.app[data-view="tips"] .board {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--rightbar-w);
-  gap: 16px;
-  height: calc(100dvh - var(--topbar-h) - var(--notice-h, 0px) - 17px) !important;
-  min-height: 480px;
-  padding: 8px 8px 0 8px;
-}
-.app[data-view="tips"] .board > .grid-stack-item {
-  position: relative !important;
-  inset: auto !important;
-  width: auto !important;
-  height: auto !important;
-  min-height: 0;
-  transform: none !important;
-  grid-row: 1;
-}
-.app[data-view="tips"] .board > [gs-id="tips"] { grid-column: 1; }
-.app[data-view="tips"] .board > [gs-id="detail"] { grid-column: 2; }
-.app[data-view="tips"] .board > .grid-stack-item > .grid-stack-item-content { inset: 0 !important; }
-.app[data-view="tips"] .board > .grid-stack-item > .ui-resizable-handle { display: none; }
-.app[data-view="tips"] .board > [gs-id="hist"] { display: none; }
 
 /* ---------- Karta ---------- */
 .card {
@@ -711,11 +688,6 @@ i[data-lucide],
   .btn span { display: none; }
   #refresh span { display: inline; }
   .stat-row--5 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
-@media (max-width: 1100px) {
-  .app[data-view="tips"] .board { grid-template-columns: minmax(0, 1fr); height: auto !important; }
-  .app[data-view="tips"] .board > [gs-id="tips"] { height: 520px !important; }
-  .app[data-view="tips"] .board > [gs-id="detail"] { grid-column: 1; grid-row: 2; height: 360px !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {

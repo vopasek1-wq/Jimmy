@@ -65,7 +65,6 @@
     error: null,              // chyba celého stahování (text)
     busy: false,
     limits: { minProbability: 60, minOdds: 1.5, highProbability: 75 },
-    tipsportUrl: "https://www.tipsport.cz/",
     day: DAYS.includes(store.get("day")) ? store.get("day") : "today",
     hideStarted: store.get("hide-started") === true,
     onlyConfirmed: store.get("only-confirmed") === true,
@@ -113,10 +112,6 @@
     if (desktop) desktop.openExternal(url);
     else window.open(url, "_blank", "noopener");
   };
-  const copyText = async (text) => {
-    if (desktop) return desktop.copyText(text);
-    try { await navigator.clipboard.writeText(text); return true; } catch { return false; }
-  };
 
   document.addEventListener("click", (e) => {
     const a = e.target.closest?.("a[data-external], a[href^='http']");
@@ -129,7 +124,7 @@
     `<div class="stat ${cls}"><div class="stat__value">${esc(value)}</div><div class="stat__label" title="${esc(label)}">${esc(label)}</div></div>`;
 
   /* ---------- Navigace ---------- */
-  const VIEWS = ["overview", "tips", "live", "history"];
+  const VIEWS = ["overview", "live", "history"];
   const showView = (view) => {
     if (!VIEWS.includes(view)) view = "overview";
     app.dataset.view = view;
@@ -448,8 +443,6 @@
       <div class="detail__league">${esc(t.league)}</div>
       <dl class="facts">${facts.map(([k, v, strong]) => `<dt>${esc(k)}</dt><dd${strong ? ' class="is-strong"' : ""}>${esc(v)}</dd>`).join("")}</dl>
       <div class="detail__actions">
-        <button class="btn btn--primary btn--sm" type="button" data-act="tipsport" title="Zkopíruje název zápasu a otevře Tipsport"><i data-lucide="external-link"></i>Najít v Tipsportu</button>
-        <button class="btn btn--ghost btn--sm" type="button" data-act="copy"><i data-lucide="copy"></i>Kopírovat tip</button>
         ${t.url ? '<button class="btn btn--ghost btn--sm" type="button" data-act="scores24"><i data-lucide="external-link"></i>Scores24</button>' : ""}
         ${t.sofascoreUrl ? '<button class="btn btn--ghost btn--sm" type="button" data-act="sofascore"><i data-lucide="external-link"></i>SofaScore</button>' : ""}
       </div>`;
@@ -461,17 +454,6 @@
     const t = tipByKey(state.selected);
     if (!btn || !t) return;
     switch (btn.dataset.act) {
-      case "tipsport":
-        await copyText(t.matchName);
-        toast(`Název zápasu „${t.matchName}“ je zkopírovaný – vlož ho do hledání na Tipsportu.`);
-        openExternal(state.tipsportUrl);
-        break;
-      case "copy": {
-        const odds = t.odds ? `, kurz ${t.oddsEstimated ? "~" : ""}${nf2.format(t.odds)}` : "";
-        await copyText(`${t.matchName} – ${t.tipLabel} (${fmtPct(t.probability)}${odds})`);
-        toast("Tip je zkopírovaný do schránky.");
-        break;
-      }
       case "scores24": openExternal(t.url); break;
       case "sofascore": openExternal(t.sofascoreUrl); break;
       default: break;
@@ -1068,7 +1050,6 @@
     const info = await desktop.appInfo();
     if (info) {
       state.limits = { ...state.limits, ...info.limits };
-      state.tipsportUrl = info.tipsportUrl || state.tipsportUrl;
     }
     const cached = await desktop.tips.cached();
     if (cached.ok) state.payload = cached.data;
