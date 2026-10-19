@@ -747,8 +747,8 @@
       return `${title}<button type="button" class="live-row${m.id === live.selected ? " is-selected" : ""}" data-id="${m.id}">
         <span class="live-row__min"><i class="live-dot"></i>${esc(m.minute)}</span>
         <span class="live-row__teams"><span>${esc(m.home)}</span><span>${esc(m.away)}</span></span>
-        <span class="live-row__score"><span>${m.homeScore}</span><span>${m.awayScore}</span></span>
-        ${tips.length ? `<span class="live-row__tip">Tip: ${esc(tips.map((t) => t.tipLabel).join(", "))}</span>` : ""}</button>`;
+        ${tips.length ? `<span class="live-row__tip" title="${esc(tips.map((t) => t.tipLabel).join(", "))}">${esc(tips.map((t) => t.tipLabel).join(", "))}</span>` : "<span></span>"}
+        <span class="live-row__score"><span>${m.homeScore}</span><span>${m.awayScore}</span></span></button>`;
     }).join("");
   }
 

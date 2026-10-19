@@ -730,14 +730,14 @@ i[data-lucide],
 .live-scroll, .live-detail { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border-3) transparent; }
 .live-detail { margin-top: 12px; padding-right: 4px; }
 .live-group { margin: 14px 0 4px; font-size: 11.5px; letter-spacing: 0.3px; text-transform: uppercase; color: var(--muted); }
-.live-row { display: grid; grid-template-columns: 66px minmax(0, 1fr) auto; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; border-radius: var(--radius-md); text-align: left; transition: background-color 0.16s; }
+.live-row { display: grid; grid-template-columns: 66px minmax(0, 1fr) auto auto; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; border-radius: var(--radius-md); text-align: left; transition: background-color 0.16s; }
 .live-row:hover { background: rgba(255, 255, 255, 0.04); }
 .live-row.is-selected { background: var(--accent-deep); }
 .live-row__min { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 500; color: #ff8a8a; white-space: nowrap; }
 .live-row__teams { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 13.5px; }
 .live-row__teams span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .live-row__score { display: flex; flex-direction: column; gap: 2px; align-items: flex-end; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.live-row__tip { grid-column: 2 / 4; font-size: 11.5px; color: var(--accent-bright); }
+.live-row__tip { max-width: 130px; padding: 2px 8px; border-radius: 10px; background: var(--accent-soft); font-size: 11.5px; color: var(--accent-bright); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .live-head { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 14px; text-align: center; }
 .live-head__team { font-size: 17px; font-weight: 500; overflow-wrap: anywhere; }
 .live-head__score { font-size: 34px; font-weight: 700; letter-spacing: 1px; font-variant-numeric: tabular-nums; }
