@@ -194,6 +194,18 @@ class Pipeline {
 
 // --- automatické vyhodnocení výsledků ----------------------------------------------------------------------
 
+/** Vyhodnotí tipy skončených zápasů, jejichž skóre už v databázi je (bez sítě). Vrací počet vyhodnocených. */
+function settleFinished(db) {
+  let done = 0;
+  for (const t of db.finishedUnsettled()) {
+    const outcome = evaluate(t.tipCode, t.homeScore, t.awayScore);
+    if (outcome === null) continue;
+    db.setOutcome(t.id, outcome, "auto");
+    done += 1;
+  }
+  return done;
+}
+
 /**
  * Doplní výsledky skončených zápasů podle SofaScore. Vrací {done, message}. Vyhodnocují se jen tipy bez
  * výsledku, jejichž zápas začal před více než 3 hodinami a nejsou starší než `maxAgeDays`. Ručně zadané
@@ -201,15 +213,16 @@ class Pipeline {
  */
 async function updateResults(db, http, { progress = () => {}, maxAgeDays = 14, now = new Date() } = {}) {
   const cutoff = addDays(todayLocal(now), -maxAgeDays);
-  const before = new Date(now.getTime() - 3 * 3600 * 1000);
+  const settled = settleFinished(db); // co už je skončené a má skóre, se vyhodnotí hned
+  const before = new Date(now.getTime() - 100 * 60 * 1000); // zápas netrvá míň než ~100 min; skončení potvrdí SofaScore
   const byId = new Map();
   for (const t of [...db.pendingResults(before), ...db.needScores(before)]) byId.set(t.id, t); // bez výsledku, nebo bez skóre
   const pending = [...byId.values()].filter((t) => localDate(t.kickoff) >= cutoff);
-  if (!pending.length) return { done: 0, message: "Žádné tipy nečekají na vyhodnocení." };
+  if (!pending.length) return settled ? { done: settled, message: `Vyhodnoceno ${settled} tipů.` } : { done: 0, message: "Žádné tipy nečekají na vyhodnocení." };
 
   progress("SofaScore: zjišťuji výsledky zápasů…");
   const client = new SofaScoreClient(http);
-  let done = 0;
+  let done = settled;
   let skipped = 0;
   for (const t of pending) {
     const league = config.leagueByKey(t.leagueKey);
@@ -231,4 +244,4 @@ async function updateResults(db, http, { progress = () => {}, maxAgeDays = 14, n
   return { done, message: `${message}.` };
 }
 
-module.exports = { Pipeline, combine, updateResults, findForebet, findRow };
+module.exports = { Pipeline, combine, updateResults, settleFinished, findForebet, findRow };

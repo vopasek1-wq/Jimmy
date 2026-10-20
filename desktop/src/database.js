@@ -80,7 +80,7 @@ ON CONFLICT(key) DO UPDATE SET
 function labelOf(r) {
   if (!r.raw_label || r.raw_label === "Forebet") return r.tip_label;
   const m = normalizePick(r.raw_label, r.home, r.away);
-  return m.code === r.tip_code ? m.labelCs : r.tip_label;
+  return m.code === r.tip_code || r.tip_code.startsWith("OTHER:") ? m.labelCs : r.tip_label; // starý neznámý trh: jen nový český popisek
 }
 
 function rowToTip(r) {
@@ -194,6 +194,12 @@ class Database {
   needScores(kickedOffBefore) {
     return this.db.prepare("SELECT * FROM tips WHERE home_score IS NULL AND kickoff_utc <= ? ORDER BY kickoff_utc")
       .all(kickedOffBefore.toISOString()).map(rowToTip);
+  }
+
+  /** Skončené zápasy se známým skóre, které ještě nemají výsledek tipu (vyhodnotí se bez dotazu na web). */
+  finishedUnsettled() {
+    return this.db.prepare("SELECT * FROM tips WHERE status='finished' AND outcome IS NULL AND home_score IS NOT NULL AND away_score IS NOT NULL")
+      .all().map(rowToTip);
   }
 
   setScore(tipId, homeScore, awayScore) {

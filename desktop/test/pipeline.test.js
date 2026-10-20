@@ -281,6 +281,16 @@ test("updateResults: doplní skóre i tipům, které už mají (ruční) výsled
   assert.deepEqual([done, t.homeScore, t.awayScore, t.outcome, t.outcomeSource, t.status], [0, 3, 0, "win", "manual", "finished"]);
 });
 
+test("settleFinished: skončený zápas se známým skóre se vyhodnotí bez sítě", () => {
+  const { settleFinished } = require("../src/pipeline");
+  const db = memDb();
+  db.saveRun(okResult([mk({ home: "A", away: "B", tipCode: "O2.5", status: "finished", homeScore: 3, awayScore: 1, kickoff: new Date(Date.now() - 3 * 3600e3) }),
+    mk({ home: "C", away: "D", tipCode: "1", status: "live", homeScore: 1, awayScore: 0 })]));
+  assert.equal(settleFinished(db), 1);
+  const by = Object.fromEntries(db.history().map((t) => [t.home, t]));
+  assert.deepEqual([by.A.outcome, by.A.outcomeSource, by.C.outcome], ["win", "auto", null]);
+});
+
 test("updateResults: nedostupný SofaScore se nahlásí", async () => {
   const db = memDb();
   db.saveRun(okResult([mk({ kickoff: new Date(Date.now() - 5 * 3600e3) })]));

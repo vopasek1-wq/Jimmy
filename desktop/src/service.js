@@ -5,7 +5,7 @@ const path = require("node:path");
 const config = require("./config");
 const { Database } = require("./database");
 const { probabilityClass } = require("./filters");
-const { Pipeline, updateResults } = require("./pipeline");
+const { Pipeline, updateResults, settleFinished } = require("./pipeline");
 const { SofaScoreClient } = require("./scrapers/sofascore");
 const { LiveClient } = require("./live");
 const { resultOk } = require("./models");
@@ -45,6 +45,7 @@ class TipService {
 
   /** Hned po startu: poslední uložená data, než doběhne nové stahování. */
   loadCached() {
+    settleFinished(this.db);
     const run = this.db.latestRun();
     if (!run) return this._payload({ tips: [], statuses: {}, warnings: [], updatedAt: null, fromCache: true });
     return this._payload({ tips: this.db.tipsOfLatestRun(), statuses: run.statuses, warnings: run.warnings.filter((w) => !/HTTP 404/.test(w)), updatedAt: run.finishedAt, fromCache: true });
@@ -94,6 +95,7 @@ class TipService {
       await sofa.enrich(active, () => {});
       if (!sofa.requestsOk) return null;
       for (const t of active) this.db.updateLive(t);
+      settleFinished(this.db);
       return this.db.tipsOfLatestRun().map(serializeTip);
     } finally {
       this.busy = false;
@@ -105,6 +107,7 @@ class TipService {
   liveDetail(id) { return new LiveClient(this.http).detail(id); }
 
   history(period = null) {
+    settleFinished(this.db);
     const range = period && typeof period === "object";
     const tips = range ? this.db.historyRange(period.from || null, period.to || null) : this.db.history(period);
     return { tips: tips.map(serializeTip), stats: this.db.stats(null, tips) };
