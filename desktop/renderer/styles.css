@@ -431,24 +431,16 @@ i[data-lucide],
 .card__foot-text { flex: 1 1 260px; }
 
 
-/* ---------- Panel s upozorněním (zdroj selhal, offline…) ---------- */
-.notice {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin: 4px 4px 4px;
-  padding: 9px 14px;
-  background: var(--orange-soft);
-  border: 1px solid rgba(255, 106, 61, 0.35);
-  border-radius: var(--radius-md);
-  font-size: 12.5px;
-  line-height: 1.45;
-  color: var(--text);
-}
-.app[data-view]:not([data-view="overview"]) .notice { margin: 0 8px 8px; }
-.notice .lucide { width: 17px; height: 17px; margin-top: 1px; color: var(--orange); }
-.notice ul { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
-.notice .btn { margin: -3px 0 -3px 8px; }
+/* ---------- Malé upozornění vlevo od „Obnovit tipy“ ---------- */
+.warn { position: relative; }
+.warn__btn { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px; border-radius: 16px; background: var(--orange-soft); border: 1px solid rgba(255, 106, 61, 0.4); color: #ff9a76; font-size: 12.5px; font-weight: 500; transition: background-color 0.16s, transform 0.12s; }
+.warn__btn .lucide { width: 16px; height: 16px; }
+.warn__btn:hover, .warn__btn[aria-expanded="true"] { background: rgba(255, 106, 61, 0.22); }
+.warn__btn:active { transform: scale(0.96); }
+.warn__pop { position: absolute; right: 0; top: calc(100% + 8px); z-index: 50; width: 380px; max-width: 80vw; padding: 12px 14px; background: linear-gradient(180deg, var(--card-top), var(--card)); border: 1px solid var(--border-3); border-radius: var(--radius-md); box-shadow: var(--shadow-card); font-size: 12.5px; line-height: 1.45; -webkit-app-region: no-drag; }
+.warn__pop ul { display: flex; flex-direction: column; gap: 8px; }
+.warn__pop li { overflow-wrap: anywhere; }
+.warn__pop .btn { margin-top: 10px; }
 
 /* ==========================================================================
    Tipy: panel nástrojů a tabulka

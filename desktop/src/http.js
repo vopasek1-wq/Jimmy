@@ -88,7 +88,9 @@ class HttpClient {
         if (resp.status >= 500) {
           lastError = new SourceError(`${host} vrací chybu serveru (HTTP ${resp.status}).`);
         } else if (resp.status >= 400) {
-          throw new SourceError(`${host} vrací HTTP ${resp.status} pro ${new URL(url).pathname}.`);
+          const err = new SourceError(`${host} vrací HTTP ${resp.status} pro ${new URL(url).pathname}.`);
+          err.status = resp.status;
+          throw err;
         } else {
           return { status: resp.status, text };
         }

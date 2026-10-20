@@ -46,6 +46,10 @@
       <div class="topbar__actions">
         <span class="progress-text" id="progress-text" hidden></span>
         <span class="chip chip--warn" id="cache-chip" hidden title="Stažení se nepodařilo – zobrazují se poslední uložená data"><i data-lucide="file-clock"></i>z mezipaměti</span>
+        <div class="warn" id="warn" hidden>
+          <button class="warn__btn" type="button" id="warn-btn" aria-haspopup="true" aria-expanded="false" aria-label="Upozornění"><i data-lucide="triangle-alert"></i><span id="warn-count"></span></button>
+          <div class="warn__pop" id="warn-pop" role="status" hidden></div>
+        </div>
         <button class="btn btn--primary" type="button" id="refresh" title="Stáhnout tipy znovu"><i data-lucide="refresh-cw"></i><span>Obnovit tipy</span></button>
         <button class="layout-btn" type="button" id="layout-reset" hidden><i data-lucide="rotate-ccw"></i>Výchozí rozložení</button>
         <button class="layout-btn" type="button" id="layout-edit" aria-pressed="false" title="Přetahovat a měnit velikost bloků na Přehledu"><i data-lucide="layout-dashboard"></i><span>Upravit rozložení</span></button>
@@ -61,7 +65,6 @@
     <!-- ============ OBSAH ============ -->
     <main class="main" id="main">
       <h1 class="sr-only">Fotbalové tipy</h1>
-      <div class="notice" id="notice" role="status" hidden></div>
 
       <!-- Přehled: přizpůsobitelná mřížka (GridStack) – bloky jde přetahovat a měnit jejich velikost -->
       <div class="grid-stack board" id="board">

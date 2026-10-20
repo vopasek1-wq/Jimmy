@@ -461,26 +461,32 @@
   });
 
   /* ---------- Upozornění (zdroj selhal, bez internetu…) ---------- */
-  const noticeEl = $("#notice");
+  const warnEl = $("#warn");
+  const warnPop = $("#warn-pop");
+  const warnBtn = $("#warn-btn");
+  const setWarnOpen = (open) => {
+    warnPop.hidden = !open;
+    warnBtn.setAttribute("aria-expanded", String(open));
+  };
   function renderNotice() {
     const warnings = [];
     if (state.error) warnings.push(`Stahování selhalo: ${state.error}`);
     if (state.payload) warnings.push(...state.payload.warnings);
     if (!desktop) warnings.push("Aplikace neběží v okně Electronu – stahování tipů není k dispozici.");
     const forebetFailed = state.payload?.statuses?.Forebet?.state === "failed";
-    noticeEl.hidden = warnings.length === 0;
-    if (warnings.length) {
-      const icon = state.payload?.offline ? "wifi-off" : "triangle-alert";
-      noticeEl.innerHTML = `<i data-lucide="${icon}"></i><ul>${warnings.map((w) => `<li>${esc(w)}</li>`).join("")}</ul>
-        ${forebetFailed && desktop ? '<button class="btn btn--ghost btn--sm" type="button" data-act="verify" title="Otevře okno, ve kterém projdeš ověřením Cloudflare"><i data-lucide="shield-check"></i>Ověřit Forebet</button>' : ""}`;
-      renderIcons();
-    } else {
-      noticeEl.innerHTML = "";
-    }
-    syncLayoutMetrics();
+    warnEl.hidden = warnings.length === 0;
+    if (!warnings.length) { setWarnOpen(false); warnPop.innerHTML = ""; return; }
+    $("#warn-count").textContent = warnings.length > 1 ? String(warnings.length) : "";
+    warnBtn.title = warnings.length === 1 ? warnings[0] : `${warnings.length} upozornění`;
+    warnPop.innerHTML = `<ul>${warnings.map((w) => `<li>${esc(w)}</li>`).join("")}</ul>
+      ${forebetFailed && desktop ? '<button class="btn btn--ghost btn--sm" type="button" data-act="verify" title="Otevře okno, ve kterém projdeš ověřením Cloudflare"><i data-lucide="shield-check"></i>Ověřit Forebet</button>' : ""}`;
+    renderIcons();
   }
 
-  noticeEl.addEventListener("click", (e) => { if (e.target.closest("button[data-act='verify']")) refresh({ verify: true }); });
+  warnBtn.addEventListener("click", () => setWarnOpen(warnPop.hidden));
+  warnPop.addEventListener("click", (e) => { if (e.target.closest("button[data-act='verify']")) { setWarnOpen(false); refresh({ verify: true }); } });
+  document.addEventListener("click", (e) => { if (!warnPop.hidden && !warnEl.contains(e.target)) setWarnOpen(false); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !warnPop.hidden) setWarnOpen(false); });
 
   const cacheChip = $("#cache-chip");
   function renderChip() {
@@ -886,13 +892,6 @@
 
   /* ---------- Přizpůsobitelná mřížka Přehledu (GridStack) ---------- */
   let relayout = () => {};
-  function syncLayoutMetrics() {
-    const h = noticeEl.hidden ? 0 : noticeEl.offsetHeight + 8;
-    document.documentElement.style.setProperty("--notice-h", `${h}px`);
-    relayout();
-    return h;
-  }
-
   const setupBoard = () => {
     const GS = window.GridStack?.GridStack || window.GridStack;
     const boardEl = $("#board");
@@ -910,8 +909,7 @@
     // Výška řádku tak, aby všechny řádky přesně vyplnily okno pod horní lištou (a případným upozorněním).
     const rowHeight = () => {
       const top = $(".topbar").getBoundingClientRect().height;
-      const notice = noticeEl.hidden ? 0 : noticeEl.offsetHeight + 8;
-      return Math.max(10, Math.round(((window.innerHeight - top - 8 - notice) / ROWS) * 100) / 100);
+      return Math.max(10, Math.round(((window.innerHeight - top - 8) / ROWS) * 100) / 100);
     };
 
     const grid = GS.init({

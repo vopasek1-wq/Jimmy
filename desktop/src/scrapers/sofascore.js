@@ -65,7 +65,7 @@ class SofaScoreClient {
         this.requestsOk += 1;
       } catch (err) {
         if (!(err instanceof SourceError)) throw err;
-        this.errors.push(err.message);
+        if (err.status !== 404) this.errors.push(err.message); // 404 = soutěž ten den nehraje, není to chyba
         this.cache.set(key, []);
       }
     }

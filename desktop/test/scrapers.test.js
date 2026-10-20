@@ -246,3 +246,16 @@ test("Forebet: goalsProbability pro BTTS a Over/Under", () => {
   assert.equal(goalsProbability("HO1.5", g), null);
   assert.equal(goalsProbability("BTTS", null), null);
 });
+
+test("SofaScore: 404 pro soutěž/den není chyba zdroje", async () => {
+  const err = new SourceError("www.sofascore.com vrací HTTP 404 pro /x.");
+  err.status = 404;
+  const client = new sofascore.SofaScoreClient({ getJson: async () => { throw err; } });
+  assert.deepEqual(await client.events(17015, "2026-10-19"), []);
+  assert.deepEqual(client.errors, []);
+  const other = new SourceError("HTTP 403");
+  other.status = 403;
+  const bad = new sofascore.SofaScoreClient({ getJson: async () => { throw other; } });
+  await bad.events(17, "2026-10-19");
+  assert.equal(bad.errors.length, 1);
+});
