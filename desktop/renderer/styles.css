@@ -429,10 +429,6 @@ i[data-lucide],
   color: var(--muted);
 }
 .card__foot-text { flex: 1 1 260px; }
-.legend { display: inline-flex; align-items: center; gap: 6px; }
-.legend__dot { width: 9px; height: 9px; border-radius: 3px; }
-.legend__dot--high { background: var(--green); }
-.legend__dot--mid { background: var(--yellow); }
 
 
 /* ---------- Panel s upozorněním (zdroj selhal, offline…) ---------- */
