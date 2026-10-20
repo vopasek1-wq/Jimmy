@@ -55,7 +55,7 @@ function parseLive(data, nowSec = Math.floor(Date.now() / 1000)) {
         id: Number(e.id), home: e.homeTeam.name, away: e.awayTeam.name,
         homeScore: (e.homeScore && e.homeScore.current) ?? 0, awayScore: (e.awayScore && e.awayScore.current) ?? 0,
         minute: minuteText(e, nowSec), title: titleOf(e, TRACKED.has(ut.id), ut),
-        tournamentId: ut.id ?? null, tracked: TRACKED.has(ut.id),
+        tournamentId: ut.id ?? null, tracked: TRACKED.has(ut.id), leagueKey: (LEAGUE_BY_ID.get(ut.id) || {}).key || null,
         url: `${config.SOFASCORE_WEB}/cs/football/match/${e.slug}/${e.customId}#id:${e.id}`,
       });
     } catch {

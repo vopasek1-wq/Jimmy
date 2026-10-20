@@ -36,7 +36,7 @@ s `.exe`. Pro zkoušení lze složku přesměrovat proměnnou prostředí `TIPST
 
 ## Ovládání
 
-Levé menu: **Přehled** (tabulka tipů, detail a úspěšnost; rozložení lze upravit), **Živé zápasy** (právě hrané zápasy ze SofaScore; po kliknutí momentum zápasu, branky a karty a statistiky; obnovuje se každých 30 s) a **Historie**. Stav zdrojů se ukazuje jen v pruhu nahoře, když nějaký selže.
+Záložky pod vyhledáváním: **Přehled** (tabulka tipů, detail a úspěšnost; rozložení lze upravit), **Živé zápasy** (právě hrané zápasy ze SofaScore; po kliknutí momentum zápasu, branky a karty a statistiky; obnovuje se každých 30 s) a **Historie**. V levém sloupci jsou **soutěže** s počty zápasů – klik na soutěž filtruje tabulku tipů, živé zápasy i historii (hvězdička = všechny). Stav zdrojů se ukazuje jen v pruhu nahoře, když nějaký selže.
 
 * **Dnes / Zítra / Dnes a zítra / Vše** – filtr dne nad tabulkou (volba se pamatuje).
 * Kliknutí na záhlaví sloupce řadí (pravděpodobnost, kurz, čas, …); hledání v horní liště (**Ctrl + K**) filtruje
@@ -44,7 +44,7 @@ Levé menu: **Přehled** (tabulka tipů, detail a úspěšnost; rozložení lze 
 * Řádek vybereš kliknutím nebo šipkami ↑ ↓; **dvojklik / Enter** otevře zápas na Scores24.
 * Karta **Detail tipu**: pravděpodobnost, kurz, Forebet, zdroje a odkazy na zápas na Scores24 a SofaScore.
 * **Obnovit tipy** stáhne data znovu. **Upravit rozložení** umožní přetahovat a měnit velikost karet na Přehledu
-  i přesouvat položky menu (*Hotovo* nebo Esc to ukončí, *Výchozí rozložení* vrátí původní stav).
+  i přesouvat záložky (*Hotovo* nebo Esc to ukončí, *Výchozí rozložení* vrátí původní stav).
 
 ## Co aplikace zobrazí
 

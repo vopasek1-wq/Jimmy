@@ -70,6 +70,8 @@
     limits: { minProbability: 60, minOdds: 1.5, highProbability: 75 },
     day: DAYS.includes(store.get("day")) ? store.get("day") : "today",
     query: "",
+    league: store.get("league") || "",   // vybraná soutěž z levého sloupce ("" = všechny)
+    leagues: [],
     sort: store.get("sort") || { key: "time", dir: "asc" },
     selected: null,           // klíč vybraného tipu
     visible: [],              // právě zobrazené tipy (po filtrech a řazení)
@@ -141,6 +143,7 @@
     if (view === "history") loadHistory();
     if (view === "live") startLive();
     else stopLive();
+    renderCats();
   };
 
   $$(".nav__link").forEach((link) => {
@@ -261,6 +264,7 @@
     const tomorrow = nextDay(today);
     const list = tips.filter((t) => {
       if (!applyDayFilter(t, today, tomorrow)) return false;
+      if (state.league && t.leagueKey !== state.league) return false;
       return matchesQuery(t);
     });
     return sortList(list, TIP_SORT, state.sort);
@@ -342,6 +346,7 @@
       : (total ? `${state.visible.length} z ${total}` : "");
 
     renderDetail();
+    renderCats();
   }
 
   const selectTip = (key, { focus = false } = {}) => {
@@ -599,7 +604,7 @@
       stat(v.profit, `zisk (vklad 1) · ${v.roi}`, v.profitCls),
     ].join("");
 
-    const list = sortList(h.tips.filter(matchesQuery), HIST_SORT, state.hsort);
+    const list = sortList(h.tips.filter((t) => matchesQuery(t) && (!state.league || t.leagueKey === state.league)), HIST_SORT, state.hsort);
     if (!list.some((t) => t.id === state.hselected)) state.hselected = null;
     histBody.innerHTML = list.map((t) => {
       const ov = OUTCOME_VIEW[t.outcome];
@@ -622,6 +627,7 @@
     empty.textContent = h.tips.length ? "Hledání neodpovídá žádný tip." : "V historii zatím nejsou žádné tipy.";
     $("#history-table").hidden = list.length === 0;
     syncOutcomeButtons();
+    renderCats();
     renderIcons();
   }
 
@@ -707,8 +713,9 @@
   const tipsOfMatch = (id) => (state.payload?.tips || []).filter((t) => t.sofascoreId === id);
 
   function renderLiveList() {
+    renderCats();
     $("#live-all").setAttribute("aria-pressed", String(live.all));
-    const shown = live.all ? live.list : live.list.filter((m) => m.tracked);
+    const shown = (live.all ? live.list : live.list.filter((m) => m.tracked)).filter((m) => !state.league || m.leagueKey === state.league);
     $("#live-note").textContent = live.loaded ? `${shown.length} ${shown.length === 1 ? "zápas" : shown.length < 5 && shown.length ? "zápasy" : "zápasů"}` : "";
     if (!shown.length) {
       liveListEl.innerHTML = `<p class="empty">${esc(live.error ? `Živé zápasy se nepodařilo načíst: ${live.error}` : !live.loaded ? "Načítám živé zápasy…"
@@ -843,10 +850,53 @@
   });
   $("#live-open").addEventListener("click", (e) => openExternal(e.currentTarget.dataset.url));
 
+
+  /* ---------- Levý sloupec: soutěže jako filtr ---------- */
+  const catsEl = $("#cats");
+  const badgeOf = (short) => {
+    const words = short.split(/\s+/);
+    return (words.length > 1 ? words[0][0] + words[1][0] : short.slice(0, 2)).toUpperCase();
+  };
+
+  /** Počty zápasů podle soutěže pro právě otevřenou záložku. */
+  function leagueCounts() {
+    const view = app.dataset.view;
+    const counts = {};
+    let list = [];
+    if (view === "live") list = live.all ? live.list : live.list.filter((m) => m.tracked);
+    else if (view === "history") list = (state.history?.tips || []).filter(matchesQuery);
+    else {
+      const today = localDay(new Date());
+      const tomorrow = nextDay(today);
+      list = (state.payload?.tips || []).filter((t) => applyDayFilter(t, today, tomorrow) && matchesQuery(t));
+    }
+    for (const x of list) counts[x.leagueKey] = (counts[x.leagueKey] || 0) + 1;
+    return { counts, total: list.length };
+  }
+
+  function renderCats() {
+    if (!state.leagues.length) { catsEl.innerHTML = ""; return; }
+    const { counts, total } = leagueCounts();
+    const item = (key, name, badge, count) => `<button type="button" class="cat${state.league === key ? " is-active" : ""}${count ? "" : " is-empty"}" data-league="${esc(key)}" title="${esc(name)}" aria-pressed="${state.league === key}">
+      <span class="cat__badge">${esc(badge)}</span><span class="cat__name">${esc(name)}</span><span class="cat__count">${count}</span></button>`;
+    catsEl.innerHTML = `<div class="cats__title">Soutěže</div>${item("", "Všechny soutěže", "★", total)}${state.leagues.map((l) => item(l.key, l.short, badgeOf(l.short), counts[l.key] || 0)).join("")}`;
+  }
+
+  catsEl.addEventListener("click", (e) => {
+    const btn = e.target.closest(".cat");
+    if (!btn) return;
+    state.league = btn.dataset.league;
+    store.set("league", state.league);
+    renderTips();
+    renderHistory();
+    renderLiveList();
+  });
+
   /* ---------- Vykreslení všeho ---------- */
   function renderAll() {
     renderTips();
     renderNotice();
+    renderCats();
     renderChip();
   }
 
@@ -942,7 +992,7 @@
       const over = e.target.closest?.("li");
       if (!over || over === draggedNav) return;
       const r = over.getBoundingClientRect();
-      navList.insertBefore(draggedNav, e.clientY > r.top + r.height / 2 ? over.nextSibling : over);
+      navList.insertBefore(draggedNav, e.clientX > r.left + r.width / 2 ? over.nextSibling : over);
     });
     navList.addEventListener("drop", (e) => { if (draggedNav) e.preventDefault(); });
     navList.addEventListener("dragend", () => {
@@ -1008,6 +1058,8 @@
     const info = await desktop.appInfo();
     if (info) {
       state.limits = { ...state.limits, ...info.limits };
+      state.leagues = info.leagues || [];
+      if (state.league && !state.leagues.some((l) => l.key === state.league)) state.league = "";
     }
     const cached = await desktop.tips.cached();
     if (cached.ok) state.payload = cached.data;

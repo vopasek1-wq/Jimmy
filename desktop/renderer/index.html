@@ -21,23 +21,18 @@
   <div class="app" id="app" data-view="overview">
 
     <!-- ============ LEVÝ SIDEBAR ============ -->
-    <aside class="sidebar" id="sidebar" aria-label="Hlavní navigace">
+    <aside class="sidebar" id="sidebar" aria-label="Soutěže">
       <a class="brand" href="#">
         <img class="brand__logo" src="assets/logo.png" width="36" height="36" alt="">
         <span class="brand__name">Fotbalové tipy</span>
       </a>
 
-      <nav class="nav">
-        <ul class="nav__list">
-          <li><a class="nav__link is-active" href="#" data-view="overview" aria-current="page"><i data-lucide="house"></i><span>Přehled</span></a></li>
-          <li><a class="nav__link" href="#" data-view="live"><i data-lucide="radio"></i><span>Živé zápasy</span></a></li>
-          <li><a class="nav__link" href="#" data-view="history"><i data-lucide="history"></i><span>Historie</span></a></li>
-        </ul>
-      </nav>
+      <div class="cats" id="cats" aria-label="Soutěže"></div>
     </aside>
 
     <!-- ============ HORNÍ LIŠTA ============ -->
     <header class="topbar">
+      <div class="topbar__row">
       <form class="search" role="search" id="search-form" onsubmit="return false">
         <i data-lucide="search"></i>
         <input class="search__input" id="search" type="search" placeholder="Hledat zápas, ligu nebo tip... (Ctrl + K)" aria-label="Hledat v tipech" autocomplete="off">
@@ -59,6 +54,14 @@
           <button class="icon-btn icon-btn--close" type="button" aria-label="Zavřít" data-win="close"><i data-lucide="x"></i></button>
         </div>
       </div>
+      </div>
+      <nav class="tabs" aria-label="Hlavní navigace">
+        <ul class="nav__list">
+          <li><a class="nav__link is-active" href="#" data-view="overview" aria-current="page"><i data-lucide="house"></i><span>Přehled</span></a></li>
+          <li><a class="nav__link" href="#" data-view="live"><i data-lucide="radio"></i><span>Živé zápasy</span></a></li>
+          <li><a class="nav__link" href="#" data-view="history"><i data-lucide="history"></i><span>Historie</span></a></li>
+        </ul>
+      </nav>
       <div class="topbar__progress" id="topbar-progress" hidden></div>
     </header>
 
