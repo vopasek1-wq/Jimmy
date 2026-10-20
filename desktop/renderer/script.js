@@ -616,9 +616,9 @@
         <td class="c-time">${esc(fmtKickoff(t.kickoff))}</td>
         <td class="c-match"><span class="match">${esc(t.matchName)}</span><span class="match__league">${esc(t.leagueShort)}</span></td>
         <td class="c-tip">${esc(t.tipLabel)}</td>
+        <td class="c-score">${esc(fmtScore(t) || "–")}</td>
         <td class="c-prob"><span class="pill pill--${t.probClass}">${esc(fmtPct(t.probability))}</span></td>
         <td class="c-odds">${esc(fmtOdds(t))}</td>
-        <td class="c-score">${esc(fmtScore(t) || "–")}</td>
         <td class="c-outcome">${outcome}</td></tr>`;
     }).join("");
     if (list.length && !$(`tr[tabindex="0"]`, histBody)) histBody.firstElementChild.tabIndex = 0;
