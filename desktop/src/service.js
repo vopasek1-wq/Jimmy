@@ -47,7 +47,7 @@ class TipService {
   loadCached() {
     const run = this.db.latestRun();
     if (!run) return this._payload({ tips: [], statuses: {}, warnings: [], updatedAt: null, fromCache: true });
-    return this._payload({ tips: this.db.tipsOfLatestRun(), statuses: run.statuses, warnings: run.warnings, updatedAt: run.finishedAt, fromCache: true });
+    return this._payload({ tips: this.db.tipsOfLatestRun(), statuses: run.statuses, warnings: run.warnings.filter((w) => !/HTTP 404/.test(w)), updatedAt: run.finishedAt, fromCache: true });
   }
 
   async refresh(progress = () => {}, { interactiveForebet = false } = {}) {
