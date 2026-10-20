@@ -281,7 +281,6 @@ i[data-lucide],
 .input:focus { border-color: var(--accent); box-shadow: var(--ring); }
 .input--select { padding-right: 8px; }
 .input--date { width: 150px; flex: none; color-scheme: dark; }
-#date-clear { align-self: flex-end; }
 .input--select option { background: var(--card); color: var(--text); }
 
 .btn {
@@ -612,7 +611,7 @@ i[data-lucide],
 .pages > .card { min-height: calc(100dvh - var(--topbar-h) - var(--notice-h, 0px) - 25px); }
 .pages > .page-history { height: calc(100dvh - var(--topbar-h) - var(--notice-h, 0px) - 25px); }
 .page-history .stat-row { margin-top: 14px; }
-.page-history .toolbar { margin-top: 14px; align-items: flex-end; }
+.page-history .toolbar { margin-top: 14px; }
 .tbl--history .c-tip { white-space: nowrap; }
 .tbl--history .c-outcome { text-align: center; white-space: nowrap; }
 .tbl--history .c-outcome button { justify-content: center; }

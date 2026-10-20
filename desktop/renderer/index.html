@@ -157,17 +157,12 @@
           <h2 class="sr-only" id="history-title">Historie a statistiky</h2>
           <div class="stat-row stat-row--5" id="history-stats"></div>
           <div class="toolbar">
-            <label class="select-field"><span>Období</span>
-              <select class="input input--select" id="period">
-                <option value="7">Posledních 7 dní</option>
-                <option value="30" selected>Posledních 30 dní</option>
-                <option value="all">Vše</option>
-                <option value="custom" hidden>Vybrané dny</option>
-              </select>
-            </label>
-            <label class="select-field"><span>Od</span><input class="input input--date" type="date" id="date-from" aria-label="Od data"></label>
-            <label class="select-field"><span>Do</span><input class="input input--date" type="date" id="date-to" aria-label="Do data"></label>
-            <button class="icon-btn" type="button" id="date-clear" title="Zrušit výběr dnů" aria-label="Zrušit výběr dnů" hidden><i data-lucide="x"></i></button>
+            <div class="seg-control" id="hist-range" role="group" aria-label="Období">
+              <button type="button" data-range="today" aria-pressed="false">Dnes</button>
+              <button type="button" data-range="date" aria-pressed="false">Datum</button>
+              <button type="button" data-range="month" aria-pressed="true">Tento měsíc</button>
+            </div>
+            <input class="input input--date" type="date" id="hist-date" aria-label="Vybrat datum" hidden>
             <div class="seg-control seg-control--outcome" role="group" aria-label="Označit výsledek vybraného tipu">
               <button type="button" data-outcome="win"><i data-lucide="circle-check"></i>Výhra</button>
               <button type="button" data-outcome="loss"><i data-lucide="circle-x"></i>Prohra</button>
@@ -191,7 +186,7 @@
               </thead>
               <tbody id="history-body"></tbody>
             </table>
-            <p class="empty" id="history-empty" hidden>V historii zatím nejsou žádné tipy.</p>
+            <p class="empty" id="history-empty" hidden>V tomto období nejsou žádné tipy.</p>
           </div>
           <p class="card__foot"><span class="card__foot-text">Výsledky lze zadat ručně, nebo je doplní „Vyhodnotit automaticky“ podle SofaScore (jen běžné trhy; ruční výsledek se nikdy nepřepisuje). Zisk a ROI se počítají při vkladu 1 na tip, jen z tipů se skutečným kurzem.</span></p>
         </section>

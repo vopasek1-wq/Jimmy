@@ -77,9 +77,8 @@
     visible: [],              // právě zobrazené tipy (po filtrech a řazení)
     history: null,            // { tips, stats } pro vybrané období
     mini: null,               // totéž za 30 dní (karta na Přehledu)
-    period: ["7", "30", "all"].includes(store.get("period")) ? store.get("period") : "30",
-    from: "",                 // rozsah dnů z kalendáře (RRRR-MM-DD); prázdný = platí „Období“
-    to: "",
+    range: ["today", "date", "month"].includes(store.get("hist-range")) ? store.get("hist-range") : "month",
+    date: "",                 // vybraný den (RRRR-MM-DD) pro „Datum“
     hsort: store.get("hsort") || { key: "time", dir: "desc" },
     hselected: null,          // id vybraného řádku historie
   };
@@ -540,20 +539,29 @@
     void: { icon: "rotate-ccw", text: "Vráceno" },
   };
 
-  const days = (period) => (period === "all" ? null : Number(period));
-  const fetchHistory = async (period, range = null) => {
+  /** Rozsah dnů pro filtr historie: dnes / vybraný den / tento kalendářní měsíc. */
+  const historyRange = () => {
+    const today = localDay(new Date());
+    if (state.range === "today") return { from: today, to: today };
+    if (state.range === "date") { const d = state.date || today; return { from: d, to: d }; }
+    const [y, m] = today.split("-").map(Number);
+    const last = new Date(Date.UTC(y, m, 0)).getUTCDate();
+    const mm = String(m).padStart(2, "0");
+    return { from: `${y}-${mm}-01`, to: `${y}-${mm}-${String(last).padStart(2, "0")}` };
+  };
+  const fetchHistory = async (days, range = null) => {
     if (!desktop) return null;
-    const res = await desktop.history.list(range || days(period));
+    const res = await desktop.history.list(range || days);
     return res.ok ? res.data : null;
   };
 
   async function loadHistory() {
-    const data = await fetchHistory(state.period, state.from || state.to ? { from: state.from, to: state.to } : null);
+    const data = await fetchHistory(null, historyRange());
     if (data) state.history = data;
     renderHistory();
   }
   async function loadMini() {
-    const data = await fetchHistory("30");
+    const data = await fetchHistory(30);
     if (data) state.mini = data;
     renderMini();
   }
@@ -579,11 +587,10 @@
 
   function renderHistory() {
     const h = state.history;
-    const custom = Boolean(state.from || state.to);
-    $("#period").value = custom ? "custom" : state.period;
-    $("#date-from").value = state.from;
-    $("#date-to").value = state.to;
-    $("#date-clear").hidden = !custom;
+    $$("#hist-range [data-range]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.range === state.range)));
+    const dateEl = $("#hist-date");
+    dateEl.hidden = state.range !== "date";
+    dateEl.value = state.date || localDay(new Date());
     markSort($("#history-table"), "data-hsort", state.hsort);
     if (!h) {
       $("#history-stats").innerHTML = "";
@@ -623,7 +630,7 @@
     if (list.length && !$(`tr[tabindex="0"]`, histBody)) histBody.firstElementChild.tabIndex = 0;
     const empty = $("#history-empty");
     empty.hidden = list.length > 0;
-    empty.textContent = h.tips.length ? "Hledání neodpovídá žádný tip." : "V historii zatím nejsou žádné tipy.";
+    empty.textContent = h.tips.length ? "Hledání neodpovídá žádný tip." : "V tomto období nejsou žádné tipy.";
     $("#history-table").hidden = list.length === 0;
     syncOutcomeButtons();
     renderCats();
@@ -657,25 +664,13 @@
   });
   bindSort($("#history-table"), "data-hsort", () => state.hsort, (s) => { state.hsort = s; store.set("hsort", s); }, () => renderHistory());
 
-  const onDates = () => {
-    state.from = $("#date-from").value;
-    state.to = $("#date-to").value;
-    if (state.from && state.to && state.from > state.to) [state.from, state.to] = [state.to, state.from];
+  $$("#hist-range [data-range]").forEach((b) => b.addEventListener("click", () => {
+    state.range = b.dataset.range;
+    store.set("hist-range", state.range);
     loadHistory();
-  };
-  $("#date-from").addEventListener("change", onDates);
-  $("#date-to").addEventListener("change", onDates);
-  $("#date-clear").addEventListener("click", () => {
-    state.from = "";
-    state.to = "";
-    loadHistory();
-  });
-
-  $("#period").addEventListener("change", (e) => {
-    state.from = "";
-    state.to = "";
-    state.period = e.target.value;
-    store.set("period", state.period);
+  }));
+  $("#hist-date").addEventListener("change", (e) => {
+    state.date = e.target.value;
     loadHistory();
   });
 
