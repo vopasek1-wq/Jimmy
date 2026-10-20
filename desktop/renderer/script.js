@@ -61,7 +61,7 @@
   const FOREBET_CODES = new Set(["1", "X", "2", "1X", "X2", "12", "BTTS", "NOBTTS"]);
   // Forebet hodnotí 1X2, dvojitou šanci, BTTS a Over/Under celého zápasu (týmové totaly a handicapy ne).
   const forebetCovers = (code) => FOREBET_CODES.has(code) || /^[OU]\d+(?:\.\d+)?$/.test(code);
-  const DAYS = ["today", "tomorrow", "both", "all"];
+  const DAYS = ["today", "tomorrow"];
 
   const state = {
     payload: null,            // poslední data z hlavního procesu
@@ -252,7 +252,6 @@
     switch (state.day) {
       case "today": return t.day === today;
       case "tomorrow": return t.day === tomorrow;
-      case "both": return t.day === today || t.day === tomorrow;
       default: return true;
     }
   };
