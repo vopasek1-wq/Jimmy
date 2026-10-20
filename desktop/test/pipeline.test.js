@@ -178,6 +178,7 @@ test("Pipeline: pravděpodobnost gólů z Forebetu u BTTS tipu", async () => {
   const r = await new Pipeline(web).run({ now: new Date(Date.UTC(2026, 9, 18, 12)) });
   assert.equal(r.tips[0].tipCode, "BTTS");
   assert.equal(r.tips[0].probForebet, 62);
+  assert.equal(r.tips[0].forebetUrl, "https://www.forebet.com/en/football/matches/nottingham-forest-arsenal-1");
   assert.equal(r.statuses[SOURCE_FOREBET].state, "ok");
   assert.match(r.statuses[SOURCE_FOREBET].message, /góly u 1 z 1/);
   assert.ok(web.calls.some((u) => u === "https://www.forebet.com/en/football/matches/nottingham-forest-arsenal-1"));

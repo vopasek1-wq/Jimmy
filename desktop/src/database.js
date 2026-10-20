@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS tips (
     sources         TEXT NOT NULL,
     prob_forebet    REAL,
     prob_source     TEXT,
+    forebet_url     TEXT,
     status          TEXT NOT NULL DEFAULT 'upcoming',
     home_score      INTEGER,
     away_score      INTEGER,
@@ -61,15 +62,15 @@ CREATE INDEX IF NOT EXISTS idx_tips_run ON tips(last_run_id);
 // outcome a outcome_source se při aktualizaci záměrně nemění
 const UPSERT = `
 INSERT INTO tips (key, tip_date, kickoff_utc, home, away, league_key, league, tip_code, tip_label, raw_label,
-                  probability, odds, odds_estimated, sources, prob_forebet, prob_source, status, home_score, away_score,
+                  probability, odds, odds_estimated, sources, prob_forebet, prob_source, forebet_url, status, home_score, away_score,
                   url, sofascore_url, sofascore_id, last_run_id, created_at, updated_at)
 VALUES (:key, :tip_date, :kickoff_utc, :home, :away, :league_key, :league, :tip_code, :tip_label, :raw_label,
-        :probability, :odds, :odds_estimated, :sources, :prob_forebet, :prob_source, :status, :home_score, :away_score,
+        :probability, :odds, :odds_estimated, :sources, :prob_forebet, :prob_source, :forebet_url, :status, :home_score, :away_score,
         :url, :sofascore_url, :sofascore_id, :run_id, :now, :now)
 ON CONFLICT(key) DO UPDATE SET
     tip_date=excluded.tip_date, kickoff_utc=excluded.kickoff_utc, tip_label=excluded.tip_label,
     probability=excluded.probability, odds=excluded.odds, odds_estimated=excluded.odds_estimated,
-    sources=excluded.sources, prob_forebet=excluded.prob_forebet, prob_source=excluded.prob_source, status=excluded.status,
+    sources=excluded.sources, prob_forebet=excluded.prob_forebet, prob_source=excluded.prob_source, forebet_url=excluded.forebet_url, status=excluded.status,
     home_score=excluded.home_score, away_score=excluded.away_score, url=excluded.url,
     sofascore_url=excluded.sofascore_url, sofascore_id=excluded.sofascore_id,
     last_run_id=excluded.last_run_id, updated_at=excluded.updated_at
@@ -87,7 +88,7 @@ function rowToTip(r) {
     id: Number(r.id), home: r.home, away: r.away, leagueKey: r.league_key, league: r.league,
     kickoff: new Date(r.kickoff_utc), tipCode: r.tip_code, tipLabel: labelOf(r), rawLabel: r.raw_label,
     probability: r.probability, odds: r.odds, oddsEstimated: Boolean(r.odds_estimated),
-    sources: r.sources.split("|"), probForebet: r.prob_forebet, probSource: r.prob_source || "Scores24", status: r.status,
+    sources: r.sources.split("|"), probForebet: r.prob_forebet, probSource: r.prob_source || "Scores24", forebetUrl: r.forebet_url || "", status: r.status,
     homeScore: r.home_score, awayScore: r.away_score, url: r.url, sofascoreUrl: r.sofascore_url,
     sofascoreId: r.sofascore_id, outcome: r.outcome, outcomeSource: r.outcome_source,
   };
@@ -100,9 +101,9 @@ class Database {
     this.db.exec("PRAGMA journal_mode = WAL");
     this.db.exec(SCHEMA);
     // databáze z dřívějších verzí nemá sloupec prob_source
-    if (!this.db.prepare("PRAGMA table_info(tips)").all().some((c) => c.name === "prob_source")) {
-      this.db.exec("ALTER TABLE tips ADD COLUMN prob_source TEXT");
-    }
+    const columns = this.db.prepare("PRAGMA table_info(tips)").all().map((c) => c.name);
+    if (!columns.includes("prob_source")) this.db.exec("ALTER TABLE tips ADD COLUMN prob_source TEXT");
+    if (!columns.includes("forebet_url")) this.db.exec("ALTER TABLE tips ADD COLUMN forebet_url TEXT");
   }
 
   close() { this.db.close(); }
@@ -123,7 +124,7 @@ class Database {
           key: tipKey(t), tip_date: localDate(t.kickoff), kickoff_utc: t.kickoff.toISOString(), home: t.home, away: t.away,
           league_key: t.leagueKey, league: t.league, tip_code: t.tipCode, tip_label: t.tipLabel, raw_label: t.rawLabel || "",
           probability: t.probability, odds: t.odds ?? null, odds_estimated: t.oddsEstimated ? 1 : 0,
-          sources: t.sources.join("|"), prob_forebet: t.probForebet ?? null, prob_source: t.probSource ?? null, status: t.status,
+          sources: t.sources.join("|"), prob_forebet: t.probForebet ?? null, prob_source: t.probSource ?? null, forebet_url: t.forebetUrl || null, status: t.status,
           home_score: t.homeScore ?? null, away_score: t.awayScore ?? null, url: t.url || "",
           sofascore_url: t.sofascoreUrl || "", sofascore_id: t.sofascoreId ?? null, run_id: runId, now: stamp,
         });

@@ -21,7 +21,7 @@ function serializeTip(t) {
     sofascoreId: t.sofascoreId ?? null, probability: t.probability, probSource: t.probSource || "Scores24", probClass: probabilityClass(t.probability), odds: t.odds ?? null,
     oddsEstimated: Boolean(t.oddsEstimated), sources: t.sources, probForebet: t.probForebet ?? null,
     status: t.status, homeScore: t.homeScore ?? null, awayScore: t.awayScore ?? null,
-    url: t.url || "", sofascoreUrl: t.sofascoreUrl || "", outcome: t.outcome ?? null, outcomeSource: t.outcomeSource ?? null,
+    url: t.url || "", forebetUrl: t.forebetUrl || "", sofascoreUrl: t.sofascoreUrl || "", outcome: t.outcome ?? null, outcomeSource: t.outcomeSource ?? null,
   };
 }
 

@@ -61,6 +61,7 @@ function combine(s24, forebet, now) {
   for (const t of tips) {
     const m = findForebet(t.home, t.away, t.leagueKey, t.kickoff, forebet);
     if (!m) continue;
+    t.forebetUrl = m.url || "";
     t.probForebet = forebetProbability(t.tipCode, m.p1, m.px, m.p2) ?? goalsProbability(t.tipCode, m.goals);
     if (t.probability === null && t.probForebet !== null) { // Scores24 procento neuvedl → bere se z Forebetu
       t.probability = t.probForebet;
@@ -88,7 +89,7 @@ function combine(s24, forebet, now) {
     tips.push({
       home, away, leagueKey: league.key, league: league.nameCs, kickoff, tipCode: market.code, tipLabel: market.labelCs,
       rawLabel: "Forebet", probability: m.pickProbability, odds: m.odds[m.pick] ?? null, oddsEstimated: false,
-      sources: [SOURCE_FOREBET], probForebet: m.pickProbability,
+      sources: [SOURCE_FOREBET], probForebet: m.pickProbability, forebetUrl: m.url || "",
       status: (row ? classifyStatus(row.statusToken) : null) || UPCOMING, homeScore: null, awayScore: null,
       url: row ? row.url : "", sofascoreUrl: "", sofascoreId: null, id: null, outcome: null, outcomeSource: null,
     });

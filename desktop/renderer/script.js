@@ -436,6 +436,7 @@
       <dl class="facts">${facts.map(([k, v, strong]) => `<dt>${esc(k)}</dt><dd${strong ? ' class="is-strong"' : ""}>${esc(v)}</dd>`).join("")}</dl>
       <div class="detail__actions">
         ${t.url ? '<button class="btn btn--ghost btn--sm" type="button" data-act="scores24"><i data-lucide="external-link"></i>Scores24</button>' : ""}
+        ${t.forebetUrl ? '<button class="btn btn--ghost btn--sm" type="button" data-act="forebet"><i data-lucide="external-link"></i>Forebet</button>' : ""}
         ${t.sofascoreUrl ? '<button class="btn btn--ghost btn--sm" type="button" data-act="sofascore"><i data-lucide="external-link"></i>SofaScore</button>' : ""}
       </div>`;
     renderIcons();
@@ -447,6 +448,7 @@
     if (!btn || !t) return;
     switch (btn.dataset.act) {
       case "scores24": openExternal(t.url); break;
+      case "forebet": openExternal(t.forebetUrl); break;
       case "sofascore": openExternal(t.sofascoreUrl); break;
       default: break;
     }
