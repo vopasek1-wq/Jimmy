@@ -29,6 +29,8 @@ test("Live: seznam – jen rozehrané zápasy, sledované soutěže první", () 
   ] }, 10_000);
   assert.deepEqual(list.map((m) => [m.id, m.tracked]), [[4, true], [2, false]]);
   assert.deepEqual([list[0].homeScore, list[0].awayScore, list[0].minute], [1, 0, "46'"]);
+  assert.equal(list[0].title, "Anglie – Premier League"); // sledovaná soutěž česky z configu
+  assert.equal(minuteText(ev({ status: { type: "inprogress", description: "Started" }, time: {} }), 0), "Začal");
   assert.match(list[0].url, /sofascore\.com\/cs\/football\/match\/a-b\/xYz#id:4$/);
 });
 

@@ -728,7 +728,7 @@
     }
     let group = "";
     liveListEl.innerHTML = shown.map((m) => {
-      const head = `${m.country} – ${m.tournament}`;
+      const head = m.title;
       const title = head !== group ? `<h3 class="live-group">${esc(head)}</h3>` : "";
       group = head;
       const tips = tipsOfMatch(m.id);
@@ -822,7 +822,7 @@
     $("#live-open").dataset.url = m.url;
     const d = live.detail && live.detail.id === m.id ? live.detail : null;
     const head = `<div class="live-head"><div class="live-head__team">${esc(m.home)}</div><div class="live-head__score">${m.homeScore} : ${m.awayScore}</div><div class="live-head__team">${esc(m.away)}</div>
-      <div class="live-head__meta"><i class="live-dot"></i><span>${esc(m.minute)}</span><span>${esc(m.country)} – ${esc(m.tournament)}</span></div></div>`;
+      <div class="live-head__meta"><i class="live-dot"></i><span>${esc(m.minute)}</span><span>${esc(m.title)}</span></div></div>`;
     if (!d) {
       liveDetailEl.innerHTML = `${head}<p class="empty">${esc(live.detailError || "Načítám podrobnosti…")}</p>`;
       return;

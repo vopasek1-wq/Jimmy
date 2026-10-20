@@ -8,12 +8,35 @@ const { SourceError } = require("./http");
 const API_HEADERS = { Accept: "application/json", Referer: `${config.SOFASCORE_WEB}/` };
 const TRACKED = new Set(config.LEAGUES.filter((l) => l.enabled && l.sofascoreId).map((l) => l.sofascoreId));
 
+const LEAGUE_BY_ID = new Map(config.LEAGUES.filter((l) => l.sofascoreId).map((l) => [l.sofascoreId, l]));
+let regionNames = null;
+try { regionNames = new Intl.DisplayNames(["cs"], { type: "region" }); } catch { /* bez českých názvů zemí */ }
+const UK = { EN: "Anglie", SC: "Skotsko", WA: "Wales", NI: "Severní Irsko" };
+
+/** České jméno soutěže: u sledovaných z configu, jinak „Země – soutěž“ (název soutěže SofaScore česky nedává). */
+function titleOf(e, tracked, ut) {
+  const lg = tracked && LEAGUE_BY_ID.get(ut.id);
+  if (lg) return lg.nameCs;
+  const cat = (e.tournament && e.tournament.category) || {};
+  const code = String(cat.alpha2 || (cat.country && cat.country.alpha2) || "").toUpperCase();
+  let country = UK[code] || "";
+  try { if (!country && code && regionNames) country = regionNames.of(code); } catch { /* neplatný kód */ }
+  country = country && country !== code ? country : cat.name || "";
+  const name = (e.tournament && e.tournament.name) || "";
+  return country && country !== name ? `${country} – ${name}` : name;
+}
+
+const PERIODS = [
+  [/^(?:1st half|first half)$/i, "1. poločas"], [/^(?:2nd half|second half)$/i, "2. poločas"], [/extra time/i, "Prodloužení"],
+  [/penalt/i, "Penalty"], [/^started$/i, "Začal"], [/^break|pause/i, "Přestávka"], [/^interrupted$/i, "Přerušeno"],
+];
+
 /** Text minuty podle hodin periody: „34'“, „45+2'“, „Poločas“. */
 function minuteText(e, nowSec) {
   const desc = (e.status && e.status.description) || "";
   if (/half\s*time|^ht$/i.test(desc)) return "Poločas";
   const t = e.time || {};
-  if (!t.currentPeriodStartTimestamp) return desc;
+  if (!t.currentPeriodStartTimestamp) return (PERIODS.find(([re]) => re.test(desc)) || [null, desc])[1];
   const initial = t.initial || 0;
   const max = t.max || 0;
   const elapsed = initial + Math.max(0, nowSec - t.currentPeriodStartTimestamp);
@@ -31,8 +54,7 @@ function parseLive(data, nowSec = Math.floor(Date.now() / 1000)) {
       out.push({
         id: Number(e.id), home: e.homeTeam.name, away: e.awayTeam.name,
         homeScore: (e.homeScore && e.homeScore.current) ?? 0, awayScore: (e.awayScore && e.awayScore.current) ?? 0,
-        minute: minuteText(e, nowSec), tournament: (e.tournament && e.tournament.name) || "",
-        country: (e.tournament && e.tournament.category && e.tournament.category.name) || "",
+        minute: minuteText(e, nowSec), title: titleOf(e, TRACKED.has(ut.id), ut),
         tournamentId: ut.id ?? null, tracked: TRACKED.has(ut.id),
         url: `${config.SOFASCORE_WEB}/cs/football/match/${e.slug}/${e.customId}#id:${e.id}`,
       });
@@ -41,7 +63,7 @@ function parseLive(data, nowSec = Math.floor(Date.now() / 1000)) {
     }
   }
   // sledované soutěže první, pak podle soutěže
-  return out.sort((a, b) => Number(b.tracked) - Number(a.tracked) || a.country.localeCompare(b.country) || a.tournament.localeCompare(b.tournament));
+  return out.sort((a, b) => Number(b.tracked) - Number(a.tracked) || a.title.localeCompare(b.title, "cs"));
 }
 
 function parseGraph(data) {

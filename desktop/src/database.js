@@ -13,6 +13,7 @@ const path = require("node:path");
 const { DatabaseSync } = require("node:sqlite");
 
 const { tipKey } = require("./models");
+const { normalizePick } = require("./markets");
 const { addDays, localDate, todayLocal } = require("./timeutil");
 
 const SCHEMA = `
@@ -74,10 +75,17 @@ ON CONFLICT(key) DO UPDATE SET
     last_run_id=excluded.last_run_id, updated_at=excluded.updated_at
 `;
 
+/** Starší záznamy mají uložený anglický popisek – znovu se odvodí z původního textu (kód trhu se nemění). */
+function labelOf(r) {
+  if (!r.raw_label || r.raw_label === "Forebet") return r.tip_label;
+  const m = normalizePick(r.raw_label, r.home, r.away);
+  return m.code === r.tip_code ? m.labelCs : r.tip_label;
+}
+
 function rowToTip(r) {
   return {
     id: Number(r.id), home: r.home, away: r.away, leagueKey: r.league_key, league: r.league,
-    kickoff: new Date(r.kickoff_utc), tipCode: r.tip_code, tipLabel: r.tip_label, rawLabel: r.raw_label,
+    kickoff: new Date(r.kickoff_utc), tipCode: r.tip_code, tipLabel: labelOf(r), rawLabel: r.raw_label,
     probability: r.probability, odds: r.odds, oddsEstimated: Boolean(r.odds_estimated),
     sources: r.sources.split("|"), probForebet: r.prob_forebet, probSource: r.prob_source || "Scores24", status: r.status,
     homeScore: r.home_score, awayScore: r.away_score, url: r.url, sofascoreUrl: r.sofascore_url,

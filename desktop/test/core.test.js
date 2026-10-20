@@ -25,7 +25,8 @@ test("shoda s Pythonem: normalizePick", () => {
   for (const [label, home, away, code, labelCs] of golden.normalizePick) {
     const m = normalizePick(label, home, away);
     assert.equal(m.code, code, `kód pro ${JSON.stringify(label)}`);
-    assert.equal(m.labelCs, labelCs, `popisek pro ${JSON.stringify(label)}`);
+    // popisky se od Pythonu záměrně liší: „Over/Under“ je teď česky (viz test níže)
+    if (!/gólu|Over|Under/.test(labelCs)) assert.equal(m.labelCs, labelCs, `popisek pro ${JSON.stringify(label)}`);
   }
 });
 test("shoda s Pythonem: evaluate", () => {
@@ -62,10 +63,23 @@ test("estimateOdds je opatrný a validovaný, fmtOdds značí odhad", () => {
 // --- trhy ----------------------------------------------------------------------------------------------------
 test("normalizePick: neznámý trh se nezahazuje a české popisky", () => {
   const m = normalizePick("Total corners Over (9,5)", "A", "B");
-  assert.ok(m.code.startsWith("OTHER:") && m.labelCs.includes("corners"));
-  assert.equal(normalizePick("Total goals Over (2,5)", "A", "B").labelCs, "Over 2,5 gólu");
+  assert.ok(m.code.startsWith("OTHER:"));
+  assert.equal(m.labelCs, "Více než 9,5 rohů");
+  assert.equal(normalizePick("Total goals Over (2,5)", "A", "B").labelCs, "Více než 2,5 gólu");
   assert.equal(normalizePick("Arsenal to Win", "Forest", "Arsenal").labelCs, "2 – výhra Arsenal");
   assert.ok(normalizePick("Arsenal Handicap (0)", "Forest", "Arsenal").labelCs.includes("bez remízy"));
+});
+test("normalizePick: všechny popisky česky (góly, týmové totaly, nedá gól, rohy, karty)", () => {
+  const cs = (l, h = "A", a = "B") => normalizePick(l, h, a).labelCs;
+  assert.equal(cs("Total goals Over (3)"), "Více než 3 góly");
+  assert.equal(cs("Total goals Under (1)"), "Méně než 1 gól");
+  assert.equal(cs("Total goals Over (5)"), "Více než 5 gólů");
+  assert.equal(cs("A Total goals Under (1,5)"), "A: méně než 1,5 gólu");
+  assert.deepEqual(normalizePick("Slovan will not score", "Spartak", "Slovan"), { code: "AU0.5", labelCs: "Slovan nedá gól" });
+  assert.deepEqual(normalizePick("Spartak will score", "Spartak", "Slovan"), { code: "HO0.5", labelCs: "Spartak dá gól" });
+  assert.equal(cs("Total yellow cards Under (4,5)"), "Méně než 4,5 žlutých karet");
+  assert.equal(cs("Draw No Bet"), "Sázka bez remízy");
+  assert.ok(!/\b(Over|Under|will|score)\b/.test(cs("A Handicap (+1,5)")));
 });
 test("normalizePick: delší název týmu má přednost (Real Madrid vs. Real Madrid Castilla)", () => {
   assert.equal(normalizePick("Real Madrid Castilla to Win", "Real Madrid", "Real Madrid Castilla").code, "2");
