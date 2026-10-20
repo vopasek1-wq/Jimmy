@@ -36,7 +36,7 @@ s `.exe`. Pro zkoušení lze složku přesměrovat proměnnou prostředí `TIPST
 
 ## Ovládání
 
-Levé menu: **Přehled** (tabulka tipů, detail a úspěšnost; rozložení lze upravit), **Živé zápasy** (právě hrané zápasy ze SofaScore; po kliknutí hřiště se střelami, momentum zápasu, branky a karty a statistiky; obnovuje se každých 30 s) a **Historie**. Stav zdrojů se ukazuje jen v pruhu nahoře, když nějaký selže.
+Levé menu: **Přehled** (tabulka tipů, detail a úspěšnost; rozložení lze upravit), **Živé zápasy** (právě hrané zápasy ze SofaScore; po kliknutí momentum zápasu, branky a karty a statistiky; obnovuje se každých 30 s) a **Historie**. Stav zdrojů se ukazuje jen v pruhu nahoře, když nějaký selže.
 
 * **Dnes / Zítra / Dnes a zítra / Vše**, *Skrýt zahájené* a *Potvrzené Forebetem* – filtry nad tabulkou
   (volba se pamatuje).
@@ -71,6 +71,13 @@ skončené jsou ztlumené.
   Filtr *Potvrzené Forebetem* nechá jen tipy, které model také hodnotí nad 60 %.
 * Když Forebet doporučí výsledek s pravděpodobností nad 60 %, který Scores24 nemá, přidá se jako samostatný
   tip se zdrojem „Forebet“.
+
+### Sloupec Value
+
+**Value** = odhadovaná pravděpodobnost (Scores24, popř. Forebet) minus pravděpodobnost odvozená z kurzu (1 / kurz),
+v procentních bodech; kladné je zeleně, záporné červeně. U odhadnutého kurzu (`~`) se neukazuje (je z pravděpodobnosti
+dopočítaný, rozdíl by nic neříkal). Protože „Pravděp.“ ze Scores24 není kalibrovaná pravděpodobnost, jde o orientační
+ukazatel, ne záruku výhodné sázky.
 
 ### Kurzy a Tipsport
 

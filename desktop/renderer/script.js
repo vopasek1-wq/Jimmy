@@ -40,6 +40,9 @@
     return new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
   };
   const fmtPct = (v) => (v === null || v === undefined ? "–" : `${nf1.format(v)} %`);
+  /** Value = odhadovaná pravděpodobnost − pravděpodobnost z kurzu (v p. b.); u odhadnutého kurzu nemá smysl. */
+  const valueOf = (t) => (t.odds && !t.oddsEstimated ? t.probability - 100 / t.odds : null);
+  const fmtValue = (v) => (v === null ? "–" : `${v > 0 ? "+" : v < 0 ? "−" : ""}${nf1.format(Math.abs(v))} %`);
   const fmtOdds = (t) => (t.odds ? `${t.oddsEstimated ? "~" : ""}${nf2.format(t.odds)}` : "–");
   const fmtSigned = (v) => (v > 0 ? "+" : v < 0 ? "−" : "") + nf2.format(Math.abs(v));
   const fmtScore = (t) => (t.homeScore !== null && t.awayScore !== null ? `${t.homeScore}:${t.awayScore}` : "");
@@ -192,6 +195,7 @@
     tip: (t) => t.tipLabel,
     prob: (t) => t.probability,
     odds: (t) => t.odds,
+    value: valueOf,
     fb: (t) => t.probForebet,
     source: (t) => t.sources.join(" + "),
     status: (t) => matchState(t).order,
@@ -201,7 +205,7 @@
     score: (t) => (t.homeScore !== null && t.awayScore !== null ? t.homeScore * 100 + t.awayScore : null),
     outcome: (t) => OUTCOME_ORDER[t.outcome] ?? null,
   };
-  const DESC_FIRST = new Set(["prob", "odds", "fb", "score"]);
+  const DESC_FIRST = new Set(["prob", "odds", "value", "fb", "score"]);
 
   const sortList = (list, table, { key, dir }) => {
     const value = table[key] || table.time;
@@ -309,6 +313,7 @@
       <td class="c-tip">${esc(t.tipLabel)}</td>
       <td class="c-prob"><span class="pill pill--${t.probClass}"${t.probSource !== "Scores24" ? ` title="Scores24 procento neuvedl – hodnota z ${esc(t.probSource)}"` : ""}>${esc(fmtPct(t.probability))}</span></td>
       <td class="c-odds"${t.oddsEstimated ? ' title="Odhad z pravděpodobnosti – zdroj kurz neuvedl"' : ""}>${esc(fmtOdds(t))}</td>
+      <td class="c-value ${valueOf(t) === null ? "" : valueOf(t) > 0 ? "is-pos" : valueOf(t) < 0 ? "is-neg" : ""}">${esc(fmtValue(valueOf(t)))}</td>
       <td class="c-fb"${fb === "n/a" ? ' title="Forebet tento trh nehodnotí"' : ""}>${esc(fb)}</td>
       <td class="c-status">${stateHtml(t, ms)}</td>
     </tr>`;
@@ -740,32 +745,6 @@
     }).join("");
   }
 
-  const PITCH_LINES = `<g fill="none" stroke="rgba(255,255,255,.75)" stroke-width=".35">
-    <rect x=".3" y=".3" width="104.4" height="67.4"/><line x1="52.5" y1=".3" x2="52.5" y2="67.7"/><circle cx="52.5" cy="34" r="9.15"/>
-    <rect x=".3" y="13.84" width="16.5" height="40.32"/><rect x=".3" y="24.84" width="5.5" height="18.32"/>
-    <rect x="88.2" y="13.84" width="16.5" height="40.32"/><rect x="99.2" y="24.84" width="5.5" height="18.32"/></g>
-    <g fill="rgba(255,255,255,.75)"><circle cx="52.5" cy="34" r=".5"/><circle cx="11" cy="34" r=".5"/><circle cx="94" cy="34" r=".5"/></g>`;
-
-  /** Hřiště se střelami: domácí útočí doprava, hosté doleva. */
-  function pitchSvg(shots) {
-    const stripes = Array.from({ length: 10 }, (_, i) => `<rect x="${i * 10.5}" y="0" width="10.5" height="68" fill="${i % 2 ? "#3d7a3a" : "#43853f"}"/>`).join("");
-    const dots = shots.slice().sort((a, b) => (a.type === "goal") - (b.type === "goal")).map((sh) => {
-      const dist = (sh.x / 100) * 105;
-      const cx = sh.home ? 105 - dist : dist;
-      const cy = (sh.y / 100) * 68;
-      const color = sh.home ? "#36b5f4" : "#ff6b6b";
-      const names = { goal: "gól", save: "na bránu", miss: "mimo", block: "zablokovaná", post: "tyč" };
-      const tip = `${sh.minute ?? "?"}' ${sh.player} – ${names[sh.type] || sh.type}${sh.xg !== null ? `, xG ${nf2.format(sh.xg)}` : ""}`;
-      const shape = sh.type === "goal"
-        ? `<circle cx="${cx}" cy="${cy}" r="2.1" fill="#fff" stroke="${color}" stroke-width=".9"/><circle cx="${cx}" cy="${cy}" r=".8" fill="#222"/>`
-        : sh.type === "save"
-          ? `<circle cx="${cx}" cy="${cy}" r="1.4" fill="${color}" stroke="#fff" stroke-width=".35"/>`
-          : `<circle cx="${cx}" cy="${cy}" r="1.2" fill="none" stroke="${color}" stroke-width=".55"${sh.type === "block" ? ' stroke-dasharray=".8 .5"' : ""}/>`;
-      return `<g><title>${esc(tip)}</title>${shape}</g>`;
-    }).join("");
-    return `<svg class="pitch" viewBox="0 0 105 68" role="img" aria-label="Střely na hřišti">${stripes}${PITCH_LINES}${dots}</svg>`;
-  }
-
   /** Momentum: nad osou tlak domácích, pod ní hostů; červená čára = aktuální minuta, dole branky. */
   function momentumSvg(graph, incidents) {
     if (!graph.length) return '<p class="empty">Momentum zatím není k dispozici.</p>';
@@ -827,10 +806,7 @@
       liveDetailEl.innerHTML = `${head}<p class="empty">${esc(live.detailError || "Načítám podrobnosti…")}</p>`;
       return;
     }
-    const homeShots = d.shots.filter((s) => s.home).length;
     liveDetailEl.innerHTML = `${head}
-      <div class="live-box"><div class="live-box__title">Hřiště – střely<small>domácí ${homeShots} · hosté ${d.shots.length - homeShots}</small></div>${pitchSvg(d.shots)}
-        <div class="pitch-legend"><span><i style="background:#fff"></i>gól</span><span><i style="background:var(--text-2)"></i>na bránu</span><span><i></i>mimo</span><span><i style="border-style:dashed"></i>zablokovaná</span><span style="color:#36b5f4">● domácí</span><span style="color:#ff6b6b">● hosté</span></div></div>
       <div class="live-box"><div class="live-box__title">Momentum zápasu</div>${momentumSvg(d.graph, d.incidents)}
         <div class="momentum-teams"><span>▲ ${esc(m.home)}</span><span>▼ ${esc(m.away)}</span></div></div>
       <div class="live-box"><div class="live-box__title">Branky a karty</div>${eventsHtml(d.incidents)}</div>
