@@ -113,31 +113,61 @@ function parsePage(html) {
 
 const num = (s) => Number(String(s).replace(",", "."));
 
+const PLAIN = String.raw`(?<![\d.,])(\d{1,3})(?![\d]|[.,]\d)`; // celé číslo (ne část kurzu 1.85)
+const near100 = (a, b) => a + b >= 97 && a + b <= 103;
+
 function parseGoals(html) {
   const $ = load(html);
   const text = strippedStrings($.root()).join(" ");
   const goals = { over: {}, under: {}, btts: {} };
 
+  // 1) s procentem: „Over 2.5 … 57 %“
   const ou = /\b(over|under)\s*(\d(?:[.,]\d)?)\b/gi;
+  const lines = new Map(); // linie → { over: [pozice], under: [pozice] }
   for (let m = ou.exec(text); m; m = ou.exec(text)) {
-    const pct = /(\d{1,3}(?:[.,]\d+)?)\s*%/.exec(text.slice(m.index + m[0].length, m.index + m[0].length + 45));
-    const value = pct ? num(pct[1]) : null;
-    if (value === null || value > 100) continue;
+    const after = text.slice(m.index + m[0].length, m.index + m[0].length + 45);
+    const pct = /(\d{1,3}(?:[.,]\d+)?)\s*%/.exec(after);
     const bucket = m[1].toLowerCase() === "over" ? goals.over : goals.under;
     const line = String(num(m[2]));
-    if (!(line in bucket)) bucket[line] = value; // platí první výskyt (hlavní blok předpovědi)
+    if (pct && num(pct[1]) <= 100) { if (!(line in bucket)) bucket[line] = num(pct[1]); continue; }
+    const plain = new RegExp(PLAIN).exec(after); // 2) bez značky %: platí jen když se dvojice Over/Under sečte na ≈100
+    const entry = lines.get(line) || {};
+    if (plain && !entry[m[1].toLowerCase()]) entry[m[1].toLowerCase()] = Number(plain[1]);
+    lines.set(line, entry);
+  }
+  for (const [line, e] of lines) {
+    if (e.over !== undefined && e.under !== undefined && near100(e.over, e.under)) {
+      goals.over[line] ??= e.over;
+      goals.under[line] ??= e.under;
+    }
   }
 
   const label = /both teams to score|\bbtts\b/i.exec(text);
   if (label) {
     const win = text.slice(label.index, label.index + 170);
-    const yes = /\byes\b\D{0,15}?(\d{1,3}(?:[.,]\d+)?)\s*%/i.exec(win);
-    const no = /\bno\b\D{0,15}?(\d{1,3}(?:[.,]\d+)?)\s*%/i.exec(win);
-    if (yes && num(yes[1]) <= 100) goals.btts.yes = num(yes[1]);
-    if (no && num(no[1]) <= 100) goals.btts.no = num(no[1]);
+    const yes = /\byes\b\D{0,15}?(\d{1,3}(?:[.,]\d+)?)\s*%/i.exec(win) || new RegExp(String.raw`\byes\b\D{0,15}?${PLAIN}`, "i").exec(win);
+    const no = /\bno\b\D{0,15}?(\d{1,3}(?:[.,]\d+)?)\s*%/i.exec(win) || new RegExp(String.raw`\bno\b\D{0,15}?${PLAIN}`, "i").exec(win);
+    if (yes && no && near100(num(yes[1]), num(no[1])) || (yes && /%/.test(yes[0]))) goals.btts.yes = num(yes[1]);
+    if (yes && no && near100(num(yes[1]), num(no[1])) || (no && /%/.test(no[0]))) goals.btts.no = num(no[1]);
+    if (goals.btts.yes === undefined) delete goals.btts.yes;
+    if (goals.btts.no === undefined) delete goals.btts.no;
   }
   const found = Object.keys(goals.over).length + Object.keys(goals.under).length + Object.keys(goals.btts).length;
   return found ? goals : null;
+}
+
+/** Krátká diagnostika pro případ, že se stránka zápasu nepodařilo přečíst (jde ji poslat vývojáři). */
+function goalsDiagnostics(url, html) {
+  const text = strippedStrings(load(html).root()).join(" ");
+  const windows = [];
+  const re = /over|under|both teams|btts|goals?\b|yes\b/gi;
+  let last = -999;
+  for (let m = re.exec(text); m && windows.length < 40; m = re.exec(text)) {
+    if (m.index - last < 120) continue;
+    last = m.index;
+    windows.push(text.slice(Math.max(0, m.index - 60), m.index + 160));
+  }
+  return [`URL: ${url}`, `Délka HTML: ${html.length}`, `Zablokováno: ${looksBlocked(200, html)}`, `Délka textu: ${text.length}`, "--- úryvky kolem „over/under/goals/yes“ ---", ...windows].join("\n");
 }
 
 const pageReady = (html) => !looksBlocked(200, html) && (html.includes("rcnt") || html.includes("fprc"));
@@ -198,12 +228,18 @@ class ForebetScraper {
         if (useBrowser) html = await this.browser.loadHtml(m.url, { ready: (h) => !looksBlocked(200, h) && h.length > 20000, waitMs: 12000 });
         if (looksBlocked(200, html)) throw new BlockedError("Cloudflare");
         m.goals = parseGoals(html);
+        if (!m.goals && !useBrowser) { // část stránky se může doplňovat skriptem – zkusit vykreslené okno
+          const rendered = await this.browser.loadHtml(m.url, { ready: (h) => !looksBlocked(200, h) && h.length > 20000, waitMs: 12000 });
+          const again = parseGoals(rendered);
+          if (again) { m.goals = again; useBrowser = true; } else html = rendered;
+        }
         if (m.goals) summary.parsed += 1;
         else if (debugDir && !dumped) {
           dumped = true;
           try {
             fs.mkdirSync(debugDir, { recursive: true });
             fs.writeFileSync(path.join(debugDir, "forebet-zapas.html"), html);
+            fs.writeFileSync(path.join(debugDir, "forebet-diagnostika.txt"), goalsDiagnostics(m.url, html));
           } catch { /* ladicí soubor je jen bonus */ }
         }
       } catch (err) {

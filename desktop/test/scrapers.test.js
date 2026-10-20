@@ -259,3 +259,12 @@ test("SofaScore: 404 pro soutěž/den není chyba zdroje", async () => {
   await bad.events(17, "2026-10-19");
   assert.equal(bad.errors.length, 1);
 });
+
+test("Forebet: gólové pravděpodobnosti i bez znaku %, když se dvojice sečte na 100", () => {
+  const page = `<html><body><div><span>Over 2.5</span><span>1.85</span><span>58</span></div><div><span>Under 2.5</span><span>1.95</span><span>42</span></div>
+    <div><h4>Both teams to score</h4><span>Yes</span><span>61</span><span>No</span><span>39</span></div></body></html>`;
+  const g = parseGoals(page);
+  assert.deepEqual([g.over["2.5"], g.under["2.5"], g.btts.yes, g.btts.no], [58, 42, 61, 39]);
+  // čísla, která nejsou dvojice ≈100, se nepřijmou (např. jen kurzy)
+  assert.equal(parseGoals("<body><span>Over 2.5</span><span>12</span><span>Under 2.5</span><span>9</span></body>"), null);
+});
