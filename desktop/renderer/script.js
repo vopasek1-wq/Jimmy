@@ -35,10 +35,11 @@
     return `${p.weekday} ${p.day}.${p.month}. ${p.hour}:${p.minute}`;
   };
   const localDay = (date) => dayFormat.format(date);
-  const nextDay = (day) => {
+  const shiftDay = (day, delta) => {
     const [y, m, d] = day.split("-").map(Number);
-    return new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
+    return new Date(Date.UTC(y, m - 1, d + delta)).toISOString().slice(0, 10);
   };
+  const nextDay = (day) => shiftDay(day, 1);
   const fmtPct = (v) => (v === null || v === undefined ? "–" : `${nf1.format(v)} %`);
   /** Value = odhadovaná pravděpodobnost − pravděpodobnost z kurzu (v p. b.); u odhadnutého kurzu nemá smysl. */
   const valueOf = (t) => (t.odds && !t.oddsEstimated ? t.probability - 100 / t.odds : null);
@@ -77,7 +78,7 @@
     visible: [],              // právě zobrazené tipy (po filtrech a řazení)
     history: null,            // { tips, stats } pro vybrané období
     mini: null,               // totéž za 30 dní (karta na Přehledu)
-    range: ["today", "date", "month"].includes(store.get("hist-range")) ? store.get("hist-range") : "month",
+    range: ["today", "yesterday", "date", "month"].includes(store.get("hist-range")) ? store.get("hist-range") : "month",
     date: "",                 // vybraný den (RRRR-MM-DD) pro „Datum“
     hsort: store.get("hsort") || { key: "time", dir: "desc" },
     hselected: null,          // id vybraného řádku historie
@@ -545,6 +546,7 @@
   const historyRange = () => {
     const today = localDay(new Date());
     if (state.range === "today") return { from: today, to: today };
+    if (state.range === "yesterday") { const y = shiftDay(today, -1); return { from: y, to: y }; }
     if (state.range === "date") { const d = state.date || today; return { from: d, to: d }; }
     const [y, m] = today.split("-").map(Number);
     const last = new Date(Date.UTC(y, m, 0)).getUTCDate();

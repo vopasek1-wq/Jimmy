@@ -86,7 +86,7 @@ z pravděpodobnosti (férový kurz zmenšený o marži 6 %) a v tabulce je ozna�
 
 ## Historie a statistiky
 
-Každý nalezený tip se ukládá do SQLite. Stránka **Historie** ukazuje uložené tipy za **dnes**, vybraný **den** (kalendář) nebo **tento měsíc**,
+Každý nalezený tip se ukládá do SQLite. Stránka **Historie** ukazuje uložené tipy za **dnes**, **včera**, vybraný **den** (kalendář) nebo **tento měsíc**,
 včetně sloupce **Výsledek**, který doplňuje aplikace sama podle SofaScore při každém stahování (nebo tlačítkem **Vyhodnotit automaticky**).
 Vyhodnocují se běžné trhy (1X2, dvojitá šance, Over/Under, oba týmy skórují, týmové totaly, celočíselné handicapy);
 čtvrtinové linie a neznámé trhy zůstávají bez výsledku. Zisk a ROI se počítají při vkladu 1 na tip, jen z tipů se skutečným
