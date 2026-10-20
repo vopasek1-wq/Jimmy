@@ -38,8 +38,7 @@ s `.exe`. Pro zkoušení lze složku přesměrovat proměnnou prostředí `TIPST
 
 Levé menu: **Přehled** (tabulka tipů, detail a úspěšnost; rozložení lze upravit), **Živé zápasy** (právě hrané zápasy ze SofaScore; po kliknutí momentum zápasu, branky a karty a statistiky; obnovuje se každých 30 s) a **Historie**. Stav zdrojů se ukazuje jen v pruhu nahoře, když nějaký selže.
 
-* **Dnes / Zítra / Dnes a zítra / Vše**, *Skrýt zahájené* a *Potvrzené Forebetem* – filtry nad tabulkou
-  (volba se pamatuje).
+* **Dnes / Zítra / Dnes a zítra / Vše** – filtr dne nad tabulkou (volba se pamatuje).
 * Kliknutí na záhlaví sloupce řadí (pravděpodobnost, kurz, čas, …); hledání v horní liště (**Ctrl + K**) filtruje
   podle týmu, soutěže nebo tipu.
 * Řádek vybereš kliknutím nebo šipkami ↑ ↓; **dvojklik / Enter** otevře zápas na Scores24.
@@ -68,7 +67,7 @@ skončené jsou ztlumené.
 * **Sloupec „Forebet“** je statistický model. Pro 1 / X / 2 a dvojitou šanci (1X, X2, 12) se bere z přehledu
   Forebetu; pro **Over/Under a oba týmy skórují** aplikace otevře stránku zápasu na Forebetu (až 25 stránek za běh)
   a přečte z ní pravděpodobnosti gólů. Týmové totaly a handicapy Forebet nehodnotí (v tabulce „n/a“).
-  Filtr *Potvrzené Forebetem* nechá jen tipy, které model také hodnotí nad 60 %.
+  
 * Když Forebet doporučí výsledek s pravděpodobností nad 60 %, který Scores24 nemá, přidá se jako samostatný
   tip se zdrojem „Forebet“.
 

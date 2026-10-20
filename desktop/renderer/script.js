@@ -69,8 +69,6 @@
     busy: false,
     limits: { minProbability: 60, minOdds: 1.5, highProbability: 75 },
     day: DAYS.includes(store.get("day")) ? store.get("day") : "today",
-    hideStarted: store.get("hide-started") === true,
-    onlyConfirmed: store.get("only-confirmed") === true,
     query: "",
     sort: store.get("sort") || { key: "time", dir: "asc" },
     selected: null,           // klíč vybraného tipu
@@ -263,8 +261,6 @@
     const tomorrow = nextDay(today);
     const list = tips.filter((t) => {
       if (!applyDayFilter(t, today, tomorrow)) return false;
-      if (state.hideStarted && matchState(t, now).kind !== "wait") return false;
-      if (state.onlyConfirmed && !(t.probForebet !== null && t.probForebet > state.limits.minProbability)) return false;
       return matchesQuery(t);
     });
     return sortList(list, TIP_SORT, state.sort);
@@ -276,16 +272,6 @@
       store.set("day", state.day);
       renderTips();
     });
-  });
-  $("#f-started").addEventListener("click", () => {
-    state.hideStarted = !state.hideStarted;
-    store.set("hide-started", state.hideStarted);
-    renderTips();
-  });
-  $("#f-confirmed").addEventListener("click", () => {
-    state.onlyConfirmed = !state.onlyConfirmed;
-    store.set("only-confirmed", state.onlyConfirmed);
-    renderTips();
   });
   bindSort($("#tips-table"), "data-sort", () => state.sort, (s) => { state.sort = s; store.set("sort", s); }, () => renderTips());
 
@@ -347,8 +333,6 @@
     $("#tips-table").hidden = state.visible.length === 0;
 
     $$("#day-control [data-day]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.day === state.day)));
-    $("#f-started").setAttribute("aria-pressed", String(state.hideStarted));
-    $("#f-confirmed").setAttribute("aria-pressed", String(state.onlyConfirmed));
     markSort($("#tips-table"), "data-sort", state.sort);
 
     const p = state.payload;
