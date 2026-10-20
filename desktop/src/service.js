@@ -57,6 +57,7 @@ class TipService {
       const result = await new Pipeline({ http: this.http, browser: this.browser, debugDir: path.join(this.dataDir, "ladeni") }).run({ progress, interactiveForebet });
       if (resultOk(result)) {
         this.db.saveRun(result);
+        await updateResults(this.db, this.http, { progress }).catch(() => {}); // doplní skóre a výsledky skončených zápasů
         return this._payload({
           tips: result.tips, statuses: result.statuses, warnings: result.warnings, updatedAt: result.finishedAt, fromCache: false,
         });

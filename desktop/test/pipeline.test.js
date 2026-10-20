@@ -269,6 +269,17 @@ test("updateResults: vyhodnotí jen skončené zápasy a známé trhy, ruční v
   assert.match(message, /Vyhodnoceno 2/);
 });
 
+test("updateResults: doplní skóre i tipům, které už mají (ruční) výsledek", async () => {
+  const db = memDb();
+  const ko = new Date(Date.now() - 5 * 3600e3);
+  db.saveRun(okResult([mk({ home: "Brentford", away: "Spurs", tipCode: "1", kickoff: ko })]));
+  db.setOutcome(db.history()[0].id, "win", "manual");
+  const http = { getJson: async () => ({ events: [sofaEvent(5, "Brentford", "Spurs", Math.floor(ko.getTime() / 1000), "finished", 3, 0)] }) };
+  const { done } = await updateResults(db, http);
+  const t = db.history()[0];
+  assert.deepEqual([done, t.homeScore, t.awayScore, t.outcome, t.outcomeSource, t.status], [0, 3, 0, "win", "manual", "finished"]);
+});
+
 test("updateResults: nedostupný SofaScore se nahlásí", async () => {
   const db = memDb();
   db.saveRun(okResult([mk({ kickoff: new Date(Date.now() - 5 * 3600e3) })]));

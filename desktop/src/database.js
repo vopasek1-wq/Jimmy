@@ -181,6 +181,17 @@ class Database {
       .all(kickedOffBefore.toISOString()).map(rowToTip);
   }
 
+  /** Tipy, jejichž zápas už skončil, ale nemají uložené skóre (zápas doběhl mezi dvěma stahováními). */
+  needScores(kickedOffBefore) {
+    return this.db.prepare("SELECT * FROM tips WHERE home_score IS NULL AND kickoff_utc <= ? ORDER BY kickoff_utc")
+      .all(kickedOffBefore.toISOString()).map(rowToTip);
+  }
+
+  setScore(tipId, homeScore, awayScore) {
+    this.db.prepare("UPDATE tips SET home_score=?, away_score=?, status='finished', updated_at=? WHERE id=?")
+      .run(homeScore, awayScore, new Date().toISOString(), tipId);
+  }
+
   stats(days = null, tips = this.history(days)) {
     const s = { total: tips.length, evaluated: 0, wins: 0, losses: 0, voids: 0, avgOdds: null, profit: null, roiPct: null, hitRate: null };
     const decidedReal = [];

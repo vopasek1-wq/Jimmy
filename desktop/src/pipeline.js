@@ -200,7 +200,10 @@ class Pipeline {
  */
 async function updateResults(db, http, { progress = () => {}, maxAgeDays = 14, now = new Date() } = {}) {
   const cutoff = addDays(todayLocal(now), -maxAgeDays);
-  const pending = db.pendingResults(new Date(now.getTime() - 3 * 3600 * 1000)).filter((t) => localDate(t.kickoff) >= cutoff);
+  const before = new Date(now.getTime() - 3 * 3600 * 1000);
+  const byId = new Map();
+  for (const t of [...db.pendingResults(before), ...db.needScores(before)]) byId.set(t.id, t); // bez výsledku, nebo bez skóre
+  const pending = [...byId.values()].filter((t) => localDate(t.kickoff) >= cutoff);
   if (!pending.length) return { done: 0, message: "Žádné tipy nečekají na vyhodnocení." };
 
   progress("SofaScore: zjišťuji výsledky zápasů…");
@@ -209,9 +212,12 @@ async function updateResults(db, http, { progress = () => {}, maxAgeDays = 14, n
   let skipped = 0;
   for (const t of pending) {
     const league = config.leagueByKey(t.leagueKey);
-    if (!league || !league.sofascoreId) { skipped += 1; continue; }
+    const needsOutcome = t.outcome === null;
+    if (!league || !league.sofascoreId) { if (needsOutcome) skipped += 1; continue; }
     const ev = await client.find(league.sofascoreId, t.home, t.away, t.kickoff);
-    if (!ev || ev.status !== FINISHED || ev.homeScore === null || ev.awayScore === null) { skipped += 1; continue; }
+    if (!ev || ev.status !== FINISHED || ev.homeScore === null || ev.awayScore === null) { if (needsOutcome) skipped += 1; continue; }
+    if (t.homeScore === null) db.setScore(t.id, ev.homeScore, ev.awayScore); // skóre se doplní i u ručně vyhodnocených
+    if (!needsOutcome) continue;
     const outcome = evaluate(t.tipCode, ev.homeScore, ev.awayScore);
     if (outcome === null) { skipped += 1; continue; }
     db.setOutcome(t.id, outcome, "auto");
