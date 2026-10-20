@@ -599,8 +599,7 @@
       histBody.innerHTML = "";
       $("#history-empty").hidden = false;
       $("#history-empty").textContent = desktop ? "Historie se načítá…" : "Historie je dostupná jen v aplikaci.";
-      syncOutcomeButtons();
-      return;
+        return;
     }
     const s = h.stats;
     const v = statTiles(s);
@@ -634,18 +633,8 @@
     empty.hidden = list.length > 0;
     empty.textContent = h.tips.length ? "Hledání neodpovídá žádný tip." : "V tomto období nejsou žádné tipy.";
     $("#history-table").hidden = list.length === 0;
-    syncOutcomeButtons();
     renderCats();
     renderIcons();
-  }
-
-  const selectedHistoryTip = () => state.history?.tips.find((t) => t.id === state.hselected);
-  function syncOutcomeButtons() {
-    const t = selectedHistoryTip();
-    $$("[data-outcome]").forEach((b) => {
-      b.disabled = !t;
-      b.setAttribute("aria-pressed", String(Boolean(t) && (b.dataset.outcome === t.outcome)));
-    });
   }
 
   const selectHistory = (key, { focus = false } = {}) => {
@@ -658,7 +647,6 @@
       tr.setAttribute("aria-selected", String(on));
       if (on && focus) { tr.focus({ preventScroll: true }); tr.scrollIntoView({ block: "nearest" }); }
     });
-    syncOutcomeButtons();
   };
   bindRows(histBody, selectHistory, (key) => {
     const t = state.history?.tips.find((x) => x.id === Number(key));
@@ -674,18 +662,6 @@
   $("#hist-date").addEventListener("change", (e) => {
     state.date = e.target.value;
     loadHistory();
-  });
-
-  $$("[data-outcome]").forEach((b) => {
-    b.addEventListener("click", async () => {
-      const t = selectedHistoryTip();
-      if (!t || !desktop) return;
-      const outcome = b.dataset.outcome === "clear" ? null : b.dataset.outcome;
-      const res = await desktop.history.setOutcome(t.id, outcome);
-      if (!res.ok) { toast(`Výsledek se nepodařilo uložit: ${res.error}`, "error"); return; }
-      await loadHistory();
-      loadMini();
-    });
   });
 
   $("#evaluate").addEventListener("click", async () => {
