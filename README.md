@@ -92,6 +92,17 @@ Vyhodnocují se běžné trhy (1X2, dvojitá šance, Over/Under, oba týmy skór
 čtvrtinové linie a neznámé trhy zůstávají bez výsledku. Zisk a ROI se počítají při vkladu 1 na tip, jen z tipů se skutečným
 (ne odhadnutým) kurzem.
 
+## Analýza úspěšnosti
+
+Záložka **Analýza** porovnává odhadnutou pravděpodobnost tipů se skutečnými výsledky (počítají se jen výhry a prohry, ne vrácené
+sázky): úspěšnost po pásmech 60–70 / 70–80 / 80–90 / 90–100 %, podle typu tipu a podle soutěže, včetně rozdílu v procentních bodech
+a ROI. Pod tabulkami jsou textová **zjištění** (např. „tipy s pravděpodobností 80–90 % vycházejí jen v 50 % případů“); u malého
+počtu tipů (pod 30) aplikace upozorní, že závěry jsou orientační.
+
+Tlačítko **Analyzovat pomocí AI** pošle souhrnné statistiky a posledních 40 prohraných tipů do Claude API (Anthropic) **tvým vlastním
+klíčem** a zobrazí rozbor kalibrace, opakujících se chyb a doporučení. Klíč se ukládá šifrovaně (Windows DPAPI) a nikam jinam se
+neposílá; bez klíče AI část nefunguje, ale statistiky ano. Volání API je zpoplatněné podle tvého účtu u Anthropicu.
+
 ## Bez internetu a při výpadku zdroje
 
 * Po startu se hned ukážou poslední uložená data (v horní liště je štítek „z mezipaměti“).

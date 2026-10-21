@@ -127,7 +127,7 @@
     `<div class="stat ${cls}"><div class="stat__value">${esc(value)}</div><div class="stat__label" title="${esc(label)}">${esc(label)}</div></div>`;
 
   /* ---------- Navigace ---------- */
-  const VIEWS = ["overview", "live", "history"];
+  const VIEWS = ["overview", "live", "analysis", "history"];
   const showView = (view) => {
     if (!VIEWS.includes(view)) view = "overview";
     app.dataset.view = view;
@@ -143,6 +143,7 @@
     if (view === "history") loadHistory();
     if (view === "live") startLive();
     else stopLive();
+    if (view === "analysis") loadAnalysis();
     renderCats();
   };
 
@@ -298,7 +299,7 @@
     const fb = t.probForebet !== null ? fmtPct(t.probForebet) : (forebetCovers(t.tipCode) ? "–" : "n/a");
     return `<tr class="trow is-${t.probClass}${selected ? " is-selected" : ""}${ms.kind === "done" ? " is-done" : ""}${ms.kind === "live" || ms.kind === "started" ? " is-live" : ""}" data-key="${esc(key)}" tabindex="${selected ? 0 : -1}" aria-selected="${selected}">
       <td class="c-time">${esc(fmtKickoff(t.kickoff))}</td>
-      <td class="c-match"><span class="match">${esc(t.matchName)}</span><span class="match__league">${esc(t.leagueShort)}</span></td>
+      <td class="c-match"><span class="match">${esc(t.matchName)}</span></td>
       <td class="c-tip">${esc(t.tipLabel)}</td>
       <td class="c-prob"><span class="pill pill--${t.probClass}"${t.probSource !== "Scores24" ? ` title="Scores24 procento neuvedl – hodnota z ${esc(t.probSource)}"` : ""}>${esc(fmtPct(t.probability))}</span></td>
       <td class="c-odds"${t.oddsEstimated ? ' title="Odhad z pravděpodobnosti – zdroj kurz neuvedl"' : ""}>${esc(fmtOdds(t))}</td>
@@ -623,7 +624,7 @@
       const sel = t.id === state.hselected;
       return `<tr class="trow${t.outcome ? ` is-${t.outcome}` : ""}${sel ? " is-selected" : ""}" data-key="${esc(t.id)}" tabindex="${sel ? 0 : -1}" aria-selected="${sel}">
         <td class="c-time">${esc(fmtKickoff(t.kickoff))}</td>
-        <td class="c-match"><span class="match">${esc(t.matchName)}</span><span class="match__league">${esc(t.leagueShort)}</span></td>
+        <td class="c-match"><span class="match">${esc(t.matchName)}</span></td>
         <td class="c-tip">${esc(t.tipLabel)}</td>
         <td class="c-score">${esc(fmtScore(t) || "–")}</td>
         <td class="c-prob"><span class="pill pill--${t.probClass}">${esc(fmtPct(t.probability))}</span></td>
@@ -864,6 +865,96 @@
     renderTips();
     renderHistory();
     renderLiveList();
+  });
+
+
+  /* ---------- Analýza úspěšnosti tipů (+ AI) ---------- */
+  const an = { data: null, hasKey: false, busy: false };
+  const signed1 = (v) => (v === null ? "–" : `${v > 0 ? "+" : v < 0 ? "−" : ""}${nf1.format(Math.abs(v))}`);
+
+  function tableHtml(rows, nameHead) {
+    if (!rows.length) return '<p class="empty">Zatím není co ukázat.</p>';
+    const body = rows.map((r) => {
+      const cls = r.gap === null ? "" : r.gap >= 3 ? "gap-pos" : r.gap <= -3 ? "gap-neg" : "";
+      const bar = r.n ? `<div class="an-bar" title="skutečnost ${r.actual} %, předpoklad ${r.predicted} %"><i style="width:${Math.min(100, r.actual)}%"></i><b style="left:${Math.min(100, r.predicted)}%"></b></div>` : "";
+      return `<tr><td>${esc(r.label || r.name)}</td><td>${r.n}</td><td>${r.n ? `${nf1.format(r.predicted)} %` : "–"}</td><td>${r.n ? `${nf1.format(r.actual)} %` : "–"}</td>
+        <td class="${cls}">${signed1(r.gap)}${r.n ? " p. b." : ""}</td><td>${r.roi === null ? "–" : `${signed1(r.roi)} %`}</td><td>${bar}</td></tr>`;
+    }).join("");
+    return `<table class="an-table"><thead><tr><th>${esc(nameHead)}</th><th>Tipů</th><th>Odhad</th><th>Skutečně</th><th>Rozdíl</th><th>ROI</th><th></th></tr></thead><tbody>${body}</tbody></table>`;
+  }
+
+  function renderAnalysis() {
+    const a = an.data;
+    if (!a) {
+      $("#an-stats").innerHTML = "";
+      ["an-bands", "an-markets", "an-leagues"].forEach((id) => { $(`#${id}`).innerHTML = ""; });
+      $("#an-insights").innerHTML = `<li>${desktop ? "Načítám…" : "Analýza je dostupná jen v aplikaci."}</li>`;
+      return;
+    }
+    const o = a.overall;
+    $("#an-stats").innerHTML = [
+      stat(String(o.n), "vyhodnocených tipů (bez vrácených)", "stat--accent"),
+      stat(o.n ? `${nf1.format(o.actual)} %` : "–", "skutečná úspěšnost"),
+      stat(o.n ? `${nf1.format(o.predicted)} %` : "–", "průměrný odhad pravděpodobnosti"),
+      stat(o.n ? `${signed1(o.gap)} p. b.` : "–", "rozdíl (skutečnost − odhad)", o.gap > 0 ? "stat--pos" : o.gap < 0 ? "stat--neg" : ""),
+      stat(o.roi === null ? "–" : `${signed1(o.roi)} %`, "ROI (jen skutečné kurzy)", o.roi > 0 ? "stat--pos" : o.roi < 0 ? "stat--neg" : ""),
+    ].join("");
+    $("#an-bands").innerHTML = tableHtml(a.bands, "Pásmo");
+    $("#an-markets").innerHTML = tableHtml(a.markets, "Typ tipu");
+    $("#an-leagues").innerHTML = tableHtml(a.leagues, "Soutěž");
+    $("#an-insights").innerHTML = (a.insights.length ? a.insights : ["Zatím nejsou žádná zjištění."]).map((t) => `<li>${esc(t)}</li>`).join("");
+  }
+
+  async function loadAnalysis() {
+    if (!desktop) { renderAnalysis(); return; }
+    const [res, hasKey] = await Promise.all([desktop.analysis.get(), desktop.analysis.hasKey()]);
+    if (res.ok) an.data = res.data;
+    an.hasKey = hasKey;
+    $("#ai-key-label").textContent = hasKey ? "API klíč uložen" : "API klíč";
+    renderAnalysis();
+  }
+
+  /** Jednoduché zobrazení textu od AI: odstavce, odrážky „- “ a **tučné**. */
+  function aiHtml(text) {
+    const bold = (t) => esc(t).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    const out = [];
+    let list = [];
+    const flush = () => { if (list.length) { out.push(`<ul>${list.join("")}</ul>`); list = []; } };
+    for (const line of text.split(/\n+/)) {
+      const t = line.trim();
+      if (!t) continue;
+      if (/^[-*•]\s+/.test(t)) list.push(`<li>${bold(t.replace(/^[-*•]\s+/, ""))}</li>`);
+      else { flush(); out.push(`<p>${bold(t.replace(/^#+\s*/, ""))}</p>`); }
+    }
+    flush();
+    return out.join("");
+  }
+
+  $("#ai-key-btn").addEventListener("click", () => { const f = $("#ai-key-form"); f.hidden = !f.hidden; if (!f.hidden) $("#ai-key").focus(); });
+  $("#ai-key-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const key = $("#ai-key").value.trim();
+    if (!key || !desktop) return;
+    const res = await desktop.analysis.setKey(key);
+    $("#ai-key").value = "";
+    if (res.ok) { $("#ai-key-form").hidden = true; toast("API klíč je uložený (šifrovaně)."); loadAnalysis(); } else toast(res.error, "error");
+  });
+  $("#ai-key-remove").addEventListener("click", async () => {
+    if (!desktop) return;
+    await desktop.analysis.setKey("");
+    toast("API klíč je odebraný.");
+    loadAnalysis();
+  });
+  $("#ai-run").addEventListener("click", async () => {
+    if (!desktop || an.busy) return;
+    if (!an.hasKey) { $("#ai-key-form").hidden = false; $("#ai-key").focus(); $("#ai-out").innerHTML = '<p class="is-error">Nejdřív zadej API klíč.</p>'; return; }
+    an.busy = true;
+    $("#ai-run").disabled = true;
+    $("#ai-out").innerHTML = "<p>AI analyzuje tipy…</p>";
+    const res = await desktop.analysis.run();
+    an.busy = false;
+    $("#ai-run").disabled = false;
+    $("#ai-out").innerHTML = res.ok ? aiHtml(res.data) : `<p class="is-error">${esc(res.error)}</p>`;
   });
 
   /* ---------- Vykreslení všeho ---------- */

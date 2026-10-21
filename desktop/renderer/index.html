@@ -59,6 +59,7 @@
         <ul class="nav__list">
           <li><a class="nav__link is-active" href="#" data-view="overview" aria-current="page"><i data-lucide="house"></i><span>Přehled</span></a></li>
           <li><a class="nav__link" href="#" data-view="live"><i data-lucide="radio"></i><span>Živé zápasy</span></a></li>
+          <li><a class="nav__link" href="#" data-view="analysis"><i data-lucide="brain"></i><span>Analýza</span></a></li>
           <li><a class="nav__link" href="#" data-view="history"><i data-lucide="history"></i><span>Historie</span></a></li>
         </ul>
       </nav>
@@ -133,6 +134,30 @@
 
       <!-- Samostatné stránky z levého menu -->
       <div class="pages">
+        <section class="card analysis-page" aria-labelledby="analysis-title">
+          <h2 class="sr-only" id="analysis-title">Analýza úspěšnosti tipů</h2>
+          <div class="stat-row stat-row--5" id="an-stats"></div>
+          <div class="an-grid">
+            <div class="live-box"><div class="live-box__title">Odhadnutá pravděpodobnost vs. skutečnost<small>podle pásma</small></div><div id="an-bands"></div></div>
+            <div class="live-box"><div class="live-box__title">Zjištění</div><ul class="an-insights" id="an-insights"></ul></div>
+            <div class="live-box"><div class="live-box__title">Podle typu tipu</div><div id="an-markets"></div></div>
+            <div class="live-box"><div class="live-box__title">Podle soutěže</div><div id="an-leagues"></div></div>
+          </div>
+          <div class="live-box ai-box">
+            <div class="live-box__title">AI analýza<small>pošle souhrnné statistiky a posledních 40 prohraných tipů do Claude API (Anthropic) tvým klíčem</small></div>
+            <div class="ai-actions">
+              <button class="btn btn--primary btn--sm" type="button" id="ai-run"><i data-lucide="sparkles"></i>Analyzovat pomocí AI</button>
+              <button class="btn btn--ghost btn--sm" type="button" id="ai-key-btn"><i data-lucide="key-round"></i><span id="ai-key-label">API klíč</span></button>
+            </div>
+            <form class="ai-key-form" id="ai-key-form" hidden>
+              <input class="input" id="ai-key" type="password" placeholder="Anthropic API klíč (sk-ant-…)" autocomplete="off" aria-label="Anthropic API klíč">
+              <button class="btn btn--primary btn--sm" type="submit">Uložit</button>
+              <button class="btn btn--ghost btn--sm" type="button" id="ai-key-remove">Odebrat</button>
+            </form>
+            <div class="ai-out" id="ai-out" aria-live="polite"></div>
+          </div>
+        </section>
+
         <section class="live-page" aria-label="Živé zápasy">
           <div class="card live-list">
             <header class="card__header">

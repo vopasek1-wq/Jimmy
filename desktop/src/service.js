@@ -8,6 +8,7 @@ const { probabilityClass } = require("./filters");
 const { Pipeline, updateResults, settleFinished } = require("./pipeline");
 const { SofaScoreClient } = require("./scrapers/sofascore");
 const { LiveClient } = require("./live");
+const { analyze, recentLosses, buildPrompt } = require("./analysis");
 const { resultOk } = require("./models");
 const { fmtStamp, localDate, todayLocal } = require("./timeutil");
 
@@ -105,6 +106,18 @@ class TipService {
   liveMatches() { return new LiveClient(this.http).list(); }
 
   liveDetail(id) { return new LiveClient(this.http).detail(id); }
+
+  /** Statistika úspěšnosti všech vyhodnocených tipů (kalibrace pravděpodobnosti, trhy, soutěže). */
+  analysis() {
+    settleFinished(this.db);
+    return analyze(this.db.history(null).map(serializeTip));
+  }
+
+  /** Text pro AI: souhrn statistik + poslední prohry. */
+  aiPrompt() {
+    const tips = this.db.history(null).map(serializeTip);
+    return buildPrompt(analyze(tips), recentLosses(tips));
+  }
 
   history(period = null) {
     settleFinished(this.db);

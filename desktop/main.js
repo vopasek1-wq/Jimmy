@@ -1,7 +1,8 @@
 // Fotbalové tipy – hlavní proces Electronu (Windows desktop aplikace).
 "use strict";
 
-const { app, BrowserWindow, ipcMain, shell, screen, net, session, clipboard } = require("electron");
+const { app, BrowserWindow, ipcMain, shell, screen, net, session, clipboard, safeStorage } = require("electron");
+const fs = require("node:fs");
 const path = require("node:path");
 
 // ASCII název složky s daty (%APPDATA%\FotbalTipy); pro zkoušení jde přesměrovat proměnnou TIPSTER_DATA_DIR.
@@ -13,6 +14,7 @@ const config = require("./src/config");
 const { HttpClient } = require("./src/http");
 const { WindowBrowser, chromeUserAgent } = require("./src/browser");
 const { TipService } = require("./src/service");
+const { askClaude } = require("./src/analysis");
 
 const DESIGN_SIZE = { width: 1440, height: 900 };
 const isHttpUrl = (url) => /^https?:\/\//i.test(String(url));
@@ -103,6 +105,25 @@ const safe = (fn) => async (...args) => {
 ipcMain.handle("tips:cached", safe(() => service.loadCached()));
 ipcMain.handle("live:list", safe(() => service.liveMatches()));
 ipcMain.handle("live:detail", safe((_e, id) => service.liveDetail(id)));
+/* ---------- AI analýza: klíč se ukládá šifrovaně (Windows DPAPI přes safeStorage) ---------- */
+const keyFile = () => path.join(app.getPath("userData"), "ai-key.bin");
+const readKey = () => {
+  try { return safeStorage.decryptString(fs.readFileSync(keyFile())); } catch { return ""; }
+};
+ipcMain.handle("analysis:get", safe(() => service.analysis()));
+ipcMain.handle("analysis:has-key", () => Boolean(readKey()));
+ipcMain.handle("analysis:set-key", safe((_e, key) => {
+  const k = String(key || "").trim();
+  if (!k) { fs.rmSync(keyFile(), { force: true }); return false; }
+  if (!safeStorage.isEncryptionAvailable()) throw new Error("Na tomto počítači nejde klíč bezpečně uložit.");
+  fs.writeFileSync(keyFile(), safeStorage.encryptString(k));
+  return true;
+}));
+ipcMain.handle("analysis:run", safe(async () => {
+  const apiKey = readKey();
+  if (!apiKey) throw new Error("Nejdřív zadej API klíč.");
+  return askClaude({ fetchFn: (url, init) => net.fetch(url, init), apiKey, prompt: service.aiPrompt() });
+}));
 ipcMain.handle("tips:live", safe(() => service.refreshLive()));
 ipcMain.handle("tips:refresh", safe((event) => service.refresh(progressTo(event))));
 ipcMain.handle("tips:verify-forebet", safe((event) => service.refresh(progressTo(event), { interactiveForebet: true })));
