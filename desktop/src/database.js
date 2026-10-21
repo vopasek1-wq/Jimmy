@@ -104,6 +104,26 @@ class Database {
     const columns = this.db.prepare("PRAGMA table_info(tips)").all().map((c) => c.name);
     if (!columns.includes("prob_source")) this.db.exec("ALTER TABLE tips ADD COLUMN prob_source TEXT");
     if (!columns.includes("forebet_url")) this.db.exec("ALTER TABLE tips ADD COLUMN forebet_url TEXT");
+    this._upgradeUnknownMarkets();
+  }
+
+  /**
+   * Starší verze neuměla některé trhy (např. „X will not score“) a uložila je jako OTHER:<text>. Nový kód trhu se
+   * odvodí z původního textu; když takový tip už existuje, je starý jen duplicita a smaže se.
+   */
+  _upgradeUnknownMarkets() {
+    const rows = this.db.prepare("SELECT * FROM tips WHERE tip_code LIKE 'OTHER:%' AND raw_label <> '' AND raw_label <> 'Forebet'").all();
+    for (const r of rows) {
+      const m = normalizePick(r.raw_label, r.home, r.away);
+      if (m.code.startsWith("OTHER:")) continue;
+      const tip = rowToTip(r);
+      const key = tipKey({ ...tip, tipCode: m.code });
+      if (this.db.prepare("SELECT 1 FROM tips WHERE key=?").get(key)) {
+        this.db.prepare("DELETE FROM tips WHERE id=?").run(r.id);
+      } else {
+        this.db.prepare("UPDATE tips SET key=?, tip_code=?, tip_label=? WHERE id=?").run(key, m.code, m.labelCs, r.id);
+      }
+    }
   }
 
   close() { this.db.close(); }

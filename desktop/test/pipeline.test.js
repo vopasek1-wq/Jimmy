@@ -325,3 +325,25 @@ test("DB: historie podle rozsahu dnů z kalendáře", () => {
   db.setOutcome(tips[0].id, "win", "manual");
   assert.equal(db.stats(null, db.historyRange("2026-10-10", "2026-10-10")).wins, 1);
 });
+
+test("DB: starý neznámý trh (OTHER) se převede na nový kód, duplicita se smaže", () => {
+  const os = require("node:os");
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "tipy-")), "t.sqlite3");
+  const db = new Database(file);
+  const old = (raw) => mk({ home: "Roma", away: "Slovan Bratislava", tipCode: `OTHER:${raw}`, tipLabel: raw, rawLabel: raw });
+  db.saveRun(okResult([old("Slovan Bratislava will not score")]));
+  db.close();
+  let db2 = new Database(file); // při otevření se starý záznam převede
+  let t = db2.history();
+  assert.deepEqual([t.length, t[0].tipCode, t[0].tipLabel], [1, "AU0.5", "Slovan Bratislava nedá gól"]);
+  // duplicita: nový tip už existuje, starý (OTHER) se smaže
+  db2.saveRun(okResult([old("Slovan Bratislava will not score"), mk({ home: "Roma", away: "Slovan Bratislava", tipCode: "AU0.5", rawLabel: "Slovan Bratislava will not score" })]));
+  db2.close();
+  db2 = new Database(file);
+  t = db2.history();
+  assert.equal(t.filter((x) => x.tipCode === "AU0.5").length, 1);
+  assert.equal(t.filter((x) => x.tipCode.startsWith("OTHER:")).length, 0);
+  db2.close();
+});

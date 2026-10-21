@@ -230,7 +230,7 @@ async function updateResults(db, http, { progress = () => {}, maxAgeDays = 14, n
     if (!league || !league.sofascoreId) { if (needsOutcome) skipped += 1; continue; }
     const ev = await client.find(league.sofascoreId, t.home, t.away, t.kickoff);
     if (!ev || ev.status !== FINISHED || ev.homeScore === null || ev.awayScore === null) { if (needsOutcome) skipped += 1; continue; }
-    if (t.homeScore === null) db.setScore(t.id, ev.homeScore, ev.awayScore); // skóre se doplní i u ručně vyhodnocených
+    if (t.homeScore !== ev.homeScore || t.awayScore !== ev.awayScore || t.status !== FINISHED) db.setScore(t.id, ev.homeScore, ev.awayScore); // konečné skóre přepíše i zastaralé průběžné
     if (!needsOutcome) continue;
     const outcome = evaluate(t.tipCode, ev.homeScore, ev.awayScore);
     if (outcome === null) { skipped += 1; continue; }
