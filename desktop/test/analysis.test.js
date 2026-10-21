@@ -3,7 +3,7 @@
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { analyze, marketGroup, buildPrompt, recentLosses, askClaude } = require("../src/analysis");
+const { analyze, marketGroup, buildPrompt, recentLosses, askGemini } = require("../src/analysis");
 
 const tip = (probability, outcome, o = {}) => ({ probability, outcome, tipCode: "1", league: "Premier League", odds: 1.8, oddsEstimated: false, matchName: "A – B", tipLabel: "x", homeScore: 0, awayScore: 1, ...o });
 
@@ -42,13 +42,27 @@ test("buildPrompt a recentLosses", () => {
   assert.ok(p.includes("pasma_pravdepodobnosti") && p.includes("posledni_prohry"));
 });
 
-test("askClaude: úspěch a chyby", async () => {
+test("askGemini: úspěch, záložní model a chyby", async () => {
   const ok = async (url, init) => {
-    assert.equal(JSON.parse(init.body).messages[0].content, "q");
-    assert.equal(init.headers["x-api-key"], "k");
-    return { status: 200, ok: true, json: async () => ({ content: [{ type: "text", text: "Odpověď" }] }) };
+    assert.match(url, /gemini-flash-latest:generateContent$/);
+    assert.equal(init.headers["x-goog-api-key"], "k");
+    assert.equal(JSON.parse(init.body).contents[0].parts[0].text, "q");
+    return { status: 200, ok: true, json: async () => ({ candidates: [{ content: { parts: [{ text: "Odpověď" }] } }] }) };
   };
-  assert.equal(await askClaude({ fetchFn: ok, apiKey: "k", prompt: "q" }), "Odpověď");
-  const bad = async () => ({ status: 401, ok: false, json: async () => ({}) });
-  await assert.rejects(() => askClaude({ fetchFn: bad, apiKey: "k", prompt: "q" }), /není platný/);
+  assert.equal(await askGemini({ fetchFn: ok, apiKey: "k", prompt: "q" }), "Odpověď");
+
+  const urls = [];
+  const fallback = async (url) => {
+    urls.push(url);
+    return url.includes("gemini-flash-latest")
+      ? { status: 404, ok: false, json: async () => ({ error: { message: "nenalezen" } }) }
+      : { status: 200, ok: true, json: async () => ({ candidates: [{ content: { parts: [{ text: "B" }] } }] }) };
+  };
+  assert.equal(await askGemini({ fetchFn: fallback, apiKey: "k", prompt: "q" }), "B");
+  assert.equal(urls.length, 2);
+
+  const badKey = async () => ({ status: 400, ok: false, json: async () => ({ error: { message: "API key not valid. Please pass a valid API key.", details: [{ reason: "API_KEY_INVALID" }] } }) });
+  await assert.rejects(() => askGemini({ fetchFn: badKey, apiKey: "k", prompt: "q" }), /není platný/);
+  const blocked = async () => ({ status: 200, ok: true, json: async () => ({ candidates: [{}] }) });
+  await assert.rejects(() => askGemini({ fetchFn: blocked, apiKey: "k", prompt: "q" }), /žádný text/);
 });

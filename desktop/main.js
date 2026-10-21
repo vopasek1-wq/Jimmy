@@ -14,7 +14,7 @@ const config = require("./src/config");
 const { HttpClient } = require("./src/http");
 const { WindowBrowser, chromeUserAgent } = require("./src/browser");
 const { TipService } = require("./src/service");
-const { askClaude } = require("./src/analysis");
+const { askGemini } = require("./src/analysis");
 
 const DESIGN_SIZE = { width: 1440, height: 900 };
 const isHttpUrl = (url) => /^https?:\/\//i.test(String(url));
@@ -121,8 +121,8 @@ ipcMain.handle("analysis:set-key", safe((_e, key) => {
 }));
 ipcMain.handle("analysis:run", safe(async () => {
   const apiKey = readKey();
-  if (!apiKey) throw new Error("Nejdřív zadej API klíč.");
-  return askClaude({ fetchFn: (url, init) => net.fetch(url, init), apiKey, prompt: service.aiPrompt() });
+  if (!apiKey) throw new Error("Nejdřív zadej Gemini API klíč.");
+  return askGemini({ fetchFn: (url, init) => net.fetch(url, init), apiKey, prompt: service.aiPrompt() });
 }));
 ipcMain.handle("tips:live", safe(() => service.refreshLive()));
 ipcMain.handle("tips:refresh", safe((event) => service.refresh(progressTo(event))));

@@ -99,9 +99,11 @@ sázky): úspěšnost po pásmech 60–70 / 70–80 / 80–90 / 90–100 %, podl
 a ROI. Pod tabulkami jsou textová **zjištění** (např. „tipy s pravděpodobností 80–90 % vycházejí jen v 50 % případů“); u malého
 počtu tipů (pod 30) aplikace upozorní, že závěry jsou orientační.
 
-Tlačítko **Analyzovat pomocí AI** pošle souhrnné statistiky a posledních 40 prohraných tipů do Claude API (Anthropic) **tvým vlastním
-klíčem** a zobrazí rozbor kalibrace, opakujících se chyb a doporučení. Klíč se ukládá šifrovaně (Windows DPAPI) a nikam jinam se
-neposílá; bez klíče AI část nefunguje, ale statistiky ano. Volání API je zpoplatněné podle tvého účtu u Anthropicu.
+Tlačítko **Analyzovat pomocí AI** pošle souhrnné statistiky a posledních 40 prohraných tipů do **Google Gemini API** **tvým vlastním
+klíčem** a zobrazí rozbor kalibrace, opakujících se chyb a doporučení. Klíč si vytvoříš zdarma v Google AI Studio
+(aistudio.google.com → *Get API key*), v aplikaci ho zadáš pod tlačítkem „Gemini API klíč“. Ukládá se šifrovaně (Windows DPAPI) a nikam
+jinam se neposílá. Zda je volání zpoplatněné, závisí na tarifu tvého Google účtu (Gemini API má bezplatný limit, jeho výši určuje Google);
+bez klíče AI část nefunguje, statistiky ano.
 
 ## Bez internetu a při výpadku zdroje
 

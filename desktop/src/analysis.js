@@ -96,25 +96,38 @@ function buildPrompt(summary, losses) {
     + "3) 2–4 konkrétní doporučení, jak s tipy zacházet. Použij krátké odstavce nebo odrážky začínající „- “.";
 }
 
-const MODEL = "claude-sonnet-5-5";
+// „latest“ alias sleduje aktuální rychlý model Gemini; při 404 se zkusí pevný název.
+const MODELS = ["gemini-flash-latest", "gemini-2.5-flash"];
 
-/** Dotaz na Claude API (klíč má uživatel uložený v aplikaci); `fetchFn` je net.fetch z Electronu. */
-async function askClaude({ fetchFn, apiKey, prompt, timeoutMs = 90000 }) {
+/** Dotaz na Google Gemini API (klíč má uživatel uložený v aplikaci); `fetchFn` je net.fetch z Electronu. */
+async function askGemini({ fetchFn, apiKey, prompt, timeoutMs = 90000 }) {
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), timeoutMs);
   try {
-    const resp = await fetchFn("https://api.anthropic.com/v1/messages", {
-      method: "POST", signal: ctl.signal,
-      headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-      body: JSON.stringify({ model: MODEL, max_tokens: 1500, system: SYSTEM, messages: [{ role: "user", content: prompt }] }),
-    });
-    const body = await resp.json().catch(() => ({}));
-    if (resp.status === 401) throw new Error("API klíč není platný.");
-    if (resp.status === 429) throw new Error("Překročený limit požadavků – zkus to za chvíli.");
-    if (!resp.ok) throw new Error((body.error && body.error.message) || `Chyba služby (HTTP ${resp.status}).`);
-    const text = (body.content || []).filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();
-    if (!text) throw new Error("AI nevrátila žádný text.");
-    return text;
+    let lastError = null;
+    for (const model of MODELS) {
+      const resp = await fetchFn(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+        method: "POST", signal: ctl.signal,
+        headers: { "x-goog-api-key": apiKey, "content-type": "application/json" },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: SYSTEM }] },
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: 4000, temperature: 0.4 },
+        }),
+      });
+      const body = await resp.json().catch(() => ({}));
+      const err = body.error || {};
+      if (resp.status === 404) { lastError = new Error(err.message || "Model nenalezen."); continue; }
+      if (resp.status === 400 && /API key not valid|API_KEY_INVALID/i.test(JSON.stringify(err))) throw new Error("API klíč není platný.");
+      if (resp.status === 401 || resp.status === 403) throw new Error(`Klíč nemá přístup ke Gemini API (${err.message || `HTTP ${resp.status}`}).`);
+      if (resp.status === 429) throw new Error("Překročený limit požadavků – zkus to za chvíli.");
+      if (!resp.ok) throw new Error(err.message || `Chyba služby (HTTP ${resp.status}).`);
+      const parts = (((body.candidates || [])[0] || {}).content || {}).parts || [];
+      const text = parts.map((p) => p.text || "").join("\n").trim();
+      if (!text) throw new Error("AI nevrátila žádný text (odpověď mohla být zablokovaná).");
+      return text;
+    }
+    throw lastError || new Error("Model Gemini není dostupný.");
   } catch (err) {
     if (err.name === "AbortError") throw new Error("AI neodpověděla včas.");
     throw err;
@@ -123,4 +136,4 @@ async function askClaude({ fetchFn, apiKey, prompt, timeoutMs = 90000 }) {
   }
 }
 
-module.exports = { analyze, recentLosses, buildPrompt, askClaude, marketGroup, summarize, MODEL };
+module.exports = { analyze, recentLosses, buildPrompt, askGemini, marketGroup, summarize };

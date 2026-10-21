@@ -910,7 +910,7 @@
     const [res, hasKey] = await Promise.all([desktop.analysis.get(), desktop.analysis.hasKey()]);
     if (res.ok) an.data = res.data;
     an.hasKey = hasKey;
-    $("#ai-key-label").textContent = hasKey ? "API klíč uložen" : "API klíč";
+    $("#ai-key-label").textContent = hasKey ? "Gemini klíč uložen" : "Gemini API klíč";
     renderAnalysis();
   }
 
