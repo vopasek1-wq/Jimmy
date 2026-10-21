@@ -518,8 +518,8 @@ i[data-lucide],
 
 .trow { cursor: pointer; transition: background-color 0.16s; }
 .trow td:first-child { box-shadow: inset 3px 0 0 transparent; }
-.trow.is-high td:first-child { box-shadow: inset 3px 0 0 var(--green); }
-.trow.is-mid td:first-child { box-shadow: inset 3px 0 0 var(--yellow); }
+.trow.is-live td:first-child { box-shadow: inset 3px 0 0 #ff3b3b; }
+.trow.is-done td:first-child { box-shadow: inset 3px 0 0 #5b6b7f; }
 .trow:hover { background: rgba(255, 255, 255, 0.035); }
 .trow:active { background: rgba(255, 255, 255, 0.06); }
 .trow.is-selected { background: var(--accent-deep); }
