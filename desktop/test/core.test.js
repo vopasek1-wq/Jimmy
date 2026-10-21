@@ -144,3 +144,13 @@ test("čas: pražské datum a formát (letní čas)", () => {
   assert.equal(addDays("2026-10-31", 1), "2026-11-01");
   assert.equal(utcDateTime("2026-10-18", 13, 5).toISOString(), "2026-10-18T13:05:00.000Z");
 });
+
+test("filtry: ženské zápasy se vyřadí", () => {
+  const { isWomens } = require("../src/filters");
+  for (const [h, a] of [["Cruzeiro W", "Bolívar W"], ["Arsenal Women", "Chelsea"], ["Madrid CFF", "Barça (W)"], ["Real Madrid Femenina", "X"], ["Bayern Frauen", "Y"]]) {
+    assert.equal(isWomens({ home: h, away: a }), true, `${h} – ${a}`);
+  }
+  for (const [h, a] of [["Wolfsburg", "Werder Bremen"], ["West Ham", "Newcastle"], ["Sparta Praha", "Slavia Praha"], ["W Connection", "Y"]]) {
+    assert.equal(isWomens({ home: h, away: a }), false, `${h} – ${a}`);
+  }
+});

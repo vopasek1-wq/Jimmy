@@ -984,13 +984,13 @@
     // Výška řádku tak, aby všechny řádky přesně vyplnily okno pod horní lištou (a případným upozorněním).
     const rowHeight = () => {
       const top = $(".topbar").getBoundingClientRect().height;
-      return Math.max(10, Math.round(((window.innerHeight - top - 8) / ROWS) * 100) / 100);
+      return Math.max(10, Math.round(((window.innerHeight - top - 17) / ROWS) * 100) / 100);
     };
 
     const grid = GS.init({
       column: COLUMNS,
       cellHeight: rowHeight(),
-      margin: 4,                     // 8 px mezi bloky
+      margin: 8,                     // 16 px mezi bloky – stejně jako na ostatních záložkách
       float: false,
       animate: true,
       staticGrid: true,              // mimo režim úprav je mřížka zamčená

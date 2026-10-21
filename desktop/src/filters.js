@@ -22,7 +22,12 @@ function ensureOdds(tip) {
   return tip;
 }
 
+// Ženské zápasy se nesledují: „Cruzeiro W“, „Arsenal Women“, „… (W)“, „Femenina“, „Frauen“ apod.
+const WOMENS = /(?:^|\s)(?:W|Women|Womens|Women's|Ladies|Femenina|Femenino|Feminino|Féminin|Feminin|Femminile|Frauen|Vrouwen|Kobiet)\)?$|\((?:W|Women)\)|\bwomen\b/i;
+const isWomens = (tip) => WOMENS.test(String(tip.home || "").trim()) || WOMENS.test(String(tip.away || "").trim());
+
 function passesFilters(tip) {
+  if (isWomens(tip)) return false;
   const league = config.leagueByKey(tip.leagueKey);
   if (!league || !league.enabled) return false;
   if (tip.probability === null || tip.probability === undefined || !(tip.probability > config.MIN_PROBABILITY)) return false;
@@ -39,4 +44,4 @@ function probabilityClass(probability) {
   return probability > config.HIGH_PROBABILITY ? HIGH : MID;
 }
 
-module.exports = { HIGH, MID, ensureOdds, passesFilters, applyFilters, probabilityClass };
+module.exports = { isWomens, HIGH, MID, ensureOdds, passesFilters, applyFilters, probabilityClass };

@@ -14,6 +14,7 @@ const { DatabaseSync } = require("node:sqlite");
 
 const { tipKey } = require("./models");
 const { normalizePick } = require("./markets");
+const { isWomens } = require("./filters");
 const { addDays, localDate, todayLocal } = require("./timeutil");
 
 const SCHEMA = `
@@ -105,6 +106,7 @@ class Database {
     if (!columns.includes("prob_source")) this.db.exec("ALTER TABLE tips ADD COLUMN prob_source TEXT");
     if (!columns.includes("forebet_url")) this.db.exec("ALTER TABLE tips ADD COLUMN forebet_url TEXT");
     this._upgradeUnknownMarkets();
+    this._dropWomens();
   }
 
   /**
@@ -124,6 +126,13 @@ class Database {
         this.db.prepare("UPDATE tips SET key=?, tip_code=?, tip_label=? WHERE id=?").run(key, m.code, m.labelCs, r.id);
       }
     }
+  }
+
+  /** Ženské zápasy se už nesledují – dřív uložené tipy se z databáze (i z historie) odstraní. */
+  _dropWomens() {
+    const rows = this.db.prepare("SELECT id, home, away FROM tips").all();
+    const del = this.db.prepare("DELETE FROM tips WHERE id=?");
+    for (const r of rows) if (isWomens({ home: r.home, away: r.away })) del.run(r.id);
   }
 
   close() { this.db.close(); }

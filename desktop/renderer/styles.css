@@ -352,7 +352,6 @@ i[data-lucide],
    Hlavní oblast, mřížka Přehledu (GridStack 24 × 48), stránky
    ========================================================================== */
 .main { grid-area: main; position: relative; min-width: 0; padding: 9px 8px 8px 9px; }
-.app[data-view="overview"] .main { padding: 4px; }
 
 .board { min-height: 100%; }
 .board > .grid-stack-item > .grid-stack-item-content { display: flex; overflow: hidden !important; }
@@ -397,7 +396,7 @@ i[data-lucide],
 .app[data-view="history"] .live-page,
 .app[data-view="analysis"] .live-page,
 .app[data-view="analysis"] .page-history { display: none; }
-.pages > .analysis-page { display: none; height: calc(100dvh - var(--topbar-h) - 25px); }
+.pages > .analysis-page { display: none; height: calc(100dvh - var(--topbar-h) - 33px); }
 .app[data-view="analysis"] .pages > .analysis-page { display: flex; }
 
 /* ---------- Karta ---------- */
@@ -614,8 +613,8 @@ i[data-lucide],
 /* ==========================================================================
    Historie, Zdroje a pravidla
    ========================================================================== */
-.pages > .card { min-height: calc(100dvh - var(--topbar-h) - var(--notice-h, 0px) - 25px); }
-.pages > .page-history { height: calc(100dvh - var(--topbar-h) - var(--notice-h, 0px) - 25px); }
+.pages > .card { min-height: calc(100dvh - var(--topbar-h) - var(--notice-h, 0px) - 33px); }
+.pages > .page-history { height: calc(100dvh - var(--topbar-h) - var(--notice-h, 0px) - 33px); }
 .page-history .stat-row { margin-top: 14px; }
 .page-history .toolbar { margin-top: 14px; }
 .tbl--history .c-tip { white-space: nowrap; }
@@ -686,7 +685,7 @@ i[data-lucide],
 /* ==========================================================================
    Živé zápasy
    ========================================================================== */
-.live-page { display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 16px; height: calc(100dvh - var(--topbar-h) - var(--notice-h, 0px) - 25px); }
+.live-page { display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 16px; height: calc(100dvh - var(--topbar-h) - var(--notice-h, 0px) - 33px); }
 .live-page > .card { min-height: 0; overflow: hidden; }
 .live-scroll, .live-detail { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border-3) transparent; }
 .live-detail { margin-top: 12px; padding-right: 4px; }
