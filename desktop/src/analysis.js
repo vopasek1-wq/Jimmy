@@ -96,37 +96,49 @@ function buildPrompt(summary, losses) {
     + "3) 2–4 konkrétní doporučení, jak s tipy zacházet. Použij krátké odstavce nebo odrážky začínající „- “.";
 }
 
-// „latest“ alias sleduje aktuální rychlý model Gemini; při 404 se zkusí pevný název.
-const MODELS = ["gemini-flash-latest", "gemini-2.5-flash"];
+// „latest“ aliasy sledují aktuální modely Gemini; při nedostupnosti nebo přetížení se zkusí další (lehčí) model.
+const MODELS = ["gemini-flash-latest", "gemini-2.5-flash", "gemini-flash-lite-latest", "gemini-2.5-flash-lite"];
+const TRANSIENT = new Set([429, 500, 502, 503, 504]);
+const ATTEMPTS = 3; // pokusů na model při přechodné chybě (přetížení)
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /** Dotaz na Google Gemini API (klíč má uživatel uložený v aplikaci); `fetchFn` je net.fetch z Electronu. */
-async function askGemini({ fetchFn, apiKey, prompt, json = false, timeoutMs = 90000 }) {
+async function askGemini({ fetchFn, apiKey, prompt, json = false, timeoutMs = 120000, sleep = wait }) {
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), timeoutMs);
   try {
     let lastError = null;
+    let busy = false;
     for (const model of MODELS) {
-      const resp = await fetchFn(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-        method: "POST", signal: ctl.signal,
-        headers: { "x-goog-api-key": apiKey, "content-type": "application/json" },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: SYSTEM }] },
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: json ? 8000 : 4000, temperature: 0.4, ...(json ? { responseMimeType: "application/json" } : {}) },
-        }),
-      });
-      const body = await resp.json().catch(() => ({}));
-      const err = body.error || {};
-      if (resp.status === 404) { lastError = new Error(err.message || "Model nenalezen."); continue; }
-      if (resp.status === 400 && /API key not valid|API_KEY_INVALID/i.test(JSON.stringify(err))) throw new Error("API klíč není platný.");
-      if (resp.status === 401 || resp.status === 403) throw new Error(`Klíč nemá přístup ke Gemini API (${err.message || `HTTP ${resp.status}`}).`);
-      if (resp.status === 429) throw new Error("Překročený limit požadavků – zkus to za chvíli.");
-      if (!resp.ok) throw new Error(err.message || `Chyba služby (HTTP ${resp.status}).`);
-      const parts = (((body.candidates || [])[0] || {}).content || {}).parts || [];
-      const text = parts.map((p) => p.text || "").join("\n").trim();
-      if (!text) throw new Error("AI nevrátila žádný text (odpověď mohla být zablokovaná).");
-      return text;
+      for (let attempt = 0; attempt < ATTEMPTS; attempt += 1) {
+        const resp = await fetchFn(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+          method: "POST", signal: ctl.signal,
+          headers: { "x-goog-api-key": apiKey, "content-type": "application/json" },
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: SYSTEM }] },
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            generationConfig: { maxOutputTokens: json ? 8000 : 4000, temperature: 0.4, ...(json ? { responseMimeType: "application/json" } : {}) },
+          }),
+        });
+        const body = await resp.json().catch(() => ({}));
+        const err = body.error || {};
+        if (resp.status === 404) { lastError = new Error(err.message || "Model nenalezen."); break; }
+        if (resp.status === 400 && /API key not valid|API_KEY_INVALID/i.test(JSON.stringify(err))) throw new Error("API klíč není platný.");
+        if (resp.status === 401 || resp.status === 403) throw new Error(`Klíč nemá přístup ke Gemini API (${err.message || `HTTP ${resp.status}`}).`);
+        if (TRANSIENT.has(resp.status)) {          // přetížení / limit: chvíli počkat a zkusit znovu, pak jiný model
+          busy = true;
+          lastError = new Error(err.message || `Chyba služby (HTTP ${resp.status}).`);
+          if (attempt < ATTEMPTS - 1) await sleep(1500 * (attempt + 1));
+          continue;
+        }
+        if (!resp.ok) throw new Error(err.message || `Chyba služby (HTTP ${resp.status}).`);
+        const parts = (((body.candidates || [])[0] || {}).content || {}).parts || [];
+        const text = parts.map((p) => p.text || "").join("\n").trim();
+        if (!text) throw new Error("AI nevrátila žádný text (odpověď mohla být zablokovaná).");
+        return text;
+      }
     }
+    if (busy) throw new Error("Gemini je teď přetížené nebo je vyčerpaný limit (zkoušel jsem i záložní modely). Zkus to za pár minut.");
     throw lastError || new Error("Model Gemini není dostupný.");
   } catch (err) {
     if (err.name === "AbortError") throw new Error("AI neodpověděla včas.");

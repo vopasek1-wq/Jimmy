@@ -61,6 +61,16 @@ test("askGemini: úspěch, záložní model a chyby", async () => {
   assert.equal(await askGemini({ fetchFn: fallback, apiKey: "k", prompt: "q" }), "B");
   assert.equal(urls.length, 2);
 
+  // přetížení (503): znovu na stejném modelu, pak na dalším; vše přetížené → srozumitelná zpráva
+  let calls = 0;
+  const flaky = async () => (++calls < 3
+    ? { status: 503, ok: false, json: async () => ({ error: { message: "This model is currently experiencing high demand." } }) }
+    : { status: 200, ok: true, json: async () => ({ candidates: [{ content: { parts: [{ text: "Po opakování" }] } }] }) });
+  assert.equal(await askGemini({ fetchFn: flaky, apiKey: "k", prompt: "q", sleep: async () => {} }), "Po opakování");
+  assert.equal(calls, 3);
+  const allBusy = async () => ({ status: 503, ok: false, json: async () => ({ error: { message: "high demand" } }) });
+  await assert.rejects(() => askGemini({ fetchFn: allBusy, apiKey: "k", prompt: "q", sleep: async () => {} }), /přetížené/);
+
   const badKey = async () => ({ status: 400, ok: false, json: async () => ({ error: { message: "API key not valid. Please pass a valid API key.", details: [{ reason: "API_KEY_INVALID" }] } }) });
   await assert.rejects(() => askGemini({ fetchFn: badKey, apiKey: "k", prompt: "q" }), /není platný/);
   const blocked = async () => ({ status: 200, ok: true, json: async () => ({ candidates: [{}] }) });
