@@ -55,6 +55,7 @@ Tip se objeví, **jen když platí všechno** z následujícího (konstanty jsou
   skotská Premiership a česká 1. liga (seznam upravíte v `LEAGUES`),
 * pravděpodobnost je **striktně větší než 60 %**,
 * kurz je **alespoň 1,50**.
+* nejde o **ženský zápas** (týmy typu „… W“, „… Women“, „Femenina“, „Frauen“ se vyřazují; dříve uložené se při spuštění z historie smažou).
 
 Řádek je **zelený** při pravděpodobnosti nad 75 %, **žlutý** v pásmu 60–75 %. Živé zápasy mají modrou tečku,
 skončené jsou ztlumené.
