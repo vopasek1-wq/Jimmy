@@ -100,7 +100,7 @@ function buildPrompt(summary, losses) {
 const MODELS = ["gemini-flash-latest", "gemini-2.5-flash"];
 
 /** Dotaz na Google Gemini API (klíč má uživatel uložený v aplikaci); `fetchFn` je net.fetch z Electronu. */
-async function askGemini({ fetchFn, apiKey, prompt, timeoutMs = 90000 }) {
+async function askGemini({ fetchFn, apiKey, prompt, json = false, timeoutMs = 90000 }) {
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), timeoutMs);
   try {
@@ -112,7 +112,7 @@ async function askGemini({ fetchFn, apiKey, prompt, timeoutMs = 90000 }) {
         body: JSON.stringify({
           systemInstruction: { parts: [{ text: SYSTEM }] },
           contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 4000, temperature: 0.4 },
+          generationConfig: { maxOutputTokens: json ? 8000 : 4000, temperature: 0.4, ...(json ? { responseMimeType: "application/json" } : {}) },
         }),
       });
       const body = await resp.json().catch(() => ({}));

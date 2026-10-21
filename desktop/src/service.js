@@ -9,6 +9,7 @@ const { Pipeline, updateResults, settleFinished } = require("./pipeline");
 const { SofaScoreClient } = require("./scrapers/sofascore");
 const { LiveClient } = require("./live");
 const { analyze, recentLosses, buildPrompt } = require("./analysis");
+const { candidatesFrom, buildTicketPrompt } = require("./tickets");
 const { resultOk } = require("./models");
 const { fmtStamp, localDate, todayLocal } = require("./timeutil");
 
@@ -117,6 +118,14 @@ class TipService {
   aiPrompt() {
     const tips = this.db.history(null).map(serializeTip);
     return buildPrompt(analyze(tips), recentLosses(tips));
+  }
+
+  /** Kandidáti pro tikety a zadání pro AI (z posledního stažení; jen tipy, které ještě nezačaly). */
+  ticketRequest({ day, legs, count }) {
+    const tips = this.db.tipsOfLatestRun().map(serializeTip);
+    const candidates = candidatesFrom(tips, { day });
+    const prompt = candidates.length >= legs ? buildTicketPrompt(candidates, { legs, count, calibration: this.analysis() }) : null;
+    return { candidates, prompt };
   }
 
   history(period = null) {

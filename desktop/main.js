@@ -15,6 +15,7 @@ const { HttpClient } = require("./src/http");
 const { WindowBrowser, chromeUserAgent } = require("./src/browser");
 const { TipService } = require("./src/service");
 const { askGemini } = require("./src/analysis");
+const { parseTickets } = require("./src/tickets");
 
 const DESIGN_SIZE = { width: 1440, height: 900 };
 const isHttpUrl = (url) => /^https?:\/\//i.test(String(url));
@@ -123,6 +124,19 @@ ipcMain.handle("analysis:run", safe(async () => {
   const apiKey = readKey();
   if (!apiKey) throw new Error("Nejdřív zadej Gemini API klíč.");
   return askGemini({ fetchFn: (url, init) => net.fetch(url, init), apiKey, prompt: service.aiPrompt() });
+}));
+ipcMain.handle("tickets:create", safe(async (_e, req) => {
+  const apiKey = readKey();
+  if (!apiKey) throw new Error("Nejdřív zadej Gemini API klíč.");
+  const legs = Math.min(5, Math.max(2, Number(req && req.legs) || 3));
+  const count = Math.min(3, Math.max(1, Number(req && req.count) || 2));
+  const day = req && req.day === "tomorrow" ? "tomorrow" : "today";
+  const { candidates, prompt } = service.ticketRequest({ day, legs, count });
+  if (!prompt) throw new Error(`Na tiket o ${legs} tipech je málo vhodných tipů (${candidates.length}): potřebuju tipy, které ještě nezačaly a mají skutečný kurz. Zkus méně tipů, jiný den, nebo nejdřív stáhni tipy.`);
+  const text = await askGemini({ fetchFn: (url, init) => net.fetch(url, init), apiKey, prompt, json: true });
+  const tickets = parseTickets(text, candidates, { legs });
+  if (!tickets.length) throw new Error("AI nevrátila použitelné tikety (špatné tipy nebo počet) – zkus to znovu.");
+  return { tickets, candidates: candidates.length };
 }));
 ipcMain.handle("tips:live", safe(() => service.refreshLive()));
 ipcMain.handle("tips:refresh", safe((event) => service.refresh(progressTo(event))));

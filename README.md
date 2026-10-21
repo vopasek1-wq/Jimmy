@@ -98,6 +98,19 @@ Vyhodnocují se běžné trhy (1X2, dvojitá šance, Over/Under, oba týmy skór
 čtvrtinové linie a neznámé trhy zůstávají bez výsledku. Zisk a ROI se počítají při vkladu 1 na tip, jen z tipů se skutečným
 (ne odhadnutým) kurzem.
 
+## Tikety (Gemini)
+
+Záložka **Tikety** nechá Gemini poskládat kombinace (tikety) po 2–5 tipech, které pak ručně zadáš do Tipsportu (ten nemá API).
+Zvolíš den (Dnes / Zítra), počet tipů na tiketu (2–5) a počet tiketů (1–3) a klikneš na **Vytvořit tikety (AI)**. Gemini dostane jen
+tipy, které ještě nezačaly a mají **skutečný** kurz (ne odhadnutý), a k tomu tvou dosavadní kalibraci z Analýzy. U každého tiketu vrátí
+název, celkový verdikt (dobrý / průměrný / rizikový) a krátké shrnutí a u **každého tipu** verdikt a jednu větu, zda je to dobrý tip.
+Výběr tipů aplikace zkontroluje (existují, jsou z různých zápasů, správný počet) a **celkový kurz, pravděpodobnost (součin) a odhad
+výnosu počítá sama** – z AI se berou jen výběr a komentáře. Tlačítko *Kopírovat tiket* připraví text pro přepsání do Tipsportu.
+Používá se stejný Gemini klíč jako v Analýze; poslední tikety zůstanou po restartu.
+
+> Pravděpodobnost tiketu je součin odhadů zdroje, které nejsou kalibrované, takže bývá optimistická; kurzy u Tipsportu se mohou lišit
+> a výnos není zaručen. Sázení je jen pro osoby starší 18 let.
+
 ## Analýza úspěšnosti
 
 Záložka **Analýza** porovnává odhadnutou pravděpodobnost tipů se skutečnými výsledky (počítají se jen výhry a prohry, ne vrácené

@@ -127,7 +127,7 @@
     `<div class="stat ${cls}"><div class="stat__value">${esc(value)}</div><div class="stat__label" title="${esc(label)}">${esc(label)}</div></div>`;
 
   /* ---------- Navigace ---------- */
-  const VIEWS = ["overview", "live", "analysis", "history"];
+  const VIEWS = ["overview", "live", "tickets", "analysis", "history"];
   const showView = (view) => {
     if (!VIEWS.includes(view)) view = "overview";
     app.dataset.view = view;
@@ -144,6 +144,7 @@
     if (view === "live") startLive();
     else stopLive();
     if (view === "analysis") loadAnalysis();
+    if (view === "tickets") loadTickets();
     renderCats();
   };
 
@@ -863,6 +864,117 @@
     renderLiveList();
   });
 
+
+
+  /* ---------- Tikety (Gemini) ---------- */
+  const tk = {
+    day: ["today", "tomorrow"].includes(store.get("tk-day")) ? store.get("tk-day") : "today",
+    legs: [2, 3, 4, 5].includes(store.get("tk-legs")) ? store.get("tk-legs") : 3,
+    count: [1, 2, 3].includes(store.get("tk-count")) ? store.get("tk-count") : 2,
+    result: store.get("tk-result"),   // naposledy vytvořené tikety (zůstanou i po restartu)
+    busy: false, hasKey: false,
+  };
+  const VERDICT_CS = { good: "Dobrý", ok: "Průměrný", risky: "Rizikový" };
+  const kickoffShort = (iso) => fmtKickoff(iso);
+
+  function ticketText(t) {
+    const lines = [`Tiket – ${t.legs.length} tipy, celkový kurz ${nf2.format(t.totalOdds)}`];
+    t.legs.forEach((l, i) => lines.push(`${i + 1}) ${l.matchName} (${kickoffShort(l.kickoff)}): ${l.tipLabel} – kurz ${nf2.format(l.odds)}`));
+    return lines.join("\n");
+  }
+
+  function renderTickets() {
+    $$("#tk-day [data-tkday]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.tkday === tk.day)));
+    $$("#tk-legs [data-tklegs]").forEach((b) => b.setAttribute("aria-pressed", String(Number(b.dataset.tklegs) === tk.legs)));
+    $$("#tk-count [data-tkcount]").forEach((b) => b.setAttribute("aria-pressed", String(Number(b.dataset.tkcount) === tk.count)));
+    $("#tk-key-label").textContent = tk.hasKey ? "Gemini klíč uložen" : "Gemini API klíč";
+    const list = $("#tk-list");
+    const r = tk.result;
+    if (tk.busy) { list.innerHTML = '<p class="empty">Gemini skládá tikety…</p>'; return; }
+    if (!r || !r.tickets || !r.tickets.length) {
+      list.innerHTML = `<p class="empty">${esc(r && r.error ? r.error : "Zatím žádné tikety. Zvol den a počet tipů a klikni na „Vytvořit tikety (AI)“.")}</p>`;
+      return;
+    }
+    list.innerHTML = r.tickets.map((t, i) => `<article class="tk-card" data-i="${i}">
+      <div class="tk-head"><span class="tk-name">${esc(t.name)}</span><span class="tk-verdict tk-verdict--${t.verdict}">${VERDICT_CS[t.verdict] || ""} tiket</span></div>
+      <div class="tk-legs">${t.legs.map((l) => `<div class="tk-leg"><div class="tk-leg__row">
+          <span class="tk-leg__match">${esc(l.matchName)}</span><span class="tk-leg__odds">${esc(nf2.format(l.odds))}</span>
+          <span class="tk-leg__tip">${esc(l.tipLabel)}</span><span class="tk-leg__meta">${esc(kickoffShort(l.kickoff))} · ${esc(fmtPct(l.probability))}</span>
+          ${l.comment ? `<span class="tk-leg__comment"><span class="tk-verdict tk-verdict--${l.verdict}">${VERDICT_CS[l.verdict] || ""}</span><span>${esc(l.comment)}</span></span>` : ""}
+        </div></div>`).join("")}</div>
+      <div class="tk-totals">
+        ${stat(nf2.format(t.totalOdds), "celkový kurz", "stat--accent")}
+        ${stat(`${nf1.format(t.jointProbability)} %`, "pravděpodobnost (součin)")}
+        ${stat(`${t.expectedReturn > 0 ? "+" : t.expectedReturn < 0 ? "−" : ""}${nf1.format(Math.abs(t.expectedReturn))} %`, "odhad výnosu", t.expectedReturn > 0 ? "stat--pos" : t.expectedReturn < 0 ? "stat--neg" : "")}
+      </div>
+      ${t.summary ? `<p class="tk-summary">${esc(t.summary)}</p>` : ""}
+      <div class="tk-actions">
+        <button class="btn btn--ghost btn--sm" type="button" data-tkact="copy"><i data-lucide="copy"></i>Kopírovat tiket</button>
+        <button class="btn btn--ghost btn--sm" type="button" data-tkact="tipsport"><i data-lucide="external-link"></i>Tipsport</button>
+      </div></article>`).join("");
+    $("#tk-note").textContent = `Vytvořeno z ${r.candidates} vhodných tipů${r.at ? ` (${r.at})` : ""}. Pravděpodobnost je součin odhadů zdroje – bývá optimistická; kurzy u Tipsportu se mohou lišit a výnos není zaručen. Sázení je jen pro 18+.`;
+    renderIcons();
+  }
+
+  async function loadTickets() {
+    if (desktop) {
+      tk.hasKey = await desktop.analysis.hasKey();
+      $("#ai-key-label").textContent = tk.hasKey ? "Gemini klíč uložen" : "Gemini API klíč";
+    }
+    renderTickets();
+  }
+
+  const bindSeg = (sel, attr, key, parse) => $$(`${sel} [${attr}]`).forEach((b) => b.addEventListener("click", () => {
+    tk[key] = parse(b.getAttribute(attr));
+    store.set(`tk-${key}`, tk[key]);
+    renderTickets();
+  }));
+  bindSeg("#tk-day", "data-tkday", "day", (v) => v);
+  bindSeg("#tk-legs", "data-tklegs", "legs", Number);
+  bindSeg("#tk-count", "data-tkcount", "count", Number);
+
+  $("#tk-key-btn").addEventListener("click", () => { const f = $("#tk-key-form"); f.hidden = !f.hidden; if (!f.hidden) $("#tk-key").focus(); });
+  $("#tk-key-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const key = $("#tk-key").value.trim();
+    if (!key || !desktop) return;
+    const res = await desktop.analysis.setKey(key);
+    $("#tk-key").value = "";
+    if (res.ok) { $("#tk-key-form").hidden = true; toast("API klíč je uložený (šifrovaně)."); loadTickets(); } else toast(res.error, "error");
+  });
+  $("#tk-key-remove").addEventListener("click", async () => {
+    if (!desktop) return;
+    await desktop.analysis.setKey("");
+    toast("API klíč je odebraný.");
+    loadTickets();
+  });
+
+  $("#tk-create").addEventListener("click", async () => {
+    if (!desktop || tk.busy) return;
+    if (!tk.hasKey) { $("#tk-key-form").hidden = false; $("#tk-key").focus(); toast("Nejdřív zadej Gemini API klíč.", "error"); return; }
+    tk.busy = true;
+    $("#tk-create").disabled = true;
+    renderTickets();
+    const res = await desktop.tickets.create({ day: tk.day, legs: tk.legs, count: tk.count });
+    tk.busy = false;
+    $("#tk-create").disabled = false;
+    tk.result = res.ok ? { ...res.data, at: fmtKickoff(new Date().toISOString()) } : { error: res.error };
+    if (res.ok) store.set("tk-result", tk.result);
+    renderTickets();
+  });
+
+  $("#tk-list").addEventListener("click", async (e) => {
+    const btn = e.target.closest("button[data-tkact]");
+    const card = e.target.closest(".tk-card");
+    if (!btn || !card) return;
+    const t = tk.result?.tickets?.[Number(card.dataset.i)];
+    if (!t) return;
+    if (btn.dataset.tkact === "copy") {
+      if (desktop) await desktop.copyText(ticketText(t));
+      else { try { await navigator.clipboard.writeText(ticketText(t)); } catch { /* bez schránky */ } }
+      toast("Tiket je zkopírovaný – vlož ho do Tipsportu.");
+    } else openExternal("https://www.tipsport.cz/");
+  });
 
   /* ---------- Analýza úspěšnosti tipů (+ AI) ---------- */
   const an = { data: null, hasKey: false, busy: false };

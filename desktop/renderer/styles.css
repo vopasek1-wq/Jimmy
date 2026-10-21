@@ -388,16 +388,22 @@ i[data-lucide],
 .pages { display: none; padding: 8px; }
 .app[data-view="history"] .pages,
 .app[data-view="live"] .pages,
-.app[data-view="analysis"] .pages { display: block; }
+.app[data-view="analysis"] .pages,
+.app[data-view="tickets"] .pages { display: block; }
 .app[data-view="history"] .board,
 .app[data-view="live"] .board,
-.app[data-view="analysis"] .board { display: none; }
+.app[data-view="analysis"] .board,
+.app[data-view="tickets"] .board { display: none; }
 .app[data-view="live"] .page-history,
 .app[data-view="history"] .live-page,
 .app[data-view="analysis"] .live-page,
-.app[data-view="analysis"] .page-history { display: none; }
+.app[data-view="analysis"] .page-history,
+.app[data-view="tickets"] .live-page,
+.app[data-view="tickets"] .page-history { display: none; }
 .pages > .analysis-page { display: none; height: calc(100dvh - var(--topbar-h) - 33px); }
 .app[data-view="analysis"] .pages > .analysis-page { display: flex; }
+.pages > .tickets-page { display: none; height: calc(100dvh - var(--topbar-h) - 33px); overflow-x: hidden; overflow-y: auto; }
+.app[data-view="tickets"] .pages > .tickets-page { display: flex; }
 
 /* ---------- Karta ---------- */
 .card {
@@ -857,3 +863,32 @@ body { background: var(--bg); }
 .stat, .live-box, .facts { background: var(--panel); border-color: var(--border-2); border-radius: 14px; }
 .trow.is-selected { background: rgba(30, 130, 205, 0.34); }
 .toast, .warn__pop { -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); background: linear-gradient(155deg, rgba(22, 50, 84, 0.85), rgba(8, 22, 42, 0.9)); }
+
+/* ==========================================================================
+   Tikety
+   ========================================================================== */
+.tk-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.tk-controls .btn--primary { margin-left: auto; }
+.tk-note { margin-top: 12px; font-size: 12px; color: var(--muted); }
+.tk-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 16px; margin-top: 14px; align-items: start; }
+.tk-card { padding: 14px 16px 12px; background: var(--panel); border: 1px solid var(--border-2); border-radius: 14px; }
+.tk-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.tk-name { font-size: 15px; font-weight: 600; }
+.tk-verdict { display: inline-flex; align-items: center; height: 22px; padding: 0 10px; border-radius: 11px; font-size: 11.5px; font-weight: 700; letter-spacing: 0.3px; white-space: nowrap; }
+.tk-verdict--good { background: var(--green-soft); color: var(--green); }
+.tk-verdict--ok { background: var(--yellow-soft); color: var(--yellow); }
+.tk-verdict--risky { background: var(--red-soft); color: var(--red); }
+.tk-legs { display: flex; flex-direction: column; margin-top: 10px; }
+.tk-leg { padding: 9px 0; border-top: 1px solid var(--line); }
+.tk-leg__row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: baseline; }
+.tk-leg__match { font-size: 13.5px; font-weight: 500; }
+.tk-leg__odds { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.tk-leg__tip { font-size: 12.5px; color: var(--text-2); }
+.tk-leg__meta { font-size: 11.5px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.tk-leg__comment { grid-column: 1 / -1; display: flex; gap: 8px; align-items: flex-start; margin-top: 3px; font-size: 12px; line-height: 1.45; color: var(--text-2); }
+.tk-leg__comment .tk-verdict { flex: none; height: 18px; padding: 0 8px; font-size: 10.5px; }
+.tk-totals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
+.tk-summary { margin-top: 10px; font-size: 12.5px; line-height: 1.5; color: var(--text-2); }
+.tk-actions { display: flex; gap: 8px; margin-top: 10px; }
+.tk-card .stat { padding: 8px 10px 7px; }
+.tk-card .stat__value { font-size: 20px; }

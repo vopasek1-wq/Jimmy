@@ -59,6 +59,7 @@
         <ul class="nav__list">
           <li><a class="nav__link is-active" href="#" data-view="overview" aria-current="page"><i data-lucide="house"></i><span>Přehled</span></a></li>
           <li><a class="nav__link" href="#" data-view="live"><i data-lucide="radio"></i><span>Živé zápasy</span></a></li>
+          <li><a class="nav__link" href="#" data-view="tickets"><i data-lucide="ticket"></i><span>Tikety</span></a></li>
           <li><a class="nav__link" href="#" data-view="analysis"><i data-lucide="brain"></i><span>Analýza</span></a></li>
           <li><a class="nav__link" href="#" data-view="history"><i data-lucide="history"></i><span>Historie</span></a></li>
         </ul>
@@ -133,6 +134,36 @@
 
       <!-- Samostatné stránky z levého menu -->
       <div class="pages">
+        <section class="card tickets-page" aria-labelledby="tickets-title">
+          <h2 class="sr-only" id="tickets-title">Tikety</h2>
+          <div class="tk-controls">
+            <div class="seg-control" id="tk-day" role="group" aria-label="Den">
+              <button type="button" data-tkday="today" aria-pressed="true">Dnes</button>
+              <button type="button" data-tkday="tomorrow" aria-pressed="false">Zítra</button>
+            </div>
+            <div class="seg-control" id="tk-legs" role="group" aria-label="Počet tipů na tiketu">
+              <button type="button" data-tklegs="2" aria-pressed="false">2 tipy</button>
+              <button type="button" data-tklegs="3" aria-pressed="true">3 tipy</button>
+              <button type="button" data-tklegs="4" aria-pressed="false">4 tipy</button>
+              <button type="button" data-tklegs="5" aria-pressed="false">5 tipů</button>
+            </div>
+            <div class="seg-control" id="tk-count" role="group" aria-label="Počet tiketů">
+              <button type="button" data-tkcount="1" aria-pressed="false">1 tiket</button>
+              <button type="button" data-tkcount="2" aria-pressed="true">2 tikety</button>
+              <button type="button" data-tkcount="3" aria-pressed="false">3 tikety</button>
+            </div>
+            <button class="btn btn--primary" type="button" id="tk-create"><i data-lucide="sparkles"></i>Vytvořit tikety (AI)</button>
+            <button class="btn btn--ghost btn--sm" type="button" id="tk-key-btn"><i data-lucide="key-round"></i><span id="tk-key-label">Gemini API klíč</span></button>
+          </div>
+          <form class="ai-key-form" id="tk-key-form" hidden>
+            <input class="input" id="tk-key" type="password" placeholder="Gemini API klíč (AIza…)" autocomplete="off" aria-label="Gemini API klíč">
+            <button class="btn btn--primary btn--sm" type="submit">Uložit</button>
+            <button class="btn btn--ghost btn--sm" type="button" id="tk-key-remove">Odebrat</button>
+          </form>
+          <p class="tk-note" id="tk-note">Tikety skládá Gemini z tipů, které ještě nezačaly a mají skutečný kurz. Celkový kurz a pravděpodobnost počítá aplikace; kurzy u Tipsportu se mohou lišit.</p>
+          <div class="tk-list" id="tk-list"></div>
+        </section>
+
         <section class="card analysis-page" aria-labelledby="analysis-title">
           <h2 class="sr-only" id="analysis-title">Analýza úspěšnosti tipů</h2>
           <div class="stat-row stat-row--5" id="an-stats"></div>
