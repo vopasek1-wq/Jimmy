@@ -756,3 +756,6 @@ i[data-lucide],
 .ai-out strong { color: var(--text); font-weight: 500; }
 .ai-out .is-error { color: #ffb3b3; }
 @media (max-width: 1100px) { .an-grid { grid-template-columns: 1fr; } }
+.match .live-dot { display: inline-block; margin: 0 8px 1px 0; vertical-align: middle; }
+.match .score { margin-left: 6px; font-size: 13px; }
+.match .score--live { color: #ff8a8a; }
