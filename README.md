@@ -34,6 +34,11 @@ s `.exe`. Pro zkoušení lze složku přesměrovat proměnnou prostředí `TIPST
 > sestaveních může vydání `tipy-latest` zmizet. Stačí pak spustit *Actions → Fotbalové tipy – Windows build →
 > Run workflow*.
 
+## Vzhled
+
+Aplikace má „skleněný“ vzhled (verze 3): tmavé lesklé pozadí se světélkujícími koulemi, průhledné rozmazané panely se zářivými rohy
+a tlačítka s modrým přechodem. Styly jsou v `desktop/renderer/styles.css` (poslední sekce „Skleněný vzhled“, barvy v tokenech na začátku souboru).
+
 ## Ovládání
 
 Záložky pod vyhledáváním: **Přehled** (tabulka tipů, detail a úspěšnost; rozložení lze upravit), **Živé zápasy** (právě hrané zápasy ze SofaScore; po kliknutí momentum zápasu, branky a karty a statistiky; obnovuje se každých 30 s) a **Historie**. V levém sloupci jsou **soutěže** s počty zápasů – klik na soutěž filtruje tabulku tipů, živé zápasy i historii (hvězdička = všechny). Stav zdrojů se ukazuje jen v pruhu nahoře, když nějaký selže.
