@@ -49,7 +49,7 @@ a tlumeně modrá tlačítka bez záře. Styly jsou v `desktop/renderer/styles.c
 
 ## Ovládání
 
-Záložky pod vyhledáváním: **Přehled** (tabulka tipů, detail a úspěšnost; rozložení lze upravit), **Živé zápasy** (právě hrané zápasy ze sledovaných soutěží ze SofaScore; po kliknutí momentum zápasu, branky a karty a statistiky; obnovuje se každých 30 s) a **Historie**. V levém sloupci jsou **soutěže** s počty zápasů – klik na soutěž filtruje tabulku tipů, živé zápasy i historii (hvězdička = všechny). Stav zdrojů se ukazuje jen v pruhu nahoře, když nějaký selže.
+Záložky pod vyhledáváním: **Přehled** (tabulka tipů, detail a úspěšnost; rozložení lze upravit), **Živé zápasy** (právě hrané zápasy z Přehledu (podle SofaScore); po kliknutí momentum zápasu, branky a karty a statistiky; obnovuje se každých 30 s) a **Historie**. V levém sloupci jsou **soutěže** s počty zápasů – klik na soutěž filtruje tabulku tipů, živé zápasy i historii (hvězdička = všechny). Stav zdrojů se ukazuje jen v pruhu nahoře, když nějaký selže.
 
 * **Dnes / Zítra** – přepínač dne hned za nadpisem „Tipy po filtraci“ (volba se pamatuje).
 * Kliknutí na záhlaví sloupce řadí (pravděpodobnost, kurz, čas, …); hledání v horní liště (**Ctrl + K**) filtruje

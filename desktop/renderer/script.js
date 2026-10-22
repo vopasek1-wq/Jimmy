@@ -684,13 +684,19 @@
 
   const tipsOfMatch = (id) => (state.payload?.tips || []).filter((t) => t.sofascoreId === id);
 
+  /** Živé zápasy jen z tipů v Přehledu (spárované přes SofaScore ID). */
+  const liveOfOverview = () => {
+    const ids = new Set((state.payload?.tips || []).map((t) => t.sofascoreId).filter(Boolean));
+    return live.list.filter((m) => ids.has(m.id));
+  };
+
   function renderLiveList() {
     renderCats();
-    const shown = live.list.filter((m) => m.tracked && (!state.league || m.leagueKey === state.league));
+    const shown = liveOfOverview().filter((m) => !state.league || m.leagueKey === state.league);
     $("#live-note").textContent = live.loaded ? `${shown.length} ${shown.length === 1 ? "zápas" : shown.length < 5 && shown.length ? "zápasy" : "zápasů"}` : "";
     if (!shown.length) {
       liveListEl.innerHTML = `<p class="empty">${esc(live.error ? `Živé zápasy se nepodařilo načíst: ${live.error}` : !live.loaded ? "Načítám živé zápasy…"
-        : "Právě se nehraje žádný zápas ve sledovaných soutěžích.")}</p>`;
+        : "Právě se nehraje žádný zápas z Přehledu.")}</p>`;
       return;
     }
     let group = "";
@@ -829,7 +835,7 @@
     const view = app.dataset.view;
     const counts = {};
     let list = [];
-    if (view === "live") list = live.list.filter((m) => m.tracked);
+    if (view === "live") list = liveOfOverview();
     else if (view === "history") list = (state.history?.tips || []).filter(matchesQuery);
     else {
       const today = localDay(new Date());
