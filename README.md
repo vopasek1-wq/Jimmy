@@ -27,8 +27,10 @@ vydání **`tipy-latest`**:
    uložená data mladší než 15 minut, znovu se nestahuje. Okno se vždy otevře maximalizované.
 4. **Nová verze:** aplikace při startu (a pak každých 6 hodin) zjistí na GitHubu, jestli je ve vydání `tipy-latest` novější
    sestavení. Pokud ano, v horní liště se objeví štítek **Nová verze** – klik otevře stažení v prohlížeči (po stažení zavřete
-   aplikaci a spusťte nový `FotbalTipy.exe`). Číslo sestavení je v tooltipu loga vlevo nahoře; verze aplikace je `1.0.<číslo sestavení>`
-   (workflow ho dosadí z čísla běhu). Kontrola funguje až od sestavení, které ji obsahuje, a jen v zabalené aplikaci.
+   aplikaci a spusťte nový `FotbalTipy.exe`). Novou verzi lze vyhledat i hned tlačítkem **Aktualizace** vlevo dole: když je novější
+   sestavení, tlačítko se změní na „Stáhnout verzi N“ a další klik otevře stažení; když ne, ukáže se, že máte nejnovější verzi
+   (pod tlačítkem je číslo vašeho sestavení). Verze aplikace je `1.0.<číslo sestavení>` (workflow ho dosadí z čísla běhu).
+   Automatická kontrola běží jen v zabalené aplikaci a funguje až od sestavení, které ji obsahuje.
 
 Data (databáze `tipy.sqlite3`, nastavení okna) jsou ve `%APPDATA%\FotbalTipy`; vydání se nijak neváže na složku
 s `.exe`. Pro zkoušení lze složku přesměrovat proměnnou prostředí `TIPSTER_DATA_DIR`.

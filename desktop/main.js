@@ -118,6 +118,14 @@ const safe = (fn) => async (...args) => {
 };
 
 ipcMain.handle("tips:cached", safe(() => service.loadCached()));
+// Ruční kontrola (tlačítko „Aktualizace“): na rozdíl od automatické běží i ve vývojové verzi a chybu hlásí.
+ipcMain.handle("update:check", safe(async () => {
+  const info = await checkForUpdate({ fetchFn: (url, init) => net.fetch(url, init), version: app.getVersion() });
+  if (!info) throw new Error("Kontrola nové verze se nepodařila. Zkontroluj připojení k internetu; když se právě sestavuje nová verze, zkus to za pár minut.");
+  if (info.available) update = info;
+  return info;
+}));
+
 /* ---------- Diagnostika pro vývojáře (Ctrl + Shift + D) ---------- */
 ipcMain.handle("diag:copy", safe(() => {
   const text = service.diagnosticsText({ version: app.getVersion(), electron: process.versions.electron, platform: `${process.platform} ${process.getSystemVersion()}` });

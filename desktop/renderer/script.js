@@ -1217,21 +1217,52 @@
     else toast(`Diagnostiku se nepodařilo zkopírovat: ${res.error}`, "error");
   });
 
-  /* ---------- Nová verze: malý štítek v horní liště, klik otevře stažení v prohlížeči ---------- */
+  /* ---------- Nová verze: štítek v horní liště a tlačítko Aktualizace vlevo dole ---------- */
   const updateChip = $("#update-chip");
+  const updateBtn = $("#update-btn");
+  const updateBtnLabel = $("span", updateBtn);
+  let updateInfo = null;   // zjištěné novější sestavení { current, latest, url }
+
+  function renderUpdateBtn(checking = false) {
+    updateBtn.disabled = checking;
+    updateBtn.classList.toggle("side-btn--busy", checking);
+    updateBtn.classList.toggle("side-btn--found", Boolean(updateInfo) && !checking);
+    updateBtnLabel.textContent = checking ? "Hledám…" : updateInfo ? `Stáhnout verzi ${updateInfo.latest}` : "Aktualizace";
+    updateBtn.title = checking ? "Hledám novou verzi programu…"
+      : updateInfo ? `Je k dispozici sestavení ${updateInfo.latest} (máš ${updateInfo.current}). Klikni pro stažení.` : "Vyhledat novou verzi programu";
+  }
+
   function showUpdate(info) {
     if (!info || !info.available) return;
+    updateInfo = info;
     updateChip.hidden = false;
-    updateChip.dataset.url = info.url;
     updateChip.title = `Je k dispozici sestavení ${info.latest} (máš ${info.current}). Klikni pro stažení.`;
+    renderUpdateBtn();
   }
-  updateChip.addEventListener("click", () => {
-    openExternal(updateChip.dataset.url);
+
+  function downloadUpdate() {
+    if (!updateInfo) return;
+    openExternal(updateInfo.url);
     toast("Stažení se otevřelo v prohlížeči. Po stažení zavři aplikaci a spusť nový FotbalTipy.exe.");
+  }
+
+  updateChip.addEventListener("click", downloadUpdate);
+  updateBtn.addEventListener("click", async () => {
+    if (updateInfo) { downloadUpdate(); return; }       // novější verze už je známá: druhý klik stáhne
+    if (!desktop) return;
+    renderUpdateBtn(true);
+    const res = await desktop.update.check();
+    if (res.ok && res.data.available) showUpdate(res.data);
+    renderUpdateBtn();
+    if (!res.ok) toast(res.error, "error");
+    else if (res.data.available) toast(`Je k dispozici sestavení ${res.data.latest} (máš ${res.data.current}). Klikni na „Stáhnout“.`);
+    else toast(res.data.current ? `Máš nejnovější verzi (sestavení ${res.data.current}).` : "Máš nejnovější verzi.");
   });
   if (desktop) {
     desktop.update.onAvailable(showUpdate);
     desktop.update.get().then(showUpdate).catch(() => {});
+  } else {
+    updateBtn.hidden = true;
   }
 
   /* ---------- Start ---------- */
@@ -1248,7 +1279,11 @@
     const info = await desktop.appInfo();
     if (info) {
       const build = Number((/\.(\d+)$/.exec(info.version || "") || [])[1] || 0);
-      if (build) $(".brand").title = `Fotbalové tipy – sestavení ${build}`;
+      if (build) {
+        $(".brand").title = `Fotbalové tipy – sestavení ${build}`;
+        $("#build-label").textContent = `sestavení ${build}`;
+        $("#build-label").hidden = false;
+      }
       state.limits = { ...state.limits, ...info.limits };
       state.leagues = info.leagues || [];
       if (state.league && !state.leagues.some((l) => l.key === state.league)) state.league = "";

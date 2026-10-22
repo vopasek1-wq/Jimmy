@@ -23,6 +23,7 @@ contextBridge.exposeInMainWorld("desktop", {
   diagnostics: { copy: () => ipcRenderer.invoke("diag:copy") },
   update: {
     get: () => ipcRenderer.invoke("update:get"),
+    check: () => ipcRenderer.invoke("update:check"),
     onAvailable: (callback) => ipcRenderer.on("update:available", (_event, info) => callback(info)),
   },
   tickets: {
