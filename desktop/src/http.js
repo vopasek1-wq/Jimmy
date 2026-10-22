@@ -53,10 +53,10 @@ class HttpClient {
   }
 
   /** Mezi dvěma požadavky na stejný server počká náhodnou dobu – nezatěžujeme ho. */
-  async waitTurn(host) {
+  async waitTurn(host, delayMs = this.delayMs) {
     const last = this.lastRequest.get(host);
     if (last !== undefined) {
-      const [lo, hi] = this.delayMs;
+      const [lo, hi] = delayMs;
       const wanted = lo + Math.random() * (hi - lo);
       const remaining = wanted - (Date.now() - last);
       if (remaining > 0) await this.sleep(remaining);
@@ -64,11 +64,12 @@ class HttpClient {
     this.lastRequest.set(host, Date.now());
   }
 
-  async request(url, { headers = {} } = {}) {
+  /** `delayMs` = [od, do] ms: kratší pauza jen pro tento požadavek (např. dávka drobných dotazů). */
+  async request(url, { headers = {}, delayMs } = {}) {
     const host = new URL(url).host;
     let lastError = null;
     for (let attempt = 0; attempt <= this.retries; attempt++) {
-      await this.waitTurn(host);
+      await this.waitTurn(host, delayMs);
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), this.timeoutMs);
       try {

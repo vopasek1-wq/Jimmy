@@ -103,3 +103,15 @@ test("looksBlocked: skutečný obsah vs. stránka kontroly", () => {
   assert.equal(looksBlocked(200, "<!DOCTYPE html><html><head><title>Just a moment...</title>"), true);
   assert.equal(looksBlocked(200, "<html><head><title>Football predictions</title></head></html>"), false);
 });
+
+test("HTTP: kratší pauza pro jednotlivý požadavek (delayMs)", async () => {
+  const s = await server([[200, "a"], [200, "b"]]);
+  const waits = [];
+  const c = new HttpClient({ delayMs: [800, 1600], sleep: async (ms) => { waits.push(ms); }, retries: 0, timeoutMs: 3000 });
+  try {
+    await c.getText(s.url);
+    await c.getText(s.url, { delayMs: [10, 20] });
+    assert.equal(waits.length, 1);
+    assert.ok(waits[0] <= 20, `pauza ${waits[0]} ms má vycházet z vlastního rozmezí`);
+  } finally { await s.close(); }
+});

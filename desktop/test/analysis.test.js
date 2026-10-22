@@ -77,49 +77,76 @@ test("askGemini: úspěch, záložní model a chyby", async () => {
   await assert.rejects(() => askGemini({ fetchFn: blocked, apiKey: "k", prompt: "q" }), /žádný text/);
 });
 
-test("generate: vyhledávání na webu – nástroj, bez JSON režimu, údaj o vyhledávání", async () => {
+const reply = (status, error) => ({ status, ok: false, json: async () => ({ error }) });
+const okText = (text, extra = {}) => ({ status: 200, ok: true, json: async () => ({ candidates: [{ content: { parts: [{ text }] }, ...extra }] }) });
+const quotaError = (message, { quotaId = "GenerateRequestsPerMinutePerProjectPerModel-FreeTier", quotaValue = "10", retryDelay } = {}) => ({
+  code: 429, status: "RESOURCE_EXHAUSTED", message,
+  details: [{ "@type": "type.googleapis.com/google.rpc.QuotaFailure", violations: [{ quotaId, quotaValue }] },
+    ...(retryDelay ? [{ "@type": "type.googleapis.com/google.rpc.RetryInfo", retryDelay }] : [])],
+});
+
+test("generate: volby požadavku (JSON režim, teplota, limit tokenů) a vrácený model", async () => {
   let sent = null;
-  const grounded = async (_url, init) => {
-    sent = JSON.parse(init.body);
-    return { status: 200, ok: true, json: async () => ({ candidates: [{ content: { parts: [{ text: "část 1" }, { text: "skrytá úvaha", thought: true }, { text: "část 2" }] },
-      groundingMetadata: { webSearchQueries: ["a – b forma", "a – b h2h"] } }] }) };
-  };
-  const r = await generate({ fetchFn: grounded, apiKey: "k", prompt: "q", system: "vlastní", search: true, temperature: null, maxTokens: 9000 });
-  assert.deepEqual(sent.tools, [{ google_search: {} }]);
-  assert.equal(sent.generationConfig.responseMimeType, undefined);
+  const f = async (_url, init) => { sent = JSON.parse(init.body); return okText("x"); };
+  const r = await generate({ fetchFn: f, apiKey: "k", prompt: "q", json: true, temperature: null, maxTokens: 9000, system: "vlastní" });
+  assert.deepEqual([r.text, r.model], ["x", "gemini-flash-latest"]);
+  assert.equal(sent.generationConfig.responseMimeType, "application/json");
   assert.equal(sent.generationConfig.temperature, undefined);
   assert.equal(sent.generationConfig.maxOutputTokens, 9000);
   assert.equal(sent.systemInstruction.parts[0].text, "vlastní");
-  assert.deepEqual([r.text, r.grounded, r.queries.length], ["část 1\nčást 2", true, 2]);
-
-  // model nevyhledával → grounded je false; běžný dotaz bez nástrojů
-  let plain = null;
-  const noSearch = async (_url, init) => {
-    plain = JSON.parse(init.body);
-    return { status: 200, ok: true, json: async () => ({ candidates: [{ content: { parts: [{ text: "x" }] } }] }) };
-  };
-  const r2 = await generate({ fetchFn: noSearch, apiKey: "k", prompt: "q", search: true });
-  assert.equal(r2.grounded, false);
-  await generate({ fetchFn: noSearch, apiKey: "k", prompt: "q", json: true });
-  assert.equal(plain.tools, undefined);
-  assert.equal(plain.generationConfig.responseMimeType, "application/json");
-  assert.equal(plain.generationConfig.temperature, 0.4);
-
-  // JSON režim spolu s vyhledáváním Gemini nepodporuje; useknutý JSON je chyba
-  await assert.rejects(() => generate({ fetchFn: noSearch, apiKey: "k", prompt: "q", json: true, search: true }), /nepodporuje/);
-  const cut = async () => ({ status: 200, ok: true, json: async () => ({ candidates: [{ finishReason: "MAX_TOKENS", content: { parts: [{ text: "{\"tikety\":[" }] } }] }) });
+  assert.equal(sent.tools, undefined);
+  await generate({ fetchFn: f, apiKey: "k", prompt: "q" });
+  assert.equal(sent.generationConfig.temperature, 0.4);
+  assert.equal(sent.generationConfig.responseMimeType, undefined);
+  const cut = async () => okText("{\"tikety\":[", { finishReason: "MAX_TOKENS" });
   await assert.rejects(() => generate({ fetchFn: cut, apiKey: "k", prompt: "q", json: true }), /useklá/);
+  const thought = async () => ({ status: 200, ok: true, json: async () => ({ candidates: [{ content: { parts: [{ text: "úvaha", thought: true }, { text: "odpověď" }] } }] }) });
+  assert.equal(await askGemini({ fetchFn: thought, apiKey: "k", prompt: "q" }), "odpověď");
+});
 
-  // model bez podpory vyhledávání (400) → zkusí se další; když nejde žádný, srozumitelná chyba
+test("generate: model s nulovým limitem (účet zdarma) se přeskočí hned a zpráva řekne pravý důvod", async () => {
   const urls = [];
-  const only25 = async (url) => {
+  const zero = async (url) => {
     urls.push(url);
-    return url.includes("gemini-2.5-flash:")
-      ? { status: 200, ok: true, json: async () => ({ candidates: [{ content: { parts: [{ text: "ok" }] }, groundingMetadata: { groundingChunks: [{}] } }] }) }
-      : { status: 400, ok: false, json: async () => ({ error: { message: "Search Grounding is not supported." } }) };
+    return reply(429, quotaError("You exceeded your current quota. * Quota exceeded for metric: generate_content_free_tier_requests, limit: 0", { quotaId: "GenerateRequestsPerDayPerProjectPerModel-FreeTier", quotaValue: "0" }));
   };
-  const r3 = await generate({ fetchFn: only25, apiKey: "k", prompt: "q", search: true });
-  assert.deepEqual([r3.text, r3.model, r3.grounded, urls.length], ["ok", "gemini-2.5-flash", true, 2]);
-  const never = async () => ({ status: 400, ok: false, json: async () => ({ error: { message: "nope" } }) });
-  await assert.rejects(() => generate({ fetchFn: never, apiKey: "k", prompt: "q", search: true }), /Vyhledávání na webu/);
+  await assert.rejects(() => generate({ fetchFn: zero, apiKey: "k", prompt: "q", sleep: async () => { throw new Error("nečekat"); } }), (e) => {
+    assert.match(e.message, /nemá pro model gemini-flash-latest žádný dostupný limit/);
+    assert.match(e.message, /\[Google: HTTP 429 RESOURCE_EXHAUSTED: You exceeded your current quota/);
+    assert.doesNotMatch(e.message, /přetížené/);
+    return true;
+  });
+  assert.equal(urls.length, 4);   // každý model jednou, bez opakování
+});
+
+test("generate: denní limit, krátká pauza doporučená Googlem a minutový limit bez doporučení", async () => {
+  const daily = async () => reply(429, quotaError("Quota exceeded", { quotaId: "GenerateRequestsPerDayPerProjectPerModel-FreeTier", quotaValue: "20" }));
+  await assert.rejects(() => generate({ fetchFn: daily, apiKey: "k", prompt: "q" }), /Vyčerpaný denní limit Gemini API \(model gemini-flash-latest\)/);
+
+  // doporučená pauza 3 s → počká 4 s a zkusí stejný model znovu
+  const waits = [];
+  let calls = 0;
+  const retry = async (url) => { calls += 1; return calls === 1 ? reply(429, quotaError("Please retry in 3s", { retryDelay: "3s" })) : okText(url.includes("gemini-flash-latest") ? "stejný model" : "jiný model"); };
+  assert.equal(await askGemini({ fetchFn: retry, apiKey: "k", prompt: "q", sleep: async (ms) => { waits.push(ms); } }), "stejný model");
+  assert.deepEqual(waits, [4000]);
+
+  // dlouhá pauza se nečeká, zkusí se další model
+  let n = 0;
+  const longWait = async (url) => { n += 1; return n === 1 ? reply(429, quotaError("Please retry in 50s", { retryDelay: "50s" })) : okText(url); };
+  const text = await askGemini({ fetchFn: longWait, apiKey: "k", prompt: "q", sleep: async () => { throw new Error("nečekat"); } });
+  assert.match(text, /gemini-2\.5-flash:generateContent$/);
+
+  const minute = async () => reply(429, quotaError("Too many requests"));
+  await assert.rejects(() => generate({ fetchFn: minute, apiKey: "k", prompt: "q" }), /Překročený limit Gemini API/);
+});
+
+test("generate: přetížení (503) → po dvou pokusech další model; všechny přetížené → česká zpráva; chyby klíče", async () => {
+  let calls = 0;
+  const busy = async () => { calls += 1; return reply(503, { code: 503, status: "UNAVAILABLE", message: "This model is currently experiencing high demand." }); };
+  await assert.rejects(() => generate({ fetchFn: busy, apiKey: "k", prompt: "q", sleep: async () => {} }), (e) => /Gemini je teď přetížené/.test(e.message) && /UNAVAILABLE/.test(e.message));
+  assert.equal(calls, 8);          // 4 modely × 2 pokusy
+  const gone = async () => reply(404, { message: "models/x is not found" });
+  await assert.rejects(() => generate({ fetchFn: gone, apiKey: "k", prompt: "q" }), /not found/);
+  const forbidden = async () => reply(403, { message: "API has not been used" });
+  await assert.rejects(() => generate({ fetchFn: forbidden, apiKey: "k", prompt: "q" }), /nemá přístup/);
 });

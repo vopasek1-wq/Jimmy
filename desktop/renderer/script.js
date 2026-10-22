@@ -876,7 +876,7 @@
     return lines.join("\n");
   }
 
-  const busyText = () => `${tk.step || "Gemini se připravuje…"} (${Math.round((Date.now() - tk.startedAt) / 1000)} s)`;
+  const busyText = () => `${tk.step || "Připravuji tikety…"} (${Math.round((Date.now() - tk.startedAt) / 1000)} s)`;
   const tickBusy = () => { const el = $("#tk-busy-text"); if (el) el.textContent = busyText(); };
 
   function renderTickets() {
@@ -886,10 +886,9 @@
     const list = $("#tk-list");
     const r = tk.result;
     note.textContent = TK_NOTE;
-    note.classList.remove("tk-note--warn");
     if (tk.busy) {
       list.innerHTML = `<div class="tk-busy"><span class="tk-busy__spin" aria-hidden="true"></span><p class="tk-busy__text" id="tk-busy-text">${esc(busyText())}</p>
-        <p class="tk-busy__hint">Gemini hledá na webu aktuální statistiky a pak z nich skládá tikety. Obvykle to trvá 1–3 minuty, mezitím můžeš přepnout na jinou záložku.</p></div>`;
+        <p class="tk-busy__hint">Aplikace stahuje ze SofaScore statistiky zápasů a Gemini je pak vyhodnotí a složí tikety. Obvykle to trvá do dvou minut, mezitím můžeš přepnout na jinou záložku.</p></div>`;
       return;
     }
     if (!r || !r.tickets || !r.tickets.length) {
@@ -916,13 +915,7 @@
         <button class="btn btn--ghost btn--sm" type="button" data-tkact="tipsport"><i data-lucide="external-link"></i>Tipsport</button>
       </div></article>`).join("");
     const parts = [`Z ${r.analyzed} zápasů z přehledu${r.at ? ` (${r.at})` : ""}`];
-    if (r.grounded === false) {
-      parts.push("Gemini tentokrát nevyhledával na webu, statistiky proto nemusí být aktuální – ber tikety s rezervou");
-      note.classList.add("tk-note--warn");
-    } else {
-      if (r.covered < r.analyzed) parts.push(`podklady se našly k ${r.covered}`);
-      if (r.searches) parts.push(`${r.searches} vyhledávání na webu`);
-    }
+    if (r.covered < r.analyzed) parts.push(`statistiky se našly k ${r.covered}`);
     note.textContent = `${parts.join(" · ")}. Pravděpodobnost je součin odhadů zdroje – bývá optimistická; kurzy u Tipsportu se mohou lišit a výnos není zaručen. Sázení je jen pro 18+.`;
     renderIcons();
   }

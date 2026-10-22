@@ -8,6 +8,7 @@ const { probabilityClass } = require("./filters");
 const { Pipeline, updateResults, settleFinished } = require("./pipeline");
 const { SofaScoreClient } = require("./scrapers/sofascore");
 const { LiveClient } = require("./live");
+const { MatchStats } = require("./matchstats");
 const { analyze, recentLosses, buildPrompt } = require("./analysis");
 const { candidatesFrom } = require("./tickets");
 const { resultOk } = require("./models");
@@ -125,6 +126,14 @@ class TipService {
     const tips = this.db.tipsOfLatestRun().map(serializeTip);
     return { candidates: candidatesFrom(tips, { day }), calibration: this.analysis() };
   }
+
+  /** Statistiky zápasů (forma, H2H, góly, zranění) ze SofaScore pro tikety; ladicí soubor jde do složky `ladeni`. */
+  collectTicketStats(candidates, progress = () => {}) {
+    return new MatchStats(this.http, { debugDir: path.join(this.dataDir, "ladeni") }).collect(candidates, progress);
+  }
+
+  /** Kde je ladicí soubor se statistikami pro tikety (pro hlášky o chybách). */
+  ticketDiagnosticsFile() { return path.join(this.dataDir, "ladeni", "tikety-statistiky.txt"); }
 
   history(period = null) {
     settleFinished(this.db);

@@ -98,24 +98,59 @@ function buildPrompt(summary, losses) {
 
 // „latest“ aliasy sledují aktuální modely Gemini; při nedostupnosti nebo přetížení se zkusí další (lehčí) model.
 const MODELS = ["gemini-flash-latest", "gemini-2.5-flash", "gemini-flash-lite-latest", "gemini-2.5-flash-lite"];
-const TRANSIENT = new Set([429, 500, 502, 503, 504]);
-const ATTEMPTS = 3; // pokusů na model při přechodné chybě (přetížení)
+const SERVER_ERRORS = new Set([500, 502, 503, 504]);
+const ATTEMPTS = 2;        // pokusů na model při chybě serveru (přetížení)
+const MAX_QUOTA_WAIT = 20; // s: na minutový limit se počká jen krátce, jinak se zkusí další model
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/** Z chybové odpovědi Google API vytáhne důvod (stav, text, druh limitu, doporučenou pauzu). */
+function errorInfo(model, status, error) {
+  const err = error || {};
+  const details = Array.isArray(err.details) ? err.details : [];
+  const failure = details.find((d) => /QuotaFailure/.test((d && d["@type"]) || ""));
+  const violation = ((failure && failure.violations) || [])[0] || {};
+  const retry = details.find((d) => /RetryInfo/.test((d && d["@type"]) || ""));
+  const delay = /^(\d+(?:\.\d+)?)s$/.exec((retry && retry.retryDelay) || "");
+  const text = String(err.message || "").replace(/\s+/g, " ").trim();
+  return {
+    model, status, code: err.status || "", text,
+    retrySec: delay ? Number(delay[1]) : null,
+    zero: String(violation.quotaValue) === "0" || /limit:\s*0\b/i.test(text),     // model na tomto klíči (účtu zdarma) nemá žádný limit
+    daily: /PerDay/i.test(String(violation.quotaId || "")) || /per day|daily/i.test(text),
+  };
+}
+
+/** Srozumitelné vysvětlení, proč selhaly všechny modely (včetně původního textu od Googlu). */
+function failureMessage(failures) {
+  const quota = failures.filter((f) => f.status === 429);
+  const server = failures.filter((f) => SERVER_ERRORS.has(f.status));
+  const main = quota.find((f) => f.zero) || quota.find((f) => f.daily) || quota[0] || server[0] || failures[failures.length - 1];
+  let head;
+  if (quota.length) {
+    head = main.zero ? `Tvůj Gemini klíč nemá pro model ${main.model} žádný dostupný limit (tohle zdarma nejde).`
+      : main.daily ? `Vyčerpaný denní limit Gemini API (model ${main.model}); u bezplatného klíče se obnoví po půlnoci pacifického času, u nás ráno.`
+        : `Překročený limit Gemini API (model ${main.model}). Zkus to za minutu, u bezplatného klíče platí minutové i denní limity.`;
+  } else if (server.length) {
+    head = "Gemini je teď přetížené (zkoušel jsem i záložní modely). Zkus to za pár minut.";
+  } else {
+    head = main ? main.text || "Model Gemini není dostupný." : "Model Gemini není dostupný.";
+  }
+  const detail = main && main.text && head !== main.text ? ` [Google: HTTP ${main.status}${main.code ? ` ${main.code}` : ""}: ${main.text.slice(0, 220)}]` : "";
+  return `${head}${detail}`;
+}
 
 /**
  * Dotaz na Google Gemini API (klíč má uživatel uložený v aplikaci); `fetchFn` je net.fetch z Electronu.
- *  - `json`: odpověď jako JSON (nejde spolu s `search`),
- *  - `search`: model smí vyhledávat na webu (Google Search); text pak není garantovaně JSON,
+ *  - `json`: odpověď jako JSON,
  *  - `temperature: null` nechá výchozí hodnotu modelu (u nových modelů Gemini ji Google doporučuje neměnit).
- * Vrací { text, model, grounded, queries } – `grounded` říká, jestli model opravdu vyhledával na webu.
+ * Při chybě zkouší další modely; když selžou všechny, vyhodí chybu se skutečným důvodem (limit, přetížení …).
+ * Vrací { text, model }.
  */
-async function generate({ fetchFn, apiKey, prompt, system = SYSTEM, json = false, search = false, temperature = 0.4, maxTokens, timeoutMs = 120000, sleep = wait }) {
-  if (json && search) throw new Error("Gemini nepodporuje JSON režim spolu s vyhledáváním na webu.");
+async function generate({ fetchFn, apiKey, prompt, system = SYSTEM, json = false, temperature = 0.4, maxTokens, timeoutMs = 120000, sleep = wait }) {
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), timeoutMs);
   try {
-    let lastError = null;
-    let busy = false;
+    const failures = [];
     for (const model of MODELS) {
       for (let attempt = 0; attempt < ATTEMPTS; attempt += 1) {
         const resp = await fetchFn(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
@@ -124,7 +159,6 @@ async function generate({ fetchFn, apiKey, prompt, system = SYSTEM, json = false
           body: JSON.stringify({
             systemInstruction: { parts: [{ text: system }] },
             contents: [{ role: "user", parts: [{ text: prompt }] }],
-            ...(search ? { tools: [{ google_search: {} }] } : {}),
             generationConfig: {
               maxOutputTokens: maxTokens || (json ? 8000 : 4000),
               ...(temperature === null ? {} : { temperature }),
@@ -134,13 +168,17 @@ async function generate({ fetchFn, apiKey, prompt, system = SYSTEM, json = false
         });
         const body = await resp.json().catch(() => ({}));
         const err = body.error || {};
-        if (resp.status === 404) { lastError = new Error(err.message || "Model nenalezen."); break; }
         if (resp.status === 400 && /API key not valid|API_KEY_INVALID/i.test(JSON.stringify(err))) throw new Error("API klíč není platný.");
-        if (resp.status === 400 && search) { lastError = new Error(`Vyhledávání na webu se u Gemini nepodařilo zapnout: ${err.message || "HTTP 400"}`); break; }
         if (resp.status === 401 || resp.status === 403) throw new Error(`Klíč nemá přístup ke Gemini API (${err.message || `HTTP ${resp.status}`}).`);
-        if (TRANSIENT.has(resp.status)) {          // přetížení / limit: chvíli počkat a zkusit znovu, pak jiný model
-          busy = true;
-          lastError = new Error(err.message || `Chyba služby (HTTP ${resp.status}).`);
+        if (resp.status === 404) { failures.push(errorInfo(model, 404, { ...err, message: err.message || "Model nenalezen." })); break; }
+        if (resp.status === 429) {                       // limit: krátká pauza jen když ji Google doporučí, jinak další model
+          const info = errorInfo(model, 429, err);
+          failures.push(info);
+          if (!info.zero && !info.daily && info.retrySec !== null && info.retrySec <= MAX_QUOTA_WAIT && attempt < ATTEMPTS - 1) { await sleep((info.retrySec + 1) * 1000); continue; }
+          break;
+        }
+        if (SERVER_ERRORS.has(resp.status)) {            // přetížení / chyba serveru: chvíli počkat a zkusit znovu, pak jiný model
+          failures.push(errorInfo(model, resp.status, err));
           if (attempt < ATTEMPTS - 1) await sleep(1500 * (attempt + 1));
           continue;
         }
@@ -150,13 +188,10 @@ async function generate({ fetchFn, apiKey, prompt, system = SYSTEM, json = false
         const text = parts.filter((p) => !p.thought).map((p) => p.text || "").join("\n").trim();
         if (!text) throw new Error("AI nevrátila žádný text (odpověď mohla být zablokovaná).");
         if (json && cand.finishReason === "MAX_TOKENS") throw new Error("Odpověď AI byla příliš dlouhá a useklá – zkus to znovu.");
-        const meta = cand.groundingMetadata || {};
-        const queries = meta.webSearchQueries || [];
-        return { text, model, queries, grounded: queries.length > 0 || (meta.groundingChunks || []).length > 0 };
+        return { text, model };
       }
     }
-    if (busy) throw new Error("Gemini je teď přetížené nebo je vyčerpaný limit (zkoušel jsem i záložní modely). Zkus to za pár minut.");
-    throw lastError || new Error("Model Gemini není dostupný.");
+    throw new Error(failureMessage(failures));
   } catch (err) {
     if (err.name === "AbortError") throw new Error("AI neodpověděla včas.");
     throw err;

@@ -1,16 +1,16 @@
-// Tikety: výběr kandidátů, zadání pro Gemini (vyhledání statistik + sestavení), kontrola odpovědi a celý postup.
+// Tikety: výběr kandidátů, zadání pro Gemini, kontrola odpovědi a celý postup (statistiky → Gemini).
 "use strict";
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { candidatesFrom, buildResearchPrompt, buildAssemblePrompt, parseTickets, coveredIds, createTickets } = require("../src/tickets");
+const { candidatesFrom, buildTicketPrompt, parseTickets, createTickets } = require("../src/tickets");
 const { localDate } = require("../src/timeutil");
 
 const NOW = new Date(Date.UTC(2026, 9, 21, 10, 0));
 const at = (h, o = {}) => {
   const ko = new Date(NOW.getTime() + h * 3600e3);
   return { home: `D${h}`, away: `H${h}`, matchName: `D${h} – H${h}`, league: "Liga", leagueShort: "Liga", kickoff: ko.toISOString(), day: localDate(ko),
-    tipLabel: "Výhra domácích (1)", probability: 80, odds: 1.8, oddsEstimated: false, probForebet: null, status: "upcoming", ...o };
+    tipLabel: "Výhra domácích (1)", probability: 80, odds: 1.8, oddsEstimated: false, probForebet: null, status: "upcoming", sofascoreId: 1000 + h, ...o };
 };
 const json = (o) => JSON.stringify(o);
 
@@ -29,19 +29,13 @@ test("candidatesFrom: nejvýš 20 nejlepších zápasů", () => {
   assert.equal(c[0].home, "X29");
 });
 
-test("buildResearchPrompt: všechny zápasy s tipem a požadované statistiky", () => {
+test("buildTicketPrompt: pravidla, tipy a jejich statistiky", () => {
   const c = candidatesFrom([at(2, { tipLabel: "Více než 2,5 gólu" }), at(3)], { now: NOW });
-  const p = buildResearchPrompt(c, { now: NOW });
-  assert.ok(p.includes("t1 | D2 – H2 |") && p.includes("tip: Více než 2,5 gólu") && p.includes("t2 | D3 – H3 |"));
-  for (const need of ["posledních 5 zápasů", "vzájemné zápasy (H2H)", "střelecká produktivita", "zranění", "domácí výkonnost", "nenalezeno", "NEDOSTATEČNÁ DATA", "21. 10. 2026"]) {
-    assert.ok(p.includes(need), need);
-  }
-});
-
-test("buildAssemblePrompt: pravidla, nabídka a podklady", () => {
-  const c = candidatesFrom([at(2), at(3)], { now: NOW });
-  const p = buildAssemblePrompt(c, "[t1] podklady k prvnímu zápasu", { calibration: null, now: NOW });
-  for (const need of ["Maximálně 5 zápasy na tiket", "2.00", "nejjistější tipy seskupuj dohromady", "2–4 věty", "Piš česky", '"id":"t1"', "[t1] podklady k prvnímu zápasu", "Zatím nemám dost", "nejvýš v jednom tiketu"]) {
+  const stats = { t1: { forma_domaci: { forma: "V V R V P" }, h2h: { zapasu: 3 } }, t2: { forma_domaci: { forma: "P P R V V" } } };
+  const p = buildTicketPrompt(c, stats, { calibration: null, now: NOW });
+  for (const need of ["Maximálně 5 zápasy na tiket", "2.00", "nejjistější tipy seskupuj dohromady", "2–4 věty", "Piš česky", "nejvýš v jednom tiketu",
+    "21. 10. 2026", "ze SofaScore", "posledních 5 zápasů", "vzájemné zápasy (H2H)", "střelecká produktivita", "zranění", "domácí výkonnost", "Legenda: V = výhra, R = remíza, P = prohra", "Zatím nemám dost",
+    '"id":"t1"', '"tip":"Více než 2,5 gólu"', '"forma":"V V R V P"', '"h2h":{"zapasu":3}']) {
     assert.ok(p.includes(need), need);
   }
   assert.ok(!p.includes("po přesně"), "počet tipů ani tiketů se už nezadává");
@@ -105,102 +99,77 @@ test("parseTickets: prázdný výsledek s poznámkou a nevalidní JSON", () => {
   assert.throws(() => parseTickets("{ rozbité", []), /JSON/);
 });
 
-test("coveredIds: zápasy, ke kterým vyhledávání vrátilo blok", () => {
-  const c = candidatesFrom([at(2), at(3), at(4)], { now: NOW });
-  assert.deepEqual([...coveredIds("[t1] A – B\nForma\n[ t3 ] C – D\n[t9] neznámý", c)].sort(), ["t1", "t3"]);
-});
-
-/** Napodobený Gemini: nejdřív vyhledávání (prostý text), potom sestavení tiketů (JSON). */
-function fakeAsk({ research, assemble }) {
-  const calls = [];
-  const ask = async (options) => {
-    calls.push(options);
-    const step = options.search ? research.shift() : assemble.shift();
-    if (step instanceof Error) throw step;
-    return step;
+/** Napodobené stahování statistik a Gemini (`replies` se vydávají postupně). */
+const fakes = ({ covered, replies = [], collectResult }) => {
+  const calls = { collect: 0, ask: [] };
+  const collect = async (candidates, progress) => {
+    calls.collect += 1;
+    progress("Stahuji statistiky…");
+    if (collectResult) return collectResult;
+    const stats = {};
+    for (const c of candidates) if (covered.includes(c.ticketId)) stats[c.ticketId] = { forma_domaci: { forma: "V V V" } };
+    return { stats, covered: Object.keys(stats).length, total: candidates.length, noId: 0, blocked: false };
   };
-  return { ask, calls };
-}
-const notes = (ids) => ids.map((id) => `[${id}] zápas\nForma: …\nPodpora tipu: SILNÁ – ok`).join("\n\n");
-const candidates = () => candidatesFrom([at(2), at(3), at(4), at(5)], { now: NOW });
+  const ask = async (options) => {
+    calls.ask.push(options);
+    const r = replies.shift();
+    if (r instanceof Error) throw r;
+    return { text: r, model: "gemini-flash-latest" };
+  };
+  return { collect, ask, calls };
+};
+const four = () => candidatesFrom([at(2), at(3), at(4), at(5)], { now: NOW });
 
-test("createTickets: vyhledání statistik, pak sestavení; vrací tikety a údaje o vyhledávání", async () => {
-  const c = candidates();
+test("createTickets: statistiky → jediný dotaz na Gemini jen se zápasy, které mají statistiky", async () => {
+  const c = four();
   const ids = c.map((x) => x.ticketId);
-  const { ask, calls } = fakeAsk({
-    research: [{ text: notes(ids), grounded: true, queries: ["a", "b", "c"] }],
-    assemble: [{ text: json({ tikety: [{ nazev: "Tiket 1", jistota: "stredni", zduvodneni: "Dobrá forma.", tipy: [ids[0], ids[1]] }] }) }],
-  });
+  const f = fakes({ covered: [ids[0], ids[1], ids[2]], replies: [json({ tikety: [{ nazev: "Tiket 1", jistota: "stredni", zduvodneni: "Dobrá forma.", tipy: [ids[0], ids[1]] }] })] });
   const messages = [];
-  const r = await createTickets({ candidates: c, ask, calibration: null, progress: (m) => messages.push(m), now: NOW });
-  assert.equal(calls.length, 2);
-  assert.equal(calls[0].search, true);
-  assert.ok(calls[0].system.includes("vyhledáváním na webu"));
-  assert.equal(calls[1].json, true);
-  assert.ok(calls[1].prompt.includes("[t1] zápas") && calls[1].prompt.includes("Podpora tipu: SILNÁ"));
-  assert.deepEqual(messages.length, 2);
-  assert.match(messages[0], /vyhledává statistiky/);
-  assert.match(messages[1], /sestavuje tikety/);
-  assert.equal(r.tickets.length, 1);
-  assert.deepEqual([r.analyzed, r.covered, r.grounded, r.searches], [4, 4, true, 3]);
+  const r = await createTickets({ candidates: c, collect: f.collect, ask: f.ask, calibration: null, progress: (m) => messages.push(m), now: NOW });
+  assert.equal(f.calls.collect, 1);
+  assert.equal(f.calls.ask.length, 1);
+  assert.equal(f.calls.ask[0].json, true);
+  assert.equal(f.calls.ask[0].temperature, null);
+  assert.ok(f.calls.ask[0].prompt.includes(`"id":"${ids[2]}"`) && !f.calls.ask[0].prompt.includes(`"id":"${ids[3]}"`), "zápas bez statistik se do zadání nedává");
+  assert.ok(messages.includes("Stahuji statistiky…") && messages.some((m) => /Gemini vyhodnocuje/.test(m)));
+  assert.deepEqual([r.tickets.length, r.analyzed, r.covered], [1, 4, 3]);
   assert.equal(r.tickets[0].summary, "Dobrá forma.");
 });
 
-test("createTickets: neúplné vyhledávání se zkusí znovu a vybere se lepší pokus", async () => {
-  const c = candidates();
-  const ids = c.map((x) => x.ticketId);
-  const { ask, calls } = fakeAsk({
-    research: [{ text: notes(ids.slice(2)), grounded: true, queries: ["a"] }, { text: notes(ids), grounded: true, queries: ["a", "b"] }],
-    assemble: [{ text: json({ tikety: [{ tipy: ids.slice(0, 2) }] }) }],
-  });
-  const messages = [];
-  const r = await createTickets({ candidates: c, ask, progress: (m) => messages.push(m), now: NOW });
-  assert.equal(calls.filter((x) => x.search).length, 2);
-  assert.ok(messages.some((m) => /zkouším to ještě jednou/.test(m)));
-  assert.deepEqual([r.covered, r.searches, r.tickets[0].name], [4, 2, "Tiket 1"]);
-  assert.ok(calls[1].prompt.includes(ids[0]));
+test("createTickets: málo zápasů se statistikami = srozumitelná chyba a Gemini se nevolá", async () => {
+  const c = four();
+  const f = fakes({ covered: [c[0].ticketId] });
+  await assert.rejects(() => createTickets({ candidates: c, collect: f.collect, ask: f.ask, now: NOW, hint: " Podrobnosti: soubor.txt" }),
+    /nepodařilo získat statistiky aspoň ke 2 zápasům\. Statistiky se podařilo najít jen ke 1 z 4 zápasů\. Podrobnosti: soubor\.txt/);
+  assert.equal(f.calls.ask.length, 0);
+  const blocked = fakes({ collectResult: { stats: {}, covered: 0, total: 4, noId: 0, blocked: true } });
+  await assert.rejects(() => createTickets({ candidates: c, collect: blocked.collect, ask: blocked.ask, now: NOW }), /SofaScore zamítá dotazy/);
+  const noId = fakes({ collectResult: { stats: {}, covered: 0, total: 4, noId: 4, blocked: false } });
+  await assert.rejects(() => createTickets({ candidates: c, collect: noId.collect, ask: noId.ask, now: NOW }), /Obnovit tipy/);
+  const one = fakes({ covered: [] });
+  await assert.rejects(() => createTickets({ candidates: candidatesFrom([at(2)], { now: NOW }), collect: one.collect, ask: one.ask, now: NOW }), /málo vhodných tipů \(1\)/);
+  assert.equal(one.calls.collect, 0);
 });
 
-test("createTickets: model nevyhledával → grounded false (po dvou pokusech); chyba druhého pokusu nevadí", async () => {
-  const c = candidates();
+test("createTickets: žádný vhodný tiket (s poznámkou), neplatný JSON se zopakuje, tikety proti pravidlům = chyba, chyba Gemini se předá", async () => {
+  const c = four();
   const ids = c.map((x) => x.ticketId);
-  const assemble = () => [{ text: json({ tikety: [{ tipy: ids.slice(0, 2) }] }) }];
-  const twice = fakeAsk({ research: [{ text: notes(ids), grounded: false, queries: [] }, { text: notes(ids), grounded: false, queries: [] }], assemble: assemble() });
-  const a = await createTickets({ candidates: c, ask: twice.ask, now: NOW });
-  assert.equal(a.grounded, false);
-  assert.equal(twice.calls.filter((x) => x.search).length, 2);
+  const base = { covered: ids };
 
-  const second = fakeAsk({ research: [{ text: notes(ids), grounded: false, queries: [] }, new Error("přetížené")], assemble: assemble() });
-  const b = await createTickets({ candidates: c, ask: second.ask, now: NOW });
-  assert.equal(b.grounded, false);
-  assert.equal(b.tickets.length, 1);
-
-  const first = fakeAsk({ research: [new Error("Gemini je teď přetížené")], assemble: assemble() });
-  await assert.rejects(() => createTickets({ candidates: c, ask: first.ask, now: NOW }), /přetížené/);
-});
-
-test("createTickets: žádný vhodný tiket (s poznámkou), neplatný JSON se opakuje, tikety proti pravidlům = chyba", async () => {
-  const c = candidates();
-  const ids = c.map((x) => x.ticketId);
-  const research = () => [{ text: notes(ids), grounded: true, queries: ["a"] }];
-
-  const none = fakeAsk({ research: research(), assemble: [{ text: json({ tikety: [], poznamka: "U většiny zápasů chybí data." }) }] });
-  const r = await createTickets({ candidates: c, ask: none.ask, now: NOW });
+  const none = fakes({ ...base, replies: [json({ tikety: [], poznamka: "U většiny zápasů chybí data." })] });
+  const r = await createTickets({ candidates: c, collect: none.collect, ask: none.ask, now: NOW });
   assert.deepEqual([r.tickets.length, r.note], [0, "U většiny zápasů chybí data."]);
 
-  const retry = fakeAsk({ research: research(), assemble: [{ text: "ne-json" }, { text: json({ tikety: [{ tipy: ids.slice(0, 2) }] }) }] });
-  assert.equal((await createTickets({ candidates: c, ask: retry.ask, now: NOW })).tickets.length, 1);
-  assert.equal(retry.calls.filter((x) => x.json).length, 2);
+  const retry = fakes({ ...base, replies: ["ne-json", json({ tikety: [{ tipy: ids.slice(0, 2) }] })] });
+  assert.equal((await createTickets({ candidates: c, collect: retry.collect, ask: retry.ask, now: NOW })).tickets.length, 1);
+  assert.equal(retry.calls.ask.length, 2);
 
-  const broken = fakeAsk({ research: research(), assemble: [{ text: "ne-json" }, { text: "ani tohle" }] });
-  await assert.rejects(() => createTickets({ candidates: c, ask: broken.ask, now: NOW }), /JSON/);
+  const broken = fakes({ ...base, replies: ["ne-json", "ani tohle"] });
+  await assert.rejects(() => createTickets({ candidates: c, collect: broken.collect, ask: broken.ask, now: NOW }), /JSON/);
 
-  const bad = fakeAsk({ research: research(), assemble: [{ text: json({ tikety: [{ nazev: "X", tipy: [ids[0], "t99"] }] }) }] });
-  await assert.rejects(() => createTickets({ candidates: c, ask: bad.ask, now: NOW }), /nesplňují pravidla.*neznámý tip t99/);
-});
+  const bad = fakes({ ...base, replies: [json({ tikety: [{ nazev: "X", tipy: [ids[0], "t99"] }] })] });
+  await assert.rejects(() => createTickets({ candidates: c, collect: bad.collect, ask: bad.ask, now: NOW }), /nesplňují pravidla.*neznámý tip t99/);
 
-test("createTickets: méně než 2 tipy → srozumitelná chyba, Gemini se nevolá", async () => {
-  const { ask, calls } = fakeAsk({ research: [], assemble: [] });
-  await assert.rejects(() => createTickets({ candidates: candidatesFrom([at(2)], { now: NOW }), ask, now: NOW }), /málo vhodných tipů \(1\)/);
-  assert.equal(calls.length, 0);
+  const limit = fakes({ ...base, replies: [new Error("Vyčerpaný denní limit Gemini API")] });
+  await assert.rejects(() => createTickets({ candidates: c, collect: limit.collect, ask: limit.ask, now: NOW }), /Vyčerpaný denní limit/);
 });
