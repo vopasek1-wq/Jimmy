@@ -170,6 +170,32 @@ function goalsDiagnostics(url, html) {
   return [`URL: ${url}`, `Délka HTML: ${html.length}`, `Zablokováno: ${looksBlocked(200, html)}`, `Délka textu: ${text.length}`, "--- úryvky kolem „over/under/goals/yes“ ---", ...windows].join("\n");
 }
 
+/** Přehled struktury stránky se seznamem zápasů (kolik je známých značek, nejčastější třídy, začátek textu). */
+function listDiagnostics(html) {
+  const $ = load(html);
+  const count = (sel) => $(sel).length;
+  const classes = new Map();
+  $("[class]").each((_, el) => { for (const c of String($(el).attr("class")).split(/\s+/)) if (c) classes.set(c, (classes.get(c) || 0) + 1); });
+  const top = [...classes].sort((a, b) => b[1] - a[1]).slice(0, 30).map(([c, n]) => `${c}:${n}`).join(" ");
+  const text = strippedStrings($.root()).join(" ");
+  return [
+    `Délka HTML: ${html.length}`, `Zablokováno: ${looksBlocked(200, html)}`,
+    `div.rcnt: ${count("div.rcnt")}, .fprc: ${count(".fprc")}, .homeTeam: ${count(".homeTeam")}, .awayTeam: ${count(".awayTeam")}, `
+      + `time[datetime]: ${count("time[datetime]")}, .shortTag: ${count(".shortTag")}, a.tnmscn: ${count("a.tnmscn")}`,
+    `Nejčastější třídy: ${top}`, `Začátek textu: ${text.slice(0, 600)}`,
+  ].join("\n");
+}
+
+/** Když se na skutečné (ne blokované) stránce nenajde žádný zápas, uloží se HTML a přehled struktury pro ladění. */
+function dumpList(debugDir, html) {
+  if (!debugDir || looksBlocked(200, html)) return;
+  try {
+    fs.mkdirSync(debugDir, { recursive: true });
+    fs.writeFileSync(path.join(debugDir, "forebet-seznam.html"), html.slice(0, 500000));
+    fs.writeFileSync(path.join(debugDir, "forebet-seznam-diagnostika.txt"), `${new Date().toISOString()}\n${listDiagnostics(html)}\n`);
+  } catch { /* ladicí soubor je jen bonus */ }
+}
+
 const pageReady = (html) => !looksBlocked(200, html) && (html.includes("rcnt") || html.includes("fprc"));
 
 class ForebetScraper {
@@ -178,13 +204,15 @@ class ForebetScraper {
     this.browser = browser;
   }
 
-  /** @param {object} [opts] { interactive: zobrazit okno, když kontrola nepřejde sama } */
-  async fetch(progress = () => {}, { interactive = false } = {}) {
+  /** @param {object} [opts] { interactive: zobrazit okno, když kontrola nepřejde sama; debugDir: složka pro ladicí soubory } */
+  async fetch(progress = () => {}, { interactive = false, debugDir = null } = {}) {
     progress("Forebet: stahuji pravděpodobnosti…");
     let matches = [];
     if (!interactive) {
       try {
-        matches = parsePage(await this.http.getText(config.FOREBET_URL));
+        const html = await this.http.getText(config.FOREBET_URL);
+        matches = parsePage(html);
+        if (!matches.length) dumpList(debugDir, html);
       } catch (err) {
         if (!(err instanceof BlockedError)) throw err;
       }
@@ -200,7 +228,10 @@ class ForebetScraper {
         + "Tipy ze Scores24 se zobrazují i bez Forebetu.");
     }
     matches = parsePage(html);
-    if (!matches.length) throw new SourceError("Forebet: na stránce nejsou rozpoznatelné zápasy (změnila se struktura webu?).");
+    if (!matches.length) {
+      dumpList(debugDir, html);
+      throw new SourceError("Forebet: na stránce nejsou rozpoznatelné zápasy (změnila se struktura webu?).");
+    }
     return matches;
   }
 
@@ -251,4 +282,4 @@ class ForebetScraper {
   }
 }
 
-module.exports = { ForebetScraper, parsePage, parseGoals, pageReady };
+module.exports = { ForebetScraper, parsePage, parseGoals, pageReady, listDiagnostics };

@@ -1208,6 +1208,32 @@
     });
   }
 
+  /* ---------- Diagnostika pro vývojáře: Ctrl + Shift + D zkopíruje do schránky stav zdrojů a ladicí soubory ---------- */
+  document.addEventListener("keydown", async (e) => {
+    if (!(e.ctrlKey && e.shiftKey && e.code === "KeyD") || !desktop) return;
+    e.preventDefault();
+    const res = await desktop.diagnostics.copy();
+    if (res.ok) toast(`Diagnostika je zkopírovaná do schránky (${nf1.format(res.data.chars / 1000)} tis. znaků) – vlož ji do zprávy.`);
+    else toast(`Diagnostiku se nepodařilo zkopírovat: ${res.error}`, "error");
+  });
+
+  /* ---------- Nová verze: malý štítek v horní liště, klik otevře stažení v prohlížeči ---------- */
+  const updateChip = $("#update-chip");
+  function showUpdate(info) {
+    if (!info || !info.available) return;
+    updateChip.hidden = false;
+    updateChip.dataset.url = info.url;
+    updateChip.title = `Je k dispozici sestavení ${info.latest} (máš ${info.current}). Klikni pro stažení.`;
+  }
+  updateChip.addEventListener("click", () => {
+    openExternal(updateChip.dataset.url);
+    toast("Stažení se otevřelo v prohlížeči. Po stažení zavři aplikaci a spusť nový FotbalTipy.exe.");
+  });
+  if (desktop) {
+    desktop.update.onAvailable(showUpdate);
+    desktop.update.get().then(showUpdate).catch(() => {});
+  }
+
   /* ---------- Start ---------- */
   const STALE_MS = 15 * 60e3; // čerstvější data se po spuštění znovu nestahují
 
@@ -1221,6 +1247,8 @@
 
     const info = await desktop.appInfo();
     if (info) {
+      const build = Number((/\.(\d+)$/.exec(info.version || "") || [])[1] || 0);
+      if (build) $(".brand").title = `Fotbalové tipy – sestavení ${build}`;
       state.limits = { ...state.limits, ...info.limits };
       state.leagues = info.leagues || [];
       if (state.league && !state.leagues.some((l) => l.key === state.league)) state.league = "";

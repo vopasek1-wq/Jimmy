@@ -20,6 +20,11 @@ contextBridge.exposeInMainWorld("desktop", {
     verifyForebet: () => ipcRenderer.invoke("tips:verify-forebet"),
     onProgress: (callback) => ipcRenderer.on("tips:progress", (_event, message) => callback(String(message))),
   },
+  diagnostics: { copy: () => ipcRenderer.invoke("diag:copy") },
+  update: {
+    get: () => ipcRenderer.invoke("update:get"),
+    onAvailable: (callback) => ipcRenderer.on("update:available", (_event, info) => callback(info)),
+  },
   tickets: {
     create: (req) => ipcRenderer.invoke("tickets:create", req),
     onProgress: (callback) => ipcRenderer.on("tickets:progress", (_event, message) => callback(String(message))),

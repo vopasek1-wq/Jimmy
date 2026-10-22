@@ -24,7 +24,11 @@ vydání **`tipy-latest`**:
 1. Stáhněte `FotbalTipy.exe` a dvakrát na něj klikněte. Nic se neinstaluje.
 2. Pokud Windows SmartScreen zobrazí varování (aplikace není podepsaná): **Další informace → Přesto spustit**.
 3. Okno se otevře hned s posledními uloženými daty a tipy se na pozadí stáhnou (obvykle 20–40 s). Když jsou
-   uložená data mladší než 15 minut, znovu se nestahuje.
+   uložená data mladší než 15 minut, znovu se nestahuje. Okno se vždy otevře maximalizované.
+4. **Nová verze:** aplikace při startu (a pak každých 6 hodin) zjistí na GitHubu, jestli je ve vydání `tipy-latest` novější
+   sestavení. Pokud ano, v horní liště se objeví štítek **Nová verze** – klik otevře stažení v prohlížeči (po stažení zavřete
+   aplikaci a spusťte nový `FotbalTipy.exe`). Číslo sestavení je v tooltipu loga vlevo nahoře; verze aplikace je `1.0.<číslo sestavení>`
+   (workflow ho dosadí z čísla běhu). Kontrola funguje až od sestavení, které ji obsahuje, a jen v zabalené aplikaci.
 
 Data (databáze `tipy.sqlite3`, nastavení okna) jsou ve `%APPDATA%\FotbalTipy`; vydání se nijak neváže na složku
 s `.exe`. Pro zkoušení lze složku přesměrovat proměnnou prostředí `TIPSTER_DATA_DIR`.
@@ -161,6 +165,21 @@ si ověření pamatuje.
 > nenajde, ukáže se nahoře upozornění a první stažená stránka se uloží do `%APPDATA%\FotbalTipy\ladeni\forebet-zapas.html`
 > – s ní jde parser opravit (`parseGoals` v `desktop/src/scrapers/forebet.js`).
 
+### Diagnostika pro vývojáře
+
+Když něco nefunguje (Forebet, statistiky pro tikety, …), stiskněte v aplikaci **Ctrl + Shift + D**: do schránky se zkopíruje
+textový souhrn (verze, stav zdrojů posledního stahování, kolik tipů se spárovalo s Forebetem a které ne a proč, pokrytí SofaScore,
+obsah ladicích souborů) a uloží se i do `%APPDATA%\FotbalTipy\ladeni\diagnostika.txt`. Stačí ho vložit do zprávy. Neobsahuje
+API klíč ani nic osobního. Ladicí soubory ve složce `ladeni` se přepisují při každém stahování:
+
+| Soubor | Co v něm je |
+|---|---|
+| `zdroje-diagnostika.txt` | stav zdrojů, párování tipů s Forebetem (časový rozsah, nespárované tipy s nejbližším zápasem), pokrytí SofaScore |
+| `forebet-seznam-diagnostika.txt`, `forebet-seznam.html` | jen když Forebet vrátí stránku bez rozpoznatelných zápasů: přehled její struktury a celé HTML |
+| `forebet-diagnostika.txt`, `forebet-zapas.html` | jen když se nepodaří přečíst pravděpodobnosti gólů ze stránky zápasu |
+| `tikety-statistiky.txt` | co se stáhlo ze SofaScore pro tikety (po zápasech) a ukázky odpovědí |
+| `tikety-odpoved.txt` | poslední zadání a odpověď Gemini pro tikety |
+
 ## Vývoj
 
 Potřebujete Node.js 22+ (aplikace používá vestavěné `node:sqlite` z Electronu).
@@ -213,7 +232,8 @@ než u Electron verze).
 |---|---|
 | Okno se otevře, ale tabulka je prázdná | Podívejte se na pruh nahoře a na stav zdrojů; filtr *Dnes* ukazuje jen dnešní zápasy – zkuste *Dnes a zítra* nebo *Vše*. |
 | „Forebet: Cloudflare kontrola neprošla“ | Klikněte na **Ověřit Forebet**, nebo Forebet nechte být. |
-| „Forebet: … pravděpodobnosti gólů“ nahoře | Struktura stránky zápasu se liší od předpokladu – pošlete soubor `ladeni\forebet-zapas.html` (viz výše). |
+| „Forebet: … pravděpodobnosti gólů“ nahoře | Struktura stránky zápasu se liší od předpokladu – stiskněte **Ctrl + Shift + D** a pošlete diagnostiku (případně soubor `ladeni\forebet-zapas.html`). |
+| Forebet se u většiny tipů nezobrazuje | Stiskněte **Ctrl + Shift + D**: v `zdroje-diagnostika.txt` je vidět, kolik tipů se s Forebetem spárovalo a u nespárovaných nejbližší zápas (rozdílné jméno týmu, čas nebo liga). |
 | Windows SmartScreen aplikaci blokuje | *Další informace → Přesto spustit* (aplikace není podepsaná). |
 | Zápasy mají posunutý čas | Časy se převádějí z UTC do `Europe/Prague`; zkontrolujte systémové datum a čas. |
 | „Struktura webu se změnila“ | Weby se mění; parsery jsou v `desktop/src/scrapers/`, testy ukazují očekávaný tvar dat. |

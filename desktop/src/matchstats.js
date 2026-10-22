@@ -166,6 +166,10 @@ class MatchStats {
     const awayLast = await this.lastEvents("hoste", awayId, notes);
     let h2h = e.customId ? h2hFromEvents(await this.get("h2h", `${API}/event/${e.customId}/h2h/events`, notes), homeId, awayId) : null;
     if (!h2h) h2h = h2hFromDuel(await this.get("h2h_pocty", `${API}/event/${id}/h2h`, notes));
+    if (!h2h) { // naposledy: setkání obou týmů mezi posledními zápasy domácího týmu (bez dalšího dotazu)
+      const recent = h2hFromEvents(homeLast, homeId, awayId);
+      if (recent && recent.zapasu) h2h = { ...recent, poznamka: "jen setkání z posledních zápasů domácího týmu" };
+    }
     const missing = missingFrom(await this.get("sestavy", `${API}/event/${id}/lineups`, notes));
     return { ...buildStats({ homeLast, awayLast, homeId, awayId, h2h, missing }), notes };
   }

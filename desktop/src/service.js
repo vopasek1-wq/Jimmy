@@ -12,6 +12,7 @@ const { LiveClient } = require("./live");
 const { MatchStats } = require("./matchstats");
 const { analyze, recentLosses, buildPrompt } = require("./analysis");
 const { candidatesFrom } = require("./tickets");
+const { buildDiagnostics } = require("./diagnostics");
 const { resultOk } = require("./models");
 const { fmtStamp, localDate, todayLocal } = require("./timeutil");
 
@@ -142,6 +143,19 @@ class TipService {
     } catch {
       /* ladicí soubor není nutný */
     }
+  }
+
+  /** Diagnostika pro vývojáře (text); uloží se i do `ladeni/diagnostika.txt`. */
+  diagnosticsText(info) {
+    const dir = path.join(this.dataDir, "ladeni");
+    const text = buildDiagnostics({ ...info, run: this.db.latestRun(), tips: this.db.tipsOfLatestRun(), dir });
+    try {
+      fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(path.join(dir, "diagnostika.txt"), text, "utf8");
+    } catch {
+      /* soubor je jen záloha, text se vrací vždy */
+    }
+    return text;
   }
 
   /** Kde je ladicí soubor se statistikami pro tikety (pro hlášky o chybách). */

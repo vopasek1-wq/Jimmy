@@ -1,7 +1,7 @@
 // Fotbalové tipy – hlavní proces Electronu (Windows desktop aplikace).
 "use strict";
 
-const { app, BrowserWindow, ipcMain, shell, screen, net, session, safeStorage } = require("electron");
+const { app, BrowserWindow, ipcMain, shell, screen, net, session, clipboard, safeStorage } = require("electron");
 const fs = require("node:fs");
 const path = require("node:path");
 
@@ -16,6 +16,7 @@ const { WindowBrowser, chromeUserAgent } = require("./src/browser");
 const { TipService } = require("./src/service");
 const { askGemini, generate } = require("./src/analysis");
 const { createTickets } = require("./src/tickets");
+const { checkForUpdate } = require("./src/updates");
 
 const DESIGN_SIZE = { width: 1440, height: 900 };
 const isHttpUrl = (url) => /^https?:\/\//i.test(String(url));
@@ -88,6 +89,20 @@ ipcMain.handle("app:info", () => ({
   limits: { minProbability: config.MIN_PROBABILITY, minOdds: config.MIN_ODDS, highProbability: config.HIGH_PROBABILITY },
 }));
 
+/* ---------- Nová verze (GitHub vydání „tipy-latest“) ---------- */
+let update = null; // poslední zjištěné novější sestavení { current, latest, url, published }
+async function checkUpdate() {
+  // vývojová verze (npm start) se nekontroluje, jen zabalená aplikace
+  if (!app.isPackaged && !process.env.TIPSTER_UPDATE_TEST) return;
+  const info = await checkForUpdate({ fetchFn: (url, init) => net.fetch(url, init), version: app.getVersion() });
+  if (!info || !info.available) return;
+  const isNew = !update || update.latest !== info.latest;
+  update = info;
+  if (isNew && mainWindow && !mainWindow.webContents.isDestroyed()) mainWindow.webContents.send("update:available", info);
+}
+ipcMain.handle("update:get", () => update);
+
+
 /* ---------- Tipy ---------- */
 const progressTo = (event) => (message) => {
   if (!event.sender.isDestroyed()) event.sender.send("tips:progress", message);
@@ -103,6 +118,12 @@ const safe = (fn) => async (...args) => {
 };
 
 ipcMain.handle("tips:cached", safe(() => service.loadCached()));
+/* ---------- Diagnostika pro vývojáře (Ctrl + Shift + D) ---------- */
+ipcMain.handle("diag:copy", safe(() => {
+  const text = service.diagnosticsText({ version: app.getVersion(), electron: process.versions.electron, platform: `${process.platform} ${process.getSystemVersion()}` });
+  clipboard.writeText(text);
+  return { chars: text.length };
+}));
 ipcMain.handle("live:list", safe(() => service.liveMatches()));
 ipcMain.handle("live:detail", safe((_e, id) => service.liveDetail(id)));
 /* ---------- AI analýza: klíč se ukládá šifrovaně (Windows DPAPI přes safeStorage) ---------- */
@@ -166,6 +187,8 @@ if (!app.requestSingleInstanceLock()) {
     service = new TipService({ dbFile: path.join(app.getPath("userData"), "tipy.sqlite3"), http, browser });
 
     createWindow();
+    setTimeout(checkUpdate, 6000).unref();
+    setInterval(checkUpdate, 6 * 3600e3).unref();
     app.on("activate", () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow();
     });

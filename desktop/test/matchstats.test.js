@@ -157,3 +157,12 @@ test("MatchStats.collect: když chybí seznam posledních zápasů, použije se 
   assert.equal(out.stats.t1.forma_domaci.forma, "V R P V R");
   assert.ok(http.calls.some((c) => c.path === "/team/2/performance"));
 });
+
+test("MatchStats.collect: bez seznamu H2H i počtů se použijí setkání z posledních zápasů domácího týmu", async () => {
+  const r = routes101();
+  delete r["/event/abcD/h2h/events"];
+  r["/team/1/events/last/0"] = { events: [...aEvents().events, ev(A, B, 3, 1, day(9))] };   // domácí tým hrál nedávno proti B
+  const out = await new MatchStats(fakeHttp(r), { delayMs: [0, 0] }).collect([cand("t1", 101)]);
+  assert.deepEqual([out.stats.t1.h2h.zapasu, out.stats.t1.h2h.domaci_vyhry], [1, 1]);
+  assert.match(out.stats.t1.h2h.poznamka, /jen setkání z posledních zápasů/);
+});

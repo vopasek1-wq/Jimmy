@@ -347,6 +347,9 @@ i[data-lucide],
 }
 .chip .lucide { width: 14px; height: 14px; }
 .chip--warn { background: var(--yellow-soft); color: var(--yellow); }
+.chip--update { background: var(--accent-soft); border: 1px solid rgba(86, 203, 255, 0.45); color: var(--accent-bright); font-weight: 500; cursor: pointer; transition: background-color 0.16s, transform 0.12s; }
+.chip--update:hover { background: rgba(62, 198, 255, 0.26); }
+.chip--update:active { transform: scale(0.96); }
 
 /* ==========================================================================
    Hlavní oblast, mřížka Přehledu (GridStack 24 × 48), stránky

@@ -32,6 +32,11 @@ jobs:
       - name: Instalace závislostí
         run: npm ci
 
+      # Číslo sestavení = poslední část verze (1.0.<číslo běhu>). Aplikace podle něj pozná, že je k dispozici novější
+      # vydání „tipy-latest“ (v jeho názvu je stejné číslo), a nabídne stažení.
+      - name: Číslo sestavení
+        run: npm version "1.0.${{ github.run_number }}" --no-git-tag-version --allow-same-version
+
       - name: Testy
         run: npm test
 

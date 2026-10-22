@@ -52,7 +52,7 @@ function buildTicketPrompt(candidates, stats, { calibration = null, now = new Da
     + `Legenda: V = výhra, R = remíza, P = prohra; forma a seznam zápasů jsou od nejnovějšího; „dal“ a „obdrzel“ jsou průměry vstřelených a obdržených gólů na zápas; `
     + `„doma“ je výkonnost domácího týmu v jeho posledních domácích zápasech, „venku“ výkonnost hostů v jejich posledních venkovních zápasech.\n\n`
     + `POSTUP:\n`
-    + `1. U každého zápasu posuď, jak statistiky podporují tip u zápasu: SILNÁ (forma, H2H, góly a domácí/venkovní výkonnost tip jasně podporují), STŘEDNÍ (většina údajů tip podporuje a nic mu výrazně neodporuje), SLABÁ (údaje si odporují nebo tip podporují jen málo) nebo NEDOSTATEČNÁ DATA (chybí klíčové údaje).\n`
+    + `1. U každého zápasu posuď, jak statistiky podporují tip u zápasu: SILNÁ (forma, H2H, góly a domácí/venkovní výkonnost tip jasně podporují), STŘEDNÍ (většina údajů tip podporuje a nic mu výrazně neodporuje), SLABÁ (údaje si odporují nebo tip podporují jen málo) nebo NEDOSTATEČNÁ DATA (chybí forma nebo góly alespoň jednoho týmu). Chybějící H2H nebo zranění samo o sobě zápas nevyřazuje – posuzuj podle údajů, které máš.\n`
     + `2. Do tiketů zařaď zápasy s podporou SILNÁ a STŘEDNÍ. SLABÁ a NEDOSTATEČNÁ DATA nezařazuj – vyhýbej se riskantním sázkám bez datové opory.\n`
     + `3. Zařazené zápasy rozděl do tiketů logicky: nejjistější (SILNÁ) tipy seskupuj dohromady do prvního tiketu, další tikety skládej z méně jistých. Je-li zápasů s dostatečnou oporou víc, vytvoř víc tiketů – zápas nenech bez tiketu jen proto, že není mezi nejlepšími.\n\n`
     + `PRAVIDLA:\n`

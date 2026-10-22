@@ -8,6 +8,8 @@
 // považuje za úspěšný, jen když prošel Scores24 (hlavní zdroj tipů).
 "use strict";
 
+const fs = require("node:fs");
+const path = require("node:path");
 const config = require("./config");
 const { applyFilters } = require("./filters");
 const { NetworkError, SourceError } = require("./http");
@@ -16,7 +18,8 @@ const { evaluate, forebetProbability, goalsProbability, resultMarket } = require
 const {
   UPCOMING, FINISHED, SOURCE_SCORES24, SOURCE_FOREBET, SOURCE_SOFASCORE, newResult, resultOk,
 } = require("./models");
-const { sameMatch } = require("./names");
+const { marketGroup } = require("./analysis");
+const { sameMatch, teamSimilarity } = require("./names");
 const { Scores24Scraper, classifyStatus, kickoffOf } = require("./scrapers/scores24");
 const { ForebetScraper } = require("./scrapers/forebet");
 const { SofaScoreClient } = require("./scrapers/sofascore");
@@ -49,6 +52,36 @@ function findRow(m, rows, now) {
     if (score > bestScore) { best = r; bestScore = score; }
   }
   return best;
+}
+
+const iso = (d) => (d instanceof Date && !Number.isNaN(d.getTime()) ? d.toISOString().slice(0, 16).replace("T", " ") : "?");
+
+/**
+ * Jak dobře se tipy ze Scores24 párují se zápasy z Forebetu (pro ladění: názvy týmů, čas, liga).
+ * U nespárovaných tipů uvede nejpodobnější zápas z Forebetu, aby bylo vidět, jestli chybí zápas, nebo nesedí jméno či čas.
+ */
+function forebetCoverage(tips, forebet, { sample = 12 } = {}) {
+  const lines = [`Forebet: zápasů ve zdroji ${forebet.length}, z toho se sledovanou ligou ${forebet.filter((m) => m.leagueKey).length}`];
+  const times = forebet.map((m) => m.kickoff).filter(Boolean).sort((a, b) => a - b);
+  if (times.length) lines.push(`Časový rozsah zápasů (UTC): ${iso(times[0])} až ${iso(times[times.length - 1])}`);
+  const tags = new Map();
+  for (const m of forebet) tags.set(m.leagueText || "?", (tags.get(m.leagueText || "?") || 0) + 1);
+  lines.push(`Značky lig: ${[...tags].sort((a, b) => b[1] - a[1]).slice(0, 15).map(([t, n]) => `${t}:${n}`).join(" ")}`);
+  const miss = [];
+  let matched = 0;
+  for (const t of tips) (findForebet(t.home, t.away, t.leagueKey, t.kickoff, forebet) ? (matched += 1) : miss.push(t));
+  lines.push(`Tipů ze Scores24: ${tips.length}, spárováno s Forebetem: ${matched}`);
+  for (const t of miss.slice(0, sample)) {
+    let best = null;
+    let bestScore = 0;
+    for (const m of forebet) {
+      const score = (teamSimilarity(t.home, m.home) + teamSimilarity(t.away, m.away)) / 2;
+      if (score > bestScore) { best = m; bestScore = score; }
+    }
+    lines.push(`  nespárováno: ${t.home} – ${t.away} [${t.leagueKey}] ${iso(t.kickoff)} → nejbližší ve Forebetu: ${best ? `${best.home} – ${best.away} [${best.leagueText || "?"}] ${iso(best.kickoff)}, podobnost jmen ${bestScore.toFixed(2)}` : "nic"}`);
+  }
+  for (const m of forebet.slice(0, 3)) lines.push(`  ukázka řádku: ${m.home} – ${m.away} | ${iso(m.kickoff)} | ${m.leagueText || "?"} | ${m.p1}/${m.px}/${m.p2} | ${m.url || "bez odkazu"}`);
+  return lines;
 }
 
 /** Spojí tipy ze Scores24 s pravděpodobnostmi z Forebetu a přidá vlastní tipy Forebetu. */
@@ -117,6 +150,7 @@ class Pipeline {
     for (const name of [SOURCE_SCORES24, SOURCE_FOREBET, SOURCE_SOFASCORE]) setStatus(result, name, "pending");
     let s24 = null;
     let forebet = null;
+    let goalsInfo = null;
 
     // 1) Scores24 – hlavní zdroj
     try {
@@ -137,7 +171,7 @@ class Pipeline {
     // 2) Forebet – pravděpodobnosti (volitelný zdroj)
     try {
       const scraper = new ForebetScraper(this.http, this.browser);
-      forebet = await scraper.fetch(progress, { interactive: interactiveForebet });
+      forebet = await scraper.fetch(progress, { interactive: interactiveForebet, debugDir: this.debugDir });
       let message = `${forebet.length} zápasů`;
       let state = "ok";
 
@@ -151,6 +185,7 @@ class Pipeline {
       }
       if (wanted.size) {
         const g = await scraper.fetchGoals([...wanted], progress, { debugDir: this.debugDir });
+        goalsInfo = g;
         message += `, góly u ${g.parsed} z ${g.wanted} zápasů`;
         if (g.parsed < g.wanted) {
           state = "partial";
@@ -179,7 +214,39 @@ class Pipeline {
     }
 
     result.tips = tips.sort((a, b) => a.kickoff - b.kickoff || b.probability - a.probability);
+    this._writeDiagnostics(result, { s24, forebet, goalsInfo, sofa });
     return this._finish(result);
+  }
+
+  /** Souhrn posledního stahování do `ladeni/zdroje-diagnostika.txt` (přepisuje se): stav zdrojů, párování Forebetu, pokrytí SofaScore. */
+  _writeDiagnostics(result, { s24, forebet, goalsInfo, sofa }) {
+    if (!this.debugDir) return;
+    try {
+      const lines = [`Stahování tipů – ${new Date().toISOString()}`, "", "Stav zdrojů:"];
+      for (const st of Object.values(result.statuses)) lines.push(`  ${st.name}: ${st.state}${st.message ? ` – ${st.message}` : ""}`);
+      lines.push("", `Scores24: ${s24 ? s24.tips.length : 0} tipů před filtry; po filtrech ${result.tips.length}`);
+      if (forebet) {
+        lines.push(...forebetCoverage(s24 ? s24.tips : [], forebet));
+        if (goalsInfo) lines.push(`Stránky zápasů (góly): přečteno ${goalsInfo.parsed} z ${goalsInfo.wanted}${goalsInfo.errors.length ? `; chyby: ${goalsInfo.errors.slice(0, 3).join(" | ")}` : ""}`);
+      } else {
+        lines.push("Forebet: žádná data");
+      }
+      const groups = new Map();
+      for (const t of result.tips) {
+        const g = groups.get(marketGroup(t.tipCode)) || { n: 0, fb: 0 };
+        g.n += 1;
+        if (t.probForebet !== null && t.probForebet !== undefined) g.fb += 1;
+        groups.set(marketGroup(t.tipCode), g);
+      }
+      lines.push("", "Tipy po filtrech podle typu (kolik z nich má pravděpodobnost z Forebetu):");
+      for (const [name, g] of groups) lines.push(`  ${name}: ${g.n} (Forebet ${g.fb})`);
+      const withId = result.tips.filter((t) => t.sofascoreId).length;
+      lines.push("", `SofaScore: zápas nalezen u ${withId} z ${result.tips.length} tipů${sofa && sofa.errors.length ? `; chyby: ${sofa.errors.slice(0, 3).join(" | ")}` : ""}`);
+      fs.mkdirSync(this.debugDir, { recursive: true });
+      fs.writeFileSync(path.join(this.debugDir, "zdroje-diagnostika.txt"), `${lines.join("\n")}\n`, "utf8");
+    } catch {
+      /* ladicí soubor není nutný */
+    }
   }
 
   _finish(result) {
@@ -244,4 +311,4 @@ async function updateResults(db, http, { progress = () => {}, maxAgeDays = 14, n
   return { done, message: `${message}.` };
 }
 
-module.exports = { Pipeline, combine, updateResults, settleFinished, findForebet, findRow };
+module.exports = { Pipeline, combine, updateResults, settleFinished, findForebet, findRow, forebetCoverage };
