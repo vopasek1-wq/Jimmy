@@ -102,8 +102,15 @@ const TRANSIENT = new Set([429, 500, 502, 503, 504]);
 const ATTEMPTS = 3; // pokusů na model při přechodné chybě (přetížení)
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
-/** Dotaz na Google Gemini API (klíč má uživatel uložený v aplikaci); `fetchFn` je net.fetch z Electronu. */
-async function askGemini({ fetchFn, apiKey, prompt, json = false, timeoutMs = 120000, sleep = wait }) {
+/**
+ * Dotaz na Google Gemini API (klíč má uživatel uložený v aplikaci); `fetchFn` je net.fetch z Electronu.
+ *  - `json`: odpověď jako JSON (nejde spolu s `search`),
+ *  - `search`: model smí vyhledávat na webu (Google Search); text pak není garantovaně JSON,
+ *  - `temperature: null` nechá výchozí hodnotu modelu (u nových modelů Gemini ji Google doporučuje neměnit).
+ * Vrací { text, model, grounded, queries } – `grounded` říká, jestli model opravdu vyhledával na webu.
+ */
+async function generate({ fetchFn, apiKey, prompt, system = SYSTEM, json = false, search = false, temperature = 0.4, maxTokens, timeoutMs = 120000, sleep = wait }) {
+  if (json && search) throw new Error("Gemini nepodporuje JSON režim spolu s vyhledáváním na webu.");
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), timeoutMs);
   try {
@@ -115,15 +122,21 @@ async function askGemini({ fetchFn, apiKey, prompt, json = false, timeoutMs = 12
           method: "POST", signal: ctl.signal,
           headers: { "x-goog-api-key": apiKey, "content-type": "application/json" },
           body: JSON.stringify({
-            systemInstruction: { parts: [{ text: SYSTEM }] },
+            systemInstruction: { parts: [{ text: system }] },
             contents: [{ role: "user", parts: [{ text: prompt }] }],
-            generationConfig: { maxOutputTokens: json ? 8000 : 4000, temperature: 0.4, ...(json ? { responseMimeType: "application/json" } : {}) },
+            ...(search ? { tools: [{ google_search: {} }] } : {}),
+            generationConfig: {
+              maxOutputTokens: maxTokens || (json ? 8000 : 4000),
+              ...(temperature === null ? {} : { temperature }),
+              ...(json ? { responseMimeType: "application/json" } : {}),
+            },
           }),
         });
         const body = await resp.json().catch(() => ({}));
         const err = body.error || {};
         if (resp.status === 404) { lastError = new Error(err.message || "Model nenalezen."); break; }
         if (resp.status === 400 && /API key not valid|API_KEY_INVALID/i.test(JSON.stringify(err))) throw new Error("API klíč není platný.");
+        if (resp.status === 400 && search) { lastError = new Error(`Vyhledávání na webu se u Gemini nepodařilo zapnout: ${err.message || "HTTP 400"}`); break; }
         if (resp.status === 401 || resp.status === 403) throw new Error(`Klíč nemá přístup ke Gemini API (${err.message || `HTTP ${resp.status}`}).`);
         if (TRANSIENT.has(resp.status)) {          // přetížení / limit: chvíli počkat a zkusit znovu, pak jiný model
           busy = true;
@@ -132,10 +145,14 @@ async function askGemini({ fetchFn, apiKey, prompt, json = false, timeoutMs = 12
           continue;
         }
         if (!resp.ok) throw new Error(err.message || `Chyba služby (HTTP ${resp.status}).`);
-        const parts = (((body.candidates || [])[0] || {}).content || {}).parts || [];
-        const text = parts.map((p) => p.text || "").join("\n").trim();
+        const cand = (body.candidates || [])[0] || {};
+        const parts = (cand.content || {}).parts || [];
+        const text = parts.filter((p) => !p.thought).map((p) => p.text || "").join("\n").trim();
         if (!text) throw new Error("AI nevrátila žádný text (odpověď mohla být zablokovaná).");
-        return text;
+        if (json && cand.finishReason === "MAX_TOKENS") throw new Error("Odpověď AI byla příliš dlouhá a useklá – zkus to znovu.");
+        const meta = cand.groundingMetadata || {};
+        const queries = meta.webSearchQueries || [];
+        return { text, model, queries, grounded: queries.length > 0 || (meta.groundingChunks || []).length > 0 };
       }
     }
     if (busy) throw new Error("Gemini je teď přetížené nebo je vyčerpaný limit (zkoušel jsem i záložní modely). Zkus to za pár minut.");
@@ -148,4 +165,9 @@ async function askGemini({ fetchFn, apiKey, prompt, json = false, timeoutMs = 12
   }
 }
 
-module.exports = { analyze, recentLosses, buildPrompt, askGemini, marketGroup, summarize };
+/** Totéž co `generate`, vrací jen text. */
+async function askGemini(options) {
+  return (await generate(options)).text;
+}
+
+module.exports = { analyze, recentLosses, buildPrompt, askGemini, generate, marketGroup, summarize };

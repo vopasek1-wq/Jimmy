@@ -3,7 +3,7 @@
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { analyze, marketGroup, buildPrompt, recentLosses, askGemini } = require("../src/analysis");
+const { analyze, marketGroup, buildPrompt, recentLosses, askGemini, generate } = require("../src/analysis");
 
 const tip = (probability, outcome, o = {}) => ({ probability, outcome, tipCode: "1", league: "Premier League", odds: 1.8, oddsEstimated: false, matchName: "A – B", tipLabel: "x", homeScore: 0, awayScore: 1, ...o });
 
@@ -75,4 +75,51 @@ test("askGemini: úspěch, záložní model a chyby", async () => {
   await assert.rejects(() => askGemini({ fetchFn: badKey, apiKey: "k", prompt: "q" }), /není platný/);
   const blocked = async () => ({ status: 200, ok: true, json: async () => ({ candidates: [{}] }) });
   await assert.rejects(() => askGemini({ fetchFn: blocked, apiKey: "k", prompt: "q" }), /žádný text/);
+});
+
+test("generate: vyhledávání na webu – nástroj, bez JSON režimu, údaj o vyhledávání", async () => {
+  let sent = null;
+  const grounded = async (_url, init) => {
+    sent = JSON.parse(init.body);
+    return { status: 200, ok: true, json: async () => ({ candidates: [{ content: { parts: [{ text: "část 1" }, { text: "skrytá úvaha", thought: true }, { text: "část 2" }] },
+      groundingMetadata: { webSearchQueries: ["a – b forma", "a – b h2h"] } }] }) };
+  };
+  const r = await generate({ fetchFn: grounded, apiKey: "k", prompt: "q", system: "vlastní", search: true, temperature: null, maxTokens: 9000 });
+  assert.deepEqual(sent.tools, [{ google_search: {} }]);
+  assert.equal(sent.generationConfig.responseMimeType, undefined);
+  assert.equal(sent.generationConfig.temperature, undefined);
+  assert.equal(sent.generationConfig.maxOutputTokens, 9000);
+  assert.equal(sent.systemInstruction.parts[0].text, "vlastní");
+  assert.deepEqual([r.text, r.grounded, r.queries.length], ["část 1\nčást 2", true, 2]);
+
+  // model nevyhledával → grounded je false; běžný dotaz bez nástrojů
+  let plain = null;
+  const noSearch = async (_url, init) => {
+    plain = JSON.parse(init.body);
+    return { status: 200, ok: true, json: async () => ({ candidates: [{ content: { parts: [{ text: "x" }] } }] }) };
+  };
+  const r2 = await generate({ fetchFn: noSearch, apiKey: "k", prompt: "q", search: true });
+  assert.equal(r2.grounded, false);
+  await generate({ fetchFn: noSearch, apiKey: "k", prompt: "q", json: true });
+  assert.equal(plain.tools, undefined);
+  assert.equal(plain.generationConfig.responseMimeType, "application/json");
+  assert.equal(plain.generationConfig.temperature, 0.4);
+
+  // JSON režim spolu s vyhledáváním Gemini nepodporuje; useknutý JSON je chyba
+  await assert.rejects(() => generate({ fetchFn: noSearch, apiKey: "k", prompt: "q", json: true, search: true }), /nepodporuje/);
+  const cut = async () => ({ status: 200, ok: true, json: async () => ({ candidates: [{ finishReason: "MAX_TOKENS", content: { parts: [{ text: "{\"tikety\":[" }] } }] }) });
+  await assert.rejects(() => generate({ fetchFn: cut, apiKey: "k", prompt: "q", json: true }), /useklá/);
+
+  // model bez podpory vyhledávání (400) → zkusí se další; když nejde žádný, srozumitelná chyba
+  const urls = [];
+  const only25 = async (url) => {
+    urls.push(url);
+    return url.includes("gemini-2.5-flash:")
+      ? { status: 200, ok: true, json: async () => ({ candidates: [{ content: { parts: [{ text: "ok" }] }, groundingMetadata: { groundingChunks: [{}] } }] }) }
+      : { status: 400, ok: false, json: async () => ({ error: { message: "Search Grounding is not supported." } }) };
+  };
+  const r3 = await generate({ fetchFn: only25, apiKey: "k", prompt: "q", search: true });
+  assert.deepEqual([r3.text, r3.model, r3.grounded, urls.length], ["ok", "gemini-2.5-flash", true, 2]);
+  const never = async () => ({ status: 400, ok: false, json: async () => ({ error: { message: "nope" } }) });
+  await assert.rejects(() => generate({ fetchFn: never, apiKey: "k", prompt: "q", search: true }), /Vyhledávání na webu/);
 });

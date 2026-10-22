@@ -100,13 +100,23 @@ Vyhodnocují se běžné trhy (1X2, dvojitá šance, Over/Under, oba týmy skór
 
 ## Tikety (Gemini)
 
-Záložka **Tikety** nechá Gemini poskládat kombinace (tikety) po 2–5 tipech, které pak ručně zadáš do Tipsportu (ten nemá API).
-Zvolíš den (Dnes / Zítra), počet tipů na tiketu (2–5) a počet tiketů (1–3) a klikneš na **Vytvořit tikety (AI)**. Gemini dostane jen
-tipy, které ještě nezačaly a mají **skutečný** kurz (ne odhadnutý), a k tomu tvou dosavadní kalibraci z Analýzy. U každého tiketu vrátí
-název, celkový verdikt (dobrý / průměrný / rizikový) a krátké shrnutí a u **každého tipu** verdikt a jednu větu, zda je to dobrý tip.
-Výběr tipů aplikace zkontroluje (existují, jsou z různých zápasů, správný počet) a **celkový kurz, pravděpodobnost (součin) a odhad
-výnosu počítá sama** – z AI se berou jen výběr a komentáře. Tlačítko *Kopírovat tiket* připraví text pro přepsání do Tipsportu.
-Používá se stejný Gemini klíč jako v Analýze; poslední tikety zůstanou po restartu.
+Záložka **Tikety** nechá Gemini poskládat kombinace (tikety) z tipů v Přehledu, které pak ručně zadáš do Tipsportu (ten nemá API).
+Zvolíš den (Dnes / Zítra) a klikneš na **Vytvořit tikety (AI)** – počet tipů ani tiketů se nezadává, určí je Gemini. Probíhá to ve dvou
+krocích (celé to trvá obvykle 1–3 minuty, průběh je vidět v okně):
+
+1. **Vyhledání statistik.** Gemini dostane tipy z Přehledu, které ještě nezačaly a mají **skutečný** kurz (ne odhadnutý; nejvýš 20 nejlepších
+   podle pravděpodobnosti a Value). Ke každému zápasu **vyhledá na webu** (Google Search přes Gemini API) aktuální statistiky – formu obou
+   týmů (posledních 5 zápasů), vzájemné zápasy (H2H), střeleckou produktivitu, zranění klíčových hráčů a domácí/venkovní výkonnost – a posoudí,
+   jestli čísla podporují právě daný tip. Tipy samotné **neupravuje** (nemění typ sázky ani kurz), jen je hodnotí.
+2. **Sestavení tiketů.** Z nalezených podkladů vybere jen sázky s dobrou pravděpodobností úspěchu. Zápas, ke kterému chybí dost dat, do
+   tiketu nezařadí. Vybrané zápasy rozdělí do tiketů tak, že nejjistější tipy jsou pohromadě (první tiket je nejjistější).
+
+Pravidla, která aplikace u odpovědi **kontroluje** (tiket, který je porušuje, zahodí): 2–5 zápasů na tiket, kombinovaný kurz alespoň 2,00,
+každý zápas nejvýš v jednom tiketu a žádné neznámé tipy. U každého tiketu je krátké **zdůvodnění** (2–4 věty) s odkazem na formu týmů a
+statistiky a úroveň jistoty; **celkový kurz, pravděpodobnost (součin) a odhad výnosu počítá aplikace sama**. Když model na web nevyhledával,
+pod tikety se zobrazí upozornění, že statistiky nemusí být aktuální. Tlačítko *Kopírovat tiket* připraví text pro přepsání do Tipsportu.
+Používá se stejný Gemini klíč jako v Analýze; poslední tikety zůstanou po restartu. Vyhledávání na webu je u Gemini API zvláštní funkce
+s vlastními limity a podmínkami (viz dokumentace Googlu), proto může jedno vytvoření tiketů spotřebovat víc dotazů než běžná odpověď.
 
 > Pravděpodobnost tiketu je součin odhadů zdroje, které nejsou kalibrované, takže bývá optimistická; kurzy u Tipsportu se mohou lišit
 > a výnos není zaručen. Sázení je jen pro osoby starší 18 let.

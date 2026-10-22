@@ -23,6 +23,7 @@ contextBridge.exposeInMainWorld("desktop", {
   },
   tickets: {
     create: (req) => ipcRenderer.invoke("tickets:create", req),
+    onProgress: (callback) => ipcRenderer.on("tickets:progress", (_event, message) => callback(String(message))),
   },
   analysis: {
     get: () => ipcRenderer.invoke("analysis:get"),

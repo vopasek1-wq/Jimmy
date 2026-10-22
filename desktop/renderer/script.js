@@ -869,12 +869,11 @@
   /* ---------- Tikety (Gemini) ---------- */
   const tk = {
     day: ["today", "tomorrow"].includes(store.get("tk-day")) ? store.get("tk-day") : "today",
-    legs: [2, 3, 4, 5].includes(store.get("tk-legs")) ? store.get("tk-legs") : 3,
-    count: [1, 2, 3].includes(store.get("tk-count")) ? store.get("tk-count") : 2,
-    result: store.get("tk-result"),   // naposledy vytvořené tikety (zůstanou i po restartu)
-    busy: false, hasKey: false,
+    result: store.get("tk-result2"),   // naposledy vytvořené tikety (zůstanou i po restartu)
+    busy: false, hasKey: false, step: "", startedAt: 0, timer: null,
   };
-  const VERDICT_CS = { good: "Dobrý", ok: "Průměrný", risky: "Rizikový" };
+  const CERTAINTY_CS = { good: "Vysoká jistota", ok: "Střední jistota", risky: "Nižší jistota" };
+  const TK_NOTE = $("#tk-note").textContent;
   const kickoffShort = (iso) => fmtKickoff(iso);
 
   function ticketText(t) {
@@ -883,36 +882,54 @@
     return lines.join("\n");
   }
 
+  const busyText = () => `${tk.step || "Gemini se připravuje…"} (${Math.round((Date.now() - tk.startedAt) / 1000)} s)`;
+  const tickBusy = () => { const el = $("#tk-busy-text"); if (el) el.textContent = busyText(); };
+
   function renderTickets() {
     $$("#tk-day [data-tkday]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.tkday === tk.day)));
-    $$("#tk-legs [data-tklegs]").forEach((b) => b.setAttribute("aria-pressed", String(Number(b.dataset.tklegs) === tk.legs)));
-    $$("#tk-count [data-tkcount]").forEach((b) => b.setAttribute("aria-pressed", String(Number(b.dataset.tkcount) === tk.count)));
     $("#tk-key-label").textContent = tk.hasKey ? "Gemini klíč uložen" : "Gemini API klíč";
+    const note = $("#tk-note");
     const list = $("#tk-list");
     const r = tk.result;
-    if (tk.busy) { list.innerHTML = '<p class="empty">Gemini skládá tikety…</p>'; return; }
+    note.textContent = TK_NOTE;
+    note.classList.remove("tk-note--warn");
+    if (tk.busy) {
+      list.innerHTML = `<div class="tk-busy"><span class="tk-busy__spin" aria-hidden="true"></span><p class="tk-busy__text" id="tk-busy-text">${esc(busyText())}</p>
+        <p class="tk-busy__hint">Gemini hledá na webu aktuální statistiky a pak z nich skládá tikety. Obvykle to trvá 1–3 minuty, mezitím můžeš přepnout na jinou záložku.</p></div>`;
+      return;
+    }
     if (!r || !r.tickets || !r.tickets.length) {
-      list.innerHTML = `<p class="empty">${esc(r && r.error ? r.error : "Zatím žádné tikety. Zvol den a počet tipů a klikni na „Vytvořit tikety (AI)“.")}</p>`;
+      const msg = r && r.error ? r.error
+        : r && r.tickets ? `Gemini nenašel žádné tipy s dostatečnou oporou ve statistikách, žádný tiket nevznikl.${r.note ? ` ${r.note}` : ""}`
+          : "Zatím žádné tikety. Zvol den a klikni na „Vytvořit tikety (AI)“.";
+      list.innerHTML = `<p class="empty">${esc(msg)}</p>`;
       return;
     }
     list.innerHTML = r.tickets.map((t, i) => `<article class="tk-card" data-i="${i}">
-      <div class="tk-head"><span class="tk-name">${esc(t.name)}</span><span class="tk-verdict tk-verdict--${t.verdict}">${VERDICT_CS[t.verdict] || ""} tiket</span></div>
+      <div class="tk-head"><span class="tk-name">${esc(t.name)}</span>${t.verdict ? `<span class="tk-verdict tk-verdict--${t.verdict}">${CERTAINTY_CS[t.verdict] || ""}</span>` : ""}</div>
       <div class="tk-legs">${t.legs.map((l) => `<div class="tk-leg"><div class="tk-leg__row">
           <span class="tk-leg__match">${esc(l.matchName)}</span><span class="tk-leg__odds">${esc(nf2.format(l.odds))}</span>
           <span class="tk-leg__tip">${esc(l.tipLabel)}</span><span class="tk-leg__meta">${esc(kickoffShort(l.kickoff))} · ${esc(fmtPct(l.probability))}</span>
-          ${l.comment ? `<span class="tk-leg__comment"><span class="tk-verdict tk-verdict--${l.verdict}">${VERDICT_CS[l.verdict] || ""}</span><span>${esc(l.comment)}</span></span>` : ""}
         </div></div>`).join("")}</div>
       <div class="tk-totals">
         ${stat(nf2.format(t.totalOdds), "celkový kurz", "stat--accent")}
         ${stat(`${nf1.format(t.jointProbability)} %`, "pravděpodobnost (součin)")}
         ${stat(`${t.expectedReturn > 0 ? "+" : t.expectedReturn < 0 ? "−" : ""}${nf1.format(Math.abs(t.expectedReturn))} %`, "odhad výnosu", t.expectedReturn > 0 ? "stat--pos" : t.expectedReturn < 0 ? "stat--neg" : "")}
       </div>
-      ${t.summary ? `<p class="tk-summary">${esc(t.summary)}</p>` : ""}
+      ${t.summary ? `<p class="tk-summary"><span class="tk-summary__label">Zdůvodnění</span>${esc(t.summary)}</p>` : ""}
       <div class="tk-actions">
         <button class="btn btn--ghost btn--sm" type="button" data-tkact="copy"><i data-lucide="copy"></i>Kopírovat tiket</button>
         <button class="btn btn--ghost btn--sm" type="button" data-tkact="tipsport"><i data-lucide="external-link"></i>Tipsport</button>
       </div></article>`).join("");
-    $("#tk-note").textContent = `Vytvořeno z ${r.candidates} vhodných tipů${r.at ? ` (${r.at})` : ""}. Pravděpodobnost je součin odhadů zdroje – bývá optimistická; kurzy u Tipsportu se mohou lišit a výnos není zaručen. Sázení je jen pro 18+.`;
+    const parts = [`Z ${r.analyzed} zápasů z přehledu${r.at ? ` (${r.at})` : ""}`];
+    if (r.grounded === false) {
+      parts.push("Gemini tentokrát nevyhledával na webu, statistiky proto nemusí být aktuální – ber tikety s rezervou");
+      note.classList.add("tk-note--warn");
+    } else {
+      if (r.covered < r.analyzed) parts.push(`podklady se našly k ${r.covered}`);
+      if (r.searches) parts.push(`${r.searches} vyhledávání na webu`);
+    }
+    note.textContent = `${parts.join(" · ")}. Pravděpodobnost je součin odhadů zdroje – bývá optimistická; kurzy u Tipsportu se mohou lišit a výnos není zaručen. Sázení je jen pro 18+.`;
     renderIcons();
   }
 
@@ -924,14 +941,12 @@
     renderTickets();
   }
 
-  const bindSeg = (sel, attr, key, parse) => $$(`${sel} [${attr}]`).forEach((b) => b.addEventListener("click", () => {
-    tk[key] = parse(b.getAttribute(attr));
-    store.set(`tk-${key}`, tk[key]);
+  $$("#tk-day [data-tkday]").forEach((b) => b.addEventListener("click", () => {
+    tk.day = b.dataset.tkday;
+    store.set("tk-day", tk.day);
     renderTickets();
   }));
-  bindSeg("#tk-day", "data-tkday", "day", (v) => v);
-  bindSeg("#tk-legs", "data-tklegs", "legs", Number);
-  bindSeg("#tk-count", "data-tkcount", "count", Number);
+  if (desktop) desktop.tickets.onProgress((message) => { tk.step = message; tickBusy(); });
 
   $("#tk-key-btn").addEventListener("click", () => { const f = $("#tk-key-form"); f.hidden = !f.hidden; if (!f.hidden) $("#tk-key").focus(); });
   $("#tk-key-form").addEventListener("submit", async (e) => {
@@ -953,13 +968,17 @@
     if (!desktop || tk.busy) return;
     if (!tk.hasKey) { $("#tk-key-form").hidden = false; $("#tk-key").focus(); toast("Nejdřív zadej Gemini API klíč.", "error"); return; }
     tk.busy = true;
+    tk.step = "";
+    tk.startedAt = Date.now();
+    tk.timer = setInterval(tickBusy, 1000);
     $("#tk-create").disabled = true;
     renderTickets();
-    const res = await desktop.tickets.create({ day: tk.day, legs: tk.legs, count: tk.count });
+    const res = await desktop.tickets.create({ day: tk.day });
+    clearInterval(tk.timer);
     tk.busy = false;
     $("#tk-create").disabled = false;
     tk.result = res.ok ? { ...res.data, at: fmtKickoff(new Date().toISOString()) } : { error: res.error };
-    if (res.ok) store.set("tk-result", tk.result);
+    if (res.ok) store.set("tk-result2", tk.result);
     renderTickets();
   });
 

@@ -885,10 +885,14 @@ body { background: var(--bg); }
 .tk-leg__odds { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .tk-leg__tip { font-size: 12.5px; color: var(--text-2); }
 .tk-leg__meta { font-size: 11.5px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
-.tk-leg__comment { grid-column: 1 / -1; display: flex; gap: 8px; align-items: flex-start; margin-top: 3px; font-size: 12px; line-height: 1.45; color: var(--text-2); }
-.tk-leg__comment .tk-verdict { flex: none; height: 18px; padding: 0 8px; font-size: 10.5px; }
 .tk-totals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
 .tk-summary { margin-top: 10px; font-size: 12.5px; line-height: 1.5; color: var(--text-2); }
+.tk-summary__label { display: block; margin-bottom: 2px; font-size: 10.5px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: var(--muted); }
+.tk-note--warn { color: var(--yellow); }
+.tk-busy { grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 34px 12px; text-align: center; }
+.tk-busy__spin { width: 26px; height: 26px; margin-bottom: 6px; border: 3px solid var(--border-2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.9s linear infinite; }
+.tk-busy__text { font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.tk-busy__hint { max-width: 520px; font-size: 12px; line-height: 1.5; color: var(--muted); }
 .tk-actions { display: flex; gap: 8px; margin-top: 10px; }
 .tk-card .stat { padding: 8px 10px 7px; }
 .tk-card .stat__value { font-size: 20px; }

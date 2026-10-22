@@ -141,17 +141,6 @@
               <button type="button" data-tkday="today" aria-pressed="true">Dnes</button>
               <button type="button" data-tkday="tomorrow" aria-pressed="false">Zítra</button>
             </div>
-            <div class="seg-control" id="tk-legs" role="group" aria-label="Počet tipů na tiketu">
-              <button type="button" data-tklegs="2" aria-pressed="false">2 tipy</button>
-              <button type="button" data-tklegs="3" aria-pressed="true">3 tipy</button>
-              <button type="button" data-tklegs="4" aria-pressed="false">4 tipy</button>
-              <button type="button" data-tklegs="5" aria-pressed="false">5 tipů</button>
-            </div>
-            <div class="seg-control" id="tk-count" role="group" aria-label="Počet tiketů">
-              <button type="button" data-tkcount="1" aria-pressed="false">1 tiket</button>
-              <button type="button" data-tkcount="2" aria-pressed="true">2 tikety</button>
-              <button type="button" data-tkcount="3" aria-pressed="false">3 tikety</button>
-            </div>
             <button class="btn btn--primary" type="button" id="tk-create"><i data-lucide="sparkles"></i>Vytvořit tikety (AI)</button>
             <button class="btn btn--ghost btn--sm" type="button" id="tk-key-btn"><i data-lucide="key-round"></i><span id="tk-key-label">Gemini API klíč</span></button>
           </div>
@@ -160,7 +149,7 @@
             <button class="btn btn--primary btn--sm" type="submit">Uložit</button>
             <button class="btn btn--ghost btn--sm" type="button" id="tk-key-remove">Odebrat</button>
           </form>
-          <p class="tk-note" id="tk-note">Tikety skládá Gemini z tipů, které ještě nezačaly a mají skutečný kurz. Celkový kurz a pravděpodobnost počítá aplikace; kurzy u Tipsportu se mohou lišit.</p>
+          <p class="tk-note" id="tk-note">Gemini vezme tipy z přehledu, ke každému zápasu vyhledá na webu aktuální statistiky (forma, vzájemné zápasy, góly, zranění, domácí/venkovní výkonnost) a z těch s dobrou oporou v datech složí tikety. Celkový kurz a pravděpodobnost počítá aplikace; kurzy u Tipsportu se mohou lišit.</p>
           <div class="tk-list" id="tk-list"></div>
         </section>
 
