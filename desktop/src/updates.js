@@ -82,7 +82,8 @@ async function checkForUpdate({ fetchFn, version, timeoutMs = 15000 }) {
   } catch (err) {
     problems.push(`github.com: ${netReason(err)}`);
   }
-  return { error: `Kontrola nové verze se nepodařila (${problems.join("; ")}).` };
+  // obě cesty 404 = soukromý repozitář (bez přihlášení vydání nevidět): aplikace nemůže zjistit nic, otevře se stránka vydání
+  return { error: `Kontrola nové verze se nepodařila (${problems.join("; ")}).`, notFound: problems.length === 2 && problems.every((x) => /HTTP 404/.test(x)), current };
 }
 
 module.exports = { buildOf, parseRelease, parseFeed, checkForUpdate };

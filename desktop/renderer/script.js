@@ -1254,7 +1254,10 @@
     const res = await desktop.update.check();
     if (res.ok && res.data.available) showUpdate(res.data);
     renderUpdateBtn();
-    if (!res.ok) toast(res.error, "error");
+    if (res.ok && res.data.notFound) {                  // vydání bez přihlášení nejde přečíst: ukáže se stránka vydání v prohlížeči
+      openExternal(res.data.url);
+      toast(`Nové sestavení nejde zjistit automaticky. Otevřel jsem stránku vydání – číslo je v názvu (ty máš ${res.data.current || "starší"}).`);
+    } else if (!res.ok) toast(res.error, "error");
     else if (res.data.available) toast(`Je k dispozici sestavení ${res.data.latest} (máš ${res.data.current}). Klikni na „Stáhnout“.`);
     else toast(res.data.current ? `Máš nejnovější verzi (sestavení ${res.data.current}).` : "Máš nejnovější verzi.");
   });

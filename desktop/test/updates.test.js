@@ -76,4 +76,8 @@ test("checkForUpdate: když selžou obě cesty, vrátí { error } se skutečným
   const r = await checkForUpdate({ fetchFn: hang, version: "1.0.1", timeoutMs: 20 });
   assert.match(r.error, /GitHub API: vypršel časový limit; github\.com: vypršel časový limit/);
   assert.equal(r.available, undefined);
+  assert.equal(r.notFound, false);
+  // oba 404 = soukromý repozitář
+  const priv = await checkForUpdate({ fetchFn: routes({ api: reply(404, {}), atom: reply(404, "") }), version: "1.0.44" });
+  assert.deepEqual([priv.notFound, priv.current], [true, 44]);
 });
