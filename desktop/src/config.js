@@ -17,6 +17,7 @@ const SOFASCORE_WEB = "https://www.sofascore.com";
 // Průběžné vydání s hotovou aplikací (vytváří ho workflow .github/workflows/tipy-windows.yml): kontrola nové verze a stažení.
 const RELEASE_API = "https://api.github.com/repos/vopasek1-wq/Jimmy/releases/tags/tipy-latest";
 const DOWNLOAD_URL = "https://github.com/vopasek1-wq/Jimmy/releases/download/tipy-latest/FotbalTipy.exe";
+const RELEASE_FEED = "https://github.com/vopasek1-wq/Jimmy/releases.atom"; // záloha, když GitHub API nejde (limit dotazů, blokace)
 
 // Obyčejné preferenční cookie webu Scores24 (jako by si je uživatel nastavil v nastavení):
 // desetinné kurzy místo amerických a pražské časové pásmo.
@@ -82,6 +83,6 @@ function leagueByKey(key) {
 
 module.exports = {
   MIN_PROBABILITY, MIN_ODDS, HIGH_PROBABILITY, ESTIMATED_MARGIN, DISPLAY_TZ,
-  SCORES24_BASE, SCORES24_URL, FOREBET_URL, SOFASCORE_API, SOFASCORE_WEB, RELEASE_API, DOWNLOAD_URL, SCORES24_COOKIES,
+  SCORES24_BASE, SCORES24_URL, FOREBET_URL, SOFASCORE_API, SOFASCORE_WEB, RELEASE_API, RELEASE_FEED, DOWNLOAD_URL, SCORES24_COOKIES,
   REQUEST_TIMEOUT_MS, REQUEST_DELAY_MS, REQUEST_RETRIES, LEAGUES, findLeague, leagueByKey,
 };

@@ -30,7 +30,9 @@ vydání **`tipy-latest`**:
    aplikaci a spusťte nový `FotbalTipy.exe`). Novou verzi lze vyhledat i hned tlačítkem **Aktualizace** vlevo dole: když je novější
    sestavení, tlačítko se změní na „Stáhnout verzi N“ a další klik otevře stažení; když ne, ukáže se, že máte nejnovější verzi
    (pod tlačítkem je číslo vašeho sestavení). Verze aplikace je `1.0.<číslo sestavení>` (workflow ho dosadí z čísla běhu).
-   Automatická kontrola běží jen v zabalené aplikaci a funguje až od sestavení, které ji obsahuje.
+   Zjišťuje se přes GitHub API a když to nejde (limit dotazů, blokace), přes Atom kanál vydání na github.com; při selhání obou cest
+   aplikace ukáže skutečný důvod (stav HTTP, chyba spojení). Automatická kontrola běží jen v zabalené aplikaci a funguje až od sestavení,
+   které ji obsahuje.
 
 Data (databáze `tipy.sqlite3`, nastavení okna) jsou ve `%APPDATA%\FotbalTipy`; vydání se nijak neváže na složku
 s `.exe`. Pro zkoušení lze složku přesměrovat proměnnou prostředí `TIPSTER_DATA_DIR`.

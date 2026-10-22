@@ -95,7 +95,7 @@ async function checkUpdate() {
   // vývojová verze (npm start) se nekontroluje, jen zabalená aplikace
   if (!app.isPackaged && !process.env.TIPSTER_UPDATE_TEST) return;
   const info = await checkForUpdate({ fetchFn: (url, init) => net.fetch(url, init), version: app.getVersion() });
-  if (!info || !info.available) return;
+  if (info.error || !info.available) return;
   const isNew = !update || update.latest !== info.latest;
   update = info;
   if (isNew && mainWindow && !mainWindow.webContents.isDestroyed()) mainWindow.webContents.send("update:available", info);
@@ -121,7 +121,7 @@ ipcMain.handle("tips:cached", safe(() => service.loadCached()));
 // Ruční kontrola (tlačítko „Aktualizace“): na rozdíl od automatické běží i ve vývojové verzi a chybu hlásí.
 ipcMain.handle("update:check", safe(async () => {
   const info = await checkForUpdate({ fetchFn: (url, init) => net.fetch(url, init), version: app.getVersion() });
-  if (!info) throw new Error("Kontrola nové verze se nepodařila. Zkontroluj připojení k internetu; když se právě sestavuje nová verze, zkus to za pár minut.");
+  if (info.error) throw new Error(info.error);
   if (info.available) update = info;
   return info;
 }));
