@@ -797,7 +797,7 @@ body { background: var(--bg); }
     radial-gradient(800px 560px at 8% 96%, rgba(20, 110, 230, 0.24), transparent 62%),
     linear-gradient(135deg, #02060d 0%, #04122a 48%, #020a18 100%);
 }
-/* lesklé světelné pruhy a skleněné koule za panely */
+/* skleněné koule za panely (jen měkké záře; tenké prstence a světelné pruhy se z pozadí odstranily, prosvítaly mezerami mezi panely jako čáry) */
 .app::before {
   content: "";
   position: fixed;
@@ -806,13 +806,9 @@ body { background: var(--bg); }
   pointer-events: none;
   background:
     radial-gradient(circle at 34% 30%, rgba(225, 248, 255, 0.85) 0, rgba(110, 200, 255, 0.30) 16%, rgba(20, 70, 130, 0.14) 46%, transparent 70%) left 4% top 74% / 190px 190px no-repeat,
-    radial-gradient(circle, transparent 62%, rgba(150, 225, 255, 0.40) 65%, transparent 70%) left 4% top 74% / 190px 190px no-repeat,
     radial-gradient(circle at 34% 30%, rgba(225, 248, 255, 0.80) 0, rgba(110, 200, 255, 0.28) 16%, rgba(20, 70, 130, 0.12) 46%, transparent 70%) right 2% top 34% / 140px 140px no-repeat,
-    radial-gradient(circle, transparent 62%, rgba(150, 225, 255, 0.36) 65%, transparent 70%) right 2% top 34% / 140px 140px no-repeat,
     radial-gradient(circle at 34% 30%, rgba(225, 248, 255, 0.75) 0, rgba(110, 200, 255, 0.26) 18%, transparent 68%) right 24% bottom 3% / 96px 96px no-repeat,
-    radial-gradient(circle at 34% 30%, rgba(225, 248, 255, 0.70) 0, rgba(110, 200, 255, 0.24) 18%, transparent 68%) left 44% top 2% / 64px 64px no-repeat,
-    linear-gradient(118deg, transparent 38%, rgba(90, 200, 255, 0.10) 46%, rgba(255, 255, 255, 0.05) 48%, transparent 56%),
-    linear-gradient(62deg, transparent 52%, rgba(40, 140, 255, 0.10) 60%, transparent 70%);
+    radial-gradient(circle at 34% 30%, rgba(225, 248, 255, 0.70) 0, rgba(110, 200, 255, 0.24) 18%, transparent 68%) left 44% top 2% / 64px 64px no-repeat;
 }
 
 /* Boční lišta a horní část jako sklo */
