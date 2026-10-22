@@ -11,7 +11,6 @@ contextBridge.exposeInMainWorld("desktop", {
     ipcRenderer.on("win:maximized", (_event, maximized) => callback(Boolean(maximized)));
   },
   openExternal: (url) => ipcRenderer.send("shell:open-external", url),
-  copyText: (text) => ipcRenderer.invoke("clipboard:write", text),
   appInfo: () => ipcRenderer.invoke("app:info"),
 
   tips: {

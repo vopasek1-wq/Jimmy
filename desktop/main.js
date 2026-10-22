@@ -1,7 +1,7 @@
 // Fotbalové tipy – hlavní proces Electronu (Windows desktop aplikace).
 "use strict";
 
-const { app, BrowserWindow, ipcMain, shell, screen, net, session, clipboard, safeStorage } = require("electron");
+const { app, BrowserWindow, ipcMain, shell, screen, net, session, safeStorage } = require("electron");
 const fs = require("node:fs");
 const path = require("node:path");
 
@@ -82,9 +82,8 @@ ipcMain.on("win:toggle-maximize", (e) => {
 ipcMain.on("win:close", (e) => senderWindow(e)?.close());
 
 ipcMain.on("shell:open-external", (_e, url) => { if (isHttpUrl(url)) shell.openExternal(String(url)); });
-ipcMain.handle("clipboard:write", (_e, text) => { clipboard.writeText(String(text)); return true; });
 ipcMain.handle("app:info", () => ({
-  version: app.getVersion(), dataDir: app.getPath("userData"), tipsportUrl: config.TIPSPORT_URL,
+  version: app.getVersion(), dataDir: app.getPath("userData"),
   leagues: config.LEAGUES.filter((l) => l.enabled).map((l) => ({ key: l.key, short: l.short, nameCs: l.nameCs })),
   limits: { minProbability: config.MIN_PROBABILITY, minOdds: config.MIN_ODDS, highProbability: config.HIGH_PROBABILITY },
 }));

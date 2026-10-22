@@ -14,7 +14,6 @@ const SCORES24_URL = `${SCORES24_BASE}/en/predictions/soccer`;
 const FOREBET_URL = "https://www.forebet.com/en/football-predictions";
 const SOFASCORE_API = "https://www.sofascore.com/api/v1";
 const SOFASCORE_WEB = "https://www.sofascore.com";
-const TIPSPORT_URL = "https://www.tipsport.cz/kurzy/fotbal";
 
 // Obyčejné preferenční cookie webu Scores24 (jako by si je uživatel nastavil v nastavení):
 // desetinné kurzy místo amerických a pražské časové pásmo.
@@ -80,6 +79,6 @@ function leagueByKey(key) {
 
 module.exports = {
   MIN_PROBABILITY, MIN_ODDS, HIGH_PROBABILITY, ESTIMATED_MARGIN, DISPLAY_TZ,
-  SCORES24_BASE, SCORES24_URL, FOREBET_URL, SOFASCORE_API, SOFASCORE_WEB, TIPSPORT_URL, SCORES24_COOKIES,
+  SCORES24_BASE, SCORES24_URL, FOREBET_URL, SOFASCORE_API, SOFASCORE_WEB, SCORES24_COOKIES,
   REQUEST_TIMEOUT_MS, REQUEST_DELAY_MS, REQUEST_RETRIES, LEAGUES, findLeague, leagueByKey,
 };

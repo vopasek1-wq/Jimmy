@@ -870,12 +870,6 @@
   const TK_NOTE = $("#tk-note").textContent;
   const kickoffShort = (iso) => fmtKickoff(iso);
 
-  function ticketText(t) {
-    const lines = [`Tiket – ${t.legs.length} tipy, celkový kurz ${nf2.format(t.totalOdds)}`];
-    t.legs.forEach((l, i) => lines.push(`${i + 1}) ${l.matchName} (${kickoffShort(l.kickoff)}): ${l.tipLabel} – kurz ${nf2.format(l.odds)}`));
-    return lines.join("\n");
-  }
-
   const busyText = () => `${tk.step || "Připravuji tikety…"} (${Math.round((Date.now() - tk.startedAt) / 1000)} s)`;
   const tickBusy = () => { const el = $("#tk-busy-text"); if (el) el.textContent = busyText(); };
 
@@ -904,7 +898,7 @@
       list.innerHTML = `<p class="empty tk-wide">${esc(msg)}</p>${omittedHtml(r)}`;
       return;
     }
-    list.innerHTML = r.tickets.map((t, i) => `<article class="tk-card" data-i="${i}">
+    list.innerHTML = r.tickets.map((t) => `<article class="tk-card">
       <div class="tk-head"><span class="tk-name">${esc(t.name)}</span>${t.verdict ? `<span class="tk-verdict tk-verdict--${t.verdict}">${CERTAINTY_CS[t.verdict] || ""}</span>` : ""}</div>
       <div class="tk-legs">${t.legs.map((l) => `<div class="tk-leg"><div class="tk-leg__row">
           <span class="tk-leg__match">${esc(l.matchName)}</span><span class="tk-leg__odds">${esc(nf2.format(l.odds))}</span>
@@ -916,10 +910,7 @@
         ${stat(`${t.expectedReturn > 0 ? "+" : t.expectedReturn < 0 ? "−" : ""}${nf1.format(Math.abs(t.expectedReturn))} %`, "odhad výnosu", t.expectedReturn > 0 ? "stat--pos" : t.expectedReturn < 0 ? "stat--neg" : "")}
       </div>
       ${t.summary ? `<p class="tk-summary"><span class="tk-summary__label">Zdůvodnění</span>${esc(t.summary)}</p>` : ""}
-      <div class="tk-actions">
-        <button class="btn btn--ghost btn--sm" type="button" data-tkact="copy"><i data-lucide="copy"></i>Kopírovat tiket</button>
-        <button class="btn btn--ghost btn--sm" type="button" data-tkact="tipsport"><i data-lucide="external-link"></i>Tipsport</button>
-      </div></article>`).join("") + omittedHtml(r);
+      </article>`).join("") + omittedHtml(r);
     const parts = [`Z ${r.analyzed} zápasů z přehledu${r.at ? ` (${r.at})` : ""}`];
     if (r.covered < r.analyzed) parts.push(`statistiky se našly k ${r.covered}`);
     if (r.rejected) parts.push(`${r.rejected} ${r.rejected === 1 ? "tiket navržený" : "tiketů navržených"} AI porušil${r.rejected === 1 ? "" : "o"} pravidla a ${r.rejected === 1 ? "byl zahozen" : "bylo zahozeno"}`);
@@ -974,19 +965,6 @@
     tk.result = res.ok ? { ...res.data, at: fmtKickoff(new Date().toISOString()) } : { error: res.error };
     if (res.ok) store.set("tk-result2", tk.result);
     renderTickets();
-  });
-
-  $("#tk-list").addEventListener("click", async (e) => {
-    const btn = e.target.closest("button[data-tkact]");
-    const card = e.target.closest(".tk-card");
-    if (!btn || !card) return;
-    const t = tk.result?.tickets?.[Number(card.dataset.i)];
-    if (!t) return;
-    if (btn.dataset.tkact === "copy") {
-      if (desktop) await desktop.copyText(ticketText(t));
-      else { try { await navigator.clipboard.writeText(ticketText(t)); } catch { /* bez schránky */ } }
-      toast("Tiket je zkopírovaný – vlož ho do Tipsportu.");
-    } else openExternal("https://www.tipsport.cz/");
   });
 
   /* ---------- Analýza úspěšnosti tipů (+ AI) ---------- */

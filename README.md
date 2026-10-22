@@ -118,8 +118,8 @@ Zvolíš den (Dnes / Zítra) a klikneš na **Vytvořit tikety (AI)** – počet 
 
 Pravidla, která aplikace u odpovědi **kontroluje** (tiket, který je porušuje, zahodí): 2–5 zápasů na tiket, kombinovaný kurz alespoň 2,00,
 každý zápas nejvýš v jednom tiketu a žádné neznámé tipy. U každého tiketu je krátké **zdůvodnění** (2–4 věty) s odkazem na formu týmů a
-statistiky a úroveň jistoty; **celkový kurz, pravděpodobnost (součin) a odhad výnosu počítá aplikace sama**. Tlačítko *Kopírovat tiket*
-připraví text pro přepsání do Tipsportu. Používá se stejný Gemini klíč jako v Analýze; poslední tikety zůstanou po restartu.
+statistiky a úroveň jistoty; **celkový kurz, pravděpodobnost (součin) a odhad výnosu počítá aplikace sama**. Používá se stejný Gemini klíč
+jako v Analýze; poslední tikety zůstanou po restartu.
 
 Statistiky se záměrně nehledají přes „vyhledávání na webu“ v Gemini API (Grounding with Google Search) – to u **bezplatného klíče** u novějších
 modelů není k dispozici. Gemini proto dostane jen běžný textový dotaz, který zdarma funguje. Když Google dotaz odmítne, aplikace ukáže skutečný
