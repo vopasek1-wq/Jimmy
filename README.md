@@ -44,7 +44,7 @@ s `.exe`. Pro zkoušení lze složku přesměrovat proměnnou prostředí `TIPST
 
 ## Vzhled
 
-Aplikace má „skleněný“ vzhled (verze 3): tmavé lesklé pozadí se světélkujícími koulemi, průhledné rozmazané panely se zářivými rohy
+Aplikace má „skleněný“ vzhled (verze 3): tmavé pozadí, průhledné rozmazané panely se zářivými rohy
 a tlumeně modrá tlačítka bez záře. Styly jsou v `desktop/renderer/styles.css` (poslední sekce „Skleněný vzhled“, barvy v tokenech na začátku souboru).
 
 ## Ovládání
