@@ -1,6 +1,7 @@
 // Služba aplikace: spojuje databázi, stahování a vyhodnocení výsledků a připravuje data pro okno.
 "use strict";
 
+const fs = require("node:fs");
 const path = require("node:path");
 const config = require("./config");
 const { Database } = require("./database");
@@ -130,6 +131,17 @@ class TipService {
   /** Statistiky zápasů (forma, H2H, góly, zranění) ze SofaScore pro tikety; ladicí soubor jde do složky `ladeni`. */
   collectTicketStats(candidates, progress = () => {}) {
     return new MatchStats(this.http, { debugDir: path.join(this.dataDir, "ladeni") }).collect(candidates, progress);
+  }
+
+  /** Ladicí soubor s posledním zadáním a odpovědí Gemini pro tikety (přepisuje se). */
+  writeTicketLog(text) {
+    try {
+      const dir = path.join(this.dataDir, "ladeni");
+      fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(path.join(dir, "tikety-odpoved.txt"), text, "utf8");
+    } catch {
+      /* ladicí soubor není nutný */
+    }
   }
 
   /** Kde je ladicí soubor se statistikami pro tikety (pro hlášky o chybách). */

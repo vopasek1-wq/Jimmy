@@ -893,5 +893,13 @@ body { background: var(--bg); }
 .tk-busy__text { font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; }
 .tk-busy__hint { max-width: 520px; font-size: 12px; line-height: 1.5; color: var(--muted); }
 .tk-actions { display: flex; gap: 8px; margin-top: 10px; }
+.tk-list > .tk-wide { grid-column: 1 / -1; }
+.tk-omitted { padding: 10px 16px; background: var(--panel); border: 1px solid var(--border-2); border-radius: 14px; }
+.tk-omitted summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text-2); }
+.tk-omitted ul { list-style: none; margin: 10px 0 2px; padding: 0; }
+.tk-omitted li { display: grid; grid-template-columns: minmax(170px, 1.1fr) minmax(150px, 0.9fr) minmax(0, 2fr); gap: 2px 16px; padding: 7px 0; border-top: 1px solid var(--line); font-size: 12.5px; line-height: 1.4; }
+.tk-omitted__match { font-weight: 500; }
+.tk-omitted__tip { color: var(--text-2); font-variant-numeric: tabular-nums; }
+.tk-omitted__why { color: var(--muted); }
 .tk-card .stat { padding: 8px 10px 7px; }
 .tk-card .stat__value { font-size: 20px; }

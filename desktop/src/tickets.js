@@ -51,19 +51,22 @@ function buildTicketPrompt(candidates, stats, { calibration = null, now = new Da
     + `domácí výkonnost domácího týmu a venkovní výkonnost hostů a zranění či absence hráčů. Posuď, jestli tyto statistiky podporují právě tip u zápasu. `
     + `Legenda: V = výhra, R = remíza, P = prohra; forma a seznam zápasů jsou od nejnovějšího; „dal“ a „obdrzel“ jsou průměry vstřelených a obdržených gólů na zápas; `
     + `„doma“ je výkonnost domácího týmu v jeho posledních domácích zápasech, „venku“ výkonnost hostů v jejich posledních venkovních zápasech.\n\n`
+    + `POSTUP:\n`
+    + `1. U každého zápasu posuď, jak statistiky podporují tip u zápasu: SILNÁ (forma, H2H, góly a domácí/venkovní výkonnost tip jasně podporují), STŘEDNÍ (většina údajů tip podporuje a nic mu výrazně neodporuje), SLABÁ (údaje si odporují nebo tip podporují jen málo) nebo NEDOSTATEČNÁ DATA (chybí klíčové údaje).\n`
+    + `2. Do tiketů zařaď zápasy s podporou SILNÁ a STŘEDNÍ. SLABÁ a NEDOSTATEČNÁ DATA nezařazuj – vyhýbej se riskantním sázkám bez datové opory.\n`
+    + `3. Zařazené zápasy rozděl do tiketů logicky: nejjistější (SILNÁ) tipy seskupuj dohromady do prvního tiketu, další tikety skládej z méně jistých. Je-li zápasů s dostatečnou oporou víc, vytvoř víc tiketů – zápas nenech bez tiketu jen proto, že není mezi nejlepšími.\n\n`
     + `PRAVIDLA:\n`
-    + `- Vyber pouze sázky s dobrou pravděpodobností úspěchu podle statistik. Zápas, u kterého nejsou statistiky dostatečné nebo tip nepodporují, do žádného tiketu nezařazuj. Vyhýbej se riskantním sázkám bez datové opory.\n`
-    + `- Vybrané zápasy rozděl do tiketů logicky: nejjistější tipy seskupuj dohromady (první tiket je nejjistější, další jsou méně jisté).\n`
     + `- Maximálně ${MAX_LEGS} zápasy na tiket, minimálně ${MIN_LEGS}.\n`
     + `- Minimální kombinovaný kurz tiketu (součin kurzů tipů) je ${MIN_TOTAL_ODDS.toFixed(2)}. Tiket, který to nesplňuje, nevytvářej.\n`
-    + `- Každý zápas smí být nejvýš v jednom tiketu.\n`
+    + `- Každý zápas smí být nejvýš v jednom tiketu (tikety se v zápasech nepřekrývají).\n`
     + `- Zdůvodnění tiketu: 2–4 věty, stručné, věcné a srozumitelné pro běžného sázkaře; odkaž na formu týmů, vzájemné zápasy, góly, zranění nebo domácí/venkovní výkonnost z dodaných statistik. Nepřidávej čísla ani fakta, která ve statistikách nejsou. Chybějící údaj (zraneni není uvedeno) nic nedokazuje.\n`
+    + `- U každého zápasu, který v žádném tiketu není, uveď v poli "vynechane" jeho id a důvod (nejvýš 12 slov, např. „forma hostů tip nepodporuje“, „chybí údaje o H2H i zraněních“).\n`
     + `- Piš česky.\n`
     + `- Pokud žádný tiket pravidla nesplňuje, vrať prázdné pole "tikety" a v "poznamka" stručně napiš proč.\n\n`
     + `${calibrationLine(calibration)} Pravděpodobnost v nabídce je odhad zdroje, ne kalibrovaná šance.\n\n`
     + `NABÍDKA SE STATISTIKAMI (JSON): ${JSON.stringify(rows)}\n\n`
     + `Odpověz POUZE JSON podle tohoto tvaru (česky, bez dalšího textu):\n`
-    + `{"tikety":[{"nazev":"Tiket 1","jistota":"vysoka|stredni|nizsi","zduvodneni":"2–4 věty","tipy":["t1","t4"]}],"poznamka":""}`;
+    + `{"tikety":[{"nazev":"Tiket 1","jistota":"vysoka|stredni|nizsi","zduvodneni":"2–4 věty","tipy":["t1","t4"]}],"vynechane":[{"id":"t2","duvod":"max. 12 slov"}],"poznamka":""}`;
 }
 
 /** Vytáhne JSON i z odpovědi obalené v ```json … ```. */
@@ -81,10 +84,27 @@ function parseJson(text) {
   }
 }
 
+const cleanId = (x) => String(x || "").replace(/[[\]\s]/g, "").toLowerCase();
+
+/** Pole `vynechane` od AI → Map id → důvod; přijme pole objektů { id, duvod }, řetězce „t2: důvod“ i objekt { t2: "důvod" }. */
+function parseSkipped(raw) {
+  const out = new Map();
+  const add = (id, why) => { const k = cleanId(id); if (k && !out.has(k)) out.set(k, String(why || "").trim()); };
+  if (Array.isArray(raw)) {
+    for (const x of raw) {
+      if (x && typeof x === "object") add(x.id, x.duvod || x.reason || x.dovod);
+      else { const m = /^\s*\[?(t\d+)\]?\s*[:\-–—]?\s*(.*)$/i.exec(String(x)); if (m) add(m[1], m[2]); }
+    }
+  } else if (raw && typeof raw === "object") {
+    for (const [id, why] of Object.entries(raw)) add(id, why);
+  }
+  return out;
+}
+
 /**
  * Zkontroluje odpověď AI a dopočítá čísla. Zahodí tikety s neznámým tipem, špatným počtem zápasů (2–5),
  * zápasem použitým už v dřívějším tiketu nebo s kombinovaným kurzem pod minimem.
- * Vrací { tickets, note, rejected: [důvod, …] }.
+ * Vrací { tickets, note, rejected: [důvod, …], dropped: Map id → důvod zahození tiketu, skipped: Map id → důvod vynechání od AI }.
  */
 function parseTickets(text, candidates) {
   const data = parseJson(text) || {};
@@ -93,10 +113,14 @@ function parseTickets(text, candidates) {
   const usedMatches = new Set();
   const tickets = [];
   const rejected = [];
+  const dropped = new Map();
   (Array.isArray(list) ? list : []).forEach((raw, i) => {
     const name = String((raw && (raw.nazev || raw.name)) || `Tiket ${i + 1}`).trim();
-    const reject = (why) => rejected.push(`${name}: ${why}`);
-    const items = ((raw && (raw.tipy || raw.legs)) || []).map((x) => String(x && typeof x === "object" ? x.id : x).replace(/[[\]\s]/g, "").toLowerCase());
+    const items = ((raw && (raw.tipy || raw.legs)) || []).map((x) => cleanId(x && typeof x === "object" ? x.id : x));
+    const reject = (why) => {
+      rejected.push(`${name}: ${why}`);
+      for (const id of items) if (byId.has(id) && !dropped.has(id)) dropped.set(id, why);
+    };
     if (items.length < MIN_LEGS || items.length > MAX_LEGS) return reject(`${items.length} zápasů (povoleno ${MIN_LEGS}–${MAX_LEGS})`);
     const picked = [];
     const keys = new Set();
@@ -127,15 +151,42 @@ function parseTickets(text, candidates) {
       expectedReturn: Math.round((prob * odds - 1) * 1000) / 10, // v % vsazené částky, jen odhad
     });
   });
-  return { tickets, note: String(data.poznamka || data.note || "").trim(), rejected };
+  return { tickets, note: String(data.poznamka || data.note || "").trim(), rejected, dropped, skipped: parseSkipped(data.vynechane || data.skipped) };
+}
+
+/** Zápasy, které skončily mimo tikety, každý s důvodem (od AI, nebo z toho, co se s ním v aplikaci stalo). */
+function omittedMatches(candidates, usableIds, parsed) {
+  const keyOf = (c) => `${c.home}|${c.away}|${c.kickoff}`;
+  const byId = new Map(candidates.map((c) => [c.ticketId, c]));
+  const usedIds = new Set(parsed.tickets.flatMap((t) => t.legs.map((l) => l.id)));
+  const usedKeys = new Set([...usedIds].map((id) => keyOf(byId.get(id))));
+  const out = [];
+  for (const c of candidates) {
+    if (usedIds.has(c.ticketId)) continue;
+    let kind;
+    let reason;
+    if (!usableIds.has(c.ticketId)) {
+      [kind, reason] = ["nodata", c.sofascoreId ? "statistiky ze SofaScore se nepodařilo stáhnout" : "zápas se nepodařilo najít na SofaScore"];
+    } else if (usedKeys.has(keyOf(c))) {
+      [kind, reason] = ["same", "zápas je už v tiketu s jiným tipem"];
+    } else if (parsed.skipped.get(c.ticketId)) {
+      [kind, reason] = ["model", parsed.skipped.get(c.ticketId)];
+    } else if (parsed.dropped.has(c.ticketId)) {
+      [kind, reason] = ["rule", `navržený tiket byl zahozen (${parsed.dropped.get(c.ticketId)})`];
+    } else {
+      [kind, reason] = ["model", "Gemini ho do žádného tiketu nezařadil a nezdůvodnil proč"];
+    }
+    out.push({ id: c.ticketId, matchName: c.matchName, tipLabel: c.tipLabel, odds: c.odds, probability: c.probability, kickoff: c.kickoff, kind, reason });
+  }
+  return out;
 }
 
 /**
  * Celý postup: statistiky ze SofaScore → sestavení tiketů v Gemini. `collect(candidates, progress)` stáhne statistiky
  * (matchstats.js), `ask` je funkce `generate` z analysis.js (s klíčem a síťovou funkcí), `progress` dostává zprávy o průběhu.
- * Vrací { tickets, note, analyzed, covered }.
+ * Vrací { tickets, note, analyzed, covered, rejected, omitted } (omitted = zápasy mimo tikety s důvodem; `log` dostane text pro ladicí soubor).
  */
-async function createTickets({ candidates, collect, ask, calibration = null, progress = () => {}, now = new Date(), hint = "" }) {
+async function createTickets({ candidates, collect, ask, calibration = null, progress = () => {}, now = new Date(), hint = "", log = () => {} }) {
   if (candidates.length < MIN_LEGS) {
     throw new Error(`Na tikety je málo vhodných tipů (${candidates.length}): potřebuju alespoň ${MIN_LEGS}, které ještě nezačaly a mají skutečný kurz. Zkus jiný den, nebo nejdřív stáhni tipy.`);
   }
@@ -150,18 +201,24 @@ async function createTickets({ candidates, collect, ask, calibration = null, pro
   progress("Gemini vyhodnocuje statistiky a sestavuje tikety…");
   const prompt = buildTicketPrompt(usable, data.stats, { calibration, now });
   let parsed = null;
+  let text = "";
   for (let attempt = 0; !parsed; attempt += 1) {
-    const reply = await ask({ prompt, json: true, temperature: null, maxTokens: 8000, timeoutMs: ASSEMBLE_TIMEOUT });
+    text = (await ask({ prompt, json: true, temperature: null, maxTokens: 8000, timeoutMs: ASSEMBLE_TIMEOUT })).text;
     try {
-      parsed = parseTickets(reply.text, usable);
+      parsed = parseTickets(text, usable);
     } catch (err) {
-      if (attempt) throw err;      // neplatný JSON: jeden další pokus
+      if (attempt) { log(`Tikety – ${new Date().toISOString()}\nNeplatná odpověď Gemini:\n${text}\n`); throw err; }      // neplatný JSON: jeden další pokus
     }
   }
+  log([`Tikety – ${new Date().toISOString()}`, `Zápasů: ${candidates.length}, se statistikami: ${usable.length}, tiketů: ${parsed.tickets.length}, zahozených: ${parsed.rejected.length}`, "",
+    "=== ODPOVĚĎ GEMINI ===", text, "", "=== ZAHOZENÉ TIKETY ===", ...parsed.rejected, "", "=== ZADÁNÍ ===", prompt, ""].join("\n"));
   if (!parsed.tickets.length && parsed.rejected.length) {
     throw new Error(`AI navrhla tikety, které nesplňují pravidla (${parsed.rejected.slice(0, 3).join("; ")}). Zkus to znovu.`);
   }
-  return { tickets: parsed.tickets, note: parsed.note, analyzed: candidates.length, covered: usable.length };
+  return {
+    tickets: parsed.tickets, note: parsed.note, analyzed: candidates.length, covered: usable.length, rejected: parsed.rejected.length,
+    omitted: omittedMatches(candidates, new Set(usable.map((c) => c.ticketId)), parsed),
+  };
 }
 
 module.exports = {

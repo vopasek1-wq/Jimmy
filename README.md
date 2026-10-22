@@ -109,9 +109,12 @@ Zvolíš den (Dnes / Zítra) a klikneš na **Vytvořit tikety (AI)** – počet 
    (H2H), střeleckou produktivitu (góly na zápas), domácí výkonnost domácího a venkovní výkonnost hostujícího týmu a zranění/absence hráčů.
    Zápas, ke kterému statistiky nejdou stáhnout (např. nemá SofaScore ID), se do tiketů nedostane. Průběh a uplynulý čas jsou vidět v okně
    (celé to trvá obvykle do dvou minut). Podrobnosti o tom, co se stáhlo, jsou v souboru `ladeni\tikety-statistiky.txt` ve složce dat aplikace.
-2. **Gemini vybírá.** Jediný dotaz do Gemini dostane tipy se statistikami a posoudí, jestli statistiky podporují právě daný tip. Vybere jen
-   sázky s dobrou pravděpodobností úspěchu, zápasy bez dostatečné opory v datech vynechá a ostatní rozdělí do tiketů tak, že nejjistější
-   tipy jsou pohromadě (první tiket je nejjistější). Tipy samotné **neupravuje** (nemění typ sázky ani kurz), jen je hodnotí.
+2. **Gemini vybírá.** Jediný dotaz do Gemini dostane tipy se statistikami. U každého zápasu posoudí, jak statistiky podporují právě daný tip
+   (silná / střední / slabá / nedostatečná data). Do tiketů zařadí zápasy se silnou a střední oporou, slabé a bez dat vynechá a zařazené
+   rozdělí tak, že nejjistější tipy jsou pohromadě (první tiket je nejjistější). Tipy samotné **neupravuje** (nemění typ sázky ani kurz),
+   jen je hodnotí. Pod tikety je rozbalovací seznam **Nezařazeno do tiketů – proč?**: u každého zápasu, který v tiketu není, je důvod
+   (od Gemini, nebo že se k němu statistiky nepodařilo stáhnout / tiket byl zahozen pro porušení pravidel). Poslední zadání a odpověď
+   Gemini jsou v souboru `ladeni\tikety-odpoved.txt`.
 
 Pravidla, která aplikace u odpovědi **kontroluje** (tiket, který je porušuje, zahodí): 2–5 zápasů na tiket, kombinovaný kurz alespoň 2,00,
 každý zápas nejvýš v jednom tiketu a žádné neznámé tipy. U každého tiketu je krátké **zdůvodnění** (2–4 věty) s odkazem na formu týmů a

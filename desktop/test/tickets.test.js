@@ -33,7 +33,8 @@ test("buildTicketPrompt: pravidla, tipy a jejich statistiky", () => {
   const c = candidatesFrom([at(2, { tipLabel: "Více než 2,5 gólu" }), at(3)], { now: NOW });
   const stats = { t1: { forma_domaci: { forma: "V V R V P" }, h2h: { zapasu: 3 } }, t2: { forma_domaci: { forma: "P P R V V" } } };
   const p = buildTicketPrompt(c, stats, { calibration: null, now: NOW });
-  for (const need of ["Maximálně 5 zápasy na tiket", "2.00", "nejjistější tipy seskupuj dohromady", "2–4 věty", "Piš česky", "nejvýš v jednom tiketu",
+  for (const need of ["Maximálně 5 zápasy na tiket", "2.00", "seskupuj dohromady", "SILNÁ", "STŘEDNÍ", "SLABÁ", "NEDOSTATEČNÁ DATA", "vytvoř víc tiketů", '"vynechane"',
+    "2–4 věty", "Piš česky", "nejvýš v jednom tiketu",
     "21. 10. 2026", "ze SofaScore", "posledních 5 zápasů", "vzájemné zápasy (H2H)", "střelecká produktivita", "zranění", "domácí výkonnost", "Legenda: V = výhra, R = remíza, P = prohra", "Zatím nemám dost",
     '"id":"t1"', '"tip":"Více než 2,5 gólu"', '"forma":"V V R V P"', '"h2h":{"zapasu":3}']) {
     assert.ok(p.includes(need), need);
@@ -90,6 +91,19 @@ test("parseTickets: zahodí tikety, které nesplňují pravidla", () => {
   const same = parseTickets(json({ tikety: [{ nazev: "S", tipy: [d2, d2btts] }] }), c);
   assert.equal(same.tickets.length, 0);
   assert.match(same.rejected[0], /dva tipy ze stejného zápasu/);
+});
+
+test("parseTickets: důvody vynechání od AI (pole, řetězce i objekt) a zápasy ze zahozených tiketů", () => {
+  const c = candidatesFrom([at(2), at(3), at(4), at(5)], { now: NOW });
+  const [a, b, d, e] = c.map((x) => x.ticketId);
+  const arr = parseTickets(json({ tikety: [{ tipy: [a, b] }, { nazev: "špatný", tipy: [d, "t99"] }], vynechane: [{ id: d, duvod: "forma hostů tip nepodporuje" }, { id: `[${e.toUpperCase()}]`, duvod: " chybí H2H " }, { id: "t99", duvod: "x" }] }), c);
+  assert.deepEqual([...arr.skipped], [[d, "forma hostů tip nepodporuje"], [e, "chybí H2H"], ["t99", "x"]]);
+  assert.deepEqual([...arr.dropped.keys()], [d]);          // jen známé tipy ze zahozeného tiketu
+  const str = parseTickets(json({ tikety: [], vynechane: [`${a}: málo dat`, `${b} - slabá forma`, "nesmysl"] }), c);
+  assert.deepEqual([...str.skipped], [[a, "málo dat"], [b, "slabá forma"]]);
+  const obj = parseTickets(json({ tikety: [], vynechane: { [a]: "důvod A" } }), c);
+  assert.deepEqual([...obj.skipped], [[a, "důvod A"]]);
+  assert.equal(parseTickets(json({ tikety: [] }), c).skipped.size, 0);
 });
 
 test("parseTickets: prázdný výsledek s poznámkou a nevalidní JSON", () => {
@@ -172,4 +186,39 @@ test("createTickets: žádný vhodný tiket (s poznámkou), neplatný JSON se zo
 
   const limit = fakes({ ...base, replies: [new Error("Vyčerpaný denní limit Gemini API")] });
   await assert.rejects(() => createTickets({ candidates: c, collect: limit.collect, ask: limit.ask, now: NOW }), /Vyčerpaný denní limit/);
+});
+
+test("createTickets: nezařazené zápasy mají důvod (AI, bez statistik, jiný tip téhož zápasu, zahozený tiket) a ladicí soubor dostane odpověď", async () => {
+  const c = candidatesFrom([at(2), at(3), at(4), at(5), at(6), at(7, { sofascoreId: null }), at(8, { home: "D2", away: "H2", matchName: "D2 – H2", kickoff: at(2).kickoff, tipLabel: "Oba týmy dají gól – ano" })], { now: NOW });
+  const idOf = (home, label) => c.find((x) => x.home === home && (!label || x.tipLabel === label)).ticketId;
+  const [d2, d3, d4, d5, d6, d7] = ["D2", "D3", "D4", "D5", "D6", "D7"].map((h) => idOf(h));
+  const d2btts = idOf("D2", "Oba týmy dají gól – ano");
+  // statistiky mají všechny kromě D6 a D7 (D7 nemá ani SofaScore ID)
+  const f = fakes({
+    covered: [d2, d3, d4, d5, d2btts],
+    replies: [json({
+      tikety: [{ nazev: "Tiket 1", jistota: "vysoka", zduvodneni: "ok", tipy: [d2, d3] }, { nazev: "Tiket 2", tipy: [d4, "t99"] }],
+      vynechane: [{ id: d5, duvod: "forma domácích tip nepodporuje" }],
+    })],
+  });
+  const logs = [];
+  const r = await createTickets({ candidates: c, collect: f.collect, ask: f.ask, now: NOW, log: (t) => logs.push(t) });
+  assert.equal(r.tickets.length, 1);
+  assert.equal(r.rejected, 1);
+  const why = Object.fromEntries(r.omitted.map((o) => [o.id, [o.kind, o.reason]]));
+  assert.deepEqual(why[d4], ["rule", "navržený tiket byl zahozen (neznámý tip t99)"]);
+  assert.deepEqual(why[d5], ["model", "forma domácích tip nepodporuje"]);
+  assert.deepEqual(why[d6], ["nodata", "statistiky ze SofaScore se nepodařilo stáhnout"]);
+  assert.deepEqual(why[d7], ["nodata", "zápas se nepodařilo najít na SofaScore"]);
+  assert.deepEqual(why[d2btts], ["same", "zápas je už v tiketu s jiným tipem"]);
+  assert.equal(r.omitted.length, 5);               // 7 zápasů − 2 v tiketu
+  assert.equal(logs.length, 1);
+  assert.match(logs[0], /=== ODPOVĚĎ GEMINI ===\n\{"tikety"/);
+  assert.match(logs[0], /=== ZAHOZENÉ TIKETY ===\nTiket 2: neznámý tip t99/);
+  assert.match(logs[0], /=== ZADÁNÍ ===\nZ nabídky níže sestav tikety/);
+
+  // AI zápas nezmínila ani nezařadila → obecný důvod
+  const silent = fakes({ covered: [d2, d3, d4], replies: [json({ tikety: [{ tipy: [d2, d3] }] })] });
+  const r2 = await createTickets({ candidates: c.slice(0, 3), collect: silent.collect, ask: silent.ask, now: NOW });
+  assert.match(r2.omitted[0].reason, /nezařadil a nezdůvodnil/);
 });

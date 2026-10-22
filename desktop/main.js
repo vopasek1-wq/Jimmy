@@ -136,6 +136,7 @@ ipcMain.handle("tickets:create", safe(async (event, req) => {
     candidates, calibration, ask, progress,
     collect: (list, report) => service.collectTicketStats(list, report),
     hint: ` Podrobnosti: ${service.ticketDiagnosticsFile()}`,
+    log: (text) => service.writeTicketLog(text),
   });
 }));
 ipcMain.handle("tips:live", safe(() => service.refreshLive()));

@@ -879,6 +879,12 @@
   const busyText = () => `${tk.step || "Připravuji tikety…"} (${Math.round((Date.now() - tk.startedAt) / 1000)} s)`;
   const tickBusy = () => { const el = $("#tk-busy-text"); if (el) el.textContent = busyText(); };
 
+  /** Seznam zápasů, které skončily mimo tikety, každý s důvodem (rozbalovací). */
+  const omittedHtml = (r) => (r && r.omitted && r.omitted.length
+    ? `<details class="tk-omitted tk-wide"><summary>Nezařazeno do tiketů: ${r.omitted.length} z ${r.analyzed} zápasů – proč?</summary><ul>${r.omitted.map((o) => `<li>
+        <span class="tk-omitted__match">${esc(o.matchName)}</span><span class="tk-omitted__tip">${esc(o.tipLabel)} · ${esc(nf2.format(o.odds))}</span><span class="tk-omitted__why">${esc(o.reason)}</span></li>`).join("")}</ul></details>`
+    : "");
+
   function renderTickets() {
     $$("#tk-day [data-tkday]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.tkday === tk.day)));
     $("#tk-key-label").textContent = tk.hasKey ? "Gemini klíč uložen" : "Gemini API klíč";
@@ -895,7 +901,7 @@
       const msg = r && r.error ? r.error
         : r && r.tickets ? `Gemini nenašel žádné tipy s dostatečnou oporou ve statistikách, žádný tiket nevznikl.${r.note ? ` ${r.note}` : ""}`
           : "Zatím žádné tikety. Zvol den a klikni na „Vytvořit tikety (AI)“.";
-      list.innerHTML = `<p class="empty">${esc(msg)}</p>`;
+      list.innerHTML = `<p class="empty tk-wide">${esc(msg)}</p>${omittedHtml(r)}`;
       return;
     }
     list.innerHTML = r.tickets.map((t, i) => `<article class="tk-card" data-i="${i}">
@@ -913,9 +919,10 @@
       <div class="tk-actions">
         <button class="btn btn--ghost btn--sm" type="button" data-tkact="copy"><i data-lucide="copy"></i>Kopírovat tiket</button>
         <button class="btn btn--ghost btn--sm" type="button" data-tkact="tipsport"><i data-lucide="external-link"></i>Tipsport</button>
-      </div></article>`).join("");
+      </div></article>`).join("") + omittedHtml(r);
     const parts = [`Z ${r.analyzed} zápasů z přehledu${r.at ? ` (${r.at})` : ""}`];
     if (r.covered < r.analyzed) parts.push(`statistiky se našly k ${r.covered}`);
+    if (r.rejected) parts.push(`${r.rejected} ${r.rejected === 1 ? "tiket navržený" : "tiketů navržených"} AI porušil${r.rejected === 1 ? "" : "o"} pravidla a ${r.rejected === 1 ? "byl zahozen" : "bylo zahozeno"}`);
     note.textContent = `${parts.join(" · ")}. Pravděpodobnost je součin odhadů zdroje – bývá optimistická; kurzy u Tipsportu se mohou lišit a výnos není zaručen. Sázení je jen pro 18+.`;
     renderIcons();
   }
