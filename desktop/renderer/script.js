@@ -678,7 +678,7 @@
 
 
   /* ---------- Živé zápasy (SofaScore) ---------- */
-  const live = { list: [], all: store.get("live-all") === true, selected: null, detail: null, timer: 0, error: null, loaded: false };
+  const live = { list: [], selected: null, detail: null, timer: 0, error: null, loaded: false };
   const liveListEl = $("#live-list");
   const liveDetailEl = $("#live-detail");
 
@@ -686,12 +686,11 @@
 
   function renderLiveList() {
     renderCats();
-    $("#live-all").setAttribute("aria-pressed", String(live.all));
-    const shown = (live.all ? live.list : live.list.filter((m) => m.tracked)).filter((m) => !state.league || m.leagueKey === state.league);
+    const shown = live.list.filter((m) => m.tracked && (!state.league || m.leagueKey === state.league));
     $("#live-note").textContent = live.loaded ? `${shown.length} ${shown.length === 1 ? "zápas" : shown.length < 5 && shown.length ? "zápasy" : "zápasů"}` : "";
     if (!shown.length) {
       liveListEl.innerHTML = `<p class="empty">${esc(live.error ? `Živé zápasy se nepodařilo načíst: ${live.error}` : !live.loaded ? "Načítám živé zápasy…"
-        : live.all ? "Právě se nehraje žádný zápas." : "Právě se nehraje žádný zápas ve sledovaných soutěžích. Zkus „Všechny soutěže“.")}</p>`;
+        : "Právě se nehraje žádný zápas ve sledovaných soutěžích.")}</p>`;
       return;
     }
     let group = "";
@@ -815,11 +814,6 @@
     renderLiveDetail();
     loadLiveDetail();
   });
-  $("#live-all").addEventListener("click", () => {
-    live.all = !live.all;
-    store.set("live-all", live.all);
-    renderLiveList();
-  });
   $("#live-open").addEventListener("click", (e) => openExternal(e.currentTarget.dataset.url));
 
 
@@ -835,7 +829,7 @@
     const view = app.dataset.view;
     const counts = {};
     let list = [];
-    if (view === "live") list = live.all ? live.list : live.list.filter((m) => m.tracked);
+    if (view === "live") list = live.list.filter((m) => m.tracked);
     else if (view === "history") list = (state.history?.tips || []).filter(matchesQuery);
     else {
       const today = localDay(new Date());

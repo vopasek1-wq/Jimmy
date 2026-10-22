@@ -24,7 +24,7 @@ let mainWindow = null;
 let service = null;
 
 function createWindow() {
-  // Velikost podle návrhu, ale nikdy větší než pracovní plocha monitoru.
+  // Okno se vždy otevře maximalizované; velikost podle návrhu (nikdy větší než pracovní plocha) platí, až když ho uživatel zmenší.
   const { workAreaSize } = screen.getPrimaryDisplay();
   const width = Math.min(DESIGN_SIZE.width, workAreaSize.width);
   const height = Math.min(DESIGN_SIZE.height, workAreaSize.height);
@@ -48,7 +48,7 @@ function createWindow() {
     },
   });
 
-  if (width < DESIGN_SIZE.width || height < DESIGN_SIZE.height) mainWindow.maximize();
+  mainWindow.maximize();
   mainWindow.once("ready-to-show", () => mainWindow.show());
 
   const sendMaximized = () => mainWindow.webContents.send("win:maximized", mainWindow.isMaximized());
