@@ -149,6 +149,12 @@ sázky): úspěšnost po pásmech 60–70 / 70–80 / 80–90 / 90–100 %, podl
 a ROI. Pod tabulkami jsou textová **zjištění** (např. „tipy s pravděpodobností 80–90 % vycházejí jen v 50 % případů“); u malého
 počtu tipů (pod 30) aplikace upozorní, že závěry jsou orientační.
 
+Panel **Bankroll** ukazuje, kolik bys měl, kdybys od zadané počáteční částky sázel **stálý vklad** na každý vyhodnocený tip
+(nebo tiket od Gemini): bankroll nyní, zisk, ROI z vsazeného, největší propad, nejdelší série proher a graf vývoje v čase. Počítají se
+jen sázky se skutečným kurzem, vrácené se přeskakují. Nastavení (počáteční bankroll, vklad na tip a na tiket) se pamatuje. V detailu
+tipu je navíc **Doporučený vklad**: čtvrtinový Kellyho vklad z bankrollu „nyní“, nejvýš 5 % bankrollu; když kurz nemá oproti odhadu
+pravděpodobnosti výhodu, napíše „žádný“. Pravděpodobnost je jen odhad zdroje, proto jde o orientační pomůcku, ne o jistotu.
+
 Tlačítko **Analyzovat pomocí AI** pošle souhrnné statistiky a posledních 40 prohraných tipů do **Google Gemini API** **tvým vlastním
 klíčem** a zobrazí rozbor kalibrace, opakujících se chyb a doporučení. Klíč si vytvoříš zdarma v Google AI Studio
 (aistudio.google.com → *Get API key*), v aplikaci ho zadáš pod tlačítkem „Gemini API klíč“. Ukládá se šifrovaně (Windows DPAPI) a nikam

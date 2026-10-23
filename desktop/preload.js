@@ -31,6 +31,9 @@ contextBridge.exposeInMainWorld("desktop", {
     history: () => ipcRenderer.invoke("tickets:history"),
     onProgress: (callback) => ipcRenderer.on("tickets:progress", (_event, message) => callback(String(message))),
   },
+  bankroll: {
+    get: (settings) => ipcRenderer.invoke("bankroll:get", settings),
+  },
   analysis: {
     get: () => ipcRenderer.invoke("analysis:get"),
     hasKey: () => ipcRenderer.invoke("analysis:has-key"),

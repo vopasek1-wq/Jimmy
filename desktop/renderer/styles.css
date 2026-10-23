@@ -786,6 +786,19 @@ i[data-lucide],
 .ai-out strong { color: var(--text); font-weight: 500; }
 .ai-out .is-error { color: #ffb3b3; }
 @media (max-width: 1100px) { .an-grid { grid-template-columns: 1fr; } }
+/* Bankroll */
+.bk-box { margin-bottom: 16px; }
+.bk-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 16px; margin: 4px 0 14px; }
+.bk-field { display: flex; flex-direction: column; gap: 5px; font-size: 12px; color: var(--muted); }
+.bk-field .input { flex: none; width: 150px; }
+.bk-chart { margin-top: 14px; }
+.bk-chart svg { display: block; width: 100%; height: auto; }
+.bk-grid { stroke: var(--line); stroke-width: 1; }
+.bk-grid--start { stroke: var(--border-3); stroke-dasharray: 4 4; }
+.bk-axis { fill: var(--muted); font-size: 12px; }
+.bk-note { margin: 10px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+.bk-box .stat-row { margin-top: 0; }
+
 .match .live-dot { display: inline-block; margin: 0 8px 1px 0; vertical-align: middle; }
 .match .score { margin-left: 6px; font-size: 13px; }
 .match .score--live { color: #ff8a8a; }

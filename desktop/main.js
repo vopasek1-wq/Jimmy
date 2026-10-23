@@ -171,6 +171,7 @@ ipcMain.handle("tickets:create", safe(async (event, req) => {
   return result;
 }));
 ipcMain.handle("tickets:history", safe(() => service.ticketHistory()));
+ipcMain.handle("bankroll:get", safe((_e, settings) => service.bankroll(settings)));
 ipcMain.handle("history:export", safe(async () => {
   const stamp = new Date().toISOString().slice(0, 10);
   const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, { title: "Exportovat historii", defaultPath: `historie-tipu-${stamp}.csv`, filters: [{ name: "CSV (Excel)", extensions: ["csv"] }] });

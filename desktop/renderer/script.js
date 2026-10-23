@@ -422,6 +422,10 @@
       ["Forebet", forebetFact(t)],
       ["Zdroje", t.sources.join(" + ")],
     ];
+    if (!t.outcome && t.odds && !t.oddsEstimated && t.probability) {
+      const k = kellyStake(t.probability, t.odds, bkNow());
+      facts.push(["Doporučený vklad", k.stake ? `${kc(k.stake)} (${nf1.format(k.share)} % bankrollu, ¼ Kelly)` : "žádný – kurz nemá oproti odhadu výhodu", true]);
+    }
     if (t.outcome) {
       const names = { win: "Výhra", loss: "Prohra", void: "Vráceno" };
       facts.push(["Výsledek", `${names[t.outcome] || t.outcome}${t.outcomeSource && t.outcomeSource !== "manual" ? " (automaticky)" : ""}`]);
@@ -526,6 +530,7 @@
     }
     renderAll();
     loadMini();
+    loadBankroll();
     if (app.dataset.view === "history") loadHistory();
   }
   refreshBtn.addEventListener("click", () => refresh());
@@ -1056,6 +1061,7 @@
     an.hasKey = hasKey;
     $("#ai-key-label").textContent = hasKey ? "Gemini klíč uložen" : "Gemini API klíč";
     renderAnalysis();
+    loadBankroll();
   }
 
   /** Jednoduché zobrazení textu od AI: odstavce, odrážky „- “ a **tučné**. */
@@ -1100,6 +1106,106 @@
     $("#ai-run").disabled = false;
     $("#ai-out").innerHTML = res.ok ? aiHtml(res.data) : `<p class="is-error">${esc(res.error)}</p>`;
   });
+
+  /* ---------- Bankroll: stálý vklad na vyhodnocené tipy / tikety + doporučený vklad ---------- */
+  const bk = {
+    data: null,
+    src: store.get("bk-src") === "tickets" ? "tickets" : "tips",
+    settings: { start: 10000, tipStake: 100, ticketStake: 100, ...(store.get("bk") || {}) },
+  };
+  const money = new Intl.NumberFormat("cs-CZ", { maximumFractionDigits: 0 });
+  const kc = (v, sign = false) => `${v < 0 ? "−" : sign && v > 0 ? "+" : ""}${money.format(Math.abs(v))} Kč`;
+  const bkNow = () => (bk.data ? bk.data.tips.current : bk.settings.start);
+
+  /** Čtvrtinový Kelly omezený 5 % bankrollu – stejný výpočet jako kellyStake v src/bankroll.js (renderer nemůže načítat moduly). */
+  function kellyStake(probability, odds, bankroll) {
+    const p = Number(probability) / 100;
+    if (!(p > 0 && p < 1) || !(odds > 1) || !(bankroll > 0)) return { stake: 0, share: 0 };
+    const full = (p * odds - 1) / (odds - 1);
+    if (full <= 0) return { stake: 0, share: 0 };
+    const share = Math.min(full * 0.25, 0.05);
+    const raw = bankroll * share;
+    return { stake: raw >= 100 ? Math.round(raw / 10) * 10 : Math.max(1, Math.round(raw)), share: Math.round(share * 1000) / 10 };
+  }
+
+  const shortDate = new Intl.DateTimeFormat("cs-CZ", { timeZone: TZ, day: "numeric", month: "numeric" });
+
+  function bankrollChart(series, start, up) {
+    if (series.length < 2) return '<p class="empty">Zatím není co vykreslit – graf se objeví po prvních vyhodnocených sázkách.</p>';
+    const W = 1000, H = 240, L = 70, R = 16, T = 12, B = 28;
+    const values = series.map((p) => p[1]).concat(start);
+    let lo = Math.min(...values), hi = Math.max(...values);
+    if (hi === lo) { hi += 1; lo -= 1; }
+    const pad = (hi - lo) * 0.08;
+    lo -= pad; hi += pad;
+    const t0 = series[0][0], t1 = series[series.length - 1][0];
+    const x = (t) => L + ((t - t0) / (t1 - t0 || 1)) * (W - L - R);
+    const y = (v) => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
+    const pts = series.map(([t, v]) => `${x(t).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+    const last = series[series.length - 1];
+    const color = up ? "var(--green)" : "var(--red)";
+    const ticks = [hi - pad, start, lo + pad].filter((v, i, a) => a.indexOf(v) === i);
+    const grid = ticks.map((v) => `<line x1="${L}" x2="${W - R}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" class="bk-grid${v === start ? " bk-grid--start" : ""}"/>`
+      + `<text x="${L - 8}" y="${(y(v) + 4).toFixed(1)}" text-anchor="end" class="bk-axis">${money.format(Math.round(v))}</text>`).join("");
+    return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Vývoj bankrollu">
+      ${grid}
+      <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="${x(last[0]).toFixed(1)}" cy="${y(last[1]).toFixed(1)}" r="3.5" fill="${color}"/>
+      <text x="${L}" y="${H - 6}" class="bk-axis">${esc(shortDate.format(t0 + 3600 * 1000))}</text>
+      <text x="${W - R}" y="${H - 6}" text-anchor="end" class="bk-axis">${esc(shortDate.format(t1))}</text>
+    </svg>`;
+  }
+
+  function renderBankroll() {
+    const d = bk.data ? bk.data[bk.src] : null;
+    if (!d) { $("#bk-stats").innerHTML = ""; $("#bk-chart").innerHTML = ""; $("#bk-note").textContent = desktop ? "Načítám…" : ""; return; }
+    const cls = d.profit > 0 ? "stat--pos" : d.profit < 0 ? "stat--neg" : "";
+    $("#bk-stats").innerHTML = [
+      stat(kc(d.current), "bankroll nyní", "stat--accent"),
+      stat(kc(d.profit, true), `zisk · ${d.bets} sázek`, cls),
+      stat(d.roi === null ? "–" : `${signed1(d.roi)} %`, "ROI z vsazeného", cls),
+      stat(d.maxDrawdown ? kc(-d.maxDrawdown) : "0 Kč", "největší propad", d.maxDrawdown ? "stat--neg" : ""),
+      stat(String(d.longestLosing), "nejdelší série proher"),
+    ].join("");
+    $("#bk-chart").innerHTML = bankrollChart(d.series, d.start, d.profit >= 0);
+    $("#bk-note").textContent = bk.src === "tips"
+      ? `Vklad ${kc(d.stake)} na každý vyhodnocený tip se skutečným kurzem (vrácené sázky se nepočítají). Doporučený vklad u dalších tipů vychází z bankrollu „nyní“ (čtvrtinový Kelly, nejvýš 5 %).`
+      : `Vklad ${kc(d.stake)} na každý vyhodnocený tiket; zisk tiketu = jeho kurz − 1 při výhře, −1 při prohře.`;
+  }
+
+  async function loadBankroll() {
+    if (!desktop) { renderBankroll(); return; }
+    const res = await desktop.bankroll.get(bk.settings);
+    if (res.ok) bk.data = res.data;
+    renderBankroll();
+    if (state.selected) renderDetail(); // doporučený vklad závisí na bankrollu
+  }
+
+  function syncBankrollInputs() {
+    $("#bk-start").value = bk.settings.start;
+    $("#bk-tip").value = bk.settings.tipStake;
+    $("#bk-ticket").value = bk.settings.ticketStake;
+    $$("#bk-src button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.src === bk.src)));
+  }
+
+  for (const [id, key] of [["#bk-start", "start"], ["#bk-tip", "tipStake"], ["#bk-ticket", "ticketStake"]]) {
+    $(id).addEventListener("change", () => {
+      const v = Number($(id).value);
+      if (Number.isFinite(v) && v > 0) bk.settings[key] = v;
+      store.set("bk", bk.settings);
+      syncBankrollInputs();
+      loadBankroll();
+    });
+  }
+  $("#bk-src").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-src]");
+    if (!b) return;
+    bk.src = b.dataset.src;
+    store.set("bk-src", bk.src);
+    syncBankrollInputs();
+    renderBankroll();
+  });
+  syncBankrollInputs();
 
   /* ---------- Vykreslení všeho ---------- */
   function renderAll() {
@@ -1345,6 +1451,7 @@
     else state.error = cached.error;
     renderAll();
     loadMini();
+    loadBankroll();
 
     const age = state.payload?.updatedAt ? Date.now() - Date.parse(state.payload.updatedAt) : Infinity;
     if (age > STALE_MS) refresh();
