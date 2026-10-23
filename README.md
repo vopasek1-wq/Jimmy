@@ -161,6 +161,19 @@ klíčem** a zobrazí rozbor kalibrace, opakujících se chyb a doporučení. Kl
 jinam se neposílá. Zda je volání zpoplatněné, závisí na tarifu tvého Google účtu (Gemini API má bezplatný limit, jeho výši určuje Google);
 bez klíče AI část nefunguje, statistiky ano.
 
+## Co se stahuje a co ne
+
+Aplikace stahuje jen to, co potřebuje, aby bylo obnovení rychlé a zdroje nezatěžovala:
+
+* Stránky zápasů na Forebetu (pravděpodobnosti gólů) se otevírají jen u tipů, které by prošly filtry (nad 60 %, kurz od 1,50, sledovaná
+  soutěž, mužský zápas, ještě nezačal). Už stažené hodnoty se 4 hodiny berou z mezipaměti (`forebet-goals.json`), takže další obnovení
+  je u nich okamžité.
+* Zítřejší přehled Forebetu se stahuje, jen když Scores24 nějaký zítřejší zápas má. Okno prohlížeče se otevírá jen tehdy, když
+  obyčejné HTTP nestačí.
+* Statistiky pro tikety (SofaScore) se po dobu 30 minut pamatují, takže opakované vytvoření tiketů nestahuje nic nového.
+* Živé skóre se každou minutu aktualizuje jen tehdy, když nějaký tip právě hraje; výsledky se dotahují jen u tipů, které na ně čekají.
+* `ladeni/zdroje-diagnostika.txt` obsahuje řádek **Doba kroků** (Scores24 / Forebet / SofaScore), podle něj je vidět, co obnovení zdržuje.
+
 ## Bez internetu a při výpadku zdroje
 
 * Po startu se hned ukážou poslední uložená data (v horní liště je štítek „z mezipaměti“).

@@ -166,3 +166,19 @@ test("MatchStats.collect: bez seznamu H2H i počtů se použijí setkání z pos
   assert.deepEqual([out.stats.t1.h2h.zapasu, out.stats.t1.h2h.domaci_vyhry], [1, 1]);
   assert.match(out.stats.t1.h2h.poznamka, /jen setkání z posledních zápasů/);
 });
+
+test("MatchStats.collect: úplné statistiky se na 30 minut uloží do mezipaměti a znovu se nestahují", async () => {
+  const cache = new Map();
+  let t = 1_000_000;
+  const http1 = fakeHttp({ ...routes101() });
+  const first = await new MatchStats(http1, { delayMs: [0, 0], cache, now: () => t }).collect([cand("t1", 101), cand("t3", 102)]);
+  assert.equal(first.covered, 1);
+  assert.equal(cache.size, 1);                       // neúplný zápas 102 se neukládá
+  const http2 = fakeHttp({ ...routes101() });
+  const second = await new MatchStats(http2, { delayMs: [0, 0], cache, now: () => t + 10 * 60 * 1000 }).collect([cand("t1", 101)]);
+  assert.equal(http2.calls.length, 0);
+  assert.equal(second.stats.t1.forma_domaci.forma, "V R P V R");
+  const http3 = fakeHttp({ ...routes101() });
+  await new MatchStats(http3, { delayMs: [0, 0], cache, now: () => t + 31 * 60 * 1000 }).collect([cand("t1", 101)]);
+  assert.ok(http3.calls.length > 0);                 // po půl hodině se stahuje znovu
+});

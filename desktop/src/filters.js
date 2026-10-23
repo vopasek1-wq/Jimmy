@@ -39,9 +39,21 @@ function applyFilters(tips) {
   return tips.map(ensureOdds).filter(passesFilters);
 }
 
+/**
+ * Má smysl pro tip stahovat doplňující data? Platí, když by po doplnění pravděpodobnosti z Forebetu mohl projít filtry
+ * (pravděpodobnost bez zdroje se doplní až z Forebetu). Šetří dotazy na tipy, které se stejně zahodí.
+ */
+function mayPass(tip) {
+  if (isWomens(tip)) return false;
+  const league = config.leagueByKey(tip.leagueKey);
+  if (!league || !league.enabled) return false;
+  if (tip.probability === null || tip.probability === undefined) return true;
+  return passesFilters(ensureOdds({ ...tip }));
+}
+
 /** Zelená nad 75 %, žlutá v pásmu 60–75 % (včetně 75). */
 function probabilityClass(probability) {
   return probability > config.HIGH_PROBABILITY ? HIGH : MID;
 }
 
-module.exports = { isWomens, HIGH, MID, ensureOdds, passesFilters, applyFilters, probabilityClass };
+module.exports = { isWomens, HIGH, MID, ensureOdds, passesFilters, mayPass, applyFilters, probabilityClass };

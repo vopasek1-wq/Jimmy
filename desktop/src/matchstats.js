@@ -115,8 +115,11 @@ class MatchStats {
    * @param {object} http  HttpClient (getJson)
    * @param {object} opts  debugDir = složka pro ladicí soubor, delayMs = pauza mezi dotazy, concurrency = souběžné zápasy
    */
-  constructor(http, { debugDir = null, delayMs = [250, 600], concurrency = 2 } = {}) {
+  constructor(http, { debugDir = null, delayMs = [250, 600], concurrency = 2, cache = null, cacheMs = 30 * 60 * 1000, now = () => Date.now() } = {}) {
     this.http = http;
+    this.cache = cache;     // Map id zápasu → { at, result }: opakované vytvoření tiketů do `cacheMs` nic nestahuje
+    this.cacheMs = cacheMs;
+    this.now = now;
     this.debugDir = debugDir;
     this.delayMs = delayMs;
     this.concurrency = concurrency;
@@ -181,12 +184,19 @@ class MatchStats {
   async collect(candidates, progress = () => {}) {
     const ids = [...new Set(candidates.map((c) => c.sofascoreId).filter(Boolean))];
     const results = new Map();
-    const queue = [...ids];
-    progress(`Stahuji statistiky zápasů ze SofaScore (0/${ids.length})…`);
+    const queue = [];
+    for (const id of ids) {
+      const hit = this.cache && this.cache.get(id);
+      if (hit && this.now() - hit.at < this.cacheMs) results.set(id, { ...hit.result, notes: { ...hit.result.notes, mezipamet: "z mezipaměti" } });
+      else queue.push(id);
+    }
+    progress(`Stahuji statistiky zápasů ze SofaScore (${results.size}/${ids.length})…`);
     const worker = async () => {
       while (queue.length && !this.blocked) {
         const id = queue.shift();
-        results.set(id, await this.statsFor(id));
+        const r = await this.statsFor(id);
+        results.set(id, r);
+        if (this.cache && r.complete) this.cache.set(id, { at: this.now(), result: r });
         progress(`Stahuji statistiky zápasů ze SofaScore (${results.size}/${ids.length})…`);
       }
     };

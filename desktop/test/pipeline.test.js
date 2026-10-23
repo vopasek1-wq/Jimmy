@@ -347,3 +347,50 @@ test("DB: starý neznámý trh (OTHER) se převede na nový kód, duplicita se s
   assert.equal(t.filter((x) => x.tipCode.startsWith("OTHER:")).length, 0);
   db2.close();
 });
+
+// --- úspora dotazů ------------------------------------------------------------------------------------------------
+test("Pipeline: stránky gólů se nestahují pro tipy, které filtry stejně zahodí (málo procent / nízký kurz)", async () => {
+  const goalsUrl = (n) => `/en/football/matches/team-${n}-1`;
+  const web = fakeWeb({
+    scores24Html: epl([
+      s24Row({ home: "Nottingham Forest", away: "Arsenal", pick: "Both Teams to Score – (Yes)", percent: "85", odds: "1.9" }),
+      s24Row({ home: "Low", away: "Prob", percent: "55", odds: "1.9", slug: "l-p", pick: "Both Teams to Score – (Yes)" }),
+      s24Row({ home: "Low", away: "Odds", percent: "85", odds: "1.3", slug: "l-o", pick: "Both Teams to Score – (Yes)" }),
+    ]),
+    forebetHtml: forebetPage([
+      forebetRow({ home: "Nottingham Forest", away: "Arsenal", p: [10, 20, 70], pick: "2", href: goalsUrl("a") }),
+      forebetRow({ home: "Low", away: "Prob", p: [10, 20, 70], pick: "2", href: goalsUrl("b") }),
+      forebetRow({ home: "Low", away: "Odds", p: [10, 20, 70], pick: "2", href: goalsUrl("c") }),
+    ]),
+    goalsHtml: goalsPageHtml, sofaEvents: [],
+  });
+  await new Pipeline(web).run({ now: new Date(Date.UTC(2026, 9, 18, 12)) });
+  const goalCalls = web.calls.filter((u) => u.includes("/football/matches/"));
+  assert.deepEqual(goalCalls, ["https://www.forebet.com/en/football/matches/team-a-1"]);
+});
+
+test("Pipeline: pravděpodobnosti gólů z mezipaměti se podruhé nestahují", async () => {
+  const { GoalsCache } = require("../src/goalscache");
+  const cache = new GoalsCache(null);
+  const now = new Date(Date.UTC(2026, 9, 18, 12));
+  const first = goalsScenario(goalsPageHtml);
+  await new Pipeline({ ...first, goalsCache: cache }).run({ now });
+  assert.equal(first.calls.filter((u) => u.includes("/football/matches/")).length, 1);
+  const second = goalsScenario(goalsPageHtml);
+  const r = await new Pipeline({ ...second, goalsCache: cache }).run({ now });
+  assert.equal(second.calls.filter((u) => u.includes("/football/matches/")).length, 0);
+  assert.equal(r.tips[0].probForebet, 62);
+  assert.match(r.statuses[SOURCE_FOREBET].message, /góly u 1 z 1 zápasů \(1 z mezipaměti\)/);
+});
+
+test("Pipeline: zítřejší přehled Forebetu se stahuje, jen když Scores24 nějaký zítřejší zápas má", async () => {
+  const todayOnly = fakeWeb({
+    scores24Html: epl([s24Row({ home: "Nottingham Forest", away: "Arsenal", percent: "80", odds: "1.7" })]),
+    forebetHtml: forebetPage([forebetRow({ home: "Nottingham Forest", away: "Arsenal", p: [10, 20, 70], pick: "2" })]), sofaEvents: [],
+  });
+  await new Pipeline(todayOnly).run({ now: new Date(Date.UTC(2026, 9, 18, 12)) });
+  assert.deepEqual(todayOnly.calls.filter((u) => u.includes("forebet")), ["https://www.forebet.com/en/football-tips-and-predictions-for-today"]);
+  const withTomorrow = tomorrowWeb();
+  await new Pipeline(withTomorrow).run({ now: DAY_BEFORE });
+  assert.equal(withTomorrow.calls.filter((u) => u.includes("forebet")).length, 2);
+});

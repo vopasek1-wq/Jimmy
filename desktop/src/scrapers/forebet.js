@@ -315,16 +315,17 @@ class ForebetScraper {
    * Zápasy z přehledů „dnes“ a „zítra“ (sloučené bez duplicit). Starý přehled /football-predictions se bere jen tehdy,
    * když z nich nic nevyšlo. @param {object} [opts] { interactive: zobrazit okno, když kontrola nepřejde sama; debugDir: složka pro ladicí soubory }
    */
-  async fetch(progress = () => {}, { interactive = false, debugDir = null } = {}) {
+  async fetch(progress = () => {}, { interactive = false, debugDir = null, tomorrow = true } = {}) {
     progress("Forebet: stahuji pravděpodobnosti…");
-    const urls = [...config.FOREBET_LIST_URLS, config.FOREBET_URL];
+    const [todayUrl, tomorrowUrl] = config.FOREBET_LIST_URLS;
+    const urls = [todayUrl, ...(tomorrow ? [tomorrowUrl] : []), config.FOREBET_URL]; // zítřejší přehled jen když ho někdo potřebuje
     const merged = [];
     const seen = new Set();
     const lists = [];
     let firstError = null;
     for (const [i, url] of urls.entries()) {
       if (i === urls.length - 1 && merged.length) break; // záložní starý přehled jen když nic jiného nevyšlo
-      progress(`Forebet: ${i === 0 ? "dnešní" : i === 1 ? "zítřejší" : "všeobecný"} přehled…`);
+      progress(`Forebet: ${url === todayUrl ? "dnešní" : url === tomorrowUrl ? "zítřejší" : "všeobecný"} přehled…`);
       try {
         const list = await this._list(url, { interactive: interactive && i === 0, progress });
         lists.push(list);
@@ -349,12 +350,14 @@ class ForebetScraper {
    * Doplní `goals` k zápasům ze seznamu načtením jejich stránek (max. `limit`).
    * Vrací { wanted, parsed, errors } – chyby jednotlivých stránek nic neshodí.
    */
-  async fetchGoals(matches, progress = () => {}, { limit = 25, debugDir = null } = {}) {
+  async fetchGoals(matches, progress = () => {}, { limit = 25, debugDir = null, cache = null } = {}) {
     const todo = [...new Set(matches.filter((m) => m && m.url))].slice(0, limit);
-    const summary = { wanted: todo.length, parsed: 0, errors: [] };
+    const summary = { wanted: todo.length, parsed: 0, cached: 0, errors: [] };
     let useBrowser = false;
     let dumped = false;
     for (const [i, m] of todo.entries()) {
+      const hit = cache && cache.get(m.url);
+      if (hit) { m.goals = hit; summary.parsed += 1; summary.cached += 1; continue; } // nedávno staženo – bez dotazu
       progress(`Forebet: pravděpodobnosti gólů (${i + 1}/${todo.length})…`);
       try {
         let html = "";
@@ -374,7 +377,7 @@ class ForebetScraper {
           const again = parseGoals(rendered);
           if (again) { m.goals = again; useBrowser = true; } else html = rendered;
         }
-        if (m.goals) summary.parsed += 1;
+        if (m.goals) { summary.parsed += 1; if (cache) cache.set(m.url, m.goals); }
         else if (debugDir && !dumped) {
           dumped = true;
           try {

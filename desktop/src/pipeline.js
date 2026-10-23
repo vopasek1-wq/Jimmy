@@ -11,7 +11,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const config = require("./config");
-const { applyFilters } = require("./filters");
+const { applyFilters, mayPass } = require("./filters");
 const { NetworkError, SourceError } = require("./http");
 const { BrowserUnavailable } = require("./browser");
 const { evaluate, forebetProbability, goalsProbability, resultMarket } = require("./markets");
@@ -138,10 +138,11 @@ const setStatus = (result, name, state, message = "") => { result.statuses[name]
 const needsGoalsPage = (code) => code === "BTTS" || code === "NOBTTS" || /^[OU]\d+(?:\.\d+)?$/.test(code);
 
 class Pipeline {
-  constructor({ http, browser, debugDir = null }) {
+  constructor({ http, browser, debugDir = null, goalsCache = null }) {
     this.http = http;
     this.browser = browser;
     this.debugDir = debugDir;
+    this.goalsCache = goalsCache;
   }
 
   /** @param {object} [opts] { progress, now, interactiveForebet } */
@@ -151,6 +152,9 @@ class Pipeline {
     let s24 = null;
     let forebet = null;
     let goalsInfo = null;
+    const stages = {}; // doba jednotlivých kroků v sekundách (do diagnostiky)
+    let lapAt = Date.now();
+    const lap = (name) => { stages[name] = Math.round((Date.now() - lapAt) / 100) / 10; lapAt = Date.now(); };
 
     // 1) Scores24 – hlavní zdroj
     try {
@@ -162,6 +166,7 @@ class Pipeline {
       const known = err instanceof SourceError || err instanceof BrowserUnavailable;
       setStatus(result, SOURCE_SCORES24, "failed", known ? err.message : `Neočekávaná chyba: ${err.message}`);
     }
+    lap("Scores24");
 
     if (!resultOk(result)) {
       for (const name of [SOURCE_FOREBET, SOURCE_SOFASCORE]) setStatus(result, name, "skipped", "Přeskočeno – hlavní zdroj tipů není dostupný.");
@@ -171,7 +176,11 @@ class Pipeline {
     // 2) Forebet – pravděpodobnosti (volitelný zdroj)
     try {
       const scraper = new ForebetScraper(this.http, this.browser);
-      forebet = await scraper.fetch(progress, { interactive: interactiveForebet, debugDir: this.debugDir });
+      // Zítřejší přehled Forebetu je potřeba, jen když Scores24 nějaký zítřejší tip má.
+      const today = localDate(now);
+      const tomorrow = s24.rows.some((r) => { const ko = kickoffOf(r, now); return ko !== null && localDate(ko) > today; })
+        || s24.tips.some((t) => localDate(t.kickoff) > today);
+      forebet = await scraper.fetch(progress, { interactive: interactiveForebet, debugDir: this.debugDir, tomorrow });
       let message = `${forebet.length} zápasů`;
       let state = "ok";
 
@@ -179,14 +188,15 @@ class Pipeline {
       const wanted = new Set();
       const byNeed = [...s24.tips].sort((a, b) => (a.probability === null ? 0 : 1) - (b.probability === null ? 0 : 1));
       for (const t of byNeed) {
-        if (!needsGoalsPage(t.tipCode)) continue;
+        if (!needsGoalsPage(t.tipCode) || t.status !== UPCOMING || !mayPass(t)) continue; // jen tipy, které filtry nezahodí
         const m = findForebet(t.home, t.away, t.leagueKey, t.kickoff, forebet);
         if (m && m.url) wanted.add(m);
       }
       if (wanted.size) {
-        const g = await scraper.fetchGoals([...wanted], progress, { debugDir: this.debugDir });
+        const g = await scraper.fetchGoals([...wanted], progress, { debugDir: this.debugDir, cache: this.goalsCache });
+        if (this.goalsCache) this.goalsCache.save();
         goalsInfo = g;
-        message += `, góly u ${g.parsed} z ${g.wanted} zápasů`;
+        message += `, góly u ${g.parsed} z ${g.wanted} zápasů${g.cached ? ` (${g.cached} z mezipaměti)` : ""}`;
         if (g.parsed < g.wanted) {
           state = "partial";
           message += g.parsed === 0 && !g.errors.length
@@ -199,6 +209,8 @@ class Pipeline {
       const known = err instanceof SourceError || err instanceof BrowserUnavailable;
       setStatus(result, SOURCE_FOREBET, "failed", known ? err.message : `Neočekávaná chyba: ${err.message}`);
     }
+
+    lap("Forebet");
 
     // 3) sloučení + povinné filtry
     let tips = applyFilters(combine(s24, forebet, now));
@@ -213,21 +225,24 @@ class Pipeline {
       setStatus(result, SOURCE_SOFASCORE, "failed", `Neočekávaná chyba: ${err.message}`);
     }
 
+    lap("SofaScore");
     result.tips = tips.sort((a, b) => a.kickoff - b.kickoff || b.probability - a.probability);
-    this._writeDiagnostics(result, { s24, forebet, goalsInfo, sofa });
+    this._writeDiagnostics(result, { s24, forebet, goalsInfo, sofa, stages });
     return this._finish(result);
   }
 
   /** Souhrn posledního stahování do `ladeni/zdroje-diagnostika.txt` (přepisuje se): stav zdrojů, párování Forebetu, pokrytí SofaScore. */
-  _writeDiagnostics(result, { s24, forebet, goalsInfo, sofa }) {
+  _writeDiagnostics(result, { s24, forebet, goalsInfo, sofa, stages = {} }) {
     if (!this.debugDir) return;
     try {
       const lines = [`Stahování tipů – ${new Date().toISOString()}`, "", "Stav zdrojů:"];
       for (const st of Object.values(result.statuses)) lines.push(`  ${st.name}: ${st.state}${st.message ? ` – ${st.message}` : ""}`);
+      const total = Object.values(stages).reduce((a, b) => a + b, 0);
+      lines.push(`Doba kroků: ${Object.entries(stages).map(([k, v]) => `${k} ${v} s`).join(" · ")} · celkem ${Math.round(total * 10) / 10} s`);
       lines.push("", `Scores24: ${s24 ? s24.tips.length : 0} tipů před filtry; po filtrech ${result.tips.length}`);
       if (forebet) {
         lines.push(...forebetCoverage(s24 ? s24.tips : [], forebet));
-        if (goalsInfo) lines.push(`Stránky zápasů (góly): přečteno ${goalsInfo.parsed} z ${goalsInfo.wanted}${goalsInfo.errors.length ? `; chyby: ${goalsInfo.errors.slice(0, 3).join(" | ")}` : ""}`);
+        if (goalsInfo) lines.push(`Stránky zápasů (góly): přečteno ${goalsInfo.parsed} z ${goalsInfo.wanted}${goalsInfo.cached ? `, z toho ${goalsInfo.cached} z mezipaměti` : ""}${goalsInfo.errors.length ? `; chyby: ${goalsInfo.errors.slice(0, 3).join(" | ")}` : ""}`);
       } else {
         lines.push("Forebet: žádná data");
       }

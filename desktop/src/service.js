@@ -13,6 +13,7 @@ const { MatchStats } = require("./matchstats");
 const { analyze, recentLosses, buildPrompt } = require("./analysis");
 const { candidatesFrom, settleTicket, ticketStats, dueKickoffs } = require("./tickets");
 const { betsFromTips, betsFromTickets, simulate, normalizeSettings } = require("./bankroll");
+const { GoalsCache } = require("./goalscache");
 const { buildDiagnostics } = require("./diagnostics");
 const { historyCsv } = require("./csv");
 const { resultOk } = require("./models");
@@ -36,6 +37,8 @@ class TipService {
   constructor({ dbFile, http, browser }) {
     this.db = new Database(dbFile);
     this.dataDir = path.dirname(dbFile);
+    this.goalsCache = new GoalsCache(path.join(this.dataDir, "forebet-goals.json"));
+    this.statsCache = new Map(); // statistiky zápasů pro tikety (jen za běhu aplikace)
     this.http = http;
     this.browser = browser;
     this.busy = false;
@@ -62,7 +65,9 @@ class TipService {
     if (this.busy) throw new Error("Stahování už běží.");
     this.busy = true;
     try {
-      const result = await new Pipeline({ http: this.http, browser: this.browser, debugDir: path.join(this.dataDir, "ladeni") }).run({ progress, interactiveForebet });
+      const result = await new Pipeline({
+        http: this.http, browser: this.browser, debugDir: path.join(this.dataDir, "ladeni"), goalsCache: this.goalsCache,
+      }).run({ progress, interactiveForebet });
       if (resultOk(result)) {
         this.db.saveRun(result);
         await updateResults(this.db, this.http, { progress }).catch(() => {}); // doplní skóre a výsledky skončených zápasů
@@ -133,7 +138,7 @@ class TipService {
 
   /** Statistiky zápasů (forma, H2H, góly, zranění) ze SofaScore pro tikety; ladicí soubor jde do složky `ladeni`. */
   collectTicketStats(candidates, progress = () => {}) {
-    return new MatchStats(this.http, { debugDir: path.join(this.dataDir, "ladeni") }).collect(candidates, progress);
+    return new MatchStats(this.http, { debugDir: path.join(this.dataDir, "ladeni"), cache: this.statsCache }).collect(candidates, progress);
   }
 
   /** Uloží tikety od AI (pro pozdější vyhodnocení). */
