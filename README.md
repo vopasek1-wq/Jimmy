@@ -164,7 +164,8 @@ bez klíče AI část nefunguje, statistiky ano.
 
 ## Forebet a Cloudflare
 
-Forebet je chráněný Cloudflare. Aplikace nejdřív zkusí obyčejný dotaz, pak skryté okno. Když kontrola nepřejde,
+Forebet je chráněný Cloudflare. Aplikace nejdřív zkusí obyčejný dotaz, pak skryté okno. Seznam zápasů na Forebetu je zpočátku
+neúplný (jen první země podle abecedy), proto okno aplikace opakovaně klikne na **Show more**, dokud seznam přibývá. Když kontrola nepřejde,
 objeví se pruh s tlačítkem **Ověřit Forebet**: otevře se okno, ve kterém kontrolu dokončíte (až 90 s), a aplikace
 si ověření pamatuje.
 
@@ -185,7 +186,7 @@ API klíč ani nic osobního. Ladicí soubory ve složce `ladeni` se přepisují
 | Soubor | Co v něm je |
 |---|---|
 | `zdroje-diagnostika.txt` | stav zdrojů, párování tipů s Forebetem (časový rozsah, nespárované tipy s nejbližším zápasem), pokrytí SofaScore |
-| `forebet-seznam-diagnostika.txt`, `forebet-seznam.html` | jen když Forebet vrátí stránku bez rozpoznatelných zápasů: přehled její struktury a celé HTML |
+| `forebet-seznam-diagnostika.txt`, `forebet-seznam.html` | přehled seznamu zápasů z Forebetu (kolik řádků, značky lig, výsledek rozklikávání „Show more“, odkazy na jiné dny); celé HTML jen když v něm není žádná sledovaná liga |
 | `forebet-diagnostika.txt`, `forebet-zapas.html` | jen když se nepodaří přečíst pravděpodobnosti gólů ze stránky zápasu |
 | `tikety-statistiky.txt` | co se stáhlo ze SofaScore pro tikety (po zápasech) a ukázky odpovědí |
 | `tikety-odpoved.txt` | poslední zadání a odpověď Gemini pro tikety |

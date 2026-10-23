@@ -16,6 +16,7 @@ const { parseOdds } = require("../odds");
 const fs = require("node:fs");
 const path = require("node:path");
 const { load, collapse, strippedStrings } = require("../dom");
+const { EXPAND_MORE_SCRIPT } = require("../browser");
 
 const text = ($el) => (($el && $el.length) ? collapse($el.text()) : "");
 const toInt = (s) => { const m = /\d{1,3}/.exec(s); return m ? Number(m[0]) : null; };
@@ -170,29 +171,67 @@ function goalsDiagnostics(url, html) {
   return [`URL: ${url}`, `Délka HTML: ${html.length}`, `Zablokováno: ${looksBlocked(200, html)}`, `Délka textu: ${text.length}`, "--- úryvky kolem „over/under/goals/yes“ ---", ...windows].join("\n");
 }
 
-/** Přehled struktury stránky se seznamem zápasů (kolik je známých značek, nejčastější třídy, začátek textu). */
+const MORE_RE = /^(show|load|view|see|display)\s+(more|all)\b|^more\s+(matches|games|predictions|results|events)\b/i;
+const MORE_LOOSE = /\b(more|load|show|next|další|více|předchoz)/i;
+const describe = ($, el) => `${el.tagName}${$(el).attr("id") ? `#${$(el).attr("id")}` : ""}${$(el).attr("class") ? `.${String($(el).attr("class")).trim().split(/\s+/).join(".")}` : ""}`;
+
+/** Má stránka tlačítko „Show more“ (seznam se po jeho kliknutí prodlužuje)? */
+function hasMoreControl(html) {
+  const $ = load(html);
+  return $("a, button, span, div, p, li, td, input").toArray().some((el) => {
+    const t = el.tagName === "input" ? ($(el).attr("value") || "") : collapse($(el).text());
+    return t.length <= 40 && MORE_RE.test(t);
+  });
+}
+
+/** Přehled struktury stránky se seznamem zápasů (značky lig, tlačítka „více“, odkazy na jiné dny/ligy, nejčastější třídy). */
 function listDiagnostics(html) {
   const $ = load(html);
   const count = (sel) => $(sel).length;
   const classes = new Map();
   $("[class]").each((_, el) => { for (const c of String($(el).attr("class")).split(/\s+/)) if (c) classes.set(c, (classes.get(c) || 0) + 1); });
   const top = [...classes].sort((a, b) => b[1] - a[1]).slice(0, 30).map(([c, n]) => `${c}:${n}`).join(" ");
-  const text = strippedStrings($.root()).join(" ");
+  const body = strippedStrings($.root()).join(" ");
+
+  const tags = new Map();
+  $(".shortTag").each((_, el) => { const t = text($(el)); if (t) tags.set(t, (tags.get(t) || 0) + 1); });
+  const more = new Set();
+  $("a, button, span, div, p, li, td, input").each((_, el) => {
+    const t = el.tagName === "input" ? ($(el).attr("value") || "") : collapse($(el).text());
+    if (t && t.length <= 30 && MORE_LOOSE.test(t) && ![...$(el).children()].some((c) => MORE_LOOSE.test(collapse($(c).text())))) more.add(`${describe($, el)} «${t}»`);
+  });
+  const links = new Set();
+  $("a[href]").each((_, el) => {
+    const h = String($(el).attr("href"));
+    if (/predictions|tips-and-predictions|\d{4}-\d{2}-\d{2}|tomorrow|yesterday|today/i.test(h) && links.size < 40) links.add(h.slice(0, 110));
+  });
   return [
     `Délka HTML: ${html.length}`, `Zablokováno: ${looksBlocked(200, html)}`,
     `div.rcnt: ${count("div.rcnt")}, .fprc: ${count(".fprc")}, .homeTeam: ${count(".homeTeam")}, .awayTeam: ${count(".awayTeam")}, `
       + `time[datetime]: ${count("time[datetime]")}, .shortTag: ${count(".shortTag")}, a.tnmscn: ${count("a.tnmscn")}`,
-    `Nejčastější třídy: ${top}`, `Začátek textu: ${text.slice(0, 600)}`,
+    `Značky lig na stránce (${tags.size}): ${[...tags].slice(0, 60).map(([t, n]) => `${t}:${n}`).join(" ")}`,
+    `Tlačítka „více/další“: ${[...more].slice(0, 15).join(" | ") || "žádná"}`,
+    `Odkazy na dny/ligy: ${[...links].slice(0, 25).join(" | ") || "žádné"}`,
+    `Nejčastější třídy: ${top}`, `Začátek textu: ${body.slice(0, 400)}`,
   ].join("\n");
 }
 
-/** Když se na skutečné (ne blokované) stránce nenajde žádný zápas, uloží se HTML a přehled struktury pro ladění. */
-function dumpList(debugDir, html) {
+/**
+ * Uloží přehled struktury seznamu (vždy) a HTML (jen když v něm není žádný zápas sledované ligy), aby šlo vidět,
+ * co Forebet vrátil. `info` je výsledek rozbalení „Show more“ (nebo chyba) z okna prohlížeče.
+ */
+function dumpList(debugDir, html, { info = null, matches = [], via = "" } = {}) {
   if (!debugDir || looksBlocked(200, html)) return;
   try {
     fs.mkdirSync(debugDir, { recursive: true });
-    fs.writeFileSync(path.join(debugDir, "forebet-seznam.html"), html.slice(0, 500000));
-    fs.writeFileSync(path.join(debugDir, "forebet-seznam-diagnostika.txt"), `${new Date().toISOString()}\n${listDiagnostics(html)}\n`);
+    const tracked = matches.filter((m) => m.leagueKey).length;
+    if (!matches.length || !tracked) fs.writeFileSync(path.join(debugDir, "forebet-seznam.html"), html.slice(0, 500000));
+    const head = [`${new Date().toISOString()}`, `Načteno přes: ${via || "?"}; zápasů ${matches.length}, ze sledovaných lig ${tracked}`];
+    if (info) {
+      head.push(info.error ? `Rozbalení „Show more“ selhalo: ${info.error}`
+        : `Rozbalení „Show more“: řádků ${info.before} → ${info.after}, ${info.ms} ms, kliknuto na: ${(info.clickLog || []).join(" | ") || "nic (tlačítko nenalezeno)"}`);
+    }
+    fs.writeFileSync(path.join(debugDir, "forebet-seznam-diagnostika.txt"), `${head.join("\n")}\n${listDiagnostics(html)}\n`);
   } catch { /* ladicí soubor je jen bonus */ }
 }
 
@@ -207,31 +246,49 @@ class ForebetScraper {
   /** @param {object} [opts] { interactive: zobrazit okno, když kontrola nepřejde sama; debugDir: složka pro ladicí soubory } */
   async fetch(progress = () => {}, { interactive = false, debugDir = null } = {}) {
     progress("Forebet: stahuji pravděpodobnosti…");
-    let matches = [];
+    let plain = [];
+    let plainHtml = "";
     if (!interactive) {
       try {
-        const html = await this.http.getText(config.FOREBET_URL);
-        matches = parsePage(html);
-        if (!matches.length) dumpList(debugDir, html);
+        plainHtml = await this.http.getText(config.FOREBET_URL);
+        plain = parsePage(plainHtml);
       } catch (err) {
         if (!(err instanceof BlockedError)) throw err;
       }
-      if (matches.length) return matches;
+      // Obyčejné HTTP vrátí jen první část seznamu. Bez tlačítka „Show more“ a se zápasy sledovaných lig je hotovo.
+      if (plain.length && plain.some((m) => m.leagueKey) && !hasMoreControl(plainHtml)) {
+        dumpList(debugDir, plainHtml, { matches: plain, via: "HTTP" });
+        return plain;
+      }
     }
 
-    progress(interactive ? "Forebet: čekám na dokončení ověření v okně…" : "Forebet: zkouším prohlížeč (ochrana Cloudflare)…");
-    const html = await this.browser.loadHtml(config.FOREBET_URL, {
-      ready: pageReady, waitMs: interactive ? 8000 : 15000, interactive, title: "Forebet – dokončete ověření",
-    });
+    progress(interactive ? "Forebet: čekám na dokončení ověření v okně…"
+      : plain.length ? "Forebet: načítám celý seznam zápasů (Show more)…" : "Forebet: zkouším prohlížeč (ochrana Cloudflare)…");
+    let info = null;
+    let html = "";
+    try {
+      html = await this.browser.loadHtml(config.FOREBET_URL, {
+        ready: pageReady, waitMs: interactive ? 8000 : 15000, interactive, title: "Forebet – dokončete ověření",
+        expand: EXPAND_MORE_SCRIPT("div.rcnt", 45000), onExpand: (i) => { info = i; },
+      });
+    } catch (err) {
+      if (!plain.length) throw err;
+      dumpList(debugDir, plainHtml, { matches: plain, via: "HTTP (okno prohlížeče selhalo)", info: { error: err.message } });
+      return plain;
+    }
     if (looksBlocked(200, html)) {
+      if (plain.length) { // aspoň první část seznamu, kterou vrátilo HTTP
+        dumpList(debugDir, plainHtml, { matches: plain, via: "HTTP (okno prohlížeče zablokoval Cloudflare)", info });
+        return plain;
+      }
       throw new BlockedError("Forebet: Cloudflare kontrola neprošla. Klikněte na „Ověřit Forebet“ – otevře se okno, kde ji dokončíte. "
         + "Tipy ze Scores24 se zobrazují i bez Forebetu.");
     }
-    matches = parsePage(html);
-    if (!matches.length) {
-      dumpList(debugDir, html);
-      throw new SourceError("Forebet: na stránce nejsou rozpoznatelné zápasy (změnila se struktura webu?).");
-    }
+    let matches = parsePage(html);
+    let via = "okno prohlížeče";
+    if (matches.length < plain.length) { matches = plain; html = plainHtml; via = "HTTP (v okně je zápasů méně)"; }
+    dumpList(debugDir, html, { matches, via, info });
+    if (!matches.length) throw new SourceError("Forebet: na stránce nejsou rozpoznatelné zápasy (změnila se struktura webu?).");
     return matches;
   }
 
@@ -282,4 +339,4 @@ class ForebetScraper {
   }
 }
 
-module.exports = { ForebetScraper, parsePage, parseGoals, pageReady, listDiagnostics };
+module.exports = { ForebetScraper, parsePage, parseGoals, pageReady, listDiagnostics, hasMoreControl };

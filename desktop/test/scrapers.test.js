@@ -268,3 +268,69 @@ test("Forebet: gólové pravděpodobnosti i bez znaku %, když se dvojice sečte
   // čísla, která nejsou dvojice ≈100, se nepřijmou (např. jen kurzy)
   assert.equal(parseGoals("<body><span>Over 2.5</span><span>12</span><span>Under 2.5</span><span>9</span></body>"), null);
 });
+
+// --- Forebet: neúplný seznam (jen první část + „Show more“) --------------------------------------------------------
+test("Forebet: tlačítko „Show more“ a značky lig se rozpoznají v diagnostice", () => {
+  const more = '<div class="morerows"><span id="mrows" class="mrows_btn">Show more</span></div>';
+  const html = forebetPage([forebetRow({ home: "A", away: "B", p: [50, 30, 20], pick: "1" })], "Alb1").replace("</div></body>", `${more}<a href="/en/football-predictions/predictions-1x2/2026-10-24">24</a></div></body>`);
+  assert.equal(forebet.hasMoreControl(html), true);
+  assert.equal(forebet.hasMoreControl(forebetPage([forebetRow({ home: "A", away: "B", p: [50, 30, 20], pick: "1" })])), false);
+  const diag = forebet.listDiagnostics(html);
+  assert.match(diag, /Značky lig na stránce \(1\): Alb1:1/);
+  assert.match(diag, /Tlačítka „více\/další“: .*mrows_btn.*«Show more»/);
+  assert.match(diag, /Odkazy na dny\/ligy: .*2026-10-24/);
+});
+
+test("Forebet: seznam bez sledované ligy se doplní rozbalením „Show more“ v okně", async () => {
+  const fs = require("node:fs");
+  const os = require("node:os");
+  const path = require("node:path");
+  const partial = forebetPage([forebetRow({ home: "Tirana", away: "Vllaznia", p: [50, 30, 20], pick: "1" })], "Alb1")
+    .replace("</div></body>", '<span class="mrows_btn">Show more</span></div></body>');
+  const full = forebetPage([
+    forebetRow({ home: "Tirana", away: "Vllaznia", p: [50, 30, 20], pick: "1" }),
+    forebetRow({ home: "Arsenal", away: "Chelsea", p: [60, 25, 15], pick: "1" }),
+  ], "Eng1");
+  const http = { getText: async () => partial };
+  const calls = [];
+  const browser = { loadHtml: async (url, opts) => { calls.push(opts); opts.onExpand({ before: 1, after: 2, ms: 1700, clickLog: ["span.mrows_btn «Show more»"] }); return full; } };
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "fb-"));
+  const ms = await new forebet.ForebetScraper(http, browser).fetch(() => {}, { debugDir: dir });
+  assert.equal(ms.length, 2);
+  assert.equal(ms.filter((m) => m.leagueKey).length, 2);
+  assert.equal(calls.length, 1);
+  assert.match(String(calls[0].expand), /div\.rcnt/);
+  const diag = fs.readFileSync(path.join(dir, "forebet-seznam-diagnostika.txt"), "utf8");
+  assert.match(diag, /Načteno přes: okno prohlížeče; zápasů 2, ze sledovaných lig 2/);
+  assert.match(diag, /řádků 1 → 2.*span\.mrows_btn «Show more»/);
+  assert.equal(fs.existsSync(path.join(dir, "forebet-seznam.html")), false); // sledované ligy tam jsou → HTML netřeba
+});
+
+test("Forebet: úplný seznam se sledovanou ligou a bez „Show more“ se nezdržuje oknem prohlížeče", async () => {
+  const page = forebetPage([forebetRow({ home: "Arsenal", away: "Chelsea", p: [60, 25, 15], pick: "1" })]);
+  const browser = { loadHtml: async () => { throw new Error("okno nemělo být potřeba"); } };
+  const ms = await new forebet.ForebetScraper({ getText: async () => page }, browser).fetch();
+  assert.equal(ms.length, 1);
+});
+
+test("Forebet: když okno selže nebo je zablokované, zůstane aspoň první část seznamu z HTTP", async () => {
+  const fs = require("node:fs");
+  const os = require("node:os");
+  const path = require("node:path");
+  const partial = forebetPage([forebetRow({ home: "Tirana", away: "Vllaznia", p: [50, 30, 20], pick: "1" })], "Alb1");
+  const http = { getText: async () => partial };
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "fb-"));
+  const blocked = { loadHtml: async () => "<html><head><title>Just a moment...</title></head></html>" };
+  assert.equal((await new forebet.ForebetScraper(http, blocked).fetch(() => {}, { debugDir: dir })).length, 1);
+  assert.match(fs.readFileSync(path.join(dir, "forebet-seznam-diagnostika.txt"), "utf8"), /ze sledovaných lig 0/);
+  assert.equal(fs.existsSync(path.join(dir, "forebet-seznam.html")), true); // bez sledované ligy se uloží HTML k ladění
+  const broken = { loadHtml: async () => { throw new Error("okno nejde otevřít"); } };
+  assert.equal((await new forebet.ForebetScraper(http, broken).fetch()).length, 1);
+});
+
+test("Forebet: rozbalení v okně nic nepřidá → použije se delší seznam z HTTP", async () => {
+  const partial = forebetPage([forebetRow({ home: "A", away: "B", p: [50, 30, 20], pick: "1" }), forebetRow({ home: "C", away: "D", p: [50, 30, 20], pick: "1" })], "Alb1");
+  const smaller = forebetPage([forebetRow({ home: "A", away: "B", p: [50, 30, 20], pick: "1" })], "Alb1");
+  const ms = await new forebet.ForebetScraper({ getText: async () => partial }, { loadHtml: async () => smaller }).fetch();
+  assert.equal(ms.length, 2);
+});
