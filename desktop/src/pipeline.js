@@ -193,7 +193,7 @@ class Pipeline {
       for (const t of byNeed) {
         if (!needsGoalsPage(t.tipCode) || t.status !== UPCOMING || !mayPass(t)) continue; // jen tipy, které filtry nezahodí
         const m = findForebet(t.home, t.away, t.leagueKey, t.kickoff, forebet);
-        if (m && m.url) wanted.add(m);
+        if (m && m.url) { wanted.add(m); if (t.tipCode === "BTTS" || t.tipCode === "NOBTTS") m.needBtts = true; }
       }
       if (wanted.size) {
         const g = await scraper.fetchGoals([...wanted], progress, { debugDir: this.debugDir, cache: this.goalsCache });
@@ -260,6 +260,7 @@ class Pipeline {
       for (const [name, g] of groups) lines.push(`  ${name}: ${g.n} (Forebet ${g.fb})`);
       const withId = result.tips.filter((t) => t.sofascoreId).length;
       lines.push("", `SofaScore: zápas nalezen u ${withId} z ${result.tips.length} tipů${sofa && sofa.errors.length ? `; chyby: ${sofa.errors.slice(0, 3).join(" | ")}` : ""}`);
+      for (const t of result.tips.filter((x) => !x.sofascoreId).slice(0, 6)) lines.push(`  bez SofaScore: ${t.home} – ${t.away} [${t.leagueKey}] ${iso(t.kickoff)}`);
       fs.mkdirSync(this.debugDir, { recursive: true });
       fs.writeFileSync(path.join(this.debugDir, "zdroje-diagnostika.txt"), `${lines.join("\n")}\n`, "utf8");
     } catch {

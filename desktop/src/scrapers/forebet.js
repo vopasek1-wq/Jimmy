@@ -181,6 +181,8 @@ function parseGoals(html) {
   return found ? goals : null;
 }
 
+const hasBtts = (goals) => Boolean(goals && goals.btts && (goals.btts.yes !== undefined || goals.btts.no !== undefined));
+
 /** Krátká diagnostika pro případ, že se stránka zápasu nepodařilo přečíst (jde ji poslat vývojáři). */
 function goalsDiagnostics(url, html) {
   const text = strippedStrings(load(html).root()).join(" ");
@@ -450,7 +452,8 @@ class ForebetScraper {
     let dumped = false;
     for (const [i, m] of todo.entries()) {
       const hit = cache && cache.get(m.url);
-      if (hit) { m.goals = hit; summary.parsed += 1; summary.cached += 1; continue; } // nedávno staženo – bez dotazu
+      // nedávno staženo → bez dotazu; tip „oba týmy skórují“ ale potřebuje i BTTS, bez něj se stránka stáhne znovu
+      if (hit && !(m.needBtts && !hasBtts(hit))) { m.goals = hit; summary.parsed += 1; summary.cached += 1; continue; }
       progress(`Forebet: pravděpodobnosti gólů (${i + 1}/${todo.length})…`);
       try {
         let html = "";
@@ -471,7 +474,7 @@ class ForebetScraper {
           if (again) { m.goals = again; useBrowser = true; } else html = rendered;
         }
         if (m.goals) { summary.parsed += 1; if (cache) cache.set(m.url, m.goals); }
-        else if (debugDir && !dumped) {
+        if ((!m.goals || (m.needBtts && !hasBtts(m.goals))) && debugDir && !dumped) { // ladicí soubor: stránka, ze které se nepodařilo přečíst góly / BTTS
           dumped = true;
           try {
             fs.mkdirSync(debugDir, { recursive: true });

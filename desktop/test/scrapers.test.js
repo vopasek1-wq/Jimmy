@@ -426,3 +426,24 @@ test("Forebet: stránky lig se stahují po třech najednou; když se objeví ov�
   assert.ok(loaded.some((u) => u.endsWith("serie-a")));                         // blokovaná stránka šla do okna
   assert.equal(ms.filter((m) => m.leagueKey).length, 5);                        // všech pět lig má zápas
 });
+
+test("Forebet: tip BTTS bez BTTS v mezipaměti stáhne stránku znovu a při neúspěchu uloží ladicí soubor", async () => {
+  const fs = require("node:fs");
+  const os = require("node:os");
+  const path = require("node:path");
+  const { GoalsCache } = require("../src/goalscache");
+  const cache = new GoalsCache(null);
+  cache.set("https://www.forebet.com/en/football/matches/x-1", { over: { 2.5: 60 }, under: { 2.5: 40 }, btts: {} });
+  const page = "<html><body><p>Over 2.5 goals 61%</p><p>Under 2.5 goals 39%</p><p>Both teams to score: something else</p></body></html>";
+  let asked = 0;
+  const http = { getText: async () => { asked += 1; return page; } };
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "fb-"));
+  const m = { url: "https://www.forebet.com/en/football/matches/x-1", needBtts: true };
+  const other = { url: "https://www.forebet.com/en/football/matches/y-2" };
+  cache.set(other.url, { over: { 2.5: 55 }, under: {}, btts: {} });
+  const sum = await new forebet.ForebetScraper(http, { loadHtml: async () => page }).fetchGoals([m, other], () => {}, { debugDir: dir, cache });
+  assert.equal(asked >= 1, true);
+  assert.equal(sum.cached, 1);                                   // jen zápas bez potřeby BTTS zůstal z mezipaměti
+  assert.equal(m.goals.over["2.5"], 61);
+  assert.ok(fs.existsSync(path.join(dir, "forebet-diagnostika.txt")));
+});
