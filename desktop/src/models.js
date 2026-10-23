@@ -17,7 +17,6 @@ function tipKey(t) {
   return [utcDateOf(t.kickoff), normalize(t.home), normalize(t.away), t.tipCode].join("|");
 }
 
-const sourceLabel = (t) => t.sources.join(" + ");
 
 /** Výsledek jednoho běhu stahování. */
 function newResult(startedAt) {
@@ -29,4 +28,4 @@ const resultOk = (result) => {
   return Boolean(st && (st.state === "ok" || st.state === "partial"));
 };
 
-module.exports = { UPCOMING, LIVE, FINISHED, SOURCE_SCORES24, SOURCE_FOREBET, SOURCE_SOFASCORE, tipKey, sourceLabel, newResult, resultOk };
+module.exports = { UPCOMING, LIVE, FINISHED, SOURCE_SCORES24, SOURCE_FOREBET, SOURCE_SOFASCORE, tipKey, newResult, resultOk };

@@ -1,4 +1,4 @@
-// Záložní režim: skutečné okno prohlížeče (vestavěné Chromium z Electronu) místo Selenia. Všechny zdroje sdílejí jedno skryté
+// Záložní režim: skutečné okno prohlížeče (vestavěné Chromium z Electronu). Všechny zdroje sdílejí jedno skryté
 // okno (`_use`), které se po nečinnosti zavře.
 //
 // Používá se tam, kde samotné HTTP nestačí:

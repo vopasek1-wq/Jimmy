@@ -43,10 +43,4 @@ function estimateOdds(probability, margin = ESTIMATED_MARGIN) {
   return round2((100 / probability) * (1 - margin));
 }
 
-/** „1.70“, odhad „~1.60“, chybějící „–“ (UI si tečku mění na čárku samo). */
-function fmtOdds(odds, estimated = false) {
-  if (odds === null || odds === undefined) return "–";
-  return `${estimated ? "~" : ""}${odds.toFixed(2)}`;
-}
-
-module.exports = { americanToDecimal, parseOdds, estimateOdds, fmtOdds, round2 };
+module.exports = { parseOdds, estimateOdds };

@@ -5,11 +5,11 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 
 const config = require("../src/config");
-const { parseOdds, estimateOdds, fmtOdds } = require("../src/odds");
+const { parseOdds, estimateOdds } = require("../src/odds");
 const { normalizePick, evaluate, forebetProbability, WIN, LOSS, VOID } = require("../src/markets");
 const { normalize, teamSimilarity, sameMatch } = require("../src/names");
 const { applyFilters, passesFilters, probabilityClass, HIGH, MID } = require("../src/filters");
-const { localDate, fmtKickoff, fmtStamp, addDays, utcDateTime } = require("../src/timeutil");
+const { localDate, fmtStamp, addDays, utcDateTime } = require("../src/timeutil");
 const golden = require("./fixtures/golden.json");
 
 const near = (a, b) => (a === null || b === null ? a === b : Math.abs(a - b) < 1e-9);
@@ -51,13 +51,10 @@ test("parseOdds: americké kurzy se převedou na desetinné", () => {
 test("parseOdds: nesmysly a prázdné hodnoty → null", () => {
   for (const x of ["-", "", null, undefined, "abc", "1.00", "0.5", "-50"]) assert.equal(parseOdds(x), null, String(x));
 });
-test("estimateOdds je opatrný a validovaný, fmtOdds značí odhad", () => {
+test("estimateOdds je opatrný a validovaný", () => {
   assert.ok(Math.abs(estimateOdds(70) - 1.34) < 0.01);
   assert.equal(estimateOdds(0), null);
   assert.equal(estimateOdds(100), null);
-  assert.equal(fmtOdds(1.7), "1.70");
-  assert.equal(fmtOdds(1.6, true), "~1.60");
-  assert.equal(fmtOdds(null), "–");
 });
 
 // --- trhy ----------------------------------------------------------------------------------------------------
@@ -137,7 +134,6 @@ test("filtr: kombinace a pásma barev (75 % je ještě žlutá)", () => {
 // --- čas ------------------------------------------------------------------------------------------------------------------
 test("čas: pražské datum a formát (letní čas)", () => {
   const d = new Date(Date.UTC(2026, 9, 18, 15, 30)); // 15:30 UTC = 17:30 SELČ
-  assert.equal(fmtKickoff(d), "ne 18.10. 17:30");
   assert.equal(fmtStamp(d), "18.10.2026 17:30");
   assert.equal(localDate(new Date(Date.UTC(2026, 9, 18, 22, 30))), "2026-10-19"); // po půlnoci v Praze už je další den
   assert.equal(localDate(new Date(Date.UTC(2026, 0, 15, 22, 30))), "2026-01-15"); // v zimě +1 h: 23:30 je ještě týž den

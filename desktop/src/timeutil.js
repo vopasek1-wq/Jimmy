@@ -3,8 +3,6 @@
 
 const { DISPLAY_TZ } = require("./config");
 
-const CZ_DAYS = ["ne", "po", "út", "st", "čt", "pá", "so"]; // podle Date.getDay()
-
 const partsFmt = new Intl.DateTimeFormat("en-GB", {
   timeZone: DISPLAY_TZ, year: "numeric", month: "numeric", day: "numeric",
   hour: "2-digit", minute: "2-digit", hourCycle: "h23", weekday: "short",
@@ -47,12 +45,6 @@ function addDays(isoDate, days) {
   return `${dt.getUTCFullYear()}-${pad(dt.getUTCMonth() + 1)}-${pad(dt.getUTCDate())}`;
 }
 
-/** Např. „ne 18.10. 17:30“. */
-function fmtKickoff(date) {
-  const p = localParts(date);
-  return `${CZ_DAYS[p.weekday]} ${p.day}.${p.month}. ${pad(p.hour)}:${pad(p.minute)}`;
-}
-
 /** Časová značka poslední aktualizace, např. „18.10.2026 14:03“. */
 function fmtStamp(date) {
   const p = localParts(date);
@@ -72,4 +64,4 @@ function utcDateTime(isoDate, hh, mm) {
 
 const utcDateOf = (date) => date.toISOString().slice(0, 10);
 
-module.exports = { localParts, localDate, todayLocal, addDays, fmtKickoff, fmtStamp, fmtHourMinute, utcDateTime, utcDateOf, localToUtc };
+module.exports = { localParts, localDate, todayLocal, addDays, fmtStamp, fmtHourMinute, utcDateTime, utcDateOf, localToUtc };

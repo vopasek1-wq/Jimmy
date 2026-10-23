@@ -303,9 +303,7 @@ i[data-lucide],
 }
 .input:hover { border-color: var(--border-3); }
 .input:focus { border-color: var(--accent); box-shadow: var(--ring); }
-.input--select { padding-right: 8px; }
 .input--date { width: 150px; flex: none; color-scheme: dark; }
-.input--select option { background: var(--card); color: var(--text); }
 
 .btn {
   display: inline-flex;
@@ -403,17 +401,6 @@ i[data-lucide],
 .card__title { display: flex; align-items: center; gap: 12px; font-size: 16.5px; font-weight: 500; line-height: 20px; letter-spacing: 0.1px; }
 .card__title .lucide { width: 22px; height: 22px; margin: -1px 0; stroke-width: 1.8; }
 .card__note { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.card__foot {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 14px;
-  flex: none;
-  margin-top: 10px;
-  font-size: 11.5px;
-  color: var(--muted);
-}
-.card__foot-text { flex: 1 1 260px; }
 
 
 /* ---------- Malé upozornění vlevo od „Obnovit tipy“ ---------- */
@@ -457,10 +444,6 @@ i[data-lucide],
 .seg-control button:hover { background: var(--hover); color: var(--text); }
 .seg-control button:active { transform: scale(0.96); }
 .seg-control button[aria-pressed="true"] { background: var(--accent-deep); color: var(--accent-bright); box-shadow: inset 0 0 0 1px rgba(86, 203, 255, 0.45); }
-.seg-control--outcome button:disabled { opacity: 0.45; }
-.seg-control--outcome button:disabled:hover { background: none; color: var(--text-2); }
-
-.select-field { display: flex; flex-direction: column; gap: 3px; font-size: 11.5px; color: var(--muted); }
 
 .table-wrap {
   position: relative;
@@ -514,13 +497,11 @@ i[data-lucide],
 .trow.is-done .match, .trow.is-done .c-tip, .trow.is-done .c-time { color: var(--faint); }
 .trow.is-done .pill { opacity: 0.6; }
 .trow.is-selected .match, .trow.is-selected .c-tip, .trow.is-selected .c-time, .trow.is-selected .pill { color: var(--text); opacity: 1; }
-.trow.is-selected .state--done { color: var(--text-2); }
 .trow.is-selected .pill--high { color: var(--green); }
 .trow.is-selected .pill--mid { color: var(--yellow); }
 .trow:focus-visible { outline-offset: -2px; }
 
 .match { display: block; font-weight: 500; color: #e3eaf2; }
-.match__league { display: block; margin-top: 1px; font-size: 11.5px; font-weight: 400; color: var(--muted); }
 .c-tip { color: #e3eaf2; }
 
 .pill {
@@ -538,14 +519,10 @@ i[data-lucide],
 .pill--high { background: var(--green-soft); color: var(--green); }
 .pill--mid { background: var(--yellow-soft); color: var(--yellow); }
 
-.state { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; white-space: nowrap; color: var(--text-2); }
-.state--live { color: #ff8a8a; font-weight: 500; }
 .live-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: #ff3b3b; box-shadow: 0 0 8px rgba(255, 59, 59, 0.9); animation: blink 1s ease-in-out infinite; }
 .score { font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; letter-spacing: 0.3px; }
 .trow.is-live td { background: rgba(255, 59, 59, 0.06); }
 .trow.is-live.is-selected td { background: var(--accent-deep); }
-.state--done { color: var(--faint); }
-.state--done .score { color: var(--text-2); }
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.15; } }
 
 .empty { padding: 28px 8px; text-align: center; font-size: 13px; color: var(--muted); }

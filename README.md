@@ -11,8 +11,7 @@ a jako cílovou sázkovou kancelář počítá s **Tipsportem**. Vzhled a ovlád
 | [Forebet](https://www.forebet.com/) | statistické pravděpodobnosti 1 / X / 2 a gólů (Over/Under, oba týmy skórují) | HTTP, jinak okno aplikace (je za Cloudflare) |
 | [SofaScore](https://www.sofascore.com/cs) | přesný začátek, stav, skóre, výsledky | veřejný JSON endpoint webu |
 
-Aplikace žije ve složce [`desktop/`](desktop). Původní verze v Pythonu (Tkinter) zůstává v kořeni repozitáře
-– viz [Starší verze](#starší-verze-python--tkinter).
+Aplikace žije ve složce [`desktop/`](desktop).
 
 ## Stažení a spuštění (Windows)
 
@@ -237,7 +236,7 @@ desktop/
     config.js             prahy filtrů, seznam lig, adresy zdrojů
     markets.js, odds.js,  typy tipů a vyhodnocení výsledku, převod kurzů, párování názvů týmů
     names.js, filters.js, models.js, timeutil.js
-    http.js, browser.js   HTTP klient (pauzy, opakování, detekce blokace) a skryté okno místo Selenia
+    http.js, browser.js   HTTP klient (pauzy, opakování, detekce blokace) a sdílené skryté okno prohlížeče
     scrapers/             scores24.js, forebet.js, sofascore.js
     pipeline.js           sloučení zdrojů → filtry → obohacení; automatické vyhodnocení výsledků
     database.js           SQLite: běhy, tipy, historie, statistiky
@@ -245,21 +244,6 @@ desktop/
   renderer/               rozhraní (index.html, styles.css, script.js, vendor/ = GridStack, Lucide, Roboto)
   test/                   node:test + ukázkové stránky ve struktuře živých webů
 ```
-
-## Starší verze (Python + Tkinter)
-
-Původní verze (stejné zdroje a pravidla, vlastní okno v Tkinteru) zůstává v kořeni: `main.py`, složka `tipster/`,
-`run.bat`, testy v `tests/` (pytest). Potřebuje Python 3.10+ a pro Forebet / rozbalení lig Chrome nebo Edge
-(Selenium). Spouští se `run.bat`, nebo ručně:
-
-```bat
-py -3 -m venv .venv
-.venv\Scripts\pip install -r requirements.txt
-.venv\Scripts\python main.py
-```
-
-Konzolový režim: `python main.py --cli` (volitelně `--save`, `-v`). Data jsou v `data\tipy.sqlite3` (jiná databáze
-než u Electron verze).
 
 ## Řešení potíží
 

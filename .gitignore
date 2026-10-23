@@ -1,8 +1,4 @@
-.venv/
-venv/
-__pycache__/
-*.pyc
-.pytest_cache/
-data/
-*.log
+node_modules/
+dist/
 *.sqlite3
+*.log

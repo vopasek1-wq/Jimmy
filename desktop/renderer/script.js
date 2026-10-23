@@ -921,7 +921,7 @@
   /* ---------- Tikety (Gemini) ---------- */
   const tk = {
     day: ["today", "tomorrow"].includes(store.get("tk-day")) ? store.get("tk-day") : "today",
-    result: store.get("tk-result2"),   // naposledy vytvořené tikety (zůstanou i po restartu)
+    result: store.get("tk-result2"),   // naposledy vytvořené tikety (zůstanou i po restartu; ukážou se jen u dne, pro který vznikly)
     busy: false, step: "", startedAt: 0, timer: null,
   };
   const CERTAINTY_CS = { good: "Vysoká jistota", ok: "Střední jistota", risky: "Nižší jistota" };
@@ -937,11 +937,16 @@
         <span class="tk-omitted__match">${esc(o.matchName)}</span><span class="tk-omitted__tip">${esc(o.tipLabel)} · ${esc(nf2.format(o.odds))}</span><span class="tk-omitted__why">${esc(o.reason)}</span></li>`).join("")}</ul></section>`
     : "");
 
+  /** Den (RRRR-MM-DD), pro který se tikety vytvářejí podle přepínače Dnes / Zítra. */
+  const tkTargetDay = () => { const today = localDay(new Date()); return tk.day === "tomorrow" ? nextDay(today) : today; };
+  /** Den, pro který uložený výsledek vznikl (starší uložené výsledky: den prvního zápasu). */
+  const tkResultDay = (r) => r.forDay || (r.tickets && r.tickets[0] && r.tickets[0].legs[0] ? localDay(new Date(r.tickets[0].legs[0].kickoff)) : null);
+
   function renderTickets() {
     $$("#tk-day [data-tkday]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.tkday === tk.day)));
     const note = $("#tk-note");
     const list = $("#tk-list");
-    const r = tk.result;
+    const r = tk.result && tkResultDay(tk.result) === tkTargetDay() ? tk.result : null; // včerejší tikety se v „Dnes“ neukazují
     note.textContent = TK_NOTE;
     if (tk.busy) {
       list.innerHTML = `<div class="tk-busy"><span class="tk-busy__spin" aria-hidden="true"></span><p class="tk-busy__text" id="tk-busy-text">${esc(busyText())}</p>
@@ -1014,6 +1019,7 @@
   $("#tk-create").addEventListener("click", async () => {
     if (!desktop || tk.busy) return;
     if (!geminiKey.has) { openKey(); toast("Nejdřív zadej Gemini API klíč (vlevo dole).", "error"); return; }
+    const forDay = tkTargetDay(); // den platí pro to, co se právě žádá, i kdyby se mezitím přepnul filtr
     tk.busy = true;
     tk.step = "";
     tk.startedAt = Date.now();
@@ -1024,7 +1030,7 @@
     clearInterval(tk.timer);
     tk.busy = false;
     $("#tk-create").disabled = false;
-    tk.result = res.ok ? { ...res.data, at: fmtKickoff(new Date().toISOString()) } : { error: res.error };
+    tk.result = { ...(res.ok ? res.data : { error: res.error }), forDay, at: fmtKickoff(new Date().toISOString()) };
     if (res.ok) store.set("tk-result2", tk.result);
     renderTickets();
     loadTicketHistory();
