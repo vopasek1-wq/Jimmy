@@ -16,6 +16,7 @@ const ALIASES = {
   "olympique lyonnais": "lyon", "sparta prague": "sparta praha", "slavia prague": "slavia praha",
   // názvy, které se mezi zdroji liší (přejmenované kluby, anglický × domácí název)
   cologne: "koln", "amed sportif faaliyetler": "amedspor", lisen: "artis brno", "fastav zlin": "trinity zlin",
+  "royal charleroi": "charleroi", "sporting charleroi": "charleroi", "oud heverlee": "leuven", "oud heverlee leuven": "leuven", "oh leuven": "leuven",
 };
 
 const stripAccents = (text) => text.normalize("NFKD").replace(/[̀-ͯ]/g, "");

@@ -62,7 +62,7 @@ const LEAGUES = [
     slugRe: /^portugal-primeira-liga$/i, countryRe: /^Portugal$/i, nameRe: /^(Liga Portugal|Primeira Liga)$/i, forebetTags: ["Por1", "Pt1"], forebetPaths: [/^portugal\/(liga-portugal|primeira-liga)(-betclic)?$/], forebetGuess: "portugal/liga-portugal" },
   { key: "BELGIE", nameCs: "Belgie – Pro League", short: "Pro League", sofascoreId: 38,
     slugRe: /^belgium-(pro-league|jupiler-pro-league|first-division-a)$/i, countryRe: /^Belgium$/i,
-    nameRe: /^(Pro League|Jupiler Pro League|First Division A)$/i, forebetTags: ["Bel1", "Be1"], forebetPaths: [/^belgium\/(pro-league|jupiler-pro-league|first-division-a)$/], forebetGuess: ["belgium/pro-league", "belgium/jupiler-pro-league", "belgium/first-division-a"], forebetCountry: "belgium" },
+    nameRe: /^(Pro League|Jupiler Pro League|First Division A)$/i, forebetTags: ["Bel1", "Be1"], forebetPaths: [/^belgium\/(pro-league|jupiler-pro-league|first-division-a)$/], forebetGuess: ["belgium/jupiler-pro-league", "belgium/pro-league", "belgium/first-division-a"], forebetCountry: "belgium" },
   { key: "TURECKO", nameCs: "Turecko – Süper Lig", short: "Süper Lig", sofascoreId: 52,
     slugRe: /^turkey-super-lig$/i, countryRe: /^Turkey$/i, nameRe: /^Super Lig$/i, forebetTags: ["Tur1", "Tr1"], forebetPaths: [/^turkey\/(super-lig|sueper-lig|super-league)$/], forebetGuess: "turkey/super-lig" },
   { key: "SKOTSKO", nameCs: "Skotsko – Premiership", short: "Premiership", sofascoreId: 36,

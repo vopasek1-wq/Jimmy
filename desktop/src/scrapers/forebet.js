@@ -295,6 +295,7 @@ function dumpLists(debugDir, lists) {
   } catch { /* ladicí soubor je jen bonus */ }
 }
 
+const LEAGUE_CONCURRENCY = 3;
 const LEAGUE_DELAY_MS = [300, 700]; // stránky lig jsou drobné dotazy na tentýž server – kratší pauza než u ostatních zdrojů
 const pageReady = (html) => !looksBlocked(200, html) && (html.includes("rcnt") || html.includes("fprc"));
 /** Stránka ligy je hotová i bez zápasů (velká stránka s nabídkou), jen ji nesmí zastavit Cloudflare. */
@@ -331,18 +332,20 @@ class ForebetScraper {
   async _fetchPages(items, state, progress) {
     const out = items.map(() => null);
     const rest = [];
-    for (const [i, it] of items.entries()) {
-      if (!state.useBrowser) {
+    const queue = items.map((_, i) => i);
+    const worker = async () => { // tři stránky najednou; po prvním požadavku na ověření se zbylé předají oknu prohlížeče
+      while (queue.length) {
+        const i = queue.shift();
+        if (state.useBrowser) { rest.push(i); continue; }
         try {
-          out[i] = { html: await this.http.getText(it.url, { delayMs: LEAGUE_DELAY_MS }), via: "HTTP" };
-          continue;
+          out[i] = { html: await this.http.getText(items[i].url, { delayMs: LEAGUE_DELAY_MS }), via: "HTTP" };
         } catch (err) {
-          if (err instanceof BlockedError) state.useBrowser = true;
-          else { out[i] = { html: "", via: "", error: err.message || String(err) }; continue; }
+          if (err instanceof BlockedError) { state.useBrowser = true; rest.push(i); } else out[i] = { html: "", via: "", error: err.message || String(err) };
         }
       }
-      rest.push(i);
-    }
+    };
+    await Promise.all(Array.from({ length: Math.min(LEAGUE_CONCURRENCY, items.length) }, worker));
+    rest.sort((x, y) => x - y);
     if (rest.length) {
       progress(`Forebet: ${rest.length} stránek lig v okně prohlížeče…`);
       let pages = [];

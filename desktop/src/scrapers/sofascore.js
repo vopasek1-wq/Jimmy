@@ -16,6 +16,8 @@ const { utcDateOf } = require("../timeutil");
 
 const API_HEADERS = { Accept: "application/json", Referer: `${config.SOFASCORE_WEB}/` };
 const MATCH_TOLERANCE_MS = 3 * 3600 * 1000;
+const FAST_DELAY_MS = [300, 700]; // drobné dotazy na týž server; stahují se po třech najednou
+const CONCURRENCY = 3;
 
 function eventUrl(ev) {
   return `${config.SOFASCORE_WEB}/cs/football/match/${ev.slug}/${ev.customId}#id:${ev.id}`;
@@ -61,7 +63,7 @@ class SofaScoreClient {
     if (!this.cache.has(key)) {
       const url = `${config.SOFASCORE_API}/unique-tournament/${tournamentId}/scheduled-events/${day}`;
       try {
-        this.cache.set(key, parseEvents(await this.http.getJson(url, { headers: API_HEADERS })));
+        this.cache.set(key, parseEvents(await this.http.getJson(url, { headers: API_HEADERS, delayMs: FAST_DELAY_MS })));
         this.requestsOk += 1;
       } catch (err) {
         if (!(err instanceof SourceError)) throw err;
@@ -92,6 +94,14 @@ class SofaScoreClient {
       if (lg && lg.sofascoreId) groups.add(`${lg.sofascoreId}|${utcDateOf(t.kickoff)}`);
     }
     progress(`SofaScore: načítám detaily zápasů (${groups.size} dotazů)…`);
+    const queue = [...groups];
+    const worker = async () => {
+      while (queue.length) {
+        const [id, day] = queue.shift().split("|");
+        await this.events(Number(id), day);
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(CONCURRENCY, queue.length) }, worker)); // další `find` už čte z mezipaměti
 
     const kept = [];
     for (const t of tips) {
