@@ -19,7 +19,7 @@ function readLimited(file, limit) {
 const FILES = [
   ["zdroje-diagnostika.txt", 8000],
   ["forebet-diagnostika.txt", 3000],
-  ["forebet-seznam-diagnostika.txt", 3500],
+  ["forebet-seznam-diagnostika.txt", 8000],
   ["tikety-statistiky.txt", 6000],
   ["tikety-odpoved.txt", 4500, "=== ZADÁNÍ ==="],
 ];

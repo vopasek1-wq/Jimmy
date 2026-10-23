@@ -164,8 +164,9 @@ bez klíče AI část nefunguje, statistiky ano.
 
 ## Forebet a Cloudflare
 
-Forebet je chráněný Cloudflare. Aplikace nejdřív zkusí obyčejný dotaz, pak skryté okno. Seznam zápasů na Forebetu je zpočátku
-neúplný (jen první země podle abecedy), proto okno aplikace opakovaně klikne na **Show more**, dokud seznam přibývá. Když kontrola nepřejde,
+Forebet je chráněný Cloudflare. Aplikace nejdřív zkusí obyčejný dotaz, pak skryté okno. Aplikace čte přehledy „dnes“ a „zítra“
+(`football-tips-and-predictions-for-today` / `-tomorrow`); starý přehled `/football-predictions` vrací jen první země podle abecedy
+a je až záloha. Když je seznam neúplný nebo má tlačítko **Show more**, okno aplikace na ně opakovaně klikne, dokud seznam přibývá. Když kontrola nepřejde,
 objeví se pruh s tlačítkem **Ověřit Forebet**: otevře se okno, ve kterém kontrolu dokončíte (až 90 s), a aplikace
 si ověření pamatuje.
 

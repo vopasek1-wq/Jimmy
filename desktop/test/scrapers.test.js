@@ -151,14 +151,14 @@ test("Forebet: blokace → okno prohlížeče → ověření; bez úspěchu sroz
   const seen = [];
   const browserOk = { loadHtml: async (url, opts) => { seen.push(opts.interactive); return forebetPage([forebetRow({ home: "A", away: "B", p: [60, 25, 15], pick: "1" })]); } };
   const ms = await new forebet.ForebetScraper(blockedHttp, browserOk).fetch();
-  assert.equal(ms.length, 1);
-  assert.deepEqual(seen, [false]);
+  assert.equal(ms.length, 1);                  // dnešní i zítřejší stránka vrátí tentýž zápas → sloučí se
+  assert.deepEqual(seen, [false, false]);
   const browserBlocked = { loadHtml: async () => cf };
   await assert.rejects(() => new forebet.ForebetScraper(blockedHttp, browserBlocked).fetch(), /Cloudflare kontrola neprošla.*Ověřit Forebet/);
   // interaktivní režim přeskočí HTTP a rovnou otevře okno
   const httpNever = { getText: async () => { throw new Error("nemělo se volat"); } };
   await new forebet.ForebetScraper(httpNever, browserOk).fetch(() => {}, { interactive: true });
-  assert.deepEqual(seen, [false, true]);
+  assert.deepEqual(seen, [false, false, true]); // ruční ověření jen u první stránky; chyba druhé (HTTP) výsledek první nezahodí
 });
 
 // --- SofaScore ------------------------------------------------------------------------------------------------------
@@ -298,10 +298,10 @@ test("Forebet: seznam bez sledované ligy se doplní rozbalením „Show more“
   const ms = await new forebet.ForebetScraper(http, browser).fetch(() => {}, { debugDir: dir });
   assert.equal(ms.length, 2);
   assert.equal(ms.filter((m) => m.leagueKey).length, 2);
-  assert.equal(calls.length, 1);
+  assert.equal(calls.length, 2);               // dnes + zítra
   assert.match(String(calls[0].expand), /div\.rcnt/);
   const diag = fs.readFileSync(path.join(dir, "forebet-seznam-diagnostika.txt"), "utf8");
-  assert.match(diag, /Načteno přes: okno prohlížeče; zápasů 2, ze sledovaných lig 2/);
+  assert.match(diag, /for-today ===\nNačteno přes: okno prohlížeče; zápasů 2, ze sledovaných lig 2/);
   assert.match(diag, /řádků 1 → 2.*span\.mrows_btn «Show more»/);
   assert.equal(fs.existsSync(path.join(dir, "forebet-seznam.html")), false); // sledované ligy tam jsou → HTML netřeba
 });
@@ -333,4 +333,41 @@ test("Forebet: rozbalení v okně nic nepřidá → použije se delší seznam z
   const smaller = forebetPage([forebetRow({ home: "A", away: "B", p: [50, 30, 20], pick: "1" })], "Alb1");
   const ms = await new forebet.ForebetScraper({ getText: async () => partial }, { loadHtml: async () => smaller }).fetch();
   assert.equal(ms.length, 2);
+});
+
+test("Forebet: dnes + zítra se sloučí, zítřejší stránka s chybou nevadí, starý přehled jen jako záloha", async () => {
+  const today = forebetPage([forebetRow({ home: "Arsenal", away: "Chelsea", p: [60, 25, 15], pick: "1", href: "/en/football/matches/arsenal-chelsea-1" })], "Eng1");
+  const tomorrow = forebetPage([forebetRow({ home: "Everton", away: "Fulham", p: [40, 30, 30], pick: "1", href: "/en/football/matches/everton-fulham-2" })], "Eng1");
+  const asked = [];
+  const http = {
+    getText: async (url) => {
+      asked.push(url);
+      if (url.endsWith("for-today")) return today;
+      if (url.endsWith("for-tomorrow")) return tomorrow;
+      throw new Error("záloha neměla být potřeba");
+    },
+  };
+  const browser = { loadHtml: async () => { throw new Error("okno nemělo být potřeba"); } };
+  assert.deepEqual((await new forebet.ForebetScraper(http, browser).fetch()).map((m) => m.home), ["Arsenal", "Everton"]);
+  assert.equal(asked.length, 2);
+
+  const { SourceError } = require("../src/http");
+  const httpTomorrow404 = { getText: async (url) => { if (url.endsWith("for-tomorrow")) throw new SourceError("HTTP 404"); return today; } };
+  assert.equal((await new forebet.ForebetScraper(httpTomorrow404, browser).fetch()).length, 1);
+
+  // dnešní přehled nejde → starý přehled jako záloha
+  const old = forebetPage([forebetRow({ home: "Torino", away: "Monza", p: [50, 30, 20], pick: "1" })], "Ita1");
+  const httpOld = { getText: async (url) => { if (url.endsWith("football-predictions")) return old; throw new SourceError("HTTP 404"); } };
+  assert.deepEqual((await new forebet.ForebetScraper(httpOld, browser).fetch()).map((m) => m.home), ["Torino"]);
+  // nic nejde → první chyba
+  const httpNone = { getText: async () => { throw new SourceError("HTTP 404"); } };
+  await assert.rejects(() => new forebet.ForebetScraper(httpNone, browser).fetch(), /404/);
+});
+
+test("Forebet: liga se pozná i podle odkazu na ligu v řádku a značka se bere z vlastního řádku", () => {
+  const row = (tag, href) => `<div class="rcnt tr_0"><div class="shortagDiv"><span class="shortTag">${tag}</span>${href ? `<a href="${href}">liga</a>` : ""}</div>`
+    + '<span class="homeTeam">A</span><span class="awayTeam">B</span><time datetime="2026-10-24 15:00:00"></time><div class="fprc"><span>50</span><span>30</span><span>20</span></div></div>';
+  const ms = forebet.parsePage(`<html><body>${row("Zzz", "/en/football-tips-and-predictions-for-england/premier-league")}${row("Cze1", "")}${row("Xx9", "")}</body></html>`);
+  assert.deepEqual(ms.map((m) => m.leagueKey), ["EPL", "CESKO", null]);
+  assert.equal(ms[0].leagueText, "Zzz"); // značka řádku, ne předchozího
 });
