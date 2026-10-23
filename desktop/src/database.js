@@ -56,6 +56,19 @@ CREATE TABLE IF NOT EXISTS tips (
     created_at      TEXT NOT NULL,
     updated_at      TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS tickets (
+    id                INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at        TEXT NOT NULL,
+    day               TEXT NOT NULL,
+    name              TEXT NOT NULL,
+    verdict           TEXT NOT NULL DEFAULT '',
+    summary           TEXT NOT NULL DEFAULT '',
+    total_odds        REAL NOT NULL,
+    joint_probability REAL NOT NULL,
+    legs              TEXT NOT NULL,
+    signature         TEXT NOT NULL,
+    UNIQUE(day, signature)
+);
 CREATE INDEX IF NOT EXISTS idx_tips_date ON tips(tip_date);
 CREATE INDEX IF NOT EXISTS idx_tips_run ON tips(last_run_id);
 `;
@@ -164,6 +177,30 @@ class Database {
       this.db.exec("ROLLBACK");
       throw err;
     }
+  }
+
+  /** Uloží tiket od AI (stejná sada tipů ve stejný den se neuloží podruhé); vrací true, když šlo o nový. */
+  saveTicket(t) {
+    const day = localDate(new Date(t.legs[0].kickoff));
+    const signature = t.legs.map((l) => l.tipId).sort((a, b) => a - b).join(",");
+    const info = this.db.prepare(`INSERT OR IGNORE INTO tickets (created_at, day, name, verdict, summary, total_odds, joint_probability, legs, signature)
+      VALUES (?,?,?,?,?,?,?,?,?)`).run(new Date().toISOString(), day, t.name, t.verdict || "", t.summary || "", t.totalOdds, t.jointProbability, JSON.stringify(t.legs), signature);
+    return Number(info.changes) > 0;
+  }
+
+  /** Uložené tikety (nejnovější první); `limit` null = všechny. */
+  listTickets(limit = null) {
+    const rows = this.db.prepare(`SELECT * FROM tickets ORDER BY id DESC${limit ? " LIMIT ?" : ""}`).all(...(limit ? [limit] : []));
+    return rows.map((r) => ({ id: Number(r.id), createdAt: r.created_at, day: r.day, name: r.name, verdict: r.verdict, summary: r.summary,
+      totalOdds: r.total_odds, jointProbability: r.joint_probability, legs: JSON.parse(r.legs) }));
+  }
+
+  /** Výsledky tipů podle id: Map id → win/loss/void (tip bez výsledku v mapě není). */
+  outcomesByIds(ids) {
+    const out = new Map();
+    const stmt = this.db.prepare("SELECT outcome FROM tips WHERE id=?");
+    for (const id of new Set(ids)) { const r = stmt.get(id); if (r && r.outcome) out.set(id, r.outcome); }
+    return out;
   }
 
   /** Aktualizuje stav a skóre rozehraných zápasů (bez nového běhu stahování). */

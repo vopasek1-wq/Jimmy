@@ -28,6 +28,7 @@ contextBridge.exposeInMainWorld("desktop", {
   },
   tickets: {
     create: (req) => ipcRenderer.invoke("tickets:create", req),
+    history: () => ipcRenderer.invoke("tickets:history"),
     onProgress: (callback) => ipcRenderer.on("tickets:progress", (_event, message) => callback(String(message))),
   },
   analysis: {
@@ -44,5 +45,6 @@ contextBridge.exposeInMainWorld("desktop", {
     list: (days) => ipcRenderer.invoke("history:list", days),
     setOutcome: (id, outcome) => ipcRenderer.invoke("history:set-outcome", { id, outcome }),
     evaluate: () => ipcRenderer.invoke("history:evaluate"),
+    exportCsv: () => ipcRenderer.invoke("history:export"),
   },
 });

@@ -143,7 +143,7 @@ function parseTickets(text, candidates) {
       verdict: certaintyOf(raw.jistota || raw.verdikt),
       summary: String(raw.zduvodneni || raw.shrnuti || raw.summary || "").trim(),
       legs: picked.map((l) => ({
-        id: l.ticketId, matchName: l.matchName, league: l.leagueShort || l.league, kickoff: l.kickoff, tipLabel: l.tipLabel,
+        id: l.ticketId, tipId: l.id, matchName: l.matchName, league: l.leagueShort || l.league, kickoff: l.kickoff, tipLabel: l.tipLabel,
         odds: l.odds, probability: l.probability, probForebet: l.probForebet ?? null, value: l.value,
       })),
       totalOdds: Math.round(odds * 100) / 100,
@@ -178,6 +178,54 @@ function omittedMatches(candidates, usableIds, parsed) {
     }
     out.push({ id: c.ticketId, matchName: c.matchName, tipLabel: c.tipLabel, odds: c.odds, probability: c.probability, kickoff: c.kickoff, kind, reason });
   }
+  return out;
+}
+
+/**
+ * Zápasy z čekajících tiketů, které začnou do `minutes` minut a ještě se o nich neupozornilo (`notified` = Set klíčů).
+ * Vrací [{ key, matchName, ticketName, minutes }] a klíče si zapíše do `notified`.
+ */
+function dueKickoffs(tickets, outcomes, now = new Date(), notified = new Set(), minutes = 15) {
+  const out = [];
+  for (const t of tickets) {
+    if (t.legs.some((l) => outcomes.get(l.tipId) === "loss")) continue;       // prohraný tiket už nezajímá
+    for (const l of t.legs) {
+      const left = (Date.parse(l.kickoff) - now.getTime()) / 60000;
+      const key = `${t.id}:${l.tipId}`;
+      if (left > 0 && left <= minutes && !outcomes.get(l.tipId) && !notified.has(key)) {
+        notified.add(key);
+        out.push({ key, matchName: l.matchName, ticketName: t.name, minutes: Math.ceil(left) });
+      }
+    }
+  }
+  return out;
+}
+
+const round1 = (x) => Math.round(x * 10) / 10;
+
+/** Výsledek uloženého tiketu z výsledků jeho tipů (`outcomes`: tipId → win/loss/void): prohra kteréhokoli tipu = prohra, vrácený tip se přeskočí. */
+function settleTicket(ticket, outcomes) {
+  const legs = ticket.legs.map((l) => ({ ...l, outcome: outcomes.get(l.tipId) || null }));
+  const won = legs.filter((l) => l.outcome === "win");
+  let status = "pending";
+  if (legs.some((l) => l.outcome === "loss")) status = "loss";
+  else if (legs.every((l) => l.outcome)) status = won.length ? "win" : "void";
+  const effectiveOdds = status === "win" ? Math.round(won.reduce((p, l) => p * l.odds, 1) * 100) / 100 : null;
+  const profit = status === "win" ? effectiveOdds - 1 : status === "loss" ? -1 : status === "void" ? 0 : null; // vklad 1 na tiket
+  return { ...ticket, legs, status, effectiveOdds, profit };
+}
+
+/** Souhrn vyhodnocených tiketů ve tvaru jako u tipů v Analýze: počet, průměrný odhad, skutečná úspěšnost, rozdíl, ROI. */
+function ticketStats(settled) {
+  const done = settled.filter((t) => t.status === "win" || t.status === "loss");
+  const n = done.length;
+  const wins = done.filter((t) => t.status === "win").length;
+  const out = { n, wins, pending: settled.filter((t) => t.status === "pending").length, predicted: null, actual: null, gap: null, roi: null };
+  if (!n) return out;
+  out.predicted = round1(done.reduce((s, t) => s + t.jointProbability, 0) / n);
+  out.actual = round1((100 * wins) / n);
+  out.gap = round1(out.actual - out.predicted);
+  out.roi = round1((100 * done.reduce((s, t) => s + t.profit, 0)) / n);
   return out;
 }
 
@@ -222,6 +270,6 @@ async function createTickets({ candidates, collect, ask, calibration = null, pro
 }
 
 module.exports = {
-  candidatesFrom, buildTicketPrompt, parseTickets, parseJson, createTickets,
+  candidatesFrom, buildTicketPrompt, parseTickets, parseJson, createTickets, settleTicket, ticketStats, dueKickoffs,
   MIN_LEGS, MAX_LEGS, MIN_TOTAL_ODDS, MAX_CANDIDATES,
 };

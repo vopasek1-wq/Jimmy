@@ -902,6 +902,24 @@ body { background: var(--bg); }
 .tk-busy__text { font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; }
 .tk-busy__hint { max-width: 520px; font-size: 12px; line-height: 1.5; color: var(--muted); }
 .tk-list > .tk-wide { grid-column: 1 / -1; }
+.tk-hist { margin-top: 18px; }
+.tk-hist:empty { display: none; }
+.tk-hist__title { display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: var(--text-2); }
+.tk-hist__title small { font-size: 12px; font-weight: 400; color: var(--muted); }
+.tk-hist__row { display: grid; grid-template-columns: 150px minmax(0, 1fr) 64px 92px; gap: 6px 16px; align-items: start; padding: 10px 14px; margin-bottom: 8px; background: var(--panel); border: 1px solid var(--border-2); border-radius: 14px; }
+.tk-hist__meta { display: flex; flex-direction: column; gap: 2px; font-size: 12.5px; }
+.tk-hist__meta span { color: var(--muted); font-size: 11.5px; }
+.tk-hist__legs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; font-size: 12.5px; }
+.tk-hist__legs li { display: grid; grid-template-columns: 16px minmax(0, 1.2fr) minmax(0, 1fr); gap: 8px; }
+.tk-hist__legs i { font-style: normal; text-align: center; color: var(--muted); }
+.tk-hist__legs li.is-win i { color: var(--green); }
+.tk-hist__legs li.is-loss i { color: var(--red); }
+.tk-hist__legs em { font-style: normal; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.tk-hist__odds { font-size: 14px; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
+.tk-hist__status { justify-self: end; display: inline-flex; align-items: center; height: 22px; padding: 0 10px; border-radius: 11px; font-size: 11.5px; font-weight: 700; background: var(--panel-2, rgba(255,255,255,0.06)); color: var(--muted); }
+.tk-hist__status--win { background: var(--green-soft); color: var(--green); }
+.tk-hist__status--loss { background: var(--red-soft); color: var(--red); }
+.tk-hist__status--void { background: var(--yellow-soft); color: var(--yellow); }
 .tk-omitted { padding: 10px 16px; background: var(--panel); border: 1px solid var(--border-2); border-radius: 14px; }
 .tk-omitted__title { font-size: 13px; font-weight: 600; color: var(--text-2); }
 .tk-omitted ul { list-style: none; margin: 10px 0 2px; padding: 0; }

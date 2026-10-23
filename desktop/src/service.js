@@ -11,8 +11,9 @@ const { SofaScoreClient } = require("./scrapers/sofascore");
 const { LiveClient } = require("./live");
 const { MatchStats } = require("./matchstats");
 const { analyze, recentLosses, buildPrompt } = require("./analysis");
-const { candidatesFrom } = require("./tickets");
+const { candidatesFrom, settleTicket, ticketStats, dueKickoffs } = require("./tickets");
 const { buildDiagnostics } = require("./diagnostics");
+const { historyCsv } = require("./csv");
 const { resultOk } = require("./models");
 const { fmtStamp, localDate, todayLocal } = require("./timeutil");
 
@@ -132,6 +133,31 @@ class TipService {
   /** Statistiky zápasů (forma, H2H, góly, zranění) ze SofaScore pro tikety; ladicí soubor jde do složky `ladeni`. */
   collectTicketStats(candidates, progress = () => {}) {
     return new MatchStats(this.http, { debugDir: path.join(this.dataDir, "ladeni") }).collect(candidates, progress);
+  }
+
+  /** Uloží tikety od AI (pro pozdější vyhodnocení). */
+  saveTickets(tickets) {
+    for (const t of tickets) if (t.legs.every((l) => Number.isFinite(l.tipId))) this.db.saveTicket(t);
+  }
+
+  /** Zápasy z čekajících tiketů, které začnou do 15 minut (pro upozornění); `notified` si drží volající. */
+  dueKickoffs(notified, now = new Date()) {
+    const tickets = this.db.listTickets(30);
+    return dueKickoffs(tickets, this.db.outcomesByIds(tickets.flatMap((t) => t.legs.map((l) => l.tipId))), now, notified);
+  }
+
+  /** Celá historie tipů jako CSV text. */
+  historyCsv() {
+    return historyCsv(this.db.history(null).map(serializeTip));
+  }
+
+  /** Uložené tikety s výsledky podle výsledků jejich tipů a souhrn (tikety × všechny tipy). */
+  ticketHistory(limit = 20) {
+    settleFinished(this.db);
+    const all = this.db.listTickets();
+    const outcomes = this.db.outcomesByIds(all.flatMap((t) => t.legs.map((l) => l.tipId)));
+    const settled = all.map((t) => settleTicket(t, outcomes));
+    return { tickets: settled.slice(0, limit), stats: ticketStats(settled), tips: this.analysis().overall };
   }
 
   /** Ladicí soubor s posledním zadáním a odpovědí Gemini pro tikety (přepisuje se). */

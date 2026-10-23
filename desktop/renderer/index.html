@@ -159,6 +159,7 @@
           </form>
           <p class="tk-note" id="tk-note">Aplikace vezme tipy z přehledu a ke každému zápasu stáhne ze SofaScore aktuální statistiky (forma, vzájemné zápasy, góly, zranění, domácí/venkovní výkonnost). Gemini z nich vybere tipy s dobrou oporou v datech a složí tikety. Celkový kurz a pravděpodobnost počítá aplikace; kurzy u Tipsportu se mohou lišit.</p>
           <div class="tk-list" id="tk-list"></div>
+          <div class="tk-hist" id="tk-history"></div>
         </section>
 
         <section class="card analysis-page" aria-labelledby="analysis-title">
@@ -176,6 +177,7 @@
             <div class="live-box"><div class="live-box__title">Podle typu tipu</div><div id="an-markets"></div></div>
             <div class="live-box"><div class="live-box__title">Podle soutěže</div><div id="an-leagues"></div></div>
           </div>
+          <div class="live-box"><div class="live-box__title">Tikety od Gemini vs. všechny tipy<small>vklad 1 na tiket / tip; odhad u tiketu = součin pravděpodobností</small></div><div id="an-tickets"></div></div>
           <div class="live-box ai-box">
             <div class="live-box__title">AI analýza<small>pošle souhrnné statistiky a posledních 40 prohraných tipů do Google Gemini API tvým klíčem</small></div>
             <form class="ai-key-form" id="ai-key-form" hidden>
@@ -215,7 +217,8 @@
               <button type="button" data-range="month" aria-pressed="true">Tento měsíc</button>
             </div>
             <input class="input input--date" type="date" id="hist-date" aria-label="Vybrat datum" hidden>
-            <button class="btn btn--primary btn--sm toolbar__right" type="button" id="evaluate"><i data-lucide="sparkles"></i>Vyhodnotit automaticky</button>
+            <button class="btn btn--ghost btn--sm toolbar__right" type="button" id="export-csv" title="Uloží celou historii tipů do souboru pro Excel"><i data-lucide="download"></i>Exportovat (CSV)</button>
+            <button class="btn btn--primary btn--sm" type="button" id="evaluate"><i data-lucide="sparkles"></i>Vyhodnotit automaticky</button>
           </div>
           <div class="table-wrap">
             <table class="tbl tbl--history" id="history-table" aria-label="Historie tipů">

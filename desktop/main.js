@@ -1,7 +1,7 @@
 // Fotbalové tipy – hlavní proces Electronu (Windows desktop aplikace).
 "use strict";
 
-const { app, BrowserWindow, ipcMain, shell, screen, net, session, clipboard, safeStorage } = require("electron");
+const { app, BrowserWindow, ipcMain, shell, screen, net, session, clipboard, safeStorage, dialog, Notification } = require("electron");
 const fs = require("node:fs");
 const path = require("node:path");
 
@@ -161,13 +161,32 @@ ipcMain.handle("tickets:create", safe(async (event, req) => {
   const { candidates, calibration } = service.ticketInput({ day });
   const ask = (options) => generate({ fetchFn: (url, init) => net.fetch(url, init), apiKey, ...options });
   const progress = (message) => { if (!event.sender.isDestroyed()) event.sender.send("tickets:progress", message); };
-  return createTickets({
+  const result = await createTickets({
     candidates, calibration, ask, progress,
     collect: (list, report) => service.collectTicketStats(list, report),
     hint: ` Podrobnosti: ${service.ticketDiagnosticsFile()}`,
     log: (text) => service.writeTicketLog(text),
   });
+  try { service.saveTickets(result.tickets); } catch (err) { console.error(err); } // uložení nesmí shodit výsledek
+  return result;
 }));
+ipcMain.handle("tickets:history", safe(() => service.ticketHistory()));
+ipcMain.handle("history:export", safe(async () => {
+  const stamp = new Date().toISOString().slice(0, 10);
+  const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, { title: "Exportovat historii", defaultPath: `historie-tipu-${stamp}.csv`, filters: [{ name: "CSV (Excel)", extensions: ["csv"] }] });
+  if (canceled || !filePath) return { saved: false };
+  fs.writeFileSync(filePath, service.historyCsv(), "utf8");
+  return { saved: true, file: filePath };
+}));
+
+// Upozornění 15 minut před začátkem zápasu z čekajícího tiketu (jen systémové oznámení, jednou na zápas).
+const notifiedKickoffs = new Set();
+function notifyKickoffs() {
+  if (!service || !Notification.isSupported()) return;
+  try {
+    for (const k of service.dueKickoffs(notifiedKickoffs)) new Notification({ title: "Zápas z tvého tiketu brzy začíná", body: `${k.matchName} – za ${k.minutes} min (${k.ticketName})`, silent: false }).show();
+  } catch (err) { console.error(err); }
+}
 ipcMain.handle("tips:live", safe(() => service.refreshLive()));
 ipcMain.handle("tips:refresh", safe((event) => service.refresh(progressTo(event))));
 ipcMain.handle("tips:verify-forebet", safe((event) => service.refresh(progressTo(event), { interactiveForebet: true })));
@@ -198,6 +217,7 @@ if (!app.requestSingleInstanceLock()) {
     createWindow();
     setTimeout(checkUpdate, 6000).unref();
     setInterval(checkUpdate, 6 * 3600e3).unref();
+    setInterval(notifyKickoffs, 60e3).unref();
     app.on("activate", () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow();
     });

@@ -664,6 +664,13 @@
     loadHistory();
   });
 
+  $("#export-csv").addEventListener("click", async () => {
+    if (!desktop) return;
+    const res = await desktop.history.exportCsv();
+    if (!res.ok) toast(`Export se nepodařil: ${res.error}`, "error");
+    else if (res.data.saved) toast("Historie je uložená do souboru CSV (otevři ji v Excelu).");
+  });
+
   $("#evaluate").addEventListener("click", async () => {
     if (state.busy || !desktop) return;
     setBusy(true, "Zjišťuji výsledky zápasů…");
@@ -924,12 +931,37 @@
     renderIcons();
   }
 
+  const TK_STATUS = { pending: "Čeká", win: "Vyhráno", loss: "Prohráno", void: "Vráceno" };
+  const LEG_MARK = { win: "✓", loss: "✗", void: "↺" };
+
+  /** Dřívější tikety s výsledky (podle výsledků jejich tipů) a souhrnem. */
+  function renderTicketHistory() {
+    const el = $("#tk-history");
+    const h = tk.history;
+    if (!h || !h.tickets.length) { el.innerHTML = ""; return; }
+    const st = h.stats;
+    const sum = st.n ? `vyhodnoceno ${st.n}, vyhráno ${st.wins} (${nf1.format(st.actual)} %), ROI ${st.roi > 0 ? "+" : st.roi < 0 ? "−" : ""}${nf1.format(Math.abs(st.roi))} %` : "zatím žádný vyhodnocený";
+    el.innerHTML = `<h3 class="tk-hist__title">Dřívější tikety<small>${esc(sum)}${st.pending ? ` · čeká ${st.pending}` : ""}</small></h3>`
+      + h.tickets.map((t) => `<div class="tk-hist__row">
+        <div class="tk-hist__meta"><strong>${esc(t.name)}</strong><span>${esc(fmtKickoff(t.createdAt))}</span></div>
+        <ul class="tk-hist__legs">${t.legs.map((l) => `<li class="is-${l.outcome || "pending"}"><i>${LEG_MARK[l.outcome] || "…"}</i><span>${esc(l.matchName)}</span><em>${esc(l.tipLabel)} · ${esc(nf2.format(l.odds))}</em></li>`).join("")}</ul>
+        <div class="tk-hist__odds">${esc(nf2.format(t.totalOdds))}</div>
+        <span class="tk-hist__status tk-hist__status--${t.status}">${TK_STATUS[t.status]}</span></div>`).join("");
+  }
+
+  async function loadTicketHistory() {
+    if (!desktop) return;
+    const res = await desktop.tickets.history();
+    if (res.ok) { tk.history = res.data; renderTicketHistory(); }
+  }
+
   async function loadTickets() {
     if (desktop) {
       tk.hasKey = await desktop.analysis.hasKey();
       $("#ai-key-label").textContent = tk.hasKey ? "Gemini klíč uložen" : "Gemini API klíč";
     }
     renderTickets();
+    loadTicketHistory();
   }
 
   $$("#tk-day [data-tkday]").forEach((b) => b.addEventListener("click", () => {
@@ -971,10 +1003,11 @@
     tk.result = res.ok ? { ...res.data, at: fmtKickoff(new Date().toISOString()) } : { error: res.error };
     if (res.ok) store.set("tk-result2", tk.result);
     renderTickets();
+    loadTicketHistory();
   });
 
   /* ---------- Analýza úspěšnosti tipů (+ AI) ---------- */
-  const an = { data: null, hasKey: false, busy: false };
+  const an = { data: null, tickets: null, hasKey: false, busy: false };
   const signed1 = (v) => (v === null ? "–" : `${v > 0 ? "+" : v < 0 ? "−" : ""}${nf1.format(Math.abs(v))}`);
 
   function tableHtml(rows, nameHead) {
@@ -1007,6 +1040,10 @@
     $("#an-bands").innerHTML = tableHtml(a.bands, "Pásmo");
     $("#an-markets").innerHTML = tableHtml(a.markets, "Typ tipu");
     $("#an-leagues").innerHTML = tableHtml(a.leagues, "Soutěž");
+    const th = an.tickets;
+    $("#an-tickets").innerHTML = !th || !th.stats.n
+      ? `<p class="empty">${th && (th.tickets.length) ? "Uložené tikety zatím čekají na výsledky zápasů." : "Zatím nejsou uložené žádné tikety. Vytvoř je v záložce Tikety, po zápasech se tady vyhodnotí."}</p>`
+      : tableHtml([{ name: "Tikety od Gemini (počet tiketů)", ...th.stats }, { name: "Všechny tipy jednotlivě (počet tipů)", ...th.tips }], "Srovnání");
     $("#an-insights").innerHTML = (a.insights.length ? a.insights : ["Zatím nejsou žádná zjištění."]).map((t) => `<li>${esc(t)}</li>`).join("");
   }
 
@@ -1014,6 +1051,8 @@
     if (!desktop) { renderAnalysis(); return; }
     const [res, hasKey] = await Promise.all([desktop.analysis.get(), desktop.analysis.hasKey()]);
     if (res.ok) an.data = res.data;
+    const th = await desktop.tickets.history();
+    if (th.ok) an.tickets = th.data;
     an.hasKey = hasKey;
     $("#ai-key-label").textContent = hasKey ? "Gemini klíč uložen" : "Gemini API klíč";
     renderAnalysis();
