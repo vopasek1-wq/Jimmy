@@ -944,3 +944,37 @@ body { background: var(--bg); }
 .tk-omitted__why { color: var(--muted); }
 .tk-card .stat { padding: 8px 10px 7px; }
 .tk-card .stat__value { font-size: 20px; }
+
+/* ==========================================================================
+   Sklo (v4): prvky podle referenčního panelu – tmavě modrý základ, jemná šedomodrá záře z levého horního rohu,
+   světlejší horní a levá hrana. Platí pro vnořené bloky, dlaždice a tlačítka; hlavní karty mají vlastní rám.
+   ========================================================================== */
+:root {
+  --glass-glow: radial-gradient(200px 150px at 0% 0%, rgba(118, 134, 160, 0.56) 0%, rgba(80, 96, 122, 0.26) 42%, rgba(7, 18, 37, 0) 100%);
+  --glass-glow-tile: radial-gradient(150px 95px at 0% 0%, rgba(118, 134, 160, 0.5) 0%, rgba(80, 96, 122, 0.22) 45%, rgba(7, 18, 37, 0) 100%);
+  --glass-glow-soft: radial-gradient(110px 70px at 0% 0%, rgba(118, 134, 160, 0.3) 0%, rgba(80, 96, 122, 0.1) 50%, rgba(7, 18, 37, 0) 100%);
+  --glass-base: linear-gradient(180deg, rgba(9, 22, 44, 0.92), rgba(6, 16, 34, 0.94));
+  --glass-border: rgba(64, 96, 150, 0.36);
+  --glass-edge: inset 0 1px 0 rgba(176, 200, 235, 0.22), inset 1px 0 0 rgba(140, 165, 205, 0.12);
+}
+.stat, .live-box, .facts, .tk-card, .tk-hist__row, .tk-omitted, .adv__col, .key-pop {
+  background: var(--glass-glow), var(--glass-base);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-edge), 0 14px 28px -18px rgba(0, 0, 0, 0.8);
+}
+.stat { background: var(--glass-glow-tile), var(--glass-base); }
+.side-btn, .seg-control, .btn--ghost, .icon-btn, .search, .input {
+  background: var(--glass-glow-soft), var(--glass-base);
+  border-color: var(--glass-border);
+  box-shadow: var(--glass-edge);
+}
+.side-btn:hover, .btn--ghost:hover, .icon-btn:hover { background: var(--glass-glow), var(--glass-base); border-color: rgba(110, 150, 210, 0.5); }
+.ai-tile {
+  background: var(--glass-glow), linear-gradient(135deg, rgba(40, 120, 200, 0.2), rgba(7, 20, 42, 0.92));
+  border-color: rgba(110, 170, 235, 0.4); box-shadow: var(--glass-edge), 0 14px 28px -18px rgba(0, 0, 0, 0.8);
+}
+.ai-tile:hover { background: var(--glass-glow), linear-gradient(135deg, rgba(50, 140, 220, 0.3), rgba(8, 24, 48, 0.92)); border-color: rgba(130, 190, 250, 0.55); }
+.side-btn__icon, .cat__badge, .ai-tile__icon { background: rgba(5, 14, 30, 0.8); border-color: var(--glass-border); }
+.window-controls .icon-btn { background: none; border-color: transparent; box-shadow: none; }
+.window-controls .icon-btn:hover { background: rgba(255, 255, 255, 0.08); border-color: transparent; }
+.window-controls .icon-btn--close:hover { background: var(--danger); }
