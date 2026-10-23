@@ -34,7 +34,7 @@ test("buildTicketPrompt: pravidla, tipy a jejich statistiky", () => {
   const stats = { t1: { forma_domaci: { forma: "V V R V P" }, h2h: { zapasu: 3 } }, t2: { forma_domaci: { forma: "P P R V V" } } };
   const p = buildTicketPrompt(c, stats, { calibration: null, now: NOW });
   for (const need of ["Maximálně 5 zápasy na tiket", "2.00", "seskupuj dohromady", "SILNÁ", "STŘEDNÍ", "SLABÁ", "NEDOSTATEČNÁ DATA", "vytvoř víc tiketů", '"vynechane"',
-    "2–4 věty", "Piš česky", "nejvýš v jednom tiketu",
+    "KAŽDÉMU zápasu v tiketu zvlášť", "1–2 věty", '"shrnuti"', "Piš česky", "nejvýš v jednom tiketu",
     "21. 10. 2026", "ze SofaScore", "posledních 5 zápasů", "vzájemné zápasy (H2H)", "střelecká produktivita", "zranění", "domácí výkonnost", "Legenda: V = výhra, R = remíza, P = prohra", "Zatím nemám dost",
     '"id":"t1"', '"tip":"Více než 2,5 gólu"', '"forma":"V V R V P"', '"h2h":{"zapasu":3}']) {
     assert.ok(p.includes(need), need);
@@ -57,6 +57,21 @@ test("parseTickets: dopočte čísla, seřadí zápasy podle času a přijme rů
   const objs = parseTickets(json({ tickets: [{ name: "B", tipy: [{ id: idOf("D2") }, { id: idOf("D4") }] }] }), c);
   assert.equal(objs.tickets.length, 1);
   assert.equal(objs.tickets[0].verdict, "");
+});
+
+test("parseTickets: zdůvodnění u každého tipu zvlášť + shrnutí tiketu; starší tvar (jen shrnutí) dál funguje", () => {
+  const c = candidatesFrom([at(2), at(3), at(4)], { now: NOW });
+  const idOf = (home) => c.find((x) => x.home === home).ticketId;
+  const out = parseTickets(json({ tikety: [{
+    nazev: "A", jistota: "stredni", shrnuti: "Samí domácí.",
+    tipy: [{ id: idOf("D3"), zduvodneni: "  Domácí forma V V V.  " }, { id: idOf("D2"), duvod: "Hosté venku prohrávají." }, { id: idOf("D4") }],
+  }] }), c);
+  const t = out.tickets[0];
+  assert.equal(t.summary, "Samí domácí.");
+  assert.deepEqual(t.legs.map((l) => [l.matchName, l.reason]), [["D2 – H2", "Hosté venku prohrávají."], ["D3 – H3", "Domácí forma V V V."], ["D4 – H4", ""]]);
+  const old = parseTickets(json({ tikety: [{ nazev: "B", zduvodneni: "Celkové zdůvodnění.", tipy: [idOf("D2"), idOf("D3")] }] }), c).tickets[0];
+  assert.equal(old.summary, "Celkové zdůvodnění.");
+  assert.ok(old.legs.every((l) => l.reason === ""));
 });
 
 test("parseTickets: zahodí tikety, které nesplňují pravidla", () => {

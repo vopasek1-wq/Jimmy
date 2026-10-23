@@ -333,25 +333,6 @@ i[data-lucide],
 .is-busy #refresh .lucide { animation: spin 0.9s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.layout-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  height: 32px;
-  padding: 0 12px;
-  border: 1px solid var(--border-2);
-  border-radius: 16px;
-  background: #13202e;
-  font-size: 12.5px;
-  color: var(--text-2);
-  white-space: nowrap;
-  transition: background-color 0.16s, border-color 0.16s, color 0.16s, transform 0.12s;
-}
-.layout-btn .lucide { width: 16px; height: 16px; }
-.layout-btn:hover { background: #182a3c; border-color: var(--border-3); color: var(--text); }
-.layout-btn:active { transform: scale(0.96); }
-.layout-btn[aria-pressed="true"] { background: var(--accent-deep); border-color: rgba(86, 203, 255, 0.55); color: var(--accent-bright); }
-
 .chip {
   display: inline-flex;
   align-items: center;
@@ -376,33 +357,6 @@ i[data-lucide],
 .board { min-height: 100%; }
 .board > .grid-stack-item > .grid-stack-item-content { display: flex; overflow: hidden !important; }
 .board > .grid-stack-item > .grid-stack-item-content > .card { flex: 1; min-width: 0; min-height: 0; }
-
-/* Režim úprav rozložení */
-.is-editing .board .card { outline: 2px dashed rgba(86, 203, 255, 0.45); outline-offset: -2px; }
-.is-editing .board { user-select: none; }
-.is-editing .board .grid-stack-item-content * { pointer-events: none; }
-.is-editing .board .card__title { pointer-events: auto; cursor: move; }
-.is-editing .board .card__title::after {
-  content: "⠿ přetáhni";
-  margin-left: 10px;
-  padding: 1px 8px;
-  border-radius: 10px;
-  background: var(--accent-soft);
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--accent-bright);
-}
-.is-editing .nav__link { padding-left: 24px; outline: 1px dashed rgba(86, 203, 255, 0.4); outline-offset: -1px; cursor: grab; }
-.is-editing .nav__link::after { content: "⠿"; position: absolute; left: 8px; font-size: 13px; color: var(--accent-bright); opacity: 0.75; }
-.nav__list > li.is-dragging { opacity: 0.4; }
-.board .grid-stack-placeholder > .placeholder-content {
-  background: rgba(54, 181, 244, 0.1);
-  border: 2px dashed rgba(86, 203, 255, 0.6);
-  border-radius: var(--radius-card);
-}
-.board > .grid-stack-item > .ui-resizable-handle { filter: invert(1) brightness(1.4); opacity: 0.8; }
-.board > .grid-stack-item.ui-draggable-dragging > .grid-stack-item-content,
-.board > .grid-stack-item.ui-resizable-resizing > .grid-stack-item-content { box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.8); }
 
 /* Mimo Přehled se místo mřížky ukazují samostatné stránky. */
 .pages { display: none; padding: 8px; }
@@ -865,9 +819,9 @@ body { background: var(--bg); }
 .cat.is-active { color: #d4efff; background: linear-gradient(90deg, rgba(40, 140, 215, 0.34), rgba(20, 90, 170, 0.2)); box-shadow: inset 0 0 0 1px rgba(140, 215, 255, 0.22); }
 .cat.is-active .cat__count { color: #d4efff; }
 .cat__badge { background: rgba(8, 24, 46, 0.7); border-color: var(--border-2); }
-.seg-control, .layout-btn, .btn--ghost, .icon-btn { background: rgba(8, 24, 46, 0.55); border-color: var(--border-2); }
+.seg-control, .btn--ghost, .icon-btn { background: rgba(8, 24, 46, 0.55); border-color: var(--border-2); }
 .seg-control { border: 1px solid var(--border-2); }
-.seg-control button[aria-pressed="true"], .layout-btn[aria-pressed="true"] { background: rgba(40, 140, 215, 0.28); color: #c3ecff; box-shadow: inset 0 0 0 1px rgba(140, 220, 255, 0.36); }
+.seg-control button[aria-pressed="true"] { background: rgba(40, 140, 215, 0.28); color: #c3ecff; box-shadow: inset 0 0 0 1px rgba(140, 220, 255, 0.36); }
 
 /* Vyhledávání a pole */
 .search__input, .input { background: rgba(4, 14, 28, 0.55); border: 1px solid var(--border-2); border-radius: 14px; }
@@ -910,6 +864,7 @@ body { background: var(--bg); }
 .tk-leg__odds { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .tk-leg__tip { font-size: 12.5px; color: var(--text-2); }
 .tk-leg__meta { font-size: 11.5px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.tk-leg__why { margin: 7px 0 0; padding: 1px 0 1px 11px; border-left: 2px solid rgba(86, 203, 255, 0.4); font-size: 12.5px; line-height: 1.5; color: var(--text-2); }
 .tk-totals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
 .tk-summary { margin-top: 10px; font-size: 12.5px; line-height: 1.5; color: var(--text-2); }
 .tk-summary__label { display: block; margin-bottom: 2px; font-size: 10.5px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: var(--muted); }
@@ -927,6 +882,7 @@ body { background: var(--bg); }
 .tk-hist__meta span { color: var(--muted); font-size: 11.5px; }
 .tk-hist__legs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; font-size: 12.5px; }
 .tk-hist__legs li { display: grid; grid-template-columns: 16px minmax(0, 1.2fr) minmax(0, 1fr); gap: 8px; }
+.tk-hist__why { grid-column: 2 / -1; margin: 0 0 4px; font-size: 11.5px; line-height: 1.4; color: var(--muted); }
 .tk-hist__legs i { font-style: normal; text-align: center; color: var(--muted); }
 .tk-hist__legs li.is-win i { color: var(--green); }
 .tk-hist__legs li.is-loss i { color: var(--red); }

@@ -152,13 +152,12 @@
     link.title = link.textContent.trim();
     link.addEventListener("click", (e) => {
       e.preventDefault();
-      if (app.classList.contains("is-editing")) return; // v režimu úprav se položky jen přesouvají
       showView(link.dataset.view);
     });
   });
   $(".brand").addEventListener("click", (e) => {
     e.preventDefault();
-    if (!app.classList.contains("is-editing")) showView("overview");
+    showView("overview");
   });
 
   /* ---------- Hledání (Ctrl + K) ---------- */
@@ -921,13 +920,13 @@
       <div class="tk-legs">${t.legs.map((l) => `<div class="tk-leg"><div class="tk-leg__row">
           <span class="tk-leg__match">${esc(l.matchName)}</span><span class="tk-leg__odds">${esc(nf2.format(l.odds))}</span>
           <span class="tk-leg__tip">${esc(l.tipLabel)}</span><span class="tk-leg__meta">${esc(kickoffShort(l.kickoff))} · ${esc(fmtPct(l.probability))}</span>
-        </div></div>`).join("")}</div>
+        </div>${l.reason ? `<p class="tk-leg__why">${esc(l.reason)}</p>` : ""}</div>`).join("")}</div>
       <div class="tk-totals">
         ${stat(nf2.format(t.totalOdds), "celkový kurz", "stat--accent")}
         ${stat(`${nf1.format(t.jointProbability)} %`, "pravděpodobnost (součin)")}
         ${stat(`${t.expectedReturn > 0 ? "+" : t.expectedReturn < 0 ? "−" : ""}${nf1.format(Math.abs(t.expectedReturn))} %`, "odhad výnosu", t.expectedReturn > 0 ? "stat--pos" : t.expectedReturn < 0 ? "stat--neg" : "")}
       </div>
-      ${t.summary ? `<p class="tk-summary"><span class="tk-summary__label">Zdůvodnění</span>${esc(t.summary)}</p>` : ""}
+      ${t.summary ? `<p class="tk-summary"><span class="tk-summary__label">Shrnutí</span>${esc(t.summary)}</p>` : ""}
       </article>`).join("") + omittedHtml(r);
     const parts = [`Z ${r.analyzed} zápasů z přehledu${r.at ? ` (${r.at})` : ""}`];
     if (r.covered < r.analyzed) parts.push(`statistiky se našly k ${r.covered}`);
@@ -949,7 +948,7 @@
     el.innerHTML = `<h3 class="tk-hist__title">Dřívější tikety<small>${esc(sum)}${st.pending ? ` · čeká ${st.pending}` : ""}</small></h3>`
       + h.tickets.map((t) => `<div class="tk-hist__row">
         <div class="tk-hist__meta"><strong>${esc(t.name)}</strong><span>${esc(fmtKickoff(t.createdAt))}</span></div>
-        <ul class="tk-hist__legs">${t.legs.map((l) => `<li class="is-${l.outcome || "pending"}"><i>${LEG_MARK[l.outcome] || "…"}</i><span>${esc(l.matchName)}</span><em>${esc(l.tipLabel)} · ${esc(nf2.format(l.odds))}</em></li>`).join("")}</ul>
+        <ul class="tk-hist__legs">${t.legs.map((l) => `<li class="is-${l.outcome || "pending"}"><i>${LEG_MARK[l.outcome] || "…"}</i><span>${esc(l.matchName)}</span><em>${esc(l.tipLabel)} · ${esc(nf2.format(l.odds))}</em>${l.reason ? `<p class="tk-hist__why">${esc(l.reason)}</p>` : ""}</li>`).join("")}</ul>
         <div class="tk-hist__odds">${esc(nf2.format(t.totalOdds))}</div>
         <span class="tk-hist__status tk-hist__status--${t.status}">${TK_STATUS[t.status]}</span></div>`).join("");
   }
@@ -1215,21 +1214,14 @@
     renderChip();
   }
 
-  /* ---------- Přizpůsobitelná mřížka Přehledu (GridStack) ---------- */
+  /* ---------- Mřížka Přehledu (GridStack, pevné rozložení) ---------- */
   let relayout = () => {};
   const setupBoard = () => {
     const GS = window.GridStack?.GridStack || window.GridStack;
     const boardEl = $("#board");
     if (!GS || !boardEl) return;
 
-    // Jemná mřížka 24 × 48, aby šla velikost bloků měnit po malých krocích.
-    const COLUMNS = 24;
-    const ROWS = 48;
-    const DEFAULT_LAYOUT = $$(".grid-stack-item", boardEl).map((el) => ({
-      id: el.getAttribute("gs-id"),
-      x: +el.getAttribute("gs-x"), y: +el.getAttribute("gs-y"),
-      w: +el.getAttribute("gs-w"), h: +el.getAttribute("gs-h"),
-    }));
+    const ROWS = 48; // jemná mřížka 24 × 48
 
     // Výška řádku tak, aby všechny řádky přesně vyplnily okno pod horní lištou (a případným upozorněním).
     const rowHeight = () => {
@@ -1238,108 +1230,15 @@
     };
 
     const grid = GS.init({
-      column: COLUMNS,
+      column: 24,
       cellHeight: rowHeight(),
       margin: 8,                     // 16 px mezi bloky – stejně jako na ostatních záložkách
       float: false,
-      animate: true,
-      staticGrid: true,              // mimo režim úprav je mřížka zamčená
-      handle: ".card__title",
-      resizable: { handles: "e, se, s, sw, w" },
-      draggable: { cancel: "button, input, textarea, select, a, table" },
+      animate: false,
+      staticGrid: true,              // rozložení je pevné
     }, boardEl);
-
-    const num = (v, fallback) => (Number.isFinite(v) && v >= 0 ? v : fallback);
-    const applyLayout = (layout) => {
-      grid.batchUpdate();
-      DEFAULT_LAYOUT.forEach((def) => {
-        const item = layout.find((l) => l.id === def.id) || def;
-        const el = boardEl.querySelector(`[gs-id="${def.id}"]`);
-        // chybějící nebo neplatné hodnoty doplnit z výchozího rozložení
-        if (el) grid.update(el, { x: num(item.x, def.x), y: num(item.y, def.y), w: num(item.w, def.w) || def.w, h: num(item.h, def.h) || def.h });
-      });
-      grid.batchUpdate(false);
-    };
-    const saved = store.get("board-layout-v2-24");
-    if (Array.isArray(saved)) applyLayout(saved);
-
-    // Pozice brát přímo z GridStacku (grid.save() vynechává hodnoty rovné minimu).
-    const saveLayout = () => store.set("board-layout-v2-24",
-      grid.engine.nodes.map(({ id, x, y, w, h }) => ({ id, x, y, w, h })));
-    grid.on("change", saveLayout);
-    $$(".nav__link").forEach((l) => { l.draggable = false; });
-
     relayout = () => grid.cellHeight(rowHeight());
     window.addEventListener("resize", relayout);
-
-    /* Pořadí položek levého menu – v režimu úprav jde měnit přetažením */
-    const navList = $(".nav__list");
-    const navItems = () => $$(":scope > li", navList);
-    const viewOf = (li) => $(".nav__link", li).dataset.view;
-    const DEFAULT_NAV = navItems().map(viewOf);
-    const applyNavOrder = (order) => {
-      const byView = new Map(navItems().map((li) => [viewOf(li), li]));
-      const list = order.filter((v) => byView.has(v));
-      // nové položky (v uloženém pořadí chybí) za svého výchozího předchůdce
-      DEFAULT_NAV.forEach((v, i) => {
-        if (!list.includes(v)) list.splice(i === 0 ? 0 : list.indexOf(DEFAULT_NAV[i - 1]) + 1, 0, v);
-      });
-      list.forEach((v) => navList.append(byView.get(v)));
-    };
-    const saveNavOrder = () => store.set("nav-order", navItems().map(viewOf));
-    const savedNav = store.get("nav-order");
-    if (Array.isArray(savedNav)) applyNavOrder(savedNav);
-
-    let draggedNav = null;
-    navList.addEventListener("dragstart", (e) => {
-      const li = e.target.closest?.("li");
-      if (!li || !app.classList.contains("is-editing")) return;
-      draggedNav = li;
-      e.dataTransfer.clearData(); // bez adresy odkazu – přetažení mimo menu nic neotevře
-      e.dataTransfer.setData("application/x-tips-nav", viewOf(li));
-      e.dataTransfer.effectAllowed = "move";
-      li.classList.add("is-dragging");
-    });
-    navList.addEventListener("dragover", (e) => {
-      if (!draggedNav) return;
-      e.preventDefault();
-      e.dataTransfer.dropEffect = "move";
-      const over = e.target.closest?.("li");
-      if (!over || over === draggedNav) return;
-      const r = over.getBoundingClientRect();
-      navList.insertBefore(draggedNav, e.clientX > r.left + r.width / 2 ? over.nextSibling : over);
-    });
-    navList.addEventListener("drop", (e) => { if (draggedNav) e.preventDefault(); });
-    navList.addEventListener("dragend", () => {
-      if (!draggedNav) return;
-      draggedNav.classList.remove("is-dragging");
-      draggedNav = null;
-      saveNavOrder();
-    });
-
-    const editBtn = $("#layout-edit");
-    const resetBtn = $("#layout-reset");
-    const setEditing = (on) => {
-      if (on && app.dataset.view !== "overview") showView("overview");
-      grid.setStatic(!on);
-      app.classList.toggle("is-editing", on);
-      editBtn.setAttribute("aria-pressed", String(on));
-      $("span", editBtn).textContent = on ? "Hotovo" : "Upravit rozložení";
-      resetBtn.hidden = !on;
-      $$(".nav__link").forEach((l) => { l.draggable = on; });
-    };
-    editBtn.addEventListener("click", () => setEditing(!app.classList.contains("is-editing")));
-    resetBtn.addEventListener("click", () => {
-      applyLayout(DEFAULT_LAYOUT);
-      saveLayout();
-      applyNavOrder(DEFAULT_NAV);
-      saveNavOrder();
-    });
-    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && app.classList.contains("is-editing")) setEditing(false); });
-    // Přepnutí na jinou stránku režim úprav ukončí.
-    new MutationObserver(() => {
-      if (app.dataset.view !== "overview" && app.classList.contains("is-editing")) setEditing(false);
-    }).observe(app, { attributes: true, attributeFilter: ["data-view"] });
   };
   setupBoard();
 

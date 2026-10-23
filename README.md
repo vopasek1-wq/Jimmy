@@ -3,7 +3,7 @@
 Desktopová aplikace pro Windows (**Electron, `.exe` bez instalace**), která po spuštění sama stáhne fotbalové tipy,
 vyfiltruje je podle kvality a ukáže je v přehledné tabulce. Zaměřuje se na top evropské ligy a poháry UEFA
 a jako cílovou sázkovou kancelář počítá s **Tipsportem**. Vzhled a ovládání jsou ve stejném systému jako
-**J.I.M.M.Y.** (tmavé téma, okno bez rámečku, levé menu, karty, „Upravit rozložení“).
+**J.I.M.M.Y.** (tmavé téma, okno bez rámečku, levé menu, karty).
 
 | Zdroj | K čemu slouží | Jak se čte |
 |---|---|---|
@@ -49,7 +49,7 @@ a tlumeně modrá tlačítka bez záře. Styly jsou v `desktop/renderer/styles.c
 
 ## Ovládání
 
-Záložky pod vyhledáváním: **Přehled** (tabulka tipů, detail a úspěšnost; rozložení lze upravit), **Živé zápasy** (právě hrané zápasy z Přehledu (podle SofaScore); po kliknutí momentum zápasu, branky a karty a statistiky; obnovuje se každých 30 s) a **Historie**. V levém sloupci jsou **soutěže** s počty zápasů – klik na soutěž filtruje tabulku tipů, živé zápasy i historii (hvězdička = všechny). Stav zdrojů se ukazuje jen v pruhu nahoře, když nějaký selže.
+Záložky pod vyhledáváním: **Přehled** (tabulka tipů, detail a úspěšnost), **Živé zápasy** (právě hrané zápasy z Přehledu (podle SofaScore); po kliknutí momentum zápasu, branky a karty a statistiky; obnovuje se každých 30 s) a **Historie**. V levém sloupci jsou **soutěže** s počty zápasů – klik na soutěž filtruje tabulku tipů, živé zápasy i historii (hvězdička = všechny). Stav zdrojů se ukazuje jen v pruhu nahoře, když nějaký selže.
 
 * **Dnes / Zítra** – přepínač dne hned za nadpisem „Tipy po filtraci“ (volba se pamatuje).
 * Kliknutí na záhlaví sloupce řadí (pravděpodobnost, kurz, čas, …); hledání v horní liště (**Ctrl + K**) filtruje
@@ -57,8 +57,7 @@ Záložky pod vyhledáváním: **Přehled** (tabulka tipů, detail a úspěšnos
 * Řádek vybereš kliknutím nebo šipkami ↑ ↓; **dvojklik / Enter** otevře zápas na Scores24.
 * Karta **Detail tipu**: pravděpodobnost, kurz, Forebet, zdroje a odkazy na zápas na Scores24 a SofaScore.
 * Aplikace se po spuštění vždy otevře **maximalizovaná** (přes celou pracovní plochu, hlavní panel Windows zůstává vidět).
-* **Obnovit tipy** stáhne data znovu. **Upravit rozložení** umožní přetahovat a měnit velikost karet na Přehledu
-  i přesouvat záložky (*Hotovo* nebo Esc to ukončí, *Výchozí rozložení* vrátí původní stav).
+* **Obnovit tipy** stáhne data znovu.
 
 ## Co aplikace zobrazí
 
@@ -125,8 +124,8 @@ Zvolíš den (Dnes / Zítra) a klikneš na **Vytvořit tikety (AI)** – počet 
    Gemini jsou v souboru `ladeni\tikety-odpoved.txt`.
 
 Pravidla, která aplikace u odpovědi **kontroluje** (tiket, který je porušuje, zahodí): 2–5 zápasů na tiket, kombinovaný kurz alespoň 2,00,
-každý zápas nejvýš v jednom tiketu a žádné neznámé tipy. U každého tiketu je krátké **zdůvodnění** (2–4 věty) s odkazem na formu týmů a
-statistiky a úroveň jistoty; **celkový kurz, pravděpodobnost (součin) a odhad výnosu počítá aplikace sama**. Používá se stejný Gemini klíč
+každý zápas nejvýš v jednom tiketu a žádné neznámé tipy. **Pod každým tipem v tiketu** je jeho vlastní krátké zdůvodnění (1–2 věty, forma týmů, H2H, góly, zranění), u tiketu jednověté shrnutí
+a úroveň jistoty; **celkový kurz, pravděpodobnost (součin) a odhad výnosu počítá aplikace sama**. Používá se stejný Gemini klíč
 jako v Analýze; poslední tikety zůstanou po restartu.
 
 **Uložené tikety a jejich výsledky.** Každý vytvořený tiket se uloží (stejná sada tipů ve stejný den jen jednou). Pod aktuálními tikety je

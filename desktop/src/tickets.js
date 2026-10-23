@@ -59,14 +59,15 @@ function buildTicketPrompt(candidates, stats, { calibration = null, now = new Da
     + `- Maximálně ${MAX_LEGS} zápasy na tiket, minimálně ${MIN_LEGS}.\n`
     + `- Minimální kombinovaný kurz tiketu (součin kurzů tipů) je ${MIN_TOTAL_ODDS.toFixed(2)}. Tiket, který to nesplňuje, nevytvářej.\n`
     + `- Každý zápas smí být nejvýš v jednom tiketu (tikety se v zápasech nepřekrývají).\n`
-    + `- Zdůvodnění tiketu: 2–4 věty, stručné, věcné a srozumitelné pro běžného sázkaře; odkaž na formu týmů, vzájemné zápasy, góly, zranění nebo domácí/venkovní výkonnost z dodaných statistik. Nepřidávej čísla ani fakta, která ve statistikách nejsou. Chybějící údaj (zraneni není uvedeno) nic nedokazuje.\n`
+    + `- Zdůvodnění piš ke KAŽDÉMU zápasu v tiketu zvlášť („zduvodneni“ u daného tipu): 1–2 věty, stručné, věcné a srozumitelné pro běžného sázkaře; odkaž na formu týmů, vzájemné zápasy, góly, zranění nebo domácí/venkovní výkonnost z dodaných statistik právě pro tento zápas. Nepřidávej čísla ani fakta, která ve statistikách nejsou. Chybějící údaj (zraneni není uvedeno) nic nedokazuje.\n`
+    + `- Shrnutí tiketu („shrnuti“): jedna krátká věta, proč jsou tyto zápasy pohromadě (např. „samé silné domácí týmy“). Neopakuj v něm zdůvodnění jednotlivých zápasů.\n`
     + `- U každého zápasu, který v žádném tiketu není, uveď v poli "vynechane" jeho id a důvod (nejvýš 12 slov, např. „forma hostů tip nepodporuje“, „chybí údaje o H2H i zraněních“).\n`
     + `- Piš česky.\n`
     + `- Pokud žádný tiket pravidla nesplňuje, vrať prázdné pole "tikety" a v "poznamka" stručně napiš proč.\n\n`
     + `${calibrationLine(calibration)} Pravděpodobnost v nabídce je odhad zdroje, ne kalibrovaná šance.\n\n`
     + `NABÍDKA SE STATISTIKAMI (JSON): ${JSON.stringify(rows)}\n\n`
     + `Odpověz POUZE JSON podle tohoto tvaru (česky, bez dalšího textu):\n`
-    + `{"tikety":[{"nazev":"Tiket 1","jistota":"vysoka|stredni|nizsi","zduvodneni":"2–4 věty","tipy":["t1","t4"]}],"vynechane":[{"id":"t2","duvod":"max. 12 slov"}],"poznamka":""}`;
+    + `{"tikety":[{"nazev":"Tiket 1","jistota":"vysoka|stredni|nizsi","shrnuti":"1 věta","tipy":[{"id":"id zápasu z nabídky","zduvodneni":"1–2 věty k tomuto zápasu"}]}],"vynechane":[{"id":"t2","duvod":"max. 12 slov"}],"poznamka":""}`;
 }
 
 /** Vytáhne JSON i z odpovědi obalené v ```json … ```. */
@@ -116,7 +117,12 @@ function parseTickets(text, candidates) {
   const dropped = new Map();
   (Array.isArray(list) ? list : []).forEach((raw, i) => {
     const name = String((raw && (raw.nazev || raw.name)) || `Tiket ${i + 1}`).trim();
-    const items = ((raw && (raw.tipy || raw.legs)) || []).map((x) => cleanId(x && typeof x === "object" ? x.id : x));
+    const rawItems = (raw && (raw.tipy || raw.legs)) || [];
+    const items = rawItems.map((x) => cleanId(x && typeof x === "object" ? x.id : x));
+    const reasons = new Map(); // zdůvodnění u jednotlivých tipů (starší tvar odpovědi má jen shrnutí celého tiketu)
+    for (const x of rawItems) {
+      if (x && typeof x === "object") reasons.set(cleanId(x.id), String(x.zduvodneni || x.duvod || x.reason || x.komentar || "").trim());
+    }
     const reject = (why) => {
       rejected.push(`${name}: ${why}`);
       for (const id of items) if (byId.has(id) && !dropped.has(id)) dropped.set(id, why);
@@ -141,10 +147,10 @@ function parseTickets(text, candidates) {
     tickets.push({
       name,
       verdict: certaintyOf(raw.jistota || raw.verdikt),
-      summary: String(raw.zduvodneni || raw.shrnuti || raw.summary || "").trim(),
+      summary: String(raw.shrnuti || raw.zduvodneni || raw.summary || "").trim(),
       legs: picked.map((l) => ({
         id: l.ticketId, tipId: l.id, matchName: l.matchName, league: l.leagueShort || l.league, kickoff: l.kickoff, tipLabel: l.tipLabel,
-        odds: l.odds, probability: l.probability, probForebet: l.probForebet ?? null, value: l.value,
+        odds: l.odds, probability: l.probability, probForebet: l.probForebet ?? null, value: l.value, reason: reasons.get(l.ticketId) || "",
       })),
       totalOdds: Math.round(odds * 100) / 100,
       jointProbability: Math.round(prob * 1000) / 10,
