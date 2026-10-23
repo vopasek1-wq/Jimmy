@@ -46,8 +46,6 @@
   const fmtValue = (v) => (v === null ? "–" : `${v > 0 ? "+" : v < 0 ? "−" : ""}${nf1.format(Math.abs(v))} %`);
   const fmtOdds = (t) => (t.odds ? `${t.oddsEstimated ? "~" : ""}${nf2.format(t.odds)}` : "–");
   const fmtSigned = (v) => (v > 0 ? "+" : v < 0 ? "−" : "") + nf2.format(Math.abs(v));
-  const hourFormat = new Intl.DateTimeFormat("cs-CZ", { timeZone: TZ, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
-  const fmtHourMinute = (iso) => hourFormat.format(new Date(iso));
   const fmtScore = (t) => (t.homeScore !== null && t.awayScore !== null ? `${t.homeScore}:${t.awayScore}` : "");
   const untilText = (ms) => {
     const min = Math.round(ms / 60000);
@@ -688,69 +686,6 @@
     };
   };
 
-  /* ---------- Dnes v kostce (místo dřívější karty s úspěšností) ---------- */
-  const TODAY_ICON = { win: "circle-check", loss: "circle-x", void: "rotate-ccw", live: "radio", done: "flag", wait: "clock-3" };
-
-  /** Kategorie dnešního tipu: výsledek (výhra/prohra/vráceno), živě, skončil bez vyhodnocení, čeká na začátek. */
-  const todayKind = (t, now) => {
-    if (t.outcome === "win" || t.outcome === "loss" || t.outcome === "void") return t.outcome;
-    const k = matchState(t, now).kind;
-    return k === "live" || k === "started" ? "live" : k === "done" ? "done" : "wait";
-  };
-
-  function renderToday() {
-    const box = $("#today-box");
-    const note = $("#today-note");
-    if (!box) return;
-    const now = Date.now();
-    const today = localDay(new Date(now));
-    const list = (state.payload?.tips || []).filter((t) => t.day === today).map((t) => ({ t, kind: todayKind(t, now) }));
-    note.textContent = list.length ? `${list.length} ${list.length === 1 ? "tip" : list.length < 5 ? "tipy" : "tipů"}` : "";
-    if (!list.length) { box.innerHTML = '<p class="empty">Na dnešek nejsou žádné tipy po filtraci.</p>'; return; }
-
-    const count = (k) => list.filter((x) => x.kind === k).length;
-    const n = { win: count("win"), loss: count("loss"), void: count("void"), live: count("live"), done: count("done"), wait: count("wait") };
-    const bar = [["win", n.win], ["loss", n.loss], ["void", n.void], ["live", n.live], ["pending", n.done + n.wait]]
-      .filter(([, c]) => c > 0).map(([k, c]) => `<i class="is-${k}" style="width:${(100 * c) / list.length}%"></i>`).join("");
-    const decided = n.win + n.loss;
-    const headline = decided
-      ? `Trefeno <b>${n.win} z ${decided}</b> vyhodnocených (${Math.round((100 * n.win) / decided)} %)`
-      : n.live ? "Zatím se hraje, výsledky přijdou po zápasech" : "Zatím nic nezačalo";
-    const legend = [["g", n.win, "výhra"], ["r", n.loss, "prohra"], ["y", n.void, "vráceno"], ["b", n.live, "živě"], ["m", n.done + n.wait, "čeká"]]
-      .filter(([, c]) => c > 0).map(([cls, c, name]) => `<span class="${cls}">${c} ${name}</span>`).join("");
-
-    // nejbližší zápas, který ještě nezačal
-    const next = list.filter((x) => x.kind === "wait").sort((a, b) => Date.parse(a.t.kickoff) - Date.parse(b.t.kickoff))[0];
-    const nextHtml = next
-      ? `<div class="today__next"><i data-lucide="alarm-clock"></i><span>Nejbližší: <b>${esc(next.t.matchName)}</b> ${esc(untilText(Date.parse(next.t.kickoff) - now))}</span></div>`
-      : "";
-
-    const order = { live: 0, wait: 1, done: 2, win: 3, loss: 3, void: 3 };
-    const rows = [...list].sort((a, b) => order[a.kind] - order[b.kind] || Date.parse(a.t.kickoff) - Date.parse(b.t.kickoff)).map(({ t, kind }) => {
-      const score = fmtScore(t);
-      const right = kind === "wait" ? fmtHourMinute(t.kickoff) : score || (kind === "live" ? "živě" : "–");
-      return `<button type="button" class="today__row is-${kind}" data-key="${esc(tipUid(t))}" title="${esc(`${t.matchName} – ${t.tipLabel}`)}">
-        <i class="today__icon" data-lucide="${TODAY_ICON[kind]}"></i>
-        <span class="today__what"><b>${esc(t.matchName)}</b><small>${esc(t.tipLabel)} · ${esc(fmtPct(t.probability))}</small></span>
-        <span class="today__right">${esc(right)}</span></button>`;
-    }).join("");
-
-    box.innerHTML = `<div class="today__head">${headline}</div>
-      <div class="today__bar">${bar}</div><div class="today__legend">${legend}</div>${nextHtml}
-      <div class="today__list">${rows}</div>`;
-    renderIcons();
-  }
-
-  $("#today-box").addEventListener("click", (e) => {
-    const row = e.target.closest(".today__row");
-    if (!row) return;
-    state.selected = row.dataset.key;                 // v tabulce se tip vybere a zobrazí se jeho detail
-    if (state.day !== "today") { state.day = "today"; store.set("day", "today"); }
-    state.league = "";
-    renderAll();
-    $(`tr[data-key="${CSS.escape(row.dataset.key)}"]`, tipsBody)?.scrollIntoView({ block: "nearest" });
-  });
-
   function renderHistory() {
     const h = state.history;
     $$("#hist-range [data-range]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.range === state.range)));
@@ -1293,7 +1228,6 @@
     renderCats();
     renderChip();
     renderUpdated();
-    renderToday();
   }
 
   /* ---------- Mřížka Přehledu (GridStack, pevné rozložení) ---------- */
@@ -1441,7 +1375,7 @@
   const awake = () => windowShown && !document.hidden;
 
   // Stavy „před zápasem / zahájen“ a „aktualizováno před …“ se průběžně přepočítávají podle hodin.
-  setInterval(() => { if (awake() && !state.busy && state.payload) { renderTips(); renderUpdated(); renderToday(); } }, 30e3);
+  setInterval(() => { if (awake() && !state.busy && state.payload) { renderTips(); renderUpdated(); } }, 30e3);
 
   // Skóre rozehraných zápasů se každou minutu zaktualizuje ze SofaScore (nestahuje se všechno znovu).
   async function liveScoreTick() {
@@ -1453,7 +1387,6 @@
       if (res.ok && res.data && !state.busy) {
         state.payload = { ...state.payload, tips: res.data };
         renderTips();
-        renderToday();
       }
     } catch { /* příště */ }
   }
@@ -1461,7 +1394,7 @@
 
   function wakeUp() {
     if (!awake()) return;
-    if (state.payload) { renderTips(); renderUpdated(); renderToday(); }
+    if (state.payload) { renderTips(); renderUpdated(); }
     liveScoreTick();
     if (app.dataset.view === "live") loadLiveList().then(loadLiveDetail);
   }
