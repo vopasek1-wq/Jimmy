@@ -186,21 +186,7 @@
             <div class="live-box"><div class="live-box__title">Podle typu tipu</div><div id="an-markets"></div></div>
             <div class="live-box"><div class="live-box__title">Podle soutěže</div><div id="an-leagues"></div></div>
           </div>
-          <div class="live-box bk-box">
-            <div class="live-box__title">Bankroll<small>kolik bys měl, kdybys na každý vyhodnocený tip (tiket) sázel stálý vklad; jen skutečné kurzy</small></div>
-            <div class="bk-form">
-              <label class="bk-field">Počáteční bankroll (Kč)<input class="input" type="number" id="bk-start" min="100" step="100" inputmode="numeric"></label>
-              <label class="bk-field">Vklad na tip (Kč)<input class="input" type="number" id="bk-tip" min="1" step="10" inputmode="numeric"></label>
-              <label class="bk-field">Vklad na tiket (Kč)<input class="input" type="number" id="bk-ticket" min="1" step="10" inputmode="numeric"></label>
-              <div class="seg-control" id="bk-src" role="group" aria-label="Zdroj sázek">
-                <button type="button" data-src="tips" aria-pressed="true">Tipy</button>
-                <button type="button" data-src="tickets" aria-pressed="false">Tikety</button>
-              </div>
-            </div>
-            <div class="stat-row stat-row--5" id="bk-stats"></div>
-            <div class="bk-chart" id="bk-chart"></div>
-            <p class="bk-note" id="bk-note"></p>
-          </div>
+          <div class="live-box"><div class="live-box__title">Na co sázet a na co ne<small>podle výsledků uložených tiketů a tipů v nich (stálý vklad 1)</small></div><div id="an-advice"></div></div>
           <div class="live-box"><div class="live-box__title">Tikety od Gemini vs. všechny tipy<small>vklad 1 na tiket / tip; odhad u tiketu = součin pravděpodobností</small></div><div id="an-tickets"></div></div>
           <div class="live-box ai-box">
             <div class="live-box__title">AI analýza<small>pošle souhrnné statistiky a posledních 40 prohraných tipů do Google Gemini API tvým klíčem</small></div>

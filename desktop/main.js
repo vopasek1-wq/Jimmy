@@ -175,7 +175,6 @@ ipcMain.handle("tickets:create", safe(async (event, req) => {
   return result;
 }));
 ipcMain.handle("tickets:history", safe(() => service.ticketHistory()));
-ipcMain.handle("bankroll:get", safe((_e, settings) => service.bankroll(settings)));
 
 // Upozornění 15 minut před začátkem zápasu z čekajícího tiketu (jen systémové oznámení, jednou na zápas).
 const notifiedKickoffs = new Set();

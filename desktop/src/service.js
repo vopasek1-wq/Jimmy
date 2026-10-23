@@ -12,8 +12,8 @@ const { LiveClient } = require("./live");
 const { MatchStats } = require("./matchstats");
 const { analyze, recentLosses, buildPrompt } = require("./analysis");
 const { candidatesFrom, settleTicket, ticketStats, dueKickoffs } = require("./tickets");
-const { betsFromTips, betsFromTickets, simulate, normalizeSettings } = require("./bankroll");
 const { GoalsCache } = require("./goalscache");
+const { ticketAdvice } = require("./advice");
 const { tidy } = require("./housekeeping");
 const { buildDiagnostics } = require("./diagnostics");
 const { resultOk } = require("./models");
@@ -157,7 +157,8 @@ class TipService {
   /** Uložené tikety s výsledky podle výsledků jejich tipů a souhrn (tikety × všechny tipy). */
   ticketHistory(limit = 20) {
     const settled = this._settledTickets();
-    return { tickets: settled.slice(0, limit), stats: ticketStats(settled), tips: this.analysis().overall };
+    const tipInfo = this.db.tipInfoByIds(settled.flatMap((t) => t.legs.map((l) => l.tipId)));
+    return { tickets: settled.slice(0, limit), stats: ticketStats(settled), tips: this.analysis().overall, advice: ticketAdvice(settled, tipInfo) };
   }
 
   /** Všechny uložené tikety s výsledky podle výsledků jejich tipů (nejnovější první). */
@@ -166,18 +167,6 @@ class TipService {
     const all = this.db.listTickets();
     const outcomes = this.db.outcomesByIds(all.flatMap((t) => t.legs.map((l) => l.tipId)));
     return all.map((t) => settleTicket(t, outcomes));
-  }
-
-  /** Bankroll při stálém vkladu: průběh podle jednotlivých tipů a podle tiketů od Gemini. */
-  bankroll(settings) {
-    const cfg = normalizeSettings(settings);
-    settleFinished(this.db);
-    const tips = this.db.history(null).map(serializeTip);
-    return {
-      settings: cfg,
-      tips: simulate(betsFromTips(tips), { start: cfg.start, stake: cfg.tipStake }),
-      tickets: simulate(betsFromTickets(this._settledTickets()), { start: cfg.start, stake: cfg.ticketStake }),
-    };
   }
 
   /** Ladicí soubor s posledním zadáním a odpovědí Gemini pro tikety (přepisuje se). */
