@@ -133,23 +133,37 @@ function parsePage(html) {
 }
 
 // --- stránka zápasu: pravděpodobnosti gólů -------------------------------------------------------------------
-// !!! Neověřeno na živé stránce (Cloudflare mě nepustil): hledá se podle viditelného textu („Over 2.5 … 55 %“,
-// „Both teams to score … Yes 52 % No 48 %“), ne podle názvů tříd, aby to přežilo změny značek.
+// Ověřeno na skutečné stránce zápasu (z diagnostiky): text obsahuje tabulky s hlavičkou a řádkem zápasu, např.
+//   „… Prob. % Under/Over 2.5 Pred … Round 10 Es1 Racing Santander Espanyol 24/10/2026 16:15 44 56 Over …“  (Under 44 %, Over 56 %)
+//   „… Prob. % No Yes Pred … 24/10/2026 16:15 41 59 Yes …“                                              (BTTS ne 41 %, ano 59 %)
+// Pro případ, že Forebet tabulky změní, zůstává záloha podle viditelného textu („Over 2.5 … 55 %“, „Both teams to score … Yes 52 %“).
 
 const num = (s) => Number(String(s).replace(",", "."));
 
 const PLAIN = String.raw`(?<![\d.,])(\d{1,3})(?![\d]|[.,]\d)`; // celé číslo (ne část kurzu 1.85)
 const near100 = (a, b) => a + b >= 97 && a + b <= 103;
 
+const DATE_TIME = String.raw`\d{1,2}\/\d{1,2}\/\d{4}\s+\d{1,2}:\d{2}`;
+const TABLE_OU = new RegExp(String.raw`Prob\.\s*%\s*Under\/Over\s*(\d(?:[.,]\d)?)\b[^]*?${DATE_TIME}\s+(\d{1,3})\s+(\d{1,3})\s+(?:Over|Under)\b`, "i");
+const TABLE_BTTS = new RegExp(String.raw`Prob\.\s*%\s*No\s+Yes\b[^]*?${DATE_TIME}\s+(\d{1,3})\s+(\d{1,3})\s+(?:Yes|No)\b`, "i");
+
 function parseGoals(html) {
   const $ = load(html);
   const text = strippedStrings($.root()).join(" ");
   const goals = { over: {}, under: {}, btts: {} };
 
-  // 1) s procentem: „Over 2.5 … 57 %“
+  // 0) tabulky zápasu: první dvě čísla za datem jsou pravděpodobnosti (Under, Over) resp. (Ne, Ano) a dávají dohromady ≈ 100
+  const tou = TABLE_OU.exec(text);
+  const tableOu = Boolean(tou && near100(+tou[2], +tou[3]));
+  if (tableOu) { const line = String(num(tou[1])); goals.under[line] = +tou[2]; goals.over[line] = +tou[3]; }
+  const tb = TABLE_BTTS.exec(text);
+  const tableBtts = Boolean(tb && near100(+tb[1], +tb[2]));
+  if (tableBtts) { goals.btts.no = +tb[1]; goals.btts.yes = +tb[2]; }
+
+  // 1) záloha podle textu s procentem: „Over 2.5 … 57 %“
   const ou = /\b(over|under)\s*(\d(?:[.,]\d)?)\b/gi;
   const lines = new Map(); // linie → { over: [pozice], under: [pozice] }
-  for (let m = ou.exec(text); m; m = ou.exec(text)) {
+  for (let m = tableOu ? null : ou.exec(text); m; m = ou.exec(text)) {
     const after = text.slice(m.index + m[0].length, m.index + m[0].length + 45);
     const pct = /(\d{1,3}(?:[.,]\d+)?)\s*%/.exec(after);
     const bucket = m[1].toLowerCase() === "over" ? goals.over : goals.under;
@@ -167,7 +181,7 @@ function parseGoals(html) {
     }
   }
 
-  const label = /both teams to score|\bbtts\b/i.exec(text);
+  const label = tableBtts ? null : /both teams to score|\bbtts\b/i.exec(text);
   if (label) {
     const win = text.slice(label.index, label.index + 170);
     const yes = /\byes\b\D{0,15}?(\d{1,3}(?:[.,]\d+)?)\s*%/i.exec(win) || new RegExp(String.raw`\byes\b\D{0,15}?${PLAIN}`, "i").exec(win);

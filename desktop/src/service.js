@@ -36,7 +36,7 @@ class TipService {
   constructor({ dbFile, http, browser }) {
     this.db = new Database(dbFile);
     this.dataDir = path.dirname(dbFile);
-    this.goalsCache = new GoalsCache(path.join(this.dataDir, "forebet-goals.json"));
+    this.goalsCache = new GoalsCache(path.join(this.dataDir, "forebet-goals-v2.json"));
     this.statsCache = new Map(); // statistiky zápasů pro tikety (jen za běhu aplikace)
     this.http = http;
     this.browser = browser;

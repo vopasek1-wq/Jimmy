@@ -165,7 +165,7 @@ bez klíče AI část nefunguje, statistiky ano.
 Aplikace stahuje jen to, co potřebuje, aby bylo obnovení rychlé a zdroje nezatěžovala:
 
 * Stránky zápasů na Forebetu (pravděpodobnosti gólů) se otevírají jen u tipů, které by prošly filtry (nad 60 %, kurz od 1,50, sledovaná
-  soutěž, mužský zápas, ještě nezačal). Už stažené hodnoty se 4 hodiny berou z mezipaměti (`forebet-goals.json`), takže další obnovení
+  soutěž, mužský zápas, ještě nezačal). Už stažené hodnoty se 4 hodiny berou z mezipaměti (`forebet-goals-v2.json`), takže další obnovení
   je u nich okamžité.
 * Z Forebetu se načítají jen stránky lig, které Scores24 právě nabízí. Okno prohlížeče se otevírá jen tehdy, když obyčejné HTTP nestačí.
 * Statistiky pro tikety (SofaScore) se po dobu 30 minut pamatují, takže opakované vytvoření tiketů nestahuje nic nového.

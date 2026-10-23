@@ -447,3 +447,18 @@ test("Forebet: tip BTTS bez BTTS v mezipaměti stáhne stránku znovu a při ne�
   assert.equal(m.goals.over["2.5"], 61);
   assert.ok(fs.existsSync(path.join(dir, "forebet-diagnostika.txt")));
 });
+
+test("Forebet: góly a BTTS z tabulek na skutečné stránce zápasu (text ze zachycené diagnostiky)", () => {
+  const html = `<html><body>
+    <div>Football Predictions for TODAY 455 &gt; Predictions 1X2 Under/Over 2.5 goals Half Time Half Time/Full Time Both To Score Double chance LIVE predictions 39</div>
+    <div>17th place Spain La Liga 16th place &lt; 1X2 Under/Over 2.5 Half Time HT/FT Btts Double Handicap Scorers Corners Cards &gt;</div>
+    <table>
+    <tr><td>Home team Away team Prob. % 1 X 2 Pred Correct score Avg. goals Weather conditions Coef. Score Live coef. Round 10 Es1 Racing Santander Espanyol 24/10/2026 16:15 41 35 24 1 2 - 1 2 - 1 2.81 15° 2.35</td></tr>
+    <tr><td>Home team Away team Prob. % Under/Over 2.5 Pred Correct score Avg. goals Weather conditions Coef. Score Round 10 Es1 Racing Santander Espanyol 24/10/2026 16:15 44 56 Over 2.81 2 - 1 2.81 15° 1.68 2.21 1.68 PRE VIEW</td></tr>
+    <tr><td>Home team Away team Prob. % No Yes Pred Correct score Avg. goals Weather conditions Coef. Score Round 10 Es1 Racing Santander Espanyol 24/10/2026 16:15 41 59 Yes 2 - 1 2 - 1 2.81 15° 1.53 1.53 2.37 PRE VIEW</td></tr>
+    <tr><td>Home team Away team Prob. % 1X/2X/12 Pred Correct score Round 10 Es1 Racing Santander Espanyol 24/10/2026 16:15 72% 29% 17%</td></tr>
+    </table></body></html>`;
+  assert.deepEqual(parseGoals(html), { over: { 2.5: 56 }, under: { 2.5: 44 }, btts: { no: 41, yes: 59 } });
+  // dvojice, která se nesečte na ≈100, se nebere
+  assert.equal(parseGoals(html.replace("44 56 Over", "20 56 Over").replace("41 59 Yes", "10 59 Yes")), null);
+});
