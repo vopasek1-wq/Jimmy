@@ -1277,14 +1277,12 @@
     $("#ai-run").disabled = true;
     $("#ai-run").classList.add("is-busy");
     $("#ai-title").textContent = "Analyzuji…";
-    $("#ai-sub").textContent = "Gemini zpracovává statistiky";
     $("#ai-out").innerHTML = "<p>AI analyzuje tipy…</p>";
     const res = await desktop.analysis.run();
     an.busy = false;
     $("#ai-run").disabled = false;
     $("#ai-run").classList.remove("is-busy");
     $("#ai-title").textContent = "Analyzovat pomocí AI";
-    $("#ai-sub").textContent = "Rozbor kalibrace a chyb (Gemini)";
     $("#ai-out").innerHTML = res.ok ? aiHtml(res.data) : `<p class="is-error">${esc(res.error)}</p>`;
   });
 
@@ -1356,17 +1354,17 @@
   const updateBtn = $("#update-btn");
   const updateBtnLabel = $(".side-btn__title", updateBtn);
   const updateBtnSub = $("#build-label");
-  let updateInfo = null;   // zjištěné novější sestavení { current, latest, url }
-  let appBuild = 0;        // číslo sestavení této aplikace
+  let updateInfo = null;   // zjištěná novější verze { current, latest, url }
+  let appBuild = 0;        // číslo verze této aplikace
 
   function renderUpdateBtn(checking = false) {
     updateBtn.disabled = checking;
     updateBtn.classList.toggle("side-btn--busy", checking);
     updateBtn.classList.toggle("side-btn--found", Boolean(updateInfo) && !checking);
     updateBtnLabel.textContent = checking ? "Hledám…" : updateInfo ? `Stáhnout verzi ${updateInfo.latest}` : "Aktualizace";
-    updateBtnSub.textContent = checking ? "kontroluji GitHub" : updateInfo ? `máš ${updateInfo.current || "starší"} · nová je ${updateInfo.latest}` : appBuild ? `sestavení ${appBuild}` : "Vyhledat novou verzi";
+    updateBtnSub.textContent = checking ? "kontroluji GitHub" : updateInfo ? `máš ${updateInfo.current || "starší"} · nová je ${updateInfo.latest}` : appBuild ? `verze ${appBuild}` : "Vyhledat novou verzi";
     updateBtn.title = checking ? "Hledám novou verzi programu…"
-      : updateInfo ? `Je k dispozici sestavení ${updateInfo.latest} (máš ${updateInfo.current}). Klikni pro stažení.` : "Vyhledat novou verzi programu";
+      : updateInfo ? `Je k dispozici verze ${updateInfo.latest} (máš ${updateInfo.current}). Klikni pro stažení.` : "Vyhledat novou verzi programu";
   }
 
   function showUpdate(info) {
@@ -1374,7 +1372,7 @@
     updateInfo = info;
     updateChip.hidden = false;
     $("span", updateChip).textContent = `Nová verze ${info.latest}`;
-    updateChip.title = `Je k dispozici sestavení ${info.latest} (máš ${info.current}). Klikni pro stažení.`;
+    updateChip.title = `Je k dispozici verze ${info.latest} (máš ${info.current}). Klikni pro stažení.`;
     renderUpdateBtn();
   }
 
@@ -1394,10 +1392,10 @@
     renderUpdateBtn();
     if (res.ok && res.data.notFound) {                  // vydání bez přihlášení nejde přečíst: ukáže se stránka vydání v prohlížeči
       openExternal(res.data.url);
-      toast(`Nové sestavení nejde zjistit automaticky. Otevřel jsem stránku vydání – číslo je v názvu (ty máš ${res.data.current || "starší"}).`);
+      toast(`Novou verzi nejde zjistit automaticky. Otevřel jsem stránku vydání – číslo je v názvu (ty máš ${res.data.current || "starší"}).`);
     } else if (!res.ok) toast(res.error, "error");
-    else if (res.data.available) toast(`Je k dispozici sestavení ${res.data.latest} (máš ${res.data.current}). Klikni na „Stáhnout“.`);
-    else toast(res.data.current ? `Máš nejnovější verzi (sestavení ${res.data.current}).` : "Máš nejnovější verzi.");
+    else if (res.data.available) toast(`Je k dispozici verze ${res.data.latest} (máš ${res.data.current}). Klikni na „Stáhnout“.`);
+    else toast(res.data.current ? `Máš nejnovější verzi (${res.data.current}).` : "Máš nejnovější verzi.");
   });
   if (desktop) {
     desktop.update.onAvailable(showUpdate);
@@ -1420,7 +1418,7 @@
     if (info) {
       const build = Number((/\.(\d+)$/.exec(info.version || "") || [])[1] || 0);
       if (build) {
-        $(".brand").title = `Fotbalové tipy – sestavení ${build}`;
+        $(".brand").title = `Fotbalové tipy – verze ${build}`;
         appBuild = build;
         renderUpdateBtn();
       }
