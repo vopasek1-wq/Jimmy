@@ -500,18 +500,16 @@
       facts.push(["Výsledek", `${names[t.outcome] || t.outcome}${t.outcomeSource && t.outcomeSource !== "manual" ? " (automaticky)" : ""}`]);
     }
     const hi = state.limits.highProbability;
+    const links = [["scores24", "Scores24", t.url], ["forebet", "Forebet", t.forebetUrl], ["sofascore", "SofaScore", t.sofascoreUrl]]
+      .map(([act, name, url]) => `<button class="btn btn--ghost btn--sm" type="button" data-act="${act}"${url ? "" : ` disabled title="${name}: zápas nenalezen"`}><i data-lucide="external-link"></i>${name}</button>`).join("");
     detailEl.innerHTML = `
       <span class="detail__state is-${t.probClass}">${t.probClass === "high" ? `NAD ${hi} %` : `${state.limits.minProbability}–${hi} %`}</span>
       <div class="detail__tip">${esc(t.tipLabel)}</div>
       <div class="detail__match">${esc(t.matchName)}</div>
       <div class="detail__league">${esc(t.league)}</div>
+      <div class="detail__actions">${links}</div>
       <dl class="facts">${facts.map(([k, v, strong]) => `<dt>${esc(k)}</dt><dd${strong ? ' class="is-strong"' : ""}>${esc(v)}</dd>`).join("")}</dl>
-      <div class="dstats" id="detail-stats">${detailStatsHtml(t)}</div>
-      <div class="detail__actions">
-        ${t.url ? '<button class="btn btn--ghost btn--sm" type="button" data-act="scores24"><i data-lucide="external-link"></i>Scores24</button>' : ""}
-        ${t.forebetUrl ? '<button class="btn btn--ghost btn--sm" type="button" data-act="forebet"><i data-lucide="external-link"></i>Forebet</button>' : ""}
-        ${t.sofascoreUrl ? '<button class="btn btn--ghost btn--sm" type="button" data-act="sofascore"><i data-lucide="external-link"></i>SofaScore</button>' : ""}
-      </div>`;
+      <div class="dstats" id="detail-stats">${detailStatsHtml(t)}</div>`;
     renderIcons();
   }
 

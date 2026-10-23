@@ -335,6 +335,7 @@ i[data-lucide],
 }
 .btn--ghost:hover { background: #182a3c; border-color: var(--border-3); color: var(--text); }
 .btn--ghost:active { transform: scale(0.97); }
+.btn--ghost:disabled { opacity: 0.4; cursor: default; transform: none; background: transparent; border-color: var(--border-2); color: var(--muted); }
 .is-busy #refresh .lucide { animation: spin 0.9s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
