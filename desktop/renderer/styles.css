@@ -25,9 +25,9 @@
 
   /* Text */
   --text: #e8eef5;
-  --text-2: #c9d3de;
-  --muted: #8d9cae;
-  --faint: #66768a;
+  --text-2: #d6dfea;
+  --muted: #a9b8ca;
+  --faint: #8393a8;
 
   /* Akcenty */
   --accent: #3ec6ff;
@@ -953,8 +953,8 @@ body { background: var(--bg); }
   --glass-glow: radial-gradient(200px 150px at 0% 0%, rgba(118, 134, 160, 0.56) 0%, rgba(80, 96, 122, 0.26) 42%, rgba(7, 18, 37, 0) 100%);
   --glass-glow-tile: radial-gradient(150px 95px at 0% 0%, rgba(118, 134, 160, 0.5) 0%, rgba(80, 96, 122, 0.22) 45%, rgba(7, 18, 37, 0) 100%);
   --glass-glow-soft: radial-gradient(110px 70px at 0% 0%, rgba(118, 134, 160, 0.3) 0%, rgba(80, 96, 122, 0.1) 50%, rgba(7, 18, 37, 0) 100%);
-  --glass-base: linear-gradient(180deg, rgba(9, 22, 44, 0.92), rgba(6, 16, 34, 0.94));
-  --glass-border: rgba(64, 96, 150, 0.36);
+  --glass-base: linear-gradient(180deg, rgba(15, 36, 68, 0.9), rgba(10, 27, 54, 0.92));
+  --glass-border: rgba(96, 138, 198, 0.42);
   --glass-edge: inset 0 1px 0 rgba(176, 200, 235, 0.22), inset 1px 0 0 rgba(140, 165, 205, 0.12);
 }
 .stat, .live-box, .facts, .tk-card, .tk-hist__row, .tk-omitted, .adv__col, .key-pop {
@@ -978,8 +978,8 @@ body { background: var(--bg); }
 
 /* Hlavní karty ve stejném skle jako vnořené prvky: bez modrých rohů a záře, jen jemná šedomodrá záře vlevo nahoře */
 :root {
-  --glass-glow-card: radial-gradient(380px 260px at 0% 0%, rgba(118, 134, 160, 0.46) 0%, rgba(80, 96, 122, 0.19) 42%, rgba(7, 18, 37, 0) 100%);
-  --glass-base-card: linear-gradient(180deg, rgba(8, 20, 42, 0.82), rgba(5, 14, 30, 0.88));
+  --glass-glow-card: radial-gradient(380px 260px at 0% 0%, rgba(130, 148, 176, 0.42) 0%, rgba(90, 108, 136, 0.17) 42%, rgba(7, 18, 37, 0) 100%);
+  --glass-base-card: linear-gradient(180deg, rgba(24, 52, 94, 0.8), rgba(16, 39, 74, 0.86));
 }
 .card {
   background: var(--glass-glow-card), var(--glass-base-card);
