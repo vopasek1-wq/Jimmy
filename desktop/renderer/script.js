@@ -964,7 +964,7 @@
 
   /* ---------- Tikety (Gemini) ---------- */
   const tk = {
-    day: ["today", "tomorrow", "earlier"].includes(store.get("tk-day")) ? store.get("tk-day") : "today",
+    day: ["today", "tomorrow"].includes(store.get("tk-day")) ? store.get("tk-day") : "today",
     result: store.get("tk-result2"),   // naposledy vytvořené tikety (zůstanou i po restartu; ukážou se jen u dne, pro který vznikly)
     busy: false, step: "", startedAt: 0, timer: null,
   };
@@ -982,7 +982,7 @@
     : "");
 
   /** Den (RRRR-MM-DD), pro který se tikety vytvářejí podle přepínače Dnes / Zítra. */
-  const tkTargetDay = () => { const today = localDay(new Date()); return tk.day === "tomorrow" ? nextDay(today) : today; }; // „Dříve“ nic nevytváří
+  const tkTargetDay = () => { const today = localDay(new Date()); return tk.day === "tomorrow" ? nextDay(today) : today; };
   /** Den, pro který uložený výsledek vznikl (starší uložené výsledky: den prvního zápasu). */
   const tkResultDay = (r) => r.forDay || (r.tickets && r.tickets[0] && r.tickets[0].legs[0] ? localDay(new Date(r.tickets[0].legs[0].kickoff)) : null);
 
@@ -990,14 +990,7 @@
     $$("#tk-day [data-tkday]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.tkday === tk.day)));
     const note = $("#tk-note");
     const list = $("#tk-list");
-    const earlier = tk.day === "earlier";
-    $("#tk-create").hidden = earlier;
     renderTicketHistory();
-    if (earlier) {
-      note.textContent = "Tikety z dřívějších dnů s výsledky podle výsledků jejich zápasů. Tikety na dnešek a zítřek najdeš pod Dnes a Zítra.";
-      list.innerHTML = "";
-      return;
-    }
     const r = tk.result && tkResultDay(tk.result) === tkTargetDay() ? tk.result : null; // včerejší tikety se v „Dnes“ neukazují
     note.textContent = TK_NOTE;
     if (tk.busy) {
@@ -1036,20 +1029,16 @@
   const LEG_MARK = { win: "✓", loss: "✗", void: "↺" };
 
   /** Dřívější tikety s výsledky (podle výsledků jejich tipů) a souhrnem. */
+  /** Uložené tikety zvoleného dne (Dnes / Zítra) – jen když se nezobrazují jako čerstvě vytvořené karty; starší dny se tu neukazují. */
   function renderTicketHistory() {
     const el = $("#tk-history");
     const h = tk.history;
     if (!h) { el.innerHTML = ""; return; }
-    const today = localDay(new Date());
-    const earlier = tk.day === "earlier";
     const target = tkTargetDay();
-    const shownNow = !earlier && tk.result && tkResultDay(tk.result) === target;      // tikety dne už jsou vidět jako karty výše
-    const rows = earlier ? h.tickets.filter((t) => t.day < today) : shownNow ? [] : h.tickets.filter((t) => t.day === target);
-    if (!rows.length) { el.innerHTML = earlier ? '<p class="empty">Zatím žádné dřívější tikety.</p>' : ""; return; }
-    const st = h.stats;
-    const sum = st.n ? `vyhodnoceno ${st.n}, vyhráno ${st.wins} (${nf1.format(st.actual)} %), ROI ${st.roi > 0 ? "+" : st.roi < 0 ? "−" : ""}${nf1.format(Math.abs(st.roi))} %` : "zatím žádný vyhodnocený";
-    const title = earlier ? `Dřívější tikety<small>${esc(sum)}${st.pending ? ` · čeká ${st.pending}` : ""}</small>` : "Uložené tikety na tento den";
-    el.innerHTML = `<h3 class="tk-hist__title">${title}</h3>`
+    const shownNow = tk.result && tkResultDay(tk.result) === target;
+    const rows = shownNow ? [] : h.tickets.filter((t) => t.day === target);
+    if (!rows.length) { el.innerHTML = ""; return; }
+    el.innerHTML = '<h3 class="tk-hist__title">Uložené tikety na tento den</h3>'
       + rows.map((t) => `<div class="tk-hist__row">
         <div class="tk-hist__meta"><strong>${esc(t.name)}</strong><span>${esc(fmtKickoff(t.createdAt))}</span></div>
         <ul class="tk-hist__legs">${t.legs.map((l) => `<li class="is-${l.outcome || "pending"}"><i>${LEG_MARK[l.outcome] || "…"}</i><span>${esc(l.matchName)}</span><em>${esc(l.tipLabel)} · ${esc(nf2.format(l.odds))}</em>${l.reason ? `<p class="tk-hist__why">${esc(l.reason)}</p>` : ""}</li>`).join("")}</ul>
