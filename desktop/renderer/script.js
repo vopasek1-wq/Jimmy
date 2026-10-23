@@ -402,6 +402,7 @@
 
   /* ---------- Detail tipu ---------- */
   const detailEl = $("#detail");
+  const detailMatch = $("#detail-match");
 
   function forebetFact(t) {
     if (t.probForebet !== null) return `${fmtPct(t.probForebet)}${t.probForebet > state.limits.minProbability ? " – potvrzuje" : " – nepotvrzuje"}`;
@@ -480,6 +481,8 @@
 
   function renderDetail() {
     const t = tipByKey(state.selected);
+    detailMatch.textContent = t ? t.matchName : "";
+    detailMatch.title = t ? t.matchName : "";
     if (!t) {
       detailEl.innerHTML = `<p class="detail__empty">${state.visible.length ? "Vyber tip v tabulce." : "Žádný tip k zobrazení."}<br>Dvojklik na řádek otevře zápas na Scores24.</p>`;
       return;
@@ -487,11 +490,9 @@
     const now = Date.now();
     const ms = matchState(t, now);
     const kickoff = Date.parse(t.kickoff);
-    const when = `${fmtKickoff(t.kickoff)}${ms.kind === "wait" ? ` (${untilText(kickoff - now)})` : ""}`;
+    const when = `${fmtKickoff(t.kickoff)} · ${ms.kind === "wait" ? untilText(kickoff - now) : ms.text}`;
     const facts = [
-      ["Začátek", `${when} · ${ms.text}`],
-      [`Pravděpodobnost (${t.probSource})`, fmtPct(t.probability), true],
-      ["Kurz", t.odds ? `${nf2.format(t.odds)}${t.oddsEstimated ? " – odhad z pravděpodobnosti" : " – orientační"}` : "není k dispozici", true],
+      ["Začátek", when],
       ["Forebet", forebetFact(t)],
       ["Zdroje", t.sources.join(" + ")],
     ];
@@ -500,15 +501,19 @@
       facts.push(["Výsledek", `${names[t.outcome] || t.outcome}${t.outcomeSource && t.outcomeSource !== "manual" ? " (automaticky)" : ""}`]);
     }
     const hi = state.limits.highProbability;
+    const val = valueOf(t);
+    const kpis = [
+      stat(fmtPct(t.probability), "Pravděpodobnost", "stat--accent"),
+      stat(t.odds ? nf2.format(t.odds) : "–", t.oddsEstimated ? "Kurz (odhad)" : "Kurz"),
+      stat(fmtValue(val), "Value", val === null ? "" : val > 0 ? "stat--pos" : val < 0 ? "stat--neg" : ""),
+    ].join("");
     const links = [["scores24", "Scores24", t.url], ["forebet", "Forebet", t.forebetUrl], ["sofascore", "SofaScore", t.sofascoreUrl]]
       .map(([act, name, url]) => `<button class="btn btn--ghost btn--sm" type="button" data-act="${act}"${url ? "" : ` disabled title="${name}: zápas nenalezen"`}><i data-lucide="external-link"></i>${name}</button>`).join("");
     detailEl.innerHTML = `
-      <span class="detail__state is-${t.probClass}">${t.probClass === "high" ? `NAD ${hi} %` : `${state.limits.minProbability}–${hi} %`}</span>
-      <div class="detail__tip">${esc(t.tipLabel)}</div>
-      <div class="detail__match">${esc(t.matchName)}</div>
-      <div class="detail__league">${esc(t.league)}</div>
+      <div class="detail__tip">${esc(t.tipLabel)}<span class="detail__state is-${t.probClass}">${t.probClass === "high" ? `NAD ${hi} %` : `${state.limits.minProbability}–${hi} %`}</span></div>
+      <div class="stat-row stat-row--detail">${kpis}</div>
+      <dl class="facts">${facts.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
       <div class="detail__actions">${links}</div>
-      <dl class="facts">${facts.map(([k, v, strong]) => `<dt>${esc(k)}</dt><dd${strong ? ' class="is-strong"' : ""}>${esc(v)}</dd>`).join("")}</dl>
       <div class="dstats" id="detail-stats">${detailStatsHtml(t)}</div>`;
     renderIcons();
   }
