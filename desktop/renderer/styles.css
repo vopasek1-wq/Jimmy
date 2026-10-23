@@ -963,7 +963,7 @@ body { background: var(--bg); }
   box-shadow: var(--glass-edge), 0 14px 28px -18px rgba(0, 0, 0, 0.8);
 }
 .stat { background: var(--glass-glow-tile), var(--glass-base); }
-.side-btn, .seg-control, .btn--ghost, .search, .input {
+.side-btn, .seg-control, .btn--ghost, .input {
   background: var(--glass-glow-soft), var(--glass-base);
   border-color: var(--glass-border);
   box-shadow: var(--glass-edge);
