@@ -123,8 +123,15 @@
     openExternal(a.getAttribute("href"));
   });
 
-  const stat = (value, label, cls = "") =>
-    `<div class="stat ${cls}"><div class="stat__value">${esc(value)}</div><div class="stat__label" title="${esc(label)}">${esc(label)}</div></div>`;
+  /**
+   * Dlaždice se statistikou. `extra`: icon (název ikony Lucide), bar (pole { w: šířka v %, cls: is-win|is-loss|is-void|is-good|is-warn|is-bad }),
+   * note (HTML pod tím, vkládá se jen z hodnot, které už prošly přes esc()).
+   */
+  const stat = (value, label, cls = "", extra = {}) => `<div class="stat ${cls}">
+    ${extra.icon ? `<i class="stat__icon" data-lucide="${extra.icon}"></i>` : ""}
+    <div class="stat__value">${esc(value)}</div><div class="stat__label" title="${esc(label)}">${esc(label)}</div>
+    ${extra.bar ? `<div class="stat__bar">${extra.bar.map((p) => `<i class="${p.cls}" style="width:${Math.max(0, Math.min(100, p.w))}%"></i>`).join("")}</div>` : ""}
+    ${extra.note ? `<div class="stat__note">${extra.note}</div>` : ""}</div>`;
 
   /* ---------- Navigace ---------- */
   const VIEWS = ["overview", "live", "tickets", "analysis", "history"];
@@ -604,8 +611,18 @@
   const statTiles = (s) => {
     const rate = s.hitRate === null ? "–" : `${Math.round(s.hitRate)} %`;
     const profit = s.profit === null ? "–" : fmtSigned(s.profit);
-    const roi = s.roiPct === null ? "bez skutečných kurzů" : `ROI ${s.roiPct > 0 ? "+" : s.roiPct < 0 ? "−" : ""}${nf1.format(Math.abs(s.roiPct))} %`;
-    return { rate, profit, roi, profitCls: s.profit > 0 ? "stat--pos" : s.profit < 0 ? "stat--neg" : "" };
+    const roiText = s.roiPct === null ? "bez skutečných kurzů" : `ROI ${s.roiPct > 0 ? "+" : s.roiPct < 0 ? "−" : ""}${nf1.format(Math.abs(s.roiPct))} %`;
+    const tone = s.profit > 0 ? "pos" : s.profit < 0 ? "neg" : "muted";
+    const rateTone = s.hitRate === null ? "" : s.hitRate >= 60 ? "good" : s.hitRate >= 45 ? "warn" : "bad";
+    return {
+      rate, profit, roi: roiText, profitCls: s.profit > 0 ? "stat--pos" : s.profit < 0 ? "stat--neg" : "",
+      roiChip: `<span class="stat__chip stat__chip--${tone}">${esc(roiText)}</span>`,
+      rateCls: rateTone ? `stat--${rateTone}` : "",
+      rateBar: s.hitRate === null ? null : [{ w: s.hitRate, cls: `is-${rateTone}` }],
+      // výhry / prohry / vrácené jako dělený pruh a barevná legenda
+      outcomeBar: s.evaluated ? [{ w: (100 * s.wins) / s.evaluated, cls: "is-win" }, { w: (100 * s.losses) / s.evaluated, cls: "is-loss" }, { w: (100 * s.voids) / s.evaluated, cls: "is-void" }] : null,
+      outcomeNote: `<span class="g">${s.wins} V</span><span class="r">${s.losses} P</span><span class="y">${s.voids} vr.</span>`,
+    };
   };
 
   function renderMini() {
@@ -613,11 +630,12 @@
     if (!s) { $("#mini-stats").innerHTML = '<p class="empty">Zatím žádná historie.</p>'; return; }
     const v = statTiles(s);
     $("#mini-stats").innerHTML = [
-      stat(String(s.total), "uložených tipů", "stat--accent"),
-      stat(String(s.evaluated), "vyhodnoceno"),
-      stat(v.rate, `úspěšnost (${s.wins} V / ${s.losses} P)`),
-      stat(v.profit, `zisk · ${v.roi}`, v.profitCls),
+      stat(String(s.total), "uložených tipů", "stat--accent", { icon: "database" }),
+      stat(String(s.evaluated), "vyhodnoceno", "", { bar: v.outcomeBar, note: v.outcomeNote }),
+      stat(v.rate, "úspěšnost", v.rateCls, { bar: v.rateBar }),
+      stat(v.profit, "zisk (vklad 1)", v.profitCls, { note: v.roiChip }),
     ].join("");
+    renderIcons();
   }
 
   function renderHistory() {
@@ -637,12 +655,13 @@
     const s = h.stats;
     const v = statTiles(s);
     $("#history-stats").innerHTML = [
-      stat(String(s.total), "tipů v období", "stat--accent"),
-      stat(String(s.evaluated), `vyhodnoceno (${s.wins} V · ${s.losses} P · ${s.voids} vr.)`),
-      stat(v.rate, "úspěšnost"),
-      stat(s.avgOdds === null ? "–" : nf2.format(s.avgOdds), "průměrný kurz"),
-      stat(v.profit, `zisk (vklad 1) · ${v.roi}`, v.profitCls),
+      stat(String(s.total), "tipů v období", "stat--accent", { icon: "list" }),
+      stat(String(s.evaluated), "vyhodnoceno", "", { bar: v.outcomeBar, note: v.outcomeNote }),
+      stat(v.rate, "úspěšnost", v.rateCls, { bar: v.rateBar, icon: "target" }),
+      stat(s.avgOdds === null ? "–" : nf2.format(s.avgOdds), "průměrný kurz", "", { icon: "coins" }),
+      stat(v.profit, "zisk (vklad 1)", v.profitCls, { note: v.roiChip, icon: "trending-up" }),
     ].join("");
+    renderIcons();
 
     const list = sortList(h.tips.filter((t) => matchesQuery(t) && (!state.league || t.leagueKey === state.league)), HIST_SORT, state.hsort);
     if (!list.some((t) => t.id === state.hselected)) state.hselected = null;
@@ -1036,12 +1055,13 @@
     }
     const o = a.overall;
     $("#an-stats").innerHTML = [
-      stat(String(o.n), "vyhodnocených tipů", "stat--accent"),
-      stat(o.n ? `${nf1.format(o.actual)} %` : "–", "skutečná úspěšnost"),
-      stat(o.n ? `${nf1.format(o.predicted)} %` : "–", "průměrný odhad"),
-      stat(o.n ? `${signed1(o.gap)} p. b.` : "–", "rozdíl (skutečnost − odhad)", o.gap > 0 ? "stat--pos" : o.gap < 0 ? "stat--neg" : ""),
+      stat(String(o.n), "vyhodnocených tipů", "stat--accent", { icon: "list-checks" }),
+      stat(o.n ? `${nf1.format(o.actual)} %` : "–", "skutečná úspěšnost", "", { icon: "target", bar: o.n ? [{ w: o.actual, cls: o.actual >= 60 ? "is-good" : o.actual >= 45 ? "is-warn" : "is-bad" }] : null }),
+      stat(o.n ? `${nf1.format(o.predicted)} %` : "–", "průměrný odhad", "", { icon: "gauge", bar: o.n ? [{ w: o.predicted, cls: "is-muted" }] : null }),
+      stat(o.n ? `${signed1(o.gap)} p. b.` : "–", "rozdíl od odhadu", o.gap > 0 ? "stat--pos" : o.gap < 0 ? "stat--neg" : ""),
       stat(o.roi === null ? "–" : `${signed1(o.roi)} %`, "ROI (skutečné kurzy)", o.roi > 0 ? "stat--pos" : o.roi < 0 ? "stat--neg" : ""),
     ].join("");
+    renderIcons();
     $("#an-bands").innerHTML = tableHtml(a.bands, "Pásmo");
     $("#an-markets").innerHTML = tableHtml(a.markets, "Typ tipu");
     $("#an-leagues").innerHTML = tableHtml(a.leagues, "Soutěž");
@@ -1133,10 +1153,16 @@
     if (!geminiKey.has) { openKey(); $("#ai-out").innerHTML = '<p class="is-error">Nejdřív zadej Gemini API klíč (vlevo dole).</p>'; return; }
     an.busy = true;
     $("#ai-run").disabled = true;
+    $("#ai-run").classList.add("is-busy");
+    $("#ai-title").textContent = "Analyzuji…";
+    $("#ai-sub").textContent = "Gemini zpracovává statistiky";
     $("#ai-out").innerHTML = "<p>AI analyzuje tipy…</p>";
     const res = await desktop.analysis.run();
     an.busy = false;
     $("#ai-run").disabled = false;
+    $("#ai-run").classList.remove("is-busy");
+    $("#ai-title").textContent = "Analyzovat pomocí AI";
+    $("#ai-sub").textContent = "Rozbor kalibrace a chyb (Gemini)";
     $("#ai-out").innerHTML = res.ok ? aiHtml(res.data) : `<p class="is-error">${esc(res.error)}</p>`;
   });
 

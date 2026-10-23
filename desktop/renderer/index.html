@@ -176,9 +176,10 @@
           <h2 class="sr-only" id="analysis-title">Analýza úspěšnosti tipů</h2>
           <div class="an-top">
             <div class="stat-row stat-row--5" id="an-stats"></div>
-            <div class="an-action">
-              <button class="btn btn--primary btn--sm" type="button" id="ai-run"><i data-lucide="sparkles"></i>Analyzovat pomocí AI</button>
-            </div>
+            <button class="ai-tile" type="button" id="ai-run" title="Gemini rozebere kalibraci pravděpodobností a opakované chyby v prohraných tipech">
+              <span class="ai-tile__icon"><i data-lucide="sparkles"></i></span>
+              <span class="ai-tile__text"><span class="ai-tile__title" id="ai-title">Analyzovat pomocí AI</span><span class="ai-tile__sub" id="ai-sub">Rozbor kalibrace a chyb (Gemini)</span></span>
+            </button>
           </div>
           <div class="an-grid">
             <div class="live-box"><div class="live-box__title">Odhadnutá pravděpodobnost vs. skutečnost<small>podle pásma</small></div><div id="an-bands"></div></div>
