@@ -30,8 +30,10 @@
       <div class="cats" id="cats" aria-label="Soutěže"></div>
 
       <div class="sidebar__foot">
-        <button class="side-btn" type="button" id="update-btn" title="Vyhledat novou verzi programu"><i data-lucide="refresh-cw"></i><span>Aktualizace</span></button>
-        <span class="sidebar__build" id="build-label" hidden></span>
+        <button class="side-btn" type="button" id="update-btn" title="Vyhledat novou verzi programu">
+          <span class="side-btn__icon"><i data-lucide="refresh-cw"></i></span>
+          <span class="side-btn__text"><span class="side-btn__title">Aktualizace</span><span class="side-btn__sub" id="build-label">Vyhledat novou verzi</span></span>
+        </button>
       </div>
     </aside>
 
@@ -161,7 +163,13 @@
 
         <section class="card analysis-page" aria-labelledby="analysis-title">
           <h2 class="sr-only" id="analysis-title">Analýza úspěšnosti tipů</h2>
-          <div class="stat-row stat-row--5" id="an-stats"></div>
+          <div class="an-top">
+            <div class="stat-row stat-row--5" id="an-stats"></div>
+            <div class="an-action">
+              <button class="btn btn--primary btn--sm" type="button" id="ai-run"><i data-lucide="sparkles"></i>Analyzovat pomocí AI</button>
+              <button class="btn btn--ghost btn--sm" type="button" id="ai-key-btn"><i data-lucide="key-round"></i><span id="ai-key-label">Gemini API klíč</span></button>
+            </div>
+          </div>
           <div class="an-grid">
             <div class="live-box"><div class="live-box__title">Odhadnutá pravděpodobnost vs. skutečnost<small>podle pásma</small></div><div id="an-bands"></div></div>
             <div class="live-box"><div class="live-box__title">Zjištění</div><ul class="an-insights" id="an-insights"></ul></div>
@@ -170,10 +178,6 @@
           </div>
           <div class="live-box ai-box">
             <div class="live-box__title">AI analýza<small>pošle souhrnné statistiky a posledních 40 prohraných tipů do Google Gemini API tvým klíčem</small></div>
-            <div class="ai-actions">
-              <button class="btn btn--primary btn--sm" type="button" id="ai-run"><i data-lucide="sparkles"></i>Analyzovat pomocí AI</button>
-              <button class="btn btn--ghost btn--sm" type="button" id="ai-key-btn"><i data-lucide="key-round"></i><span id="ai-key-label">Gemini API klíč</span></button>
-            </div>
             <form class="ai-key-form" id="ai-key-form" hidden>
               <input class="input" id="ai-key" type="password" placeholder="Gemini API klíč (AIza…)" autocomplete="off" aria-label="Gemini API klíč">
               <button class="btn btn--primary btn--sm" type="submit">Uložit</button>

@@ -881,8 +881,8 @@
 
   /** Seznam zápasů, které skončily mimo tikety, každý s důvodem (rozbalovací). */
   const omittedHtml = (r) => (r && r.omitted && r.omitted.length
-    ? `<details class="tk-omitted tk-wide"><summary>Nezařazeno do tiketů: ${r.omitted.length} z ${r.analyzed} zápasů – proč?</summary><ul>${r.omitted.map((o) => `<li>
-        <span class="tk-omitted__match">${esc(o.matchName)}</span><span class="tk-omitted__tip">${esc(o.tipLabel)} · ${esc(nf2.format(o.odds))}</span><span class="tk-omitted__why">${esc(o.reason)}</span></li>`).join("")}</ul></details>`
+    ? `<section class="tk-omitted tk-wide"><h3 class="tk-omitted__title">Nezařazeno do tiketů: ${r.omitted.length} z ${r.analyzed} zápasů – proč?</h3><ul>${r.omitted.map((o) => `<li>
+        <span class="tk-omitted__match">${esc(o.matchName)}</span><span class="tk-omitted__tip">${esc(o.tipLabel)} · ${esc(nf2.format(o.odds))}</span><span class="tk-omitted__why">${esc(o.reason)}</span></li>`).join("")}</ul></section>`
     : "");
 
   function renderTickets() {
@@ -998,11 +998,11 @@
     }
     const o = a.overall;
     $("#an-stats").innerHTML = [
-      stat(String(o.n), "vyhodnocených tipů (bez vrácených)", "stat--accent"),
+      stat(String(o.n), "vyhodnocených tipů", "stat--accent"),
       stat(o.n ? `${nf1.format(o.actual)} %` : "–", "skutečná úspěšnost"),
-      stat(o.n ? `${nf1.format(o.predicted)} %` : "–", "průměrný odhad pravděpodobnosti"),
+      stat(o.n ? `${nf1.format(o.predicted)} %` : "–", "průměrný odhad"),
       stat(o.n ? `${signed1(o.gap)} p. b.` : "–", "rozdíl (skutečnost − odhad)", o.gap > 0 ? "stat--pos" : o.gap < 0 ? "stat--neg" : ""),
-      stat(o.roi === null ? "–" : `${signed1(o.roi)} %`, "ROI (jen skutečné kurzy)", o.roi > 0 ? "stat--pos" : o.roi < 0 ? "stat--neg" : ""),
+      stat(o.roi === null ? "–" : `${signed1(o.roi)} %`, "ROI (skutečné kurzy)", o.roi > 0 ? "stat--pos" : o.roi < 0 ? "stat--neg" : ""),
     ].join("");
     $("#an-bands").innerHTML = tableHtml(a.bands, "Pásmo");
     $("#an-markets").innerHTML = tableHtml(a.markets, "Typ tipu");
@@ -1226,14 +1226,17 @@
   /* ---------- Nová verze: štítek v horní liště a tlačítko Aktualizace vlevo dole ---------- */
   const updateChip = $("#update-chip");
   const updateBtn = $("#update-btn");
-  const updateBtnLabel = $("span", updateBtn);
+  const updateBtnLabel = $(".side-btn__title", updateBtn);
+  const updateBtnSub = $("#build-label");
   let updateInfo = null;   // zjištěné novější sestavení { current, latest, url }
+  let appBuild = 0;        // číslo sestavení této aplikace
 
   function renderUpdateBtn(checking = false) {
     updateBtn.disabled = checking;
     updateBtn.classList.toggle("side-btn--busy", checking);
     updateBtn.classList.toggle("side-btn--found", Boolean(updateInfo) && !checking);
     updateBtnLabel.textContent = checking ? "Hledám…" : updateInfo ? `Stáhnout verzi ${updateInfo.latest}` : "Aktualizace";
+    updateBtnSub.textContent = checking ? "kontroluji GitHub" : updateInfo ? `máš ${updateInfo.current || "starší"} · nová je ${updateInfo.latest}` : appBuild ? `sestavení ${appBuild}` : "Vyhledat novou verzi";
     updateBtn.title = checking ? "Hledám novou verzi programu…"
       : updateInfo ? `Je k dispozici sestavení ${updateInfo.latest} (máš ${updateInfo.current}). Klikni pro stažení.` : "Vyhledat novou verzi programu";
   }
@@ -1242,6 +1245,7 @@
     if (!info || !info.available) return;
     updateInfo = info;
     updateChip.hidden = false;
+    $("span", updateChip).textContent = `Nová verze ${info.latest}`;
     updateChip.title = `Je k dispozici sestavení ${info.latest} (máš ${info.current}). Klikni pro stažení.`;
     renderUpdateBtn();
   }
@@ -1290,8 +1294,8 @@
       const build = Number((/\.(\d+)$/.exec(info.version || "") || [])[1] || 0);
       if (build) {
         $(".brand").title = `Fotbalové tipy – sestavení ${build}`;
-        $("#build-label").textContent = `sestavení ${build}`;
-        $("#build-label").hidden = false;
+        appBuild = build;
+        renderUpdateBtn();
       }
       state.limits = { ...state.limits, ...info.limits };
       state.leagues = info.leagues || [];
