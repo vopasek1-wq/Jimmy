@@ -156,7 +156,7 @@ pravděpodobnosti výhodu, napíše „žádný“. Pravděpodobnost je jen odha
 
 Tlačítko **Analyzovat pomocí AI** pošle souhrnné statistiky a posledních 40 prohraných tipů do **Google Gemini API** **tvým vlastním
 klíčem** a zobrazí rozbor kalibrace, opakujících se chyb a doporučení. Klíč si vytvoříš zdarma v Google AI Studio
-(aistudio.google.com → *Get API key*), v aplikaci ho zadáš pod tlačítkem „Gemini API klíč“. Ukládá se šifrovaně (Windows DPAPI) a nikam
+(aistudio.google.com → *Get API key*), v aplikaci ho zadáš v levém panelu pod tlačítkem **Aktualizace** (tlačítko „Gemini API klíč“). Jeden klíč platí pro Tikety i AI analýzu; když chybí, kliknutí na „Vytvořit tikety“ nebo „Analyzovat pomocí AI“ okno pro zadání otevře. Ukládá se šifrovaně (Windows DPAPI) a nikam
 jinam se neposílá. Zda je volání zpoplatněné, závisí na tarifu tvého Google účtu (Gemini API má bezplatný limit, jeho výši určuje Google);
 bez klíče AI část nefunguje, statistiky ano.
 

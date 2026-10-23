@@ -34,8 +34,24 @@
           <span class="side-btn__icon"><i data-lucide="refresh-cw"></i></span>
           <span class="side-btn__text"><span class="side-btn__title">Aktualizace</span><span class="side-btn__sub" id="build-label">Vyhledat novou verzi</span></span>
         </button>
+        <button class="side-btn" type="button" id="key-btn" title="Gemini API klíč – používá se pro tikety a AI analýzu" aria-haspopup="dialog" aria-expanded="false">
+          <span class="side-btn__icon"><i data-lucide="key-round"></i></span>
+          <span class="side-btn__text"><span class="side-btn__title">Gemini API klíč</span><span class="side-btn__sub" id="key-label">Nenastaven</span></span>
+        </button>
       </div>
     </aside>
+
+    <!-- Okno pro Gemini API klíč (otevírá se z levého panelu) -->
+    <form class="key-pop" id="key-form" role="dialog" aria-label="Gemini API klíč" hidden>
+      <div class="key-pop__title">Gemini API klíč</div>
+      <p class="key-pop__hint">Používá se pro záložku Tikety i AI analýzu. Ukládá se šifrovaně jen v tomto počítači. Klíč zdarma: aistudio.google.com → Get API key.</p>
+      <input class="input" id="key-input" type="password" placeholder="AIza…" autocomplete="off" aria-label="Gemini API klíč">
+      <div class="key-pop__actions">
+        <button class="btn btn--primary btn--sm" type="submit">Uložit</button>
+        <button class="btn btn--ghost btn--sm" type="button" id="key-remove" hidden>Odebrat</button>
+        <button class="btn btn--ghost btn--sm" type="button" id="key-close">Zavřít</button>
+      </div>
+    </form>
 
     <!-- ============ HORNÍ LIŠTA ============ -->
     <header class="topbar">
@@ -148,13 +164,7 @@
               <button type="button" data-tkday="tomorrow" aria-pressed="false">Zítra</button>
             </div>
             <button class="btn btn--primary" type="button" id="tk-create"><i data-lucide="sparkles"></i>Vytvořit tikety (AI)</button>
-            <button class="btn btn--ghost btn--sm" type="button" id="tk-key-btn"><i data-lucide="key-round"></i><span id="tk-key-label">Gemini API klíč</span></button>
           </div>
-          <form class="ai-key-form" id="tk-key-form" hidden>
-            <input class="input" id="tk-key" type="password" placeholder="Gemini API klíč (AIza…)" autocomplete="off" aria-label="Gemini API klíč">
-            <button class="btn btn--primary btn--sm" type="submit">Uložit</button>
-            <button class="btn btn--ghost btn--sm" type="button" id="tk-key-remove">Odebrat</button>
-          </form>
           <p class="tk-note" id="tk-note">Aplikace vezme tipy z přehledu a ke každému zápasu stáhne ze SofaScore aktuální statistiky (forma, vzájemné zápasy, góly, zranění, domácí/venkovní výkonnost). Gemini z nich vybere tipy s dobrou oporou v datech a složí tikety. Celkový kurz a pravděpodobnost počítá aplikace; kurzy u Tipsportu se mohou lišit.</p>
           <div class="tk-list" id="tk-list"></div>
           <div class="tk-hist" id="tk-history"></div>
@@ -166,7 +176,6 @@
             <div class="stat-row stat-row--5" id="an-stats"></div>
             <div class="an-action">
               <button class="btn btn--primary btn--sm" type="button" id="ai-run"><i data-lucide="sparkles"></i>Analyzovat pomocí AI</button>
-              <button class="btn btn--ghost btn--sm" type="button" id="ai-key-btn"><i data-lucide="key-round"></i><span id="ai-key-label">Gemini API klíč</span></button>
             </div>
           </div>
           <div class="an-grid">
@@ -193,11 +202,6 @@
           <div class="live-box"><div class="live-box__title">Tikety od Gemini vs. všechny tipy<small>vklad 1 na tiket / tip; odhad u tiketu = součin pravděpodobností</small></div><div id="an-tickets"></div></div>
           <div class="live-box ai-box">
             <div class="live-box__title">AI analýza<small>pošle souhrnné statistiky a posledních 40 prohraných tipů do Google Gemini API tvým klíčem</small></div>
-            <form class="ai-key-form" id="ai-key-form" hidden>
-              <input class="input" id="ai-key" type="password" placeholder="Gemini API klíč (AIza…)" autocomplete="off" aria-label="Gemini API klíč">
-              <button class="btn btn--primary btn--sm" type="submit">Uložit</button>
-              <button class="btn btn--ghost btn--sm" type="button" id="ai-key-remove">Odebrat</button>
-            </form>
             <div class="ai-out" id="ai-out" aria-live="polite"></div>
           </div>
         </section>

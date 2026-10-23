@@ -874,7 +874,7 @@
   const tk = {
     day: ["today", "tomorrow"].includes(store.get("tk-day")) ? store.get("tk-day") : "today",
     result: store.get("tk-result2"),   // naposledy vytvořené tikety (zůstanou i po restartu)
-    busy: false, hasKey: false, step: "", startedAt: 0, timer: null,
+    busy: false, step: "", startedAt: 0, timer: null,
   };
   const CERTAINTY_CS = { good: "Vysoká jistota", ok: "Střední jistota", risky: "Nižší jistota" };
   const TK_NOTE = $("#tk-note").textContent;
@@ -891,7 +891,6 @@
 
   function renderTickets() {
     $$("#tk-day [data-tkday]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.tkday === tk.day)));
-    $("#tk-key-label").textContent = tk.hasKey ? "Gemini klíč uložen" : "Gemini API klíč";
     const note = $("#tk-note");
     const list = $("#tk-list");
     const r = tk.result;
@@ -953,10 +952,6 @@
   }
 
   async function loadTickets() {
-    if (desktop) {
-      tk.hasKey = await desktop.analysis.hasKey();
-      $("#ai-key-label").textContent = tk.hasKey ? "Gemini klíč uložen" : "Gemini API klíč";
-    }
     renderTickets();
     loadTicketHistory();
   }
@@ -968,25 +963,9 @@
   }));
   if (desktop) desktop.tickets.onProgress((message) => { tk.step = message; tickBusy(); });
 
-  $("#tk-key-btn").addEventListener("click", () => { const f = $("#tk-key-form"); f.hidden = !f.hidden; if (!f.hidden) $("#tk-key").focus(); });
-  $("#tk-key-form").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const key = $("#tk-key").value.trim();
-    if (!key || !desktop) return;
-    const res = await desktop.analysis.setKey(key);
-    $("#tk-key").value = "";
-    if (res.ok) { $("#tk-key-form").hidden = true; toast("API klíč je uložený (šifrovaně)."); loadTickets(); } else toast(res.error, "error");
-  });
-  $("#tk-key-remove").addEventListener("click", async () => {
-    if (!desktop) return;
-    await desktop.analysis.setKey("");
-    toast("API klíč je odebraný.");
-    loadTickets();
-  });
-
   $("#tk-create").addEventListener("click", async () => {
     if (!desktop || tk.busy) return;
-    if (!tk.hasKey) { $("#tk-key-form").hidden = false; $("#tk-key").focus(); toast("Nejdřív zadej Gemini API klíč.", "error"); return; }
+    if (!geminiKey.has) { openKey(); toast("Nejdřív zadej Gemini API klíč (vlevo dole).", "error"); return; }
     tk.busy = true;
     tk.step = "";
     tk.startedAt = Date.now();
@@ -1004,7 +983,7 @@
   });
 
   /* ---------- Analýza úspěšnosti tipů (+ AI) ---------- */
-  const an = { data: null, tickets: null, hasKey: false, busy: false };
+  const an = { data: null, tickets: null, busy: false };
   const signed1 = (v) => (v === null ? "–" : `${v > 0 ? "+" : v < 0 ? "−" : ""}${nf1.format(Math.abs(v))}`);
 
   function tableHtml(rows, nameHead) {
@@ -1046,12 +1025,10 @@
 
   async function loadAnalysis() {
     if (!desktop) { renderAnalysis(); return; }
-    const [res, hasKey] = await Promise.all([desktop.analysis.get(), desktop.analysis.hasKey()]);
+    const res = await desktop.analysis.get();
     if (res.ok) an.data = res.data;
     const th = await desktop.tickets.history();
     if (th.ok) an.tickets = th.data;
-    an.hasKey = hasKey;
-    $("#ai-key-label").textContent = hasKey ? "Gemini klíč uložen" : "Gemini API klíč";
     renderAnalysis();
     loadBankroll();
   }
@@ -1072,24 +1049,46 @@
     return out.join("");
   }
 
-  $("#ai-key-btn").addEventListener("click", () => { const f = $("#ai-key-form"); f.hidden = !f.hidden; if (!f.hidden) $("#ai-key").focus(); });
-  $("#ai-key-form").addEventListener("submit", async (e) => {
+  /* ---------- Gemini API klíč (levý panel; společný pro Tikety a AI analýzu) ---------- */
+  const geminiKey = { has: false };
+  const keyForm = $("#key-form");
+  const keyBtn = $("#key-btn");
+  function renderKey() {
+    $("#key-label").textContent = geminiKey.has ? "Uložen" : "Nenastaven – klikni";
+    $("#key-remove").hidden = !geminiKey.has;
+  }
+  async function loadKey() {
+    if (!desktop) return;
+    geminiKey.has = await desktop.analysis.hasKey();
+    renderKey();
+  }
+  function openKey(open = true) {
+    keyForm.hidden = !open;
+    keyBtn.setAttribute("aria-expanded", String(open));
+    if (open) $("#key-input").focus();
+  }
+  keyBtn.addEventListener("click", () => openKey(keyForm.hidden));
+  $("#key-close").addEventListener("click", () => openKey(false));
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !keyForm.hidden) openKey(false); });
+  document.addEventListener("mousedown", (e) => { if (!keyForm.hidden && !keyForm.contains(e.target) && !keyBtn.contains(e.target)) openKey(false); });
+  keyForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const key = $("#ai-key").value.trim();
+    const key = $("#key-input").value.trim();
     if (!key || !desktop) return;
     const res = await desktop.analysis.setKey(key);
-    $("#ai-key").value = "";
-    if (res.ok) { $("#ai-key-form").hidden = true; toast("API klíč je uložený (šifrovaně)."); loadAnalysis(); } else toast(res.error, "error");
+    $("#key-input").value = "";
+    if (res.ok) { openKey(false); toast("API klíč je uložený (šifrovaně)."); loadKey(); } else toast(res.error, "error");
   });
-  $("#ai-key-remove").addEventListener("click", async () => {
+  $("#key-remove").addEventListener("click", async () => {
     if (!desktop) return;
     await desktop.analysis.setKey("");
     toast("API klíč je odebraný.");
-    loadAnalysis();
+    openKey(false);
+    loadKey();
   });
   $("#ai-run").addEventListener("click", async () => {
     if (!desktop || an.busy) return;
-    if (!an.hasKey) { $("#ai-key-form").hidden = false; $("#ai-key").focus(); $("#ai-out").innerHTML = '<p class="is-error">Nejdřív zadej API klíč.</p>'; return; }
+    if (!geminiKey.has) { openKey(); $("#ai-out").innerHTML = '<p class="is-error">Nejdřív zadej Gemini API klíč (vlevo dole).</p>'; return; }
     an.busy = true;
     $("#ai-run").disabled = true;
     $("#ai-out").innerHTML = "<p>AI analyzuje tipy…</p>";
@@ -1344,6 +1343,7 @@
     renderAll();
     loadMini();
     loadBankroll();
+    loadKey();
 
     const age = state.payload?.updatedAt ? Date.now() - Date.parse(state.payload.updatedAt) : Infinity;
     if (age > STALE_MS) refresh();

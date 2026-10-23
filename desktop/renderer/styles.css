@@ -164,7 +164,7 @@ i[data-lucide],
 .brand__name { font-size: 17px; font-weight: 500; letter-spacing: 0.1px; white-space: nowrap; }
 
 /* Patička levého panelu: tlačítko Aktualizace a číslo sestavení; při nízkém okně zůstává při dolním okraji */
-.sidebar__foot { position: sticky; bottom: 0; margin-top: auto; flex: none; display: flex; flex-direction: column; gap: 6px; padding: 14px 0 18px; background: linear-gradient(180deg, transparent, rgba(6, 15, 28, 0.94) 32%); }
+.sidebar__foot { position: sticky; bottom: 0; margin-top: auto; flex: none; display: flex; flex-direction: column; gap: 8px; padding: 14px 0 16px; }
 .side-btn { display: flex; align-items: center; gap: 11px; width: 100%; padding: 8px 10px; border-radius: 12px; border: 1px solid var(--border-2); background: rgba(8, 24, 46, 0.55); color: var(--text-2); text-align: left; transition: background-color 0.16s, border-color 0.16s, transform 0.12s; }
 .side-btn__icon { flex: none; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 9px; background: var(--panel); border: 1px solid var(--border-2); color: var(--accent-bright); }
 .side-btn__icon .lucide { width: 17px; height: 17px; }
@@ -733,7 +733,14 @@ i[data-lucide],
 .an-insights { display: flex; flex-direction: column; gap: 9px; font-size: 13px; line-height: 1.5; color: var(--text-2); }
 .an-insights li { position: relative; padding-left: 14px; }
 .an-insights li::before { content: ""; position: absolute; left: 0; top: 0.6em; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
-.ai-key-form { display: flex; gap: 8px; margin-top: 10px; max-width: 560px; }
+/* Okno s Gemini API klíčem (otevírá se z levého panelu) */
+.key-pop { position: fixed; left: calc(var(--sidebar-w) + 8px); bottom: 12px; z-index: 70; width: 340px; padding: 14px 16px 14px; border-radius: 14px;
+  background: rgba(8, 20, 38, 0.96); border: 1px solid var(--border-2); box-shadow: 0 18px 44px -14px rgba(0, 0, 0, 0.85); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); }
+.key-pop[hidden] { display: none; }
+.key-pop__title { font-size: 14px; font-weight: 600; }
+.key-pop__hint { margin: 6px 0 10px; font-size: 12px; line-height: 1.5; color: var(--muted); }
+.key-pop .input { width: 100%; flex: none; }
+.key-pop__actions { display: flex; gap: 8px; margin-top: 10px; }
 .ai-out { margin-top: 12px; font-size: 13.5px; line-height: 1.6; color: var(--text-2); }
 .ai-out p { margin: 0 0 10px; }
 .ai-out ul { margin: 0 0 10px; padding-left: 18px; list-style: disc; }
