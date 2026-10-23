@@ -43,40 +43,6 @@ const EXPAND_SCRIPT = (slugs) => `(async () => {
   return { html: document.documentElement.outerHTML, result };
 })()`;
 
-// Skript běžící ve stránce Forebetu: opakovaně klikne na „Show more“ (a podobná tlačítka) a čeká, až přibývají řádky
-// zápasů. Bez toho Forebet vrátí jen první část seznamu (podle zemí od „A“) a sledované ligy v něm nejsou.
-// Odkazy vedoucí na jinou stránku se nekliknou, hlavička/menu se přeskakuje.
-const EXPAND_MORE_SCRIPT = (rowSelector, maxMs) => String.raw`(async () => {
-  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-  const MORE = /^(show|load|view|see|display)\s+(more|all)\b|^more\s+(matches|games|predictions|results|events)\b|^(zobrazit|načíst|ukázat)\s+(více|další|vše)/i;
-  const rows = () => document.querySelectorAll(${JSON.stringify(rowSelector)}).length;
-  const label = (el) => ((el.tagName === "INPUT" ? el.value : (el.innerText || el.textContent)) || "").replace(/\s+/g, " ").trim();
-  const shown = (el) => { const r = el.getBoundingClientRect(); const s = getComputedStyle(el); return r.width > 0 && r.height > 0 && s.visibility !== "hidden" && s.display !== "none"; };
-  const navigates = (el) => { const a = el.closest("a[href]"); const h = a ? (a.getAttribute("href") || "") : ""; return !!h && !h.startsWith("#") && !/^javascript:/i.test(h); };
-  const find = () => {
-    const hits = [...document.querySelectorAll("a, button, div, span, p, li, td, input")]
-      .filter((el) => !el.closest("nav, header, footer") && label(el).length <= 40 && MORE.test(label(el)) && shown(el) && !navigates(el));
-    return hits.filter((el) => !hits.some((o) => o !== el && el.contains(o)));
-  };
-  const name = (el) => el.tagName.toLowerCase() + (el.id ? "#" + el.id : "") + (typeof el.className === "string" && el.className.trim() ? "." + el.className.trim().split(/\s+/).join(".") : "") + " «" + label(el) + "»";
-  const start = Date.now(), before = rows(), log = [];
-  let last = before, idle = 0;
-  while (Date.now() - start < ${Number(maxMs)} && idle < 3) {
-    window.scrollTo(0, document.body.scrollHeight);
-    const hits = find();
-    if (hits.length) {
-      const el = hits[hits.length - 1];
-      el.scrollIntoView({ block: "center" });
-      el.click();
-      if (log.length < 6) log.push(name(el));
-    }
-    await sleep(1500);
-    const n = rows();
-    if (n > last) { last = n; idle = 0; } else idle += 1;
-  }
-  return { html: document.documentElement.outerHTML, before, after: rows(), clickLog: log, ms: Date.now() - start };
-})()`;
-
 class WindowBrowser {
   /**
    * @param {object} electron  { BrowserWindow, session, app } – předává se zvenku kvůli testům
@@ -127,7 +93,7 @@ class WindowBrowser {
    * Pokud podmínka do limitu nenastala, vrací i tak poslední HTML a volající rozhodne.
    * S `interactive` se po `waitMs` okno zobrazí a dává se uživateli až `interactiveMs` na ruční ověření.
    */
-  async loadHtml(url, { ready, waitMs = 15000, interactive = false, interactiveMs = 90000, title, expand = null, onExpand = null } = {}) {
+  async loadHtml(url, { ready, waitMs = 15000, interactive = false, interactiveMs = 90000, title } = {}) {
     const win = this._createWindow(false, title);
     try {
       await this._load(win, url);
@@ -146,26 +112,40 @@ class WindowBrowser {
           html = await this._html(win);
         }
       }
-      if (expand && ready(html) && !win.isDestroyed()) html = await this._expand(win, expand, html, onExpand);
       return html;
     } finally {
       if (!win.isDestroyed()) win.destroy();
     }
   }
 
-  /** Spustí na hotové stránce skript `{ html, ... }` (např. „Show more“); při chybě zůstane původní HTML. */
-  async _expand(win, script, html, onExpand) {
+  /**
+   * Načte víc stránek jednu po druhé v jednom skrytém okně (ověření Cloudflare stačí projít jednou, okno se neotevírá znovu).
+   * Vrací pole HTML ve stejném pořadí; stránka, která se nenačetla, je prázdný řetězec. Mezi stránkami je krátká pauza.
+   */
+  async loadPages(urls, { ready, waitMs = 10000 } = {}) {
+    const win = this._createWindow(false);
+    const out = [];
     try {
-      const info = await Promise.race([
-        win.webContents.executeJavaScript(script, true),
-        sleep(60000).then(() => { throw new Error("rozbalení trvalo příliš dlouho"); }),
-      ]);
-      if (onExpand) onExpand({ ...info, html: undefined });
-      return info && info.html ? info.html : html;
-    } catch (err) {
-      if (onExpand) onExpand({ error: String(err.message || err).split("\n")[0] });
-      return html;
+      for (const [i, url] of urls.entries()) {
+        let html = "";
+        try {
+          await this._load(win, url);
+          html = await this._html(win);
+          const deadline = Date.now() + waitMs;
+          while (!ready(html) && Date.now() < deadline && !win.isDestroyed()) {
+            await sleep(700);
+            html = await this._html(win);
+          }
+        } catch {
+          html = "";
+        }
+        out.push(html);
+        if (i < urls.length - 1) await sleep(350 + Math.random() * 450);
+      }
+    } finally {
+      if (!win.isDestroyed()) win.destroy();
     }
+    return out;
   }
 
   /** Rozbalí sbalené ligy na Scores24 a vrátí výsledné HTML. */
@@ -194,4 +174,4 @@ class WindowBrowser {
   }
 }
 
-module.exports = { WindowBrowser, BrowserUnavailable, chromeUserAgent, EXPAND_SCRIPT, EXPAND_MORE_SCRIPT };
+module.exports = { WindowBrowser, BrowserUnavailable, chromeUserAgent, EXPAND_SCRIPT };

@@ -69,8 +69,13 @@ function forebetCoverage(tips, forebet, { sample = 12 } = {}) {
   lines.push(`Značky lig: ${[...tags].sort((a, b) => b[1] - a[1]).slice(0, 15).map(([t, n]) => `${t}:${n}`).join(" ")}`);
   const miss = [];
   let matched = 0;
-  for (const t of tips) (findForebet(t.home, t.away, t.leagueKey, t.kickoff, forebet) ? (matched += 1) : miss.push(t));
+  const offsets = [];
+  for (const t of tips) {
+    const m = findForebet(t.home, t.away, t.leagueKey, t.kickoff, forebet);
+    if (m) { matched += 1; if (m.kickoff) offsets.push(Math.round((m.kickoff - t.kickoff) / 60000)); } else miss.push(t);
+  }
   lines.push(`Tipů ze Scores24: ${tips.length}, spárováno s Forebetem: ${matched}`);
+  if (offsets.length) lines.push(`Rozdíl času Forebet − Scores24 u spárovaných (minuty): ${offsets.slice(0, 12).join(" ")}`);
   for (const t of miss.slice(0, sample)) {
     let best = null;
     let bestScore = 0;
@@ -176,11 +181,9 @@ class Pipeline {
     // 2) Forebet – pravděpodobnosti (volitelný zdroj)
     try {
       const scraper = new ForebetScraper(this.http, this.browser);
-      // Zítřejší přehled Forebetu je potřeba, jen když Scores24 nějaký zítřejší tip má.
-      const today = localDate(now);
-      const tomorrow = s24.rows.some((r) => { const ko = kickoffOf(r, now); return ko !== null && localDate(ko) > today; })
-        || s24.tips.some((t) => localDate(t.kickoff) > today);
-      forebet = await scraper.fetch(progress, { interactive: interactiveForebet, debugDir: this.debugDir, tomorrow });
+      // Stránky lig na Forebetu se načítají jen pro ligy, které Scores24 právě nabízí.
+      const leagues = new Set([...s24.rows, ...s24.tips].map((x) => x.leagueKey).filter(Boolean));
+      forebet = await scraper.fetch(progress, { interactive: interactiveForebet, debugDir: this.debugDir, leagues });
       let message = `${forebet.length} zápasů`;
       let state = "ok";
 

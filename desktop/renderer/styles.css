@@ -850,6 +850,9 @@ body { background: var(--bg); }
 }
 .card::before { top: -1px; left: -1px; border-top-width: 2px; border-left-width: 2px; border-top-left-radius: var(--radius-card); }
 .card::after { right: -1px; bottom: -1px; border-bottom-width: 2px; border-right-width: 2px; border-bottom-right-radius: var(--radius-card); }
+/* Karty, které se posouvají, mají rohové čáry zrušené – jinak by se posouvaly s obsahem a objevily se uprostřed stránky. */
+.analysis-page::before, .analysis-page::after, .tickets-page::before, .tickets-page::after,
+.page-history::before, .page-history::after { display: none; }
 .card__title { font-weight: 600; }
 .card__title .lucide { color: var(--accent-bright); }
 

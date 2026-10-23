@@ -383,14 +383,15 @@ test("Pipeline: pravděpodobnosti gólů z mezipaměti se podruhé nestahují", 
   assert.match(r.statuses[SOURCE_FOREBET].message, /góly u 1 z 1 zápasů \(1 z mezipaměti\)/);
 });
 
-test("Pipeline: zítřejší přehled Forebetu se stahuje, jen když Scores24 nějaký zítřejší zápas má", async () => {
-  const todayOnly = fakeWeb({
+test("Pipeline: stránky lig na Forebetu se stahují jen pro ligy, které Scores24 nabízí", async () => {
+  const web = fakeWeb({
     scores24Html: epl([s24Row({ home: "Nottingham Forest", away: "Arsenal", percent: "80", odds: "1.7" })]),
     forebetHtml: forebetPage([forebetRow({ home: "Nottingham Forest", away: "Arsenal", p: [10, 20, 70], pick: "2" })]), sofaEvents: [],
   });
-  await new Pipeline(todayOnly).run({ now: new Date(Date.UTC(2026, 9, 18, 12)) });
-  assert.deepEqual(todayOnly.calls.filter((u) => u.includes("forebet")), ["https://www.forebet.com/en/football-tips-and-predictions-for-today"]);
-  const withTomorrow = tomorrowWeb();
-  await new Pipeline(withTomorrow).run({ now: DAY_BEFORE });
-  assert.equal(withTomorrow.calls.filter((u) => u.includes("forebet")).length, 2);
+  const r = await new Pipeline(web).run({ now: new Date(Date.UTC(2026, 9, 18, 12)) });
+  assert.deepEqual(web.calls.filter((u) => u.includes("forebet")), [
+    "https://www.forebet.com/en/football-tips-and-predictions-for-today",
+    "https://www.forebet.com/en/football-tips-and-predictions-for-england/premier-league", // jediná liga ze Scores24
+  ]);
+  assert.equal(r.tips[0].probForebet, 70);
 });

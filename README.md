@@ -168,8 +168,7 @@ Aplikace stahuje jen to, co potřebuje, aby bylo obnovení rychlé a zdroje neza
 * Stránky zápasů na Forebetu (pravděpodobnosti gólů) se otevírají jen u tipů, které by prošly filtry (nad 60 %, kurz od 1,50, sledovaná
   soutěž, mužský zápas, ještě nezačal). Už stažené hodnoty se 4 hodiny berou z mezipaměti (`forebet-goals.json`), takže další obnovení
   je u nich okamžité.
-* Zítřejší přehled Forebetu se stahuje, jen když Scores24 nějaký zítřejší zápas má. Okno prohlížeče se otevírá jen tehdy, když
-  obyčejné HTTP nestačí.
+* Z Forebetu se načítají jen stránky lig, které Scores24 právě nabízí. Okno prohlížeče se otevírá jen tehdy, když obyčejné HTTP nestačí.
 * Statistiky pro tikety (SofaScore) se po dobu 30 minut pamatují, takže opakované vytvoření tiketů nestahuje nic nového.
 * Živé skóre se každou minutu aktualizuje jen tehdy, když nějaký tip právě hraje; výsledky se dotahují jen u tipů, které na ně čekají.
 * `ladeni/zdroje-diagnostika.txt` obsahuje řádek **Doba kroků** (Scores24 / Forebet / SofaScore), podle něj je vidět, co obnovení zdržuje.
@@ -183,9 +182,11 @@ Aplikace stahuje jen to, co potřebuje, aby bylo obnovení rychlé a zdroje neza
 
 ## Forebet a Cloudflare
 
-Forebet je chráněný Cloudflare. Aplikace nejdřív zkusí obyčejný dotaz, pak skryté okno. Aplikace čte přehledy „dnes“ a „zítra“
-(`football-tips-and-predictions-for-today` / `-tomorrow`); starý přehled `/football-predictions` vrací jen první země podle abecedy
-a je až záloha. Když je seznam neúplný nebo má tlačítko **Show more**, okno aplikace na ně opakovaně klikne, dokud seznam přibývá. Když kontrola nepřejde,
+Forebet je chráněný Cloudflare. Aplikace nejdřív zkusí obyčejný dotaz, pak skryté okno. Přehled „dnes“
+(`football-tips-and-predictions-for-today`) obsahuje jen malou část zápasů a žádnou ze sledovaných lig, proto z jeho nabídky
+aplikace vezme odkazy na stránky lig (`…-for-england/premier-league` apod.) a načte přímo stránky těch sledovaných lig, které
+právě nabízí Scores24 (když odkaz v nabídce není, zkusí odhad adresy). Zbylé stránky lig se při ověření Cloudflare projdou v jednom
+skrytém okně. Starý přehled `/football-predictions` (jen první země podle abecedy) je až záloha. Když kontrola nepřejde,
 objeví se pruh s tlačítkem **Ověřit Forebet**: otevře se okno, ve kterém kontrolu dokončíte (až 90 s), a aplikace
 si ověření pamatuje.
 
@@ -206,7 +207,7 @@ API klíč ani nic osobního. Ladicí soubory ve složce `ladeni` se přepisují
 | Soubor | Co v něm je |
 |---|---|
 | `zdroje-diagnostika.txt` | stav zdrojů, párování tipů s Forebetem (časový rozsah, nespárované tipy s nejbližším zápasem), pokrytí SofaScore |
-| `forebet-seznam-diagnostika.txt`, `forebet-seznam.html` | přehled seznamu zápasů z Forebetu (kolik řádků, značky lig, výsledek rozklikávání „Show more“, odkazy na jiné dny); celé HTML jen když v něm není žádná sledovaná liga |
+| `forebet-seznam-diagnostika.txt`, `forebet-seznam.html` | přehled načtených stránek Forebetu (přehled „dnes“ a stránky lig: odkud, kolik zápasů, nabídka lig a ukázka řádku); celé HTML jen když přehled „dnes“ nevrátil žádný zápas |
 | `forebet-diagnostika.txt`, `forebet-zapas.html` | jen když se nepodaří přečíst pravděpodobnosti gólů ze stránky zápasu |
 | `tikety-statistiky.txt` | co se stáhlo ze SofaScore pro tikety (po zápasech) a ukázky odpovědí |
 | `tikety-odpoved.txt` | poslední zadání a odpověď Gemini pro tikety |
