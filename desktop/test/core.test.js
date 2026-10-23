@@ -154,3 +154,13 @@ test("filtry: ženské zápasy se vyřadí", () => {
     assert.equal(isWomens({ home: h, away: a }), false, `${h} – ${a}`);
   }
 });
+
+test("teamSimilarity: aliasy názvů, které se mezi zdroji liší (Cologne × Köln, přejmenované kluby, turecké ı)", () => {
+  const { teamSimilarity, sameMatch } = require("../src/names");
+  for (const [a, b] of [["Cologne", "Köln"], ["Kasimpasa Istanbul", "Kasımpasa SK"], ["Amed Sportif Faaliyetler", "Amedspor"], ["SK Artis Brno", "SK Lisen"],
+    ["Fastav Zlin", "FK Trinity Zlin"], ["Eyupspor", "Eyüpspor"], ["Schalke", "Schalke 04"]]) {
+    assert.ok(teamSimilarity(a, b) >= 0.9, `${a} × ${b}`);
+  }
+  assert.ok(sameMatch("Fastav Zlin", "Sigma", "FK Trinity Zlin", "Sigma Olomouc") > 0.9);
+  assert.equal(sameMatch("Fastav Zlin", "Sigma", "Sigma Olomouc", "FK Trinity Zlin"), 0); // zrcadlový zápas je jiný
+});

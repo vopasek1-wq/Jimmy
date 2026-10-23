@@ -16,6 +16,7 @@ const { parseOdds } = require("../odds");
 const fs = require("node:fs");
 const path = require("node:path");
 const { load, collapse, strippedStrings } = require("../dom");
+const { localToUtc } = require("../timeutil");
 
 const text = ($el) => (($el && $el.length) ? collapse($el.text()) : "");
 const toInt = (s) => { const m = /\d{1,3}/.exec(s); return m ? Number(m[0]) : null; };
@@ -38,8 +39,9 @@ function kickoff($, row) {
   const raw = (row.find("time[datetime]").first().attr("datetime") || "").trim();
   let m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/.exec(raw);
   if (m) return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]));
+  // Forebet píše čas zápasu v pražském čase (u spárovaných zápasů vycházel rozdíl proti Scores24 přesně o 2 hodiny).
   m = /(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})/.exec(text(row.find(".date_bah").first()));
-  if (m) return new Date(Date.UTC(+m[3], +m[2] - 1, +m[1], +m[4], +m[5]));
+  if (m) return localToUtc(+m[3], +m[2], +m[1], +m[4], +m[5]);
   return null;
 }
 
@@ -72,7 +74,7 @@ function leaguePath($, row) {
   if (own) return own;
   const click = row.find("[onclick*='getstag']").first().attr("onclick") || "";
   const m = /getstag\([^)]*'([a-z0-9-]+\/[a-z0-9-]+)'\s*,\s*'[^']*'\)/i.exec(click);
-  return m ? m[1].toLowerCase() : "";
+  return m ? m[1].toLowerCase().replace(/^football-tips-and-predictions-for-/, "") : "";
 }
 
 function leagueKeyOf(tagText, pathText = "") {
@@ -213,8 +215,10 @@ function leagueLinks(html) {
 }
 
 /**
- * Které stránky lig načíst: pro každou požadovanou sledovanou ligu odkaz z nabídky Forebetu (podle `forebetPaths`),
- * jinak odhad adresy (`forebetGuess`). Vrací [{ key, path, url, from: "nabídka" | "odhad" }].
+ * Které stránky lig načíst. Pro každou požadovanou sledovanou ligu seznam adres, které se zkoušejí popořadě, dokud některá
+ * nevrátí zápasy: odkaz z nabídky Forebetu (podle `forebetPaths`), jinak odhady adresy (`forebetGuess`) a nakonec stránka celé
+ * země (`forebetCountry`), ze které se vezmou jen zápasy dané ligy. Vrací [{ key, candidates: [{ url, path, from, force }] }];
+ * `force` = všechny zápasy na stránce patří do ligy.
  */
 function leagueTargets(links, keys) {
   const out = [];
@@ -222,8 +226,13 @@ function leagueTargets(links, keys) {
     const lg = config.LEAGUES.find((l) => l.key === key && l.enabled);
     if (!lg) continue;
     const hit = links.find((l) => (lg.forebetPaths || []).some((re) => re.test(l.path)));
-    if (hit) out.push({ key, path: hit.path, url: hit.url, from: "nabídka" });
-    else if (lg.forebetGuess) out.push({ key, path: lg.forebetGuess, url: config.forebetLeagueUrl(lg.forebetGuess), from: "odhad" });
+    const candidates = [];
+    if (hit) candidates.push({ url: hit.url, path: hit.path, from: "nabídka", force: true });
+    else {
+      for (const g of [].concat(lg.forebetGuess || [])) candidates.push({ url: config.forebetLeagueUrl(g), path: g, from: "odhad", force: true });
+      if (lg.forebetCountry) candidates.push({ url: config.forebetLeagueUrl(lg.forebetCountry), path: lg.forebetCountry, from: "země", force: false });
+    }
+    if (candidates.length) out.push({ key, candidates });
   }
   return out;
 }
@@ -286,6 +295,7 @@ function dumpLists(debugDir, lists) {
   } catch { /* ladicí soubor je jen bonus */ }
 }
 
+const LEAGUE_DELAY_MS = [300, 700]; // stránky lig jsou drobné dotazy na tentýž server – kratší pauza než u ostatních zdrojů
 const pageReady = (html) => !looksBlocked(200, html) && (html.includes("rcnt") || html.includes("fprc"));
 /** Stránka ligy je hotová i bez zápasů (velká stránka s nabídkou), jen ji nesmí zastavit Cloudflare. */
 const leaguePageReady = (html) => pageReady(html) || (!looksBlocked(200, html) && html.length > 100000);
@@ -317,39 +327,59 @@ class ForebetScraper {
     return { url, matches: parsePage(html), html, via: "okno prohlížeče" };
   }
 
-  /**
-   * Stránky sledovaných lig. Nejdřív obyčejné HTTP; když Forebet vyžaduje ověření, zbylé stránky se projdou v jednom skrytém okně
-   * (ověření už prošlo u přehledu). Zápasům se nastaví liga podle stránky. Vrací pole { ...target, matches, html, via, error }.
-   */
-  async _leaguePages(targets, progress) {
-    const out = [];
+  /** Stáhne seznam stránek: obyčejné HTTP; když Forebet žádá ověření, zbylé stránky projdou jedním skrytým oknem. Vrací [{ html, via, error }]. */
+  async _fetchPages(items, state, progress) {
+    const out = items.map(() => null);
     const rest = [];
-    let useBrowser = false;
-    for (const [i, t] of targets.entries()) {
-      progress(`Forebet: ${config.leagueByKey(t.key)?.short || t.key} (${i + 1}/${targets.length})…`);
-      if (!useBrowser) {
+    for (const [i, it] of items.entries()) {
+      if (!state.useBrowser) {
         try {
-          out.push({ ...t, html: await this.http.getText(t.url), via: "HTTP" });
+          out[i] = { html: await this.http.getText(it.url, { delayMs: LEAGUE_DELAY_MS }), via: "HTTP" };
           continue;
         } catch (err) {
-          if (err instanceof BlockedError) useBrowser = true;
-          else { out.push({ ...t, html: "", error: err.message || String(err) }); continue; }
+          if (err instanceof BlockedError) state.useBrowser = true;
+          else { out[i] = { html: "", via: "", error: err.message || String(err) }; continue; }
         }
       }
-      rest.push(t);
+      rest.push(i);
     }
     if (rest.length) {
       progress(`Forebet: ${rest.length} stránek lig v okně prohlížeče…`);
       let pages = [];
       let failure = "stránka se nenačetla";
-      try { pages = await this.browser.loadPages(rest.map((t) => t.url), { ready: leaguePageReady, waitMs: 9000 }); } catch (err) { failure = err.message || failure; }
-      rest.forEach((t, i) => out.push({ ...t, html: pages[i] || "", via: "okno prohlížeče", ...(pages[i] ? {} : { error: failure }) }));
-    }
-    for (const r of out) {
-      r.matches = r.html && !looksBlocked(200, r.html) ? parsePage(r.html) : [];
-      for (const m of r.matches) { m.leagueKey = r.key; m.leagueText = m.leagueText || r.path; }
+      try { pages = await this.browser.loadPages(rest.map((i) => items[i].url), { ready: leaguePageReady, waitMs: 9000 }); } catch (err) { failure = err.message || failure; }
+      rest.forEach((i, k) => { out[i] = { html: pages[k] || "", via: "okno prohlížeče", ...(pages[k] ? {} : { error: failure }) }; });
     }
     return out;
+  }
+
+  /**
+   * Stránky sledovaných lig. V každém kole se zkusí další adresa u lig, které zatím nevrátily žádný zápas (nabídka → odhady → stránka země).
+   * Vrací všechny pokusy: [{ key, url, path, from, html, via, error, matches }]; zápasům se nastaví liga podle stránky (u stránky země podle značky).
+   */
+  async _leaguePages(targets, progress) {
+    const attempts = [];
+    const state = { useBrowser: false };
+    let pending = targets.map((t) => ({ key: t.key, candidates: t.candidates, i: 0 }));
+    let done = 0;
+    while (pending.length) {
+      const items = pending.map((t) => ({ key: t.key, ...t.candidates[t.i] }));
+      progress(`Forebet: ligy (${Math.min(done + 1, targets.length)}–${Math.min(done + items.length, targets.length)} z ${targets.length})…`);
+      const pages = await this._fetchPages(items, state, progress);
+      const next = [];
+      items.forEach((it, k) => {
+        const page = pages[k];
+        let matches = page.html && !looksBlocked(200, page.html) ? parsePage(page.html) : [];
+        if (it.force) for (const m of matches) { m.leagueKey = it.key; m.leagueText = m.leagueText || it.path; }
+        else matches = matches.filter((m) => m.leagueKey === it.key);
+        attempts.push({ ...it, ...page, matches });
+        const t = pending[k];
+        if (!matches.length && t.i + 1 < t.candidates.length) next.push({ ...t, i: t.i + 1 });
+      });
+      done += items.length - next.length;
+      pending = next;
+    }
+    return attempts;
   }
 
   /**

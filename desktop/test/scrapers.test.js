@@ -275,12 +275,18 @@ const withMenu = (html, ...paths) => html.replace("</body>", `${menu(...paths)}<
 const eplRow = (home, away, p, href) => forebetRow({ home, away, p, pick: "1", href });
 
 test("Forebet: odkazy na ligy z nabídky a výběr stránek sledovaných lig", () => {
-  const links = forebet.leagueLinks(withMenu(forebetPage([]), "england/premier-league", "england/championship", "czech-rep/chance-liga", "spain/la-liga", "england/premier-league"));
-  assert.deepEqual(links.map((l) => l.path), ["england/premier-league", "england/championship", "czech-rep/chance-liga", "spain/la-liga"]);
-  const t = forebet.leagueTargets(links, ["EPL", "CESKO", "LALIGA", "SERIEA"]);
-  assert.deepEqual(t.map((x) => [x.key, x.from]), [["EPL", "nabídka"], ["CESKO", "nabídka"], ["LALIGA", "nabídka"], ["SERIEA", "odhad"]]);
-  assert.equal(t[0].url, "https://www.forebet.com/en/football-tips-and-predictions-for-england/premier-league"); // ne championship
-  assert.equal(t[3].url, "https://www.forebet.com/en/football-tips-and-predictions-for-italy/serie-a");
+  const links = forebet.leagueLinks(withMenu(forebetPage([]), "england/premier-league", "england/championship", "czech-rep/chance-liga", "spain/primera-division", "france/ligue1", "england/premier-league"));
+  assert.deepEqual(links.map((l) => l.path), ["england/premier-league", "england/championship", "czech-rep/chance-liga", "spain/primera-division", "france/ligue1"]);
+  const t = forebet.leagueTargets(links, ["EPL", "CESKO", "LALIGA", "LIGUE1", "SERIEA", "BELGIE"]);
+  const first = (x) => x.candidates[0];
+  assert.deepEqual(t.map((x) => [x.key, first(x).from]), [["EPL", "nabídka"], ["CESKO", "nabídka"], ["LALIGA", "nabídka"], ["LIGUE1", "nabídka"], ["SERIEA", "odhad"], ["BELGIE", "odhad"]]);
+  assert.equal(first(t[0]).url, "https://www.forebet.com/en/football-tips-and-predictions-for-england/premier-league"); // ne championship
+  assert.equal(first(t[3]).path, "france/ligue1");
+  assert.equal(first(t[4]).url, "https://www.forebet.com/en/football-tips-and-predictions-for-italy/serie-a");
+  assert.equal(t[0].candidates.length, 1);                                                                // z nabídky se nic dalšího nezkouší
+  const belgium = t[5].candidates;                                                                         // odhady adres a nakonec stránka celé země
+  assert.deepEqual(belgium.map((c) => [c.path, c.from, c.force]), [["belgium/pro-league", "odhad", true], ["belgium/jupiler-pro-league", "odhad", true],
+    ["belgium/first-division-a", "odhad", true], ["belgium", "země", false]]);
   assert.deepEqual(forebet.leagueTargets(links, ["NEZNAMA"]), []);
 });
 
@@ -365,4 +371,33 @@ test("Forebet: liga se pozná i podle odkazu na ligu v řádku a značka se bere
   const ms = forebet.parsePage(`<html><body>${row("Zzz", "/en/football-tips-and-predictions-for-england/premier-league")}${row("Cze1", "")}${row("Xx9", "")}</body></html>`);
   assert.deepEqual(ms.map((m) => m.leagueKey), ["EPL", "CESKO", null]);
   assert.equal(ms[0].leagueText, "Zzz"); // značka řádku, ne předchozího
+});
+
+test("Forebet: liga bez odkazu v nabídce – další odhad adresy, nakonec stránka země s filtrem podle značky", async () => {
+  const { SourceError } = require("../src/http");
+  const today = forebetPage([eplRow("Tirana", "Vllaznia", [50, 30, 20])], "Alb1");
+  const country = forebetPage([eplRow("Kortrijk", "Mechelen", [40, 30, 30], "/en/football/matches/kortrijk-mechelen-1"), eplRow("Lommel", "Beerschot", [30, 30, 40])], "Be1")
+    .replace("</body>", `${forebetPage([eplRow("Genk U23", "Anderlecht U23", [30, 30, 40])], "Be2").replace(/^.*<body>|<\/body>.*$/g, "")}</body>`);
+  const asked = [];
+  const http = {
+    getText: async (url) => {
+      asked.push(url.split("for-").pop());
+      if (url.endsWith("for-today")) return today;
+      if (url.endsWith("belgium")) return country;
+      throw new SourceError("HTTP 404");
+    },
+  };
+  const ms = await new forebet.ForebetScraper(http, { loadHtml: async () => today }).fetch(() => {}, { leagues: ["BELGIE"] });
+  assert.deepEqual(asked, ["today", "belgium/pro-league", "belgium/jupiler-pro-league", "belgium/first-division-a", "belgium"]);
+  assert.deepEqual(ms.filter((m) => m.leagueKey).map((m) => [m.home, m.leagueKey]), [["Kortrijk", "BELGIE"], ["Lommel", "BELGIE"]]); // Be2 se nebere
+});
+
+test("Forebet: čas zápasu je pražský (letní i zimní), liga i z onclick s předponou adresy", () => {
+  const row = (when, onclick) => `<div class="rcnt"><img onclick="${onclick}"><span class="shortTag">Zzz</span><span class="homeTeam">A</span><span class="awayTeam">B</span>`
+    + `<time datetime="${when.slice(0, 10)}"><span class="date_bah">${when}</span></time><div class="fprc"><span>50</span><span>30</span><span>20</span></div></div>`;
+  const click = "getstag(this,1,'France','Ligue 1','football-tips-and-predictions-for-france/ligue1','fr')";
+  const [summer, winter] = forebet.parsePage(`<html><body>${row("23/10/2026 15:00", click)}${row("26/10/2026 15:00", click)}</body></html>`);
+  assert.equal(summer.kickoff.toISOString(), "2026-10-23T13:00:00.000Z"); // UTC+2
+  assert.equal(winter.kickoff.toISOString(), "2026-10-26T14:00:00.000Z"); // po změně času UTC+1
+  assert.equal(summer.leagueKey, "LIGUE1");
 });

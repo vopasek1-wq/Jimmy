@@ -19,6 +19,17 @@ function localParts(date) {
 
 const pad = (n) => String(n).padStart(2, "0");
 
+/** Pražský místní čas (rok, měsíc, den, hodina, minuta) → okamžik (Date, UTC); správně i kolem přechodu na letní/zimní čas. */
+function localToUtc(year, month, day, hour, minute) {
+  const wanted = Date.UTC(year, month - 1, day, hour, minute);
+  let t = wanted;
+  for (let i = 0; i < 2; i++) {
+    const p = localParts(new Date(t));
+    t -= Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute) - wanted;
+  }
+  return new Date(t);
+}
+
 /** Datum zápasu v pražském čase jako „YYYY-MM-DD“ – podle něj se řadí tipy do „dnes“ a „zítra“. */
 function localDate(date) {
   const p = localParts(date);
@@ -61,4 +72,4 @@ function utcDateTime(isoDate, hh, mm) {
 
 const utcDateOf = (date) => date.toISOString().slice(0, 10);
 
-module.exports = { localParts, localDate, todayLocal, addDays, fmtKickoff, fmtStamp, fmtHourMinute, utcDateTime, utcDateOf };
+module.exports = { localParts, localDate, todayLocal, addDays, fmtKickoff, fmtStamp, fmtHourMinute, utcDateTime, utcDateOf, localToUtc };

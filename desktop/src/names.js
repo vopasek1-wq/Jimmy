@@ -14,13 +14,15 @@ const ALIASES = {
   "borussia monchengladbach": "monchengladbach", gladbach: "monchengladbach", psg: "paris saint germain",
   "paris sg": "paris saint germain", "olympique marseille": "marseille", "olympique lyon": "lyon",
   "olympique lyonnais": "lyon", "sparta prague": "sparta praha", "slavia prague": "slavia praha",
+  // názvy, které se mezi zdroji liší (přejmenované kluby, anglický × domácí název)
+  cologne: "koln", "amed sportif faaliyetler": "amedspor", lisen: "artis brno", "fastav zlin": "trinity zlin",
 };
 
 const stripAccents = (text) => text.normalize("NFKD").replace(/[̀-ͯ]/g, "");
 
 /** Malá písmena, bez diakritiky a interpunkce, bez bezvýznamných zkratek (FC, CF…). */
 function normalize(name) {
-  let s = stripAccents(String(name)).toLowerCase().replace(/&/g, " and ");
+  let s = stripAccents(String(name)).toLowerCase().replace(/ı/g, "i").replace(/&/g, " and "); // tureckou tečkovanou/netečkovanou řeší i
   s = s.replace(/[^a-z0-9 ]+/g, " ");
   s = s.split(/\s+/).filter((t) => t && !NOISE.has(t)).join(" ");
   return Object.prototype.hasOwnProperty.call(ALIASES, s) ? ALIASES[s] : s;
