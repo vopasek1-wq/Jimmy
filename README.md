@@ -27,8 +27,8 @@ vydání **`tipy-latest`**:
 4. **Nová verze:** aplikace při startu (a pak každých 6 hodin) zjistí na GitHubu, jestli je ve vydání `tipy-latest` novější
    sestavení. Pokud ano, v horní liště se objeví štítek **Nová verze** – klik otevře stažení v prohlížeči (po stažení zavřete
    aplikaci a spusťte nový `FotbalTipy.exe`). Novou verzi lze vyhledat i hned tlačítkem **Aktualizace** vlevo dole: když je novější
-   sestavení, tlačítko se změní na „Stáhnout verzi N“ a další klik otevře stažení; když ne, ukáže se, že máte nejnovější verzi
-   (pod tlačítkem je číslo vaší verze). Verze aplikace je `1.0.<číslo sestavení>` (workflow ho dosadí z čísla běhu).
+   sestavení, tlačítko se změní na „Stáhnout verzi N“ a další klik otevře stažení; když ne, tlačítko se zezelená a změní na „Máš aktuální verzi“
+   (pod ním je číslo vaší verze; další klik zkontroluje znovu). Verze aplikace je `1.0.<číslo sestavení>` (workflow ho dosadí z čísla běhu).
    Zjišťuje se přes GitHub API a když to nejde (limit dotazů, blokace), přes Atom kanál vydání na github.com; při selhání obou cest
    aplikace ukáže skutečný důvod (stav HTTP, chyba spojení). U soukromého repozitáře (vydání bez přihlášení nejde přečíst, obě cesty vrátí 404) tlačítko **Aktualizace** jen otevře stránku vydání v prohlížeči, kde číslo verze porovnáte ručně. Automatická kontrola běží jen v zabalené aplikaci a funguje až od sestavení,
    které ji obsahuje.

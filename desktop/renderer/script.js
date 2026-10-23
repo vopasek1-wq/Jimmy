@@ -1293,20 +1293,32 @@
   const updateBtnSub = $("#build-label");
   let updateInfo = null;   // zjištěná novější verze { current, latest, url }
   let appBuild = 0;        // číslo verze této aplikace
+  let upToDate = false;    // poslední kontrola potvrdila, že je to nejnovější verze
+
+  const updateBtnIcon = $(".side-btn__icon", updateBtn);
+  let updateIcon = "refresh-cw";
 
   function renderUpdateBtn(checking = false) {
     updateBtn.disabled = checking;
     updateBtn.classList.toggle("side-btn--busy", checking);
     updateBtn.classList.toggle("side-btn--found", Boolean(updateInfo) && !checking);
-    updateBtnLabel.textContent = checking ? "Hledám…" : updateInfo ? `Stáhnout verzi ${updateInfo.latest}` : "Aktualizace";
-    updateBtnSub.textContent = checking ? "kontroluji GitHub" : updateInfo ? `máš ${updateInfo.current || "starší"} · nová je ${updateInfo.latest}` : appBuild ? `verze ${appBuild}` : "Vyhledat novou verzi";
+    updateBtn.classList.toggle("side-btn--ok", upToDate && !updateInfo && !checking);
+    const icon = upToDate && !updateInfo && !checking ? "circle-check" : "refresh-cw";
+    if (icon !== updateIcon) {
+      updateIcon = icon;
+      updateBtnIcon.innerHTML = `<i data-lucide="${icon}"></i>`;
+      renderIcons();
+    }
+    updateBtnLabel.textContent = checking ? "Hledám…" : updateInfo ? `Stáhnout verzi ${updateInfo.latest}` : upToDate ? "Máš aktuální verzi" : "Aktualizace";
+    updateBtnSub.textContent = checking ? "kontroluji GitHub" : updateInfo ? "klikni pro stažení" : appBuild ? `verze ${appBuild}` : upToDate ? "nejnovější verze" : "Vyhledat novou verzi";
     updateBtn.title = checking ? "Hledám novou verzi programu…"
-      : updateInfo ? `Je k dispozici verze ${updateInfo.latest} (máš ${updateInfo.current}). Klikni pro stažení.` : "Vyhledat novou verzi programu";
+      : updateInfo ? `Je k dispozici verze ${updateInfo.latest} (máš ${updateInfo.current}). Klikni pro stažení.` : upToDate ? "Máš nejnovější verzi programu. Klikni pro novou kontrolu." : "Vyhledat novou verzi programu";
   }
 
   function showUpdate(info) {
     if (!info || !info.available) return;
     updateInfo = info;
+    upToDate = false;
     updateChip.hidden = false;
     $("span", updateChip).textContent = `Nová verze ${info.latest}`;
     updateChip.title = `Je k dispozici verze ${info.latest} (máš ${info.current}). Klikni pro stažení.`;
@@ -1326,13 +1338,13 @@
     renderUpdateBtn(true);
     const res = await desktop.update.check();
     if (res.ok && res.data.available) showUpdate(res.data);
+    upToDate = Boolean(res.ok && !res.data.available && !res.data.notFound && !res.data.error);
     renderUpdateBtn();
     if (res.ok && res.data.notFound) {                  // vydání bez přihlášení nejde přečíst: ukáže se stránka vydání v prohlížeči
       openExternal(res.data.url);
       toast(`Novou verzi nejde zjistit automaticky. Otevřel jsem stránku vydání – číslo je v názvu (ty máš ${res.data.current || "starší"}).`);
     } else if (!res.ok) toast(res.error, "error");
     else if (res.data.available) toast(`Je k dispozici verze ${res.data.latest} (máš ${res.data.current}). Klikni na „Stáhnout“.`);
-    else toast(res.data.current ? `Máš nejnovější verzi (${res.data.current}).` : "Máš nejnovější verzi.");
   });
   if (desktop) {
     desktop.update.onAvailable(showUpdate);

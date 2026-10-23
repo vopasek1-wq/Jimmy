@@ -179,6 +179,9 @@ i[data-lucide],
 .side-btn--found:hover { background: linear-gradient(90deg, rgba(40, 140, 215, 0.42), rgba(20, 90, 170, 0.26)); }
 .side-btn--found .side-btn__icon { background: rgba(8, 24, 46, 0.7); }
 .side-btn--found .side-btn__sub { color: #a9d6f0; }
+.side-btn--ok { border-color: rgba(60, 200, 130, 0.35); }
+.side-btn--ok .side-btn__icon { color: var(--green); }
+.side-btn--ok .side-btn__sub { color: var(--green); }
 
 /* Soutěže v levém sloupci (filtr tabulky tipů, živých zápasů i historie) */
 .cats { display: flex; flex-direction: column; gap: 2px; padding: 6px 0 12px; }
