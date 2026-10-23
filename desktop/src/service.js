@@ -72,8 +72,8 @@ class TipService {
       if (resultOk(result)) {
         this.db.saveRun(result);
         await updateResults(this.db, this.http, { progress }).catch(() => {}); // doplní skóre a výsledky skončených zápasů
-        return this._payload({
-          tips: result.tips, statuses: result.statuses, warnings: result.warnings, updatedAt: result.finishedAt, fromCache: false,
+        return this._payload({ // z databáze, aby tipy už skončených zápasů měly výsledek
+          tips: this.db.tipsOfLatestRun(), statuses: result.statuses, warnings: result.warnings, updatedAt: result.finishedAt, fromCache: false,
         });
       }
       // Stahování selhalo: ponecháme poslední uložená data a řekneme proč.
@@ -155,7 +155,7 @@ class TipService {
   }
 
   /** Uložené tikety s výsledky podle výsledků jejich tipů a souhrn (tikety × všechny tipy). */
-  ticketHistory(limit = 20) {
+  ticketHistory(limit = 60) {
     const settled = this._settledTickets();
     const tipInfo = this.db.tipInfoByIds(settled.flatMap((t) => t.legs.map((l) => l.tipId)));
     return { tickets: settled.slice(0, limit), stats: ticketStats(settled), tips: this.analysis().overall, advice: ticketAdvice(settled, tipInfo) };

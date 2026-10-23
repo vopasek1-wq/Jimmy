@@ -48,7 +48,7 @@ a tlumeně modrá tlačítka bez záře. Styly jsou v `desktop/renderer/styles.c
 
 ## Ovládání
 
-Záložky pod vyhledáváním: **Přehled** (tabulka tipů, detail a úspěšnost), **Živé zápasy** (právě hrané zápasy z Přehledu (podle SofaScore); po kliknutí momentum zápasu, branky a karty a statistiky; obnovuje se každých 30 s) a **Historie**. V levém sloupci jsou **soutěže** s počty zápasů – klik na soutěž filtruje tabulku tipů, živé zápasy i historii (hvězdička = všechny). Stav zdrojů se ukazuje jen v pruhu nahoře, když nějaký selže.
+Záložky pod vyhledáváním: **Přehled** (tabulka tipů, detail a karta **Dnes v kostce**: kolik dnešních tipů vyšlo, co se hraje, nejbližší zápas a seznam dnešních tipů s výsledky), **Živé zápasy** (právě hrané zápasy z Přehledu (podle SofaScore); po kliknutí momentum zápasu, branky a karty a statistiky; obnovuje se každých 30 s) a **Historie**. V levém sloupci jsou **soutěže** s počty zápasů – klik na soutěž filtruje tabulku tipů, živé zápasy i historii (hvězdička = všechny). Stav zdrojů se ukazuje jen v pruhu nahoře, když nějaký selže.
 
 * **Dnes / Zítra** – přepínač dne hned za nadpisem „Tipy po filtraci“ (volba se pamatuje).
 * Kliknutí na záhlaví sloupce řadí (pravděpodobnost, kurz, čas, …); hledání v horní liště (**Ctrl + K**) filtruje
@@ -107,7 +107,7 @@ Vyhodnocují se běžné trhy (1X2, dvojitá šance, Over/Under, oba týmy skór
 
 ## Tikety (Gemini)
 
-Záložka **Tikety** nechá Gemini poskládat kombinace (tikety) z tipů v Přehledu, které pak ručně zadáš do Tipsportu (ten nemá API).
+Záložka **Tikety** nechá Gemini poskládat kombinace (tikety) z tipů v Přehledu, které pak ručně zadáš do Tipsportu (ten nemá API). Přepínač **Dnes / Zítra / Dříve** ukazuje tikety jen pro zvolený den; starší tikety s výsledky jsou pod „Dříve“ (včerejší tikety se tak neukazují mezi dnešními).
 Zvolíš den (Dnes / Zítra) a klikneš na **Vytvořit tikety (AI)** – počet tipů ani tiketů se nezadává, určí je Gemini. Postup:
 
 1. **Statistiky ze SofaScore.** Z tipů v Přehledu se vezmou ty, které ještě nezačaly a mají **skutečný** kurz (ne odhadnutý; nejvýš 20 nejlepších

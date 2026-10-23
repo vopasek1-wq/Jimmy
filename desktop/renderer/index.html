@@ -131,19 +131,19 @@
           </div>
         </div>
 
-        <div class="grid-stack-item" gs-id="hist" gs-x="15" gs-y="30" gs-w="9" gs-h="18" gs-min-w="6" gs-min-h="8">
+        <div class="grid-stack-item" gs-id="today" gs-x="15" gs-y="25" gs-w="9" gs-h="23" gs-min-w="6" gs-min-h="8">
           <div class="grid-stack-item-content">
-            <section class="card hist-mini" aria-labelledby="hist-title">
+            <section class="card today-card" aria-labelledby="today-title">
               <header class="card__header">
-                <h2 class="card__title" id="hist-title"><i data-lucide="chart-column"></i>Úspěšnost tipů</h2>
-                <span class="card__note">posledních 30 dní</span>
+                <h2 class="card__title" id="today-title"><i data-lucide="calendar-clock"></i>Dnes v kostce</h2>
+                <span class="card__note" id="today-note"></span>
               </header>
-              <div class="stat-row" id="mini-stats"></div>
+              <div class="today" id="today-box"></div>
             </section>
           </div>
         </div>
 
-        <div class="grid-stack-item" gs-id="detail" gs-x="15" gs-y="0" gs-w="9" gs-h="30" gs-min-w="6" gs-min-h="12">
+        <div class="grid-stack-item" gs-id="detail" gs-x="15" gs-y="0" gs-w="9" gs-h="25" gs-min-w="6" gs-min-h="12">
           <div class="grid-stack-item-content">
             <section class="card detail-card" aria-labelledby="detail-title">
               <header class="card__header">
@@ -164,6 +164,7 @@
             <div class="seg-control" id="tk-day" role="group" aria-label="Den">
               <button type="button" data-tkday="today" aria-pressed="true">Dnes</button>
               <button type="button" data-tkday="tomorrow" aria-pressed="false">Zítra</button>
+              <button type="button" data-tkday="earlier" aria-pressed="false">Dříve</button>
             </div>
             <button class="btn btn--primary" type="button" id="tk-create"><i data-lucide="sparkles"></i>Vytvořit tikety (AI)</button>
           </div>

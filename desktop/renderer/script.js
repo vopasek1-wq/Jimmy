@@ -46,6 +46,8 @@
   const fmtValue = (v) => (v === null ? "–" : `${v > 0 ? "+" : v < 0 ? "−" : ""}${nf1.format(Math.abs(v))} %`);
   const fmtOdds = (t) => (t.odds ? `${t.oddsEstimated ? "~" : ""}${nf2.format(t.odds)}` : "–");
   const fmtSigned = (v) => (v > 0 ? "+" : v < 0 ? "−" : "") + nf2.format(Math.abs(v));
+  const hourFormat = new Intl.DateTimeFormat("cs-CZ", { timeZone: TZ, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  const fmtHourMinute = (iso) => hourFormat.format(new Date(iso));
   const fmtScore = (t) => (t.homeScore !== null && t.awayScore !== null ? `${t.homeScore}:${t.awayScore}` : "");
   const untilText = (ms) => {
     const min = Math.round(ms / 60000);
@@ -565,7 +567,6 @@
       setBusy(false);
     }
     renderAll();
-    loadMini();
     if (app.dataset.view === "history") loadHistory();
   }
   refreshBtn.addEventListener("click", () => refresh());
@@ -602,12 +603,6 @@
     if (data) state.history = data;
     renderHistory();
   }
-  async function loadMini() {
-    const data = await fetchHistory(30);
-    if (data) state.mini = data;
-    renderMini();
-  }
-
   const statTiles = (s) => {
     const rate = s.hitRate === null ? "–" : `${Math.round(s.hitRate)} %`;
     const profit = s.profit === null ? "–" : fmtSigned(s.profit);
@@ -625,18 +620,68 @@
     };
   };
 
-  function renderMini() {
-    const s = state.mini?.stats;
-    if (!s) { $("#mini-stats").innerHTML = '<p class="empty">Zatím žádná historie.</p>'; return; }
-    const v = statTiles(s);
-    $("#mini-stats").innerHTML = [
-      stat(String(s.total), "uložených tipů", "stat--accent", { icon: "database" }),
-      stat(String(s.evaluated), "vyhodnoceno", "", { bar: v.outcomeBar, note: v.outcomeNote }),
-      stat(v.rate, "úspěšnost", v.rateCls, { bar: v.rateBar }),
-      stat(v.profit, "zisk (vklad 1)", v.profitCls, { note: v.roiChip }),
-    ].join("");
+  /* ---------- Dnes v kostce (místo dřívější karty s úspěšností) ---------- */
+  const TODAY_ICON = { win: "circle-check", loss: "circle-x", void: "rotate-ccw", live: "radio", done: "flag", wait: "clock-3" };
+
+  /** Kategorie dnešního tipu: výsledek (výhra/prohra/vráceno), živě, skončil bez vyhodnocení, čeká na začátek. */
+  const todayKind = (t, now) => {
+    if (t.outcome === "win" || t.outcome === "loss" || t.outcome === "void") return t.outcome;
+    const k = matchState(t, now).kind;
+    return k === "live" || k === "started" ? "live" : k === "done" ? "done" : "wait";
+  };
+
+  function renderToday() {
+    const box = $("#today-box");
+    const note = $("#today-note");
+    if (!box) return;
+    const now = Date.now();
+    const today = localDay(new Date(now));
+    const list = (state.payload?.tips || []).filter((t) => t.day === today).map((t) => ({ t, kind: todayKind(t, now) }));
+    note.textContent = list.length ? `${list.length} ${list.length === 1 ? "tip" : list.length < 5 ? "tipy" : "tipů"}` : "";
+    if (!list.length) { box.innerHTML = '<p class="empty">Na dnešek nejsou žádné tipy po filtraci.</p>'; return; }
+
+    const count = (k) => list.filter((x) => x.kind === k).length;
+    const n = { win: count("win"), loss: count("loss"), void: count("void"), live: count("live"), done: count("done"), wait: count("wait") };
+    const bar = [["win", n.win], ["loss", n.loss], ["void", n.void], ["live", n.live], ["pending", n.done + n.wait]]
+      .filter(([, c]) => c > 0).map(([k, c]) => `<i class="is-${k}" style="width:${(100 * c) / list.length}%"></i>`).join("");
+    const decided = n.win + n.loss;
+    const headline = decided
+      ? `Trefeno <b>${n.win} z ${decided}</b> vyhodnocených (${Math.round((100 * n.win) / decided)} %)`
+      : n.live ? "Zatím se hraje, výsledky přijdou po zápasech" : "Zatím nic nezačalo";
+    const legend = [["g", n.win, "výhra"], ["r", n.loss, "prohra"], ["y", n.void, "vráceno"], ["b", n.live, "živě"], ["m", n.done + n.wait, "čeká"]]
+      .filter(([, c]) => c > 0).map(([cls, c, name]) => `<span class="${cls}">${c} ${name}</span>`).join("");
+
+    // nejbližší zápas, který ještě nezačal
+    const next = list.filter((x) => x.kind === "wait").sort((a, b) => Date.parse(a.t.kickoff) - Date.parse(b.t.kickoff))[0];
+    const nextHtml = next
+      ? `<div class="today__next"><i data-lucide="alarm-clock"></i><span>Nejbližší: <b>${esc(next.t.matchName)}</b> ${esc(untilText(Date.parse(next.t.kickoff) - now))}</span></div>`
+      : "";
+
+    const order = { live: 0, wait: 1, done: 2, win: 3, loss: 3, void: 3 };
+    const rows = [...list].sort((a, b) => order[a.kind] - order[b.kind] || Date.parse(a.t.kickoff) - Date.parse(b.t.kickoff)).map(({ t, kind }) => {
+      const score = fmtScore(t);
+      const right = kind === "wait" ? fmtHourMinute(t.kickoff) : score || (kind === "live" ? "živě" : "–");
+      return `<button type="button" class="today__row is-${kind}" data-key="${esc(tipUid(t))}" title="${esc(`${t.matchName} – ${t.tipLabel}`)}">
+        <i class="today__icon" data-lucide="${TODAY_ICON[kind]}"></i>
+        <span class="today__what"><b>${esc(t.matchName)}</b><small>${esc(t.tipLabel)} · ${esc(fmtPct(t.probability))}</small></span>
+        <span class="today__right">${esc(right)}</span></button>`;
+    }).join("");
+
+    box.innerHTML = `<div class="today__head">${headline}</div>
+      <div class="today__bar">${bar}</div><div class="today__legend">${legend}</div>${nextHtml}
+      <div class="today__list">${rows}</div>`;
     renderIcons();
   }
+
+  $("#today-box").addEventListener("click", (e) => {
+    const row = e.target.closest(".today__row");
+    if (!row) return;
+    state.selected = row.dataset.key;                 // v tabulce se tip vybere a zobrazí se jeho detail
+    if (state.day !== "today") { state.day = "today"; store.set("day", "today"); }
+    state.league = "";
+    renderAll();
+    $(`tr[data-key="${CSS.escape(row.dataset.key)}"]`, tipsBody)?.scrollIntoView({ block: "nearest" });
+  });
 
   function renderHistory() {
     const h = state.history;
@@ -725,7 +770,6 @@
     if (res.ok) toast(res.data.message);
     else toast(`Vyhodnocení se nepodařilo: ${res.error}`, "error");
     await loadHistory();
-    loadMini();
   });
 
 
@@ -920,7 +964,7 @@
 
   /* ---------- Tikety (Gemini) ---------- */
   const tk = {
-    day: ["today", "tomorrow"].includes(store.get("tk-day")) ? store.get("tk-day") : "today",
+    day: ["today", "tomorrow", "earlier"].includes(store.get("tk-day")) ? store.get("tk-day") : "today",
     result: store.get("tk-result2"),   // naposledy vytvořené tikety (zůstanou i po restartu; ukážou se jen u dne, pro který vznikly)
     busy: false, step: "", startedAt: 0, timer: null,
   };
@@ -938,7 +982,7 @@
     : "");
 
   /** Den (RRRR-MM-DD), pro který se tikety vytvářejí podle přepínače Dnes / Zítra. */
-  const tkTargetDay = () => { const today = localDay(new Date()); return tk.day === "tomorrow" ? nextDay(today) : today; };
+  const tkTargetDay = () => { const today = localDay(new Date()); return tk.day === "tomorrow" ? nextDay(today) : today; }; // „Dříve“ nic nevytváří
   /** Den, pro který uložený výsledek vznikl (starší uložené výsledky: den prvního zápasu). */
   const tkResultDay = (r) => r.forDay || (r.tickets && r.tickets[0] && r.tickets[0].legs[0] ? localDay(new Date(r.tickets[0].legs[0].kickoff)) : null);
 
@@ -946,6 +990,14 @@
     $$("#tk-day [data-tkday]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.tkday === tk.day)));
     const note = $("#tk-note");
     const list = $("#tk-list");
+    const earlier = tk.day === "earlier";
+    $("#tk-create").hidden = earlier;
+    renderTicketHistory();
+    if (earlier) {
+      note.textContent = "Tikety z dřívějších dnů s výsledky podle výsledků jejich zápasů. Tikety na dnešek a zítřek najdeš pod Dnes a Zítra.";
+      list.innerHTML = "";
+      return;
+    }
     const r = tk.result && tkResultDay(tk.result) === tkTargetDay() ? tk.result : null; // včerejší tikety se v „Dnes“ neukazují
     note.textContent = TK_NOTE;
     if (tk.busy) {
@@ -987,11 +1039,18 @@
   function renderTicketHistory() {
     const el = $("#tk-history");
     const h = tk.history;
-    if (!h || !h.tickets.length) { el.innerHTML = ""; return; }
+    if (!h) { el.innerHTML = ""; return; }
+    const today = localDay(new Date());
+    const earlier = tk.day === "earlier";
+    const target = tkTargetDay();
+    const shownNow = !earlier && tk.result && tkResultDay(tk.result) === target;      // tikety dne už jsou vidět jako karty výše
+    const rows = earlier ? h.tickets.filter((t) => t.day < today) : shownNow ? [] : h.tickets.filter((t) => t.day === target);
+    if (!rows.length) { el.innerHTML = earlier ? '<p class="empty">Zatím žádné dřívější tikety.</p>' : ""; return; }
     const st = h.stats;
     const sum = st.n ? `vyhodnoceno ${st.n}, vyhráno ${st.wins} (${nf1.format(st.actual)} %), ROI ${st.roi > 0 ? "+" : st.roi < 0 ? "−" : ""}${nf1.format(Math.abs(st.roi))} %` : "zatím žádný vyhodnocený";
-    el.innerHTML = `<h3 class="tk-hist__title">Dřívější tikety<small>${esc(sum)}${st.pending ? ` · čeká ${st.pending}` : ""}</small></h3>`
-      + h.tickets.map((t) => `<div class="tk-hist__row">
+    const title = earlier ? `Dřívější tikety<small>${esc(sum)}${st.pending ? ` · čeká ${st.pending}` : ""}</small>` : "Uložené tikety na tento den";
+    el.innerHTML = `<h3 class="tk-hist__title">${title}</h3>`
+      + rows.map((t) => `<div class="tk-hist__row">
         <div class="tk-hist__meta"><strong>${esc(t.name)}</strong><span>${esc(fmtKickoff(t.createdAt))}</span></div>
         <ul class="tk-hist__legs">${t.legs.map((l) => `<li class="is-${l.outcome || "pending"}"><i>${LEG_MARK[l.outcome] || "…"}</i><span>${esc(l.matchName)}</span><em>${esc(l.tipLabel)} · ${esc(nf2.format(l.odds))}</em>${l.reason ? `<p class="tk-hist__why">${esc(l.reason)}</p>` : ""}</li>`).join("")}</ul>
         <div class="tk-hist__odds">${esc(nf2.format(t.totalOdds))}</div>
@@ -1179,6 +1238,7 @@
     renderCats();
     renderChip();
     renderUpdated();
+    renderToday();
   }
 
   /* ---------- Mřížka Přehledu (GridStack, pevné rozložení) ---------- */
@@ -1296,7 +1356,6 @@
     try { showView(sessionStorage.getItem("tips:view") || "overview"); } catch { showView("overview"); }
     renderIcons();
     renderAll();
-    renderMini();
     renderHistory();
     if (!desktop) return;
 
@@ -1316,7 +1375,6 @@
     if (cached.ok) state.payload = cached.data;
     else state.error = cached.error;
     renderAll();
-    loadMini();
     loadKey();
 
     const age = state.payload?.updatedAt ? Date.now() - Date.parse(state.payload.updatedAt) : Infinity;
@@ -1328,7 +1386,7 @@
   const awake = () => windowShown && !document.hidden;
 
   // Stavy „před zápasem / zahájen“ a „aktualizováno před …“ se průběžně přepočítávají podle hodin.
-  setInterval(() => { if (awake() && !state.busy && state.payload) { renderTips(); renderUpdated(); } }, 30e3);
+  setInterval(() => { if (awake() && !state.busy && state.payload) { renderTips(); renderUpdated(); renderToday(); } }, 30e3);
 
   // Skóre rozehraných zápasů se každou minutu zaktualizuje ze SofaScore (nestahuje se všechno znovu).
   async function liveScoreTick() {
@@ -1340,6 +1398,7 @@
       if (res.ok && res.data && !state.busy) {
         state.payload = { ...state.payload, tips: res.data };
         renderTips();
+        renderToday();
       }
     } catch { /* příště */ }
   }
@@ -1347,7 +1406,7 @@
 
   function wakeUp() {
     if (!awake()) return;
-    if (state.payload) { renderTips(); renderUpdated(); }
+    if (state.payload) { renderTips(); renderUpdated(); renderToday(); }
     liveScoreTick();
     if (app.dataset.view === "live") loadLiveList().then(loadLiveDetail);
   }
