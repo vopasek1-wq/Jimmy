@@ -413,6 +413,73 @@
     return "zápas nenalezen";
   }
 
+  /* ---------- Forma, H2H a absence v detailu tipu (SofaScore) ---------- */
+  const detailStats = new Map(); // sofascoreId → { loading } | { data } | { error }
+
+  const formChips = (form) => form.split(" ").reverse() // nejnovější vpravo
+    .map((r) => `<i class="fchip fchip--${r}" title="${r === "V" ? "výhra" : r === "R" ? "remíza" : "prohra"}">${esc(r)}</i>`).join("");
+
+  const teamFormRow = (name, f, venueLabel, venue) => {
+    if (!f) return "";
+    const goals = f.goly_na_zapas ? `Ø ${nf1.format(f.goly_na_zapas.dal)} : ${nf1.format(f.goly_na_zapas.obdrzel)} gólu` : "";
+    const where = venue ? `${venueLabel} ${venue.V} V · ${venue.R} R · ${venue.P} P` : "";
+    const last = (f.posledni_zapasy || []).map((x) => `• ${x}`).join("\n");
+    return `<div class="dform" title="${esc(last)}"><span class="dform__team">${esc(name)}</span><span class="dform__chips">${formChips(f.forma)}</span>
+      <span class="dform__meta">${esc([goals, where].filter(Boolean).join(" · "))}</span></div>`;
+  };
+
+  function detailStatsBody(t, st) {
+    const parts = [];
+    parts.push(`<div class="dstats__title">Forma <small>posledních 5 zápasů, nejnovější vpravo</small></div>`
+      + (teamFormRow(t.home, st.forma_domaci, "doma", st.forma_domaci && st.forma_domaci.doma) || '<p class="dstats__none">Forma domácích není k dispozici.</p>')
+      + (teamFormRow(t.away, st.forma_hoste, "venku", st.forma_hoste && st.forma_hoste.venku) || '<p class="dstats__none">Forma hostů není k dispozici.</p>'));
+    const h = st.h2h;
+    if (h && h.zapasu) {
+      const total = h.domaci_vyhry + h.remizy + h.hoste_vyhry;
+      const w = (n) => `${total ? (100 * n) / total : 0}%`;
+      const extra = [h.goly_na_zapas !== undefined ? `Ø ${nf1.format(h.goly_na_zapas)} gólu` : "", h.oba_skorovaly !== undefined ? `oba skórovali ${h.oba_skorovaly}×` : ""].filter(Boolean).join(" · ");
+      parts.push(`<div class="dstats__title">Vzájemné zápasy <small>${h.zapasu} ${h.zapasu === 1 ? "zápas" : h.zapasu < 5 ? "zápasy" : "zápasů"}</small></div>
+        <div class="dh2h" title="${esc((h.posledni || []).join("\n"))}"><div class="dh2h__bar"><i class="is-home" style="width:${w(h.domaci_vyhry)}"></i><i class="is-draw" style="width:${w(h.remizy)}"></i><i class="is-away" style="width:${w(h.hoste_vyhry)}"></i></div>
+        <div class="dh2h__legend"><span>${esc(t.home)} ${h.domaci_vyhry}</span><span>remíz ${h.remizy}</span><span>${esc(t.away)} ${h.hoste_vyhry}</span></div>${extra ? `<div class="dh2h__extra">${esc(extra)}</div>` : ""}</div>`);
+    } else if (h) {
+      parts.push('<div class="dstats__title">Vzájemné zápasy</div><p class="dstats__none">Dřív spolu nehráli (nebo data nejsou).</p>');
+    }
+    const z = st.zraneni;
+    if (z) {
+      const side = (name, list) => `<div class="dmiss__row"><b>${esc(name)}</b><span>${list.length ? esc(list.join(" · ")) : "bez hlášených absencí"}</span></div>`;
+      parts.push(`<div class="dstats__title">Absence <small>podle SofaScore, mohou být neúplné</small></div><div class="dmiss">${side(t.home, z.domaci)}${side(t.away, z.hoste)}</div>`);
+    }
+    return parts.join("");
+  }
+
+  /** Obsah sekce se statistikami: z mezipaměti, nebo „načítám“ (a načtení se spustí). */
+  function detailStatsHtml(t) {
+    if (!desktop) return "";
+    if (!t.sofascoreId) return '<p class="dstats__none">Zápas není spárovaný se SofaScore, statistiky nejsou.</p>';
+    const c = detailStats.get(t.sofascoreId);
+    if (!c) { loadDetailStats(t); return '<p class="dstats__none">Načítám formu a vzájemné zápasy…</p>'; }
+    if (c.loading) return '<p class="dstats__none">Načítám formu a vzájemné zápasy…</p>';
+    if (c.error) return `<p class="dstats__none">Statistiky se nepodařilo načíst (${esc(c.error)}).</p>`;
+    return detailStatsBody(t, c.data);
+  }
+
+  async function loadDetailStats(t) {
+    detailStats.set(t.sofascoreId, { loading: true });
+    let entry;
+    try {
+      const res = await desktop.tips.stats(t.sofascoreId);
+      entry = res.ok && res.data.complete ? { data: res.data.stats } : { error: res.ok ? "chybí údaje o formě" : res.error };
+    } catch (err) {
+      entry = { error: err.message || String(err) };
+    }
+    if (entry.error) detailStats.delete(t.sofascoreId); else detailStats.set(t.sofascoreId, entry); // při chybě se příště zkusí znovu
+    const cur = tipByKey(state.selected);
+    const box = $("#detail-stats");
+    if (box && cur && cur.sofascoreId === t.sofascoreId) {
+      box.innerHTML = entry.error ? `<p class="dstats__none">Statistiky se nepodařilo načíst (${esc(entry.error)}).</p>` : detailStatsBody(cur, entry.data);
+    }
+  }
+
   function renderDetail() {
     const t = tipByKey(state.selected);
     if (!t) {
@@ -441,6 +508,7 @@
       <div class="detail__match">${esc(t.matchName)}</div>
       <div class="detail__league">${esc(t.league)}</div>
       <dl class="facts">${facts.map(([k, v, strong]) => `<dt>${esc(k)}</dt><dd${strong ? ' class="is-strong"' : ""}>${esc(v)}</dd>`).join("")}</dl>
+      <div class="dstats" id="detail-stats">${detailStatsHtml(t)}</div>
       <div class="detail__actions">
         ${t.url ? '<button class="btn btn--ghost btn--sm" type="button" data-act="scores24"><i data-lucide="external-link"></i>Scores24</button>' : ""}
         ${t.forebetUrl ? '<button class="btn btn--ghost btn--sm" type="button" data-act="forebet"><i data-lucide="external-link"></i>Forebet</button>' : ""}

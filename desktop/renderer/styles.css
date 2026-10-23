@@ -966,7 +966,7 @@ body { background: var(--bg); }
 
 /* ==========================================================================
    Záložky jako v Chrome: tmavší pruh, neaktivní záložky jako zaoblené bloky, aktivní vystupuje, má barvu obsahu pod sebou
-   a vyhnuté „nožičky“ po stranách, kterými splývá s pruhem.
+   a vyhnuté „nožičky“ po stranách, kterými splývá s pruhem (bez světlé linky nahoře).
    ========================================================================== */
 :root { --tab-active: #1c3b69; }
 .tabs { padding: 8px 20px 0; background: rgba(3, 10, 22, 0.6); }
@@ -978,7 +978,7 @@ body { background: var(--bg); }
 .tabs .nav__link:hover { background: rgba(130, 160, 210, 0.17); color: var(--text); }
 .tabs .nav__link.is-active {
   height: 36px; margin-bottom: -1px; border-radius: 12px 12px 0 0; background: var(--tab-active); color: #eaf4ff; font-weight: 500;
-  box-shadow: inset 0 2px 0 var(--accent), inset 0 1px 0 rgba(190, 215, 250, 0.25); z-index: 2;
+  box-shadow: inset 0 1px 0 rgba(190, 215, 250, 0.12); z-index: 2;
 }
 .tabs .nav__link.is-active::before, .tabs .nav__link.is-active::after {
   content: ""; position: absolute; bottom: 0; width: 12px; height: 12px; pointer-events: none;
@@ -1019,4 +1019,30 @@ body { background: var(--bg); }
 .today__row.is-void .today__icon { color: var(--yellow); }
 .today__row.is-live .today__icon, .today__row.is-live .today__right { color: var(--accent-bright); }
 .today__row.is-wait .today__right { color: var(--text-2); font-weight: 500; }
+
+/* Forma, H2H a absence v detailu tipu */
+.dstats { margin-top: 8px; }
+.detail .facts { margin-top: 8px; padding: 8px 12px; gap: 3px 14px; }
+.dstats__title { margin: 12px 0 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: var(--muted); }
+.dstats__title small { margin-left: 6px; font-size: 11px; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--faint); }
+.dstats__none { margin: 4px 0; font-size: 12.5px; color: var(--muted); }
+.dform { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; align-items: center; padding: 5px 0; border-top: 1px solid var(--line); }
+.dform__team { font-size: 12.5px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dform__chips { display: inline-flex; gap: 3px; }
+.dform__meta { grid-column: 1 / -1; font-size: 11.5px; color: var(--muted); }
+.fchip { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; font-style: normal; font-size: 11px; font-weight: 700; color: #08131f; }
+.fchip--V { background: var(--green); }
+.fchip--R { background: var(--yellow); }
+.fchip--P { background: var(--red); }
+.dh2h__bar { display: flex; height: 7px; gap: 2px; border-radius: 4px; overflow: hidden; background: rgba(255, 255, 255, 0.07); }
+.dh2h__bar i { display: block; height: 100%; }
+.dh2h__bar .is-home { background: var(--accent); }
+.dh2h__bar .is-draw { background: rgba(160, 180, 205, 0.55); }
+.dh2h__bar .is-away { background: var(--orange); }
+.dh2h__legend { display: flex; justify-content: space-between; gap: 8px; margin-top: 5px; font-size: 11.5px; color: var(--text-2); }
+.dh2h__legend span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dh2h__extra { margin-top: 3px; font-size: 11.5px; color: var(--muted); }
+.dmiss { display: flex; flex-direction: column; gap: 6px; }
+.dmiss__row { display: flex; flex-direction: column; gap: 1px; font-size: 12px; line-height: 1.4; color: var(--text-2); }
+.dmiss__row b { font-weight: 500; color: var(--text); }
 

@@ -143,6 +143,13 @@ class TipService {
     return new MatchStats(this.http, { debugDir: path.join(this.dataDir, "ladeni"), cache: this.statsCache }).collect(candidates, progress);
   }
 
+  /** Forma, H2H a absence pro detail tipu (SofaScore; mezipaměť sdílí s tikety). */
+  matchDetail(sofascoreId) {
+    const id = Number(sofascoreId);
+    if (!Number.isFinite(id) || id <= 0) throw new Error("Zápas nemá přiřazený zápas na SofaScore.");
+    return new MatchStats(this.http, { cache: this.statsCache, delayMs: [150, 400] }).detail(id);
+  }
+
   /** Uloží tikety od AI (pro pozdější vyhodnocení). */
   saveTickets(tickets) {
     for (const t of tickets) if (t.legs.every((l) => Number.isFinite(l.tipId))) this.db.saveTicket(t);

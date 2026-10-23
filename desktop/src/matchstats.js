@@ -177,6 +177,15 @@ class MatchStats {
     return { ...buildStats({ homeLast, awayLast, homeId, awayId, h2h, missing }), notes };
   }
 
+  /** Statistiky jednoho zápasu pro detail tipu (s mezipamětí jako u tiketů); vrací { stats, complete, notes }. */
+  async detail(id) {
+    const hit = this.cache && this.cache.get(id);
+    if (hit && this.now() - hit.at < this.cacheMs) return hit.result;
+    const r = await this.statsFor(id);
+    if (this.cache && r.complete) this.cache.set(id, { at: this.now(), result: r });
+    return r;
+  }
+
   /**
    * Statistiky všech kandidátů (kandidát = tip s `sofascoreId` a `ticketId`). Zápas se dvěma tipy se stahuje jednou.
    * Vrací { stats: { ticketId: statistiky }, covered, total, noId, blocked }; jen zápasy s formou obou týmů.

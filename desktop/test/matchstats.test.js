@@ -182,3 +182,20 @@ test("MatchStats.collect: úplné statistiky se na 30 minut uloží do mezipamě
   await new MatchStats(http3, { delayMs: [0, 0], cache, now: () => t + 31 * 60 * 1000 }).collect([cand("t1", 101)]);
   assert.ok(http3.calls.length > 0);                 // po půl hodině se stahuje znovu
 });
+
+test("MatchStats.detail: statistiky jednoho zápasu pro detail tipu, úplné se pamatují (mezipaměť sdílená s tikety)", async () => {
+  const cache = new Map();
+  let t = 5_000_000;
+  const http1 = fakeHttp({ ...routes101() });
+  const first = await new MatchStats(http1, { delayMs: [0, 0], cache, now: () => t }).detail(101);
+  assert.equal(first.complete, true);
+  assert.equal(first.stats.forma_domaci.forma, "V R P V R");
+  assert.ok(http1.calls.length > 0);
+  const http2 = fakeHttp({ ...routes101() });
+  const second = await new MatchStats(http2, { delayMs: [0, 0], cache, now: () => t + 60_000 }).detail(101);
+  assert.equal(http2.calls.length, 0);
+  assert.equal(second, first);
+  const bad = await new MatchStats(fakeHttp({ ...routes101() }), { delayMs: [0, 0], cache, now: () => t }).detail(102); // neúplné se neukládá
+  assert.equal(bad.complete, false);
+  assert.equal(cache.has(102), false);
+});
