@@ -132,7 +132,7 @@ jako v Analýze; poslední tikety zůstanou po restartu.
 seznam **Dřívější tikety** s výsledkem: tiket je *vyhraný*, když vyjdou všechny jeho tipy, *prohraný* hned po první prohře, vrácený tip se
 z kurzu vyjme. Výsledky tipů se berou z automatického vyhodnocení. V **Analýze** je srovnání „tikety od Gemini × všechny tipy jednotlivě“
 (odhad = součin pravděpodobností, úspěšnost, rozdíl, ROI při vkladu 1). Patnáct minut před začátkem zápasu z čekajícího tiketu přijde
-systémové oznámení (jednou na zápas). V **Historii** exportuje tlačítko *Exportovat (CSV)* celou historii tipů do souboru pro Excel.
+systémové oznámení (jednou na zápas).
 
 Statistiky se záměrně nehledají přes „vyhledávání na webu“ v Gemini API (Grounding with Google Search) – to u **bezplatného klíče** u novějších
 modelů není k dispozici. Gemini proto dostane jen běžný textový dotaz, který zdarma funguje. Když Google dotaz odmítne, aplikace ukáže skutečný

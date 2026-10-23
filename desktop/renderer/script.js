@@ -668,13 +668,6 @@
     loadHistory();
   });
 
-  $("#export-csv").addEventListener("click", async () => {
-    if (!desktop) return;
-    const res = await desktop.history.exportCsv();
-    if (!res.ok) toast(`Export se nepodařil: ${res.error}`, "error");
-    else if (res.data.saved) toast("Historie je uložená do souboru CSV (otevři ji v Excelu).");
-  });
-
   $("#evaluate").addEventListener("click", async () => {
     if (state.busy || !desktop) return;
     setBusy(true, "Zjišťuji výsledky zápasů…");

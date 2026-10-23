@@ -58,7 +58,6 @@ test("DB: ukládání tiketů (bez duplicit), seznam a výsledky tipů", () => {
 });
 
 const { dueKickoffs } = require("../src/tickets");
-const { historyCsv } = require("../src/csv");
 
 test("dueKickoffs: jen čekající zápasy do 15 minut, jednou na zápas, ne z prohraných tiketů", () => {
   const now = new Date(Date.UTC(2026, 9, 23, 12, 0));
@@ -72,15 +71,4 @@ test("dueKickoffs: jen čekající zápasy do 15 minut, jednou na zápas, ne z p
   assert.deepEqual(dueKickoffs(tickets, outcomes, now, notified), []);   // podruhé už ne
   const later = new Date(now.getTime() + 30 * 60000);
   assert.deepEqual(dueKickoffs(tickets, outcomes, later, notified).map((k) => k.matchName), ["M2"]);
-});
-
-test("historyCsv: BOM, středníky, desetinná čárka a uvozovky", () => {
-  const csv = historyCsv([
-    { kickoff: "2026-10-23T12:00:00Z", league: "Liga", matchName: 'A – "B"; C', tipLabel: "Výhra domácích (1)", probability: 80.5, odds: 1.85, oddsEstimated: false, homeScore: 2, awayScore: 1, outcome: "win" },
-    { kickoff: "2026-10-23T14:00:00Z", league: "Liga", matchName: "D – E", tipLabel: "x", probability: 70, odds: null, oddsEstimated: true, homeScore: null, awayScore: null, outcome: null },
-  ]);
-  const lines = csv.split("\r\n");
-  assert.equal(lines[0], "﻿Začátek;Soutěž;Zápas;Tip;Pravděpodobnost %;Kurz;Kurz je odhad;Skóre;Výsledek");
-  assert.match(lines[1], /;"A – ""B""; C";Výhra domácích \(1\);80,5;1,85;ne;2:1;výhra$/);
-  assert.match(lines[2], /;D – E;x;70;;ano;;$/);
 });

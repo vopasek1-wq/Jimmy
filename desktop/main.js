@@ -1,7 +1,7 @@
 // Fotbalové tipy – hlavní proces Electronu (Windows desktop aplikace).
 "use strict";
 
-const { app, BrowserWindow, ipcMain, shell, screen, net, session, clipboard, safeStorage, dialog, Notification } = require("electron");
+const { app, BrowserWindow, ipcMain, shell, screen, net, session, clipboard, safeStorage, Notification } = require("electron");
 const fs = require("node:fs");
 const path = require("node:path");
 
@@ -172,13 +172,6 @@ ipcMain.handle("tickets:create", safe(async (event, req) => {
 }));
 ipcMain.handle("tickets:history", safe(() => service.ticketHistory()));
 ipcMain.handle("bankroll:get", safe((_e, settings) => service.bankroll(settings)));
-ipcMain.handle("history:export", safe(async () => {
-  const stamp = new Date().toISOString().slice(0, 10);
-  const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, { title: "Exportovat historii", defaultPath: `historie-tipu-${stamp}.csv`, filters: [{ name: "CSV (Excel)", extensions: ["csv"] }] });
-  if (canceled || !filePath) return { saved: false };
-  fs.writeFileSync(filePath, service.historyCsv(), "utf8");
-  return { saved: true, file: filePath };
-}));
 
 // Upozornění 15 minut před začátkem zápasu z čekajícího tiketu (jen systémové oznámení, jednou na zápas).
 const notifiedKickoffs = new Set();

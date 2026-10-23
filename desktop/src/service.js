@@ -15,7 +15,6 @@ const { candidatesFrom, settleTicket, ticketStats, dueKickoffs } = require("./ti
 const { betsFromTips, betsFromTickets, simulate, normalizeSettings } = require("./bankroll");
 const { GoalsCache } = require("./goalscache");
 const { buildDiagnostics } = require("./diagnostics");
-const { historyCsv } = require("./csv");
 const { resultOk } = require("./models");
 const { fmtStamp, localDate, todayLocal } = require("./timeutil");
 
@@ -150,11 +149,6 @@ class TipService {
   dueKickoffs(notified, now = new Date()) {
     const tickets = this.db.listTickets(30);
     return dueKickoffs(tickets, this.db.outcomesByIds(tickets.flatMap((t) => t.legs.map((l) => l.tipId))), now, notified);
-  }
-
-  /** Celá historie tipů jako CSV text. */
-  historyCsv() {
-    return historyCsv(this.db.history(null).map(serializeTip));
   }
 
   /** Uložené tikety s výsledky podle výsledků jejich tipů a souhrn (tikety × všechny tipy). */
