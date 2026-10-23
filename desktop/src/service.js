@@ -14,6 +14,7 @@ const { analyze, recentLosses, buildPrompt } = require("./analysis");
 const { candidatesFrom, settleTicket, ticketStats, dueKickoffs } = require("./tickets");
 const { betsFromTips, betsFromTickets, simulate, normalizeSettings } = require("./bankroll");
 const { GoalsCache } = require("./goalscache");
+const { tidy } = require("./housekeeping");
 const { buildDiagnostics } = require("./diagnostics");
 const { resultOk } = require("./models");
 const { fmtStamp, localDate, todayLocal } = require("./timeutil");
@@ -38,6 +39,7 @@ class TipService {
     this.dataDir = path.dirname(dbFile);
     this.goalsCache = new GoalsCache(path.join(this.dataDir, "forebet-goals-v2.json"));
     this.statsCache = new Map(); // statistiky zápasů pro tikety (jen za běhu aplikace)
+    tidy(this.dataDir);          // staré ladicí soubory pryč, složka `ladeni` má strop
     this.http = http;
     this.browser = browser;
     this.busy = false;
@@ -86,6 +88,7 @@ class TipService {
       });
     } finally {
       this.busy = false;
+      tidy(this.dataDir);
     }
   }
 

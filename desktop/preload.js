@@ -7,6 +7,9 @@ contextBridge.exposeInMainWorld("desktop", {
   minimize: () => ipcRenderer.send("win:minimize"),
   toggleMaximize: () => ipcRenderer.send("win:toggle-maximize"),
   close: () => ipcRenderer.send("win:close"),
+  onVisibleChange: (callback) => {
+    ipcRenderer.on("win:visible", (_event, shown) => callback(Boolean(shown)));
+  },
   onMaximizedChange: (callback) => {
     ipcRenderer.on("win:maximized", (_event, maximized) => callback(Boolean(maximized)));
   },

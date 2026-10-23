@@ -305,7 +305,7 @@ function dumpLists(debugDir, lists) {
   try {
     fs.mkdirSync(debugDir, { recursive: true });
     const first = lists[0];
-    if (first.html && !looksBlocked(200, first.html) && !first.matches.length) fs.writeFileSync(path.join(debugDir, "forebet-seznam.html"), first.html.slice(0, 500000));
+    if (first.html && !looksBlocked(200, first.html) && !first.matches.length) fs.writeFileSync(path.join(debugDir, "forebet-seznam.html"), first.html.slice(0, 200000));
     const body = lists.map((l, i) => listReport(l, i === 0)).join("\n\n");
     fs.writeFileSync(path.join(debugDir, "forebet-seznam-diagnostika.txt"), `${new Date().toISOString()}\n${body}\n`);
   } catch { /* ladicí soubor je jen bonus */ }
@@ -492,7 +492,7 @@ class ForebetScraper {
           dumped = true;
           try {
             fs.mkdirSync(debugDir, { recursive: true });
-            fs.writeFileSync(path.join(debugDir, "forebet-zapas.html"), html);
+            fs.writeFileSync(path.join(debugDir, "forebet-zapas.html"), html.slice(0, 200000));
             fs.writeFileSync(path.join(debugDir, "forebet-diagnostika.txt"), goalsDiagnostics(m.url, html));
           } catch { /* ladicí soubor je jen bonus */ }
         }

@@ -170,6 +170,10 @@ Aplikace stahuje jen to, co potřebuje, aby bylo obnovení rychlé a zdroje neza
 * Z Forebetu se načítají jen stránky lig, které Scores24 právě nabízí. Okno prohlížeče se otevírá jen tehdy, když obyčejné HTTP nestačí.
 * Statistiky pro tikety (SofaScore) se po dobu 30 minut pamatují, takže opakované vytvoření tiketů nestahuje nic nového.
 * Živé skóre se každou minutu aktualizuje jen tehdy, když nějaký tip právě hraje; výsledky se dotahují jen u tipů, které na ně čekají.
+* Scores24 i Forebet sdílejí **jedno skryté okno prohlížeče**: otevře se při prvním použití a po 45 s nečinnosti se zavře (mezi použitími je prázdné).
+* Když je okno aplikace **minimalizované** nebo skryté, nic se neobnovuje (živé zápasy, skóre, hodiny); po návratu se vše doplní hned.
+* Složka `ladeni` se uklízí: soubory starší než 7 dní se mažou a celá složka má strop 2 MB (maže se od nejstarších).
+* V horní liště je při stahování vidět, který zdroj se právě stahuje (Scores24 → Forebet → SofaScore), po dokončení „Aktualizováno před 3 min“.
 * `ladeni/zdroje-diagnostika.txt` obsahuje řádek **Doba kroků** (Scores24 / Forebet / SofaScore), podle něj je vidět, co obnovení zdržuje.
 
 ## Bez internetu a při výpadku zdroje

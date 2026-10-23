@@ -498,6 +498,38 @@
   const progressText = $("#progress-text");
   const topProgress = $("#topbar-progress");
 
+  const stepsEl = $("#steps");
+  const updatedLabel = $("#updated-label");
+  const STEPS = ["Scores24", "Forebet", "SofaScore"];
+
+  /** Text průběhu + které zdroje jsou hotové (✓), který se právě stahuje a které čekají. */
+  const showProgress = (message) => {
+    progressText.textContent = message;
+    progressText.title = message;
+    const at = STEPS.findIndex((n) => message.startsWith(n));
+    if (at >= 0) $$("i", stepsEl).forEach((el, i) => { el.className = i < at ? "is-done" : i === at ? "is-active" : ""; });
+  };
+
+  const agoText = (ms) => {
+    const min = Math.floor(ms / 60000);
+    if (min < 1) return "právě teď";
+    if (min < 60) return `před ${min} min`;
+    const h = Math.floor(min / 60);
+    return h < 24 ? `před ${h} h` : `před ${Math.floor(h / 24)} d`;
+  };
+
+  /** „Aktualizováno před 3 min“ v horní liště (jen mimo stahování; přepočítává se každých 30 s). */
+  function renderUpdated() {
+    const p = state.payload;
+    const show = !state.busy && Boolean(p && p.updatedAt);
+    updatedLabel.hidden = !show;
+    if (!show) return;
+    const age = Date.now() - Date.parse(p.updatedAt);
+    updatedLabel.textContent = `Aktualizováno ${agoText(age)}`;
+    updatedLabel.title = `Poslední stažení: ${p.updatedLabel || p.updatedAt}`;
+    updatedLabel.classList.toggle("is-stale", age > 3600e3);
+  }
+
   const setBusy = (busy, message = "") => {
     state.busy = busy;
     app.classList.toggle("is-busy", busy);
@@ -506,8 +538,10 @@
     $("span", refreshBtn).textContent = busy ? "Stahuji…" : "Obnovit tipy";
     topProgress.hidden = !busy;
     progressText.hidden = !busy;
-    progressText.textContent = message;
-    progressText.title = message;
+    stepsEl.hidden = !busy;
+    if (busy) $$("i", stepsEl).forEach((el) => { el.className = ""; });
+    showProgress(message);
+    renderUpdated();
   };
 
   async function refresh({ verify = false } = {}) {
@@ -534,7 +568,7 @@
   }
   refreshBtn.addEventListener("click", () => refresh());
 
-  if (desktop) desktop.tips.onProgress((message) => { if (state.busy) { progressText.textContent = message; progressText.title = message; } });
+  if (desktop) desktop.tips.onProgress((message) => { if (state.busy) showProgress(message); });
 
   /* ---------- Historie ---------- */
   const histBody = $("#history-body");
@@ -810,7 +844,7 @@
     renderLiveList();
     renderLiveDetail();
     loadLiveList().then(loadLiveDetail);
-    live.timer = setInterval(() => { loadLiveList().then(loadLiveDetail); }, 30e3);
+    live.timer = setInterval(() => { if (awake()) loadLiveList().then(loadLiveDetail); }, 30e3);
   }
   function stopLive() { clearInterval(live.timer); live.timer = 0; }
 
@@ -1204,6 +1238,7 @@
     renderNotice();
     renderCats();
     renderChip();
+    renderUpdated();
   }
 
   /* ---------- Mřížka Přehledu (GridStack, pevné rozložení) ---------- */
@@ -1349,12 +1384,16 @@
     if (age > STALE_MS) refresh();
   }
 
-  // Stavy „před zápasem / zahájen“ se průběžně přepočítávají podle hodin.
-  setInterval(() => { if (!state.busy && state.payload) renderTips(); }, 30e3);
+  // Okno je vidět? (minimalizované nebo skryté okno nic nestahuje ani nepřekresluje; po návratu se všechno doplní hned.)
+  let windowShown = true;
+  const awake = () => windowShown && !document.hidden;
+
+  // Stavy „před zápasem / zahájen“ a „aktualizováno před …“ se průběžně přepočítávají podle hodin.
+  setInterval(() => { if (awake() && !state.busy && state.payload) { renderTips(); renderUpdated(); } }, 30e3);
 
   // Skóre rozehraných zápasů se každou minutu zaktualizuje ze SofaScore (nestahuje se všechno znovu).
-  setInterval(async () => {
-    if (!desktop || state.busy || !state.payload) return;
+  async function liveScoreTick() {
+    if (!desktop || state.busy || !state.payload || !awake()) return;
     const now = Date.now();
     if (!state.payload.tips.some((t) => ["live", "started"].includes(matchState(t, now).kind))) return;
     try {
@@ -1364,7 +1403,17 @@
         renderTips();
       }
     } catch { /* příště */ }
-  }, 60e3);
+  }
+  setInterval(liveScoreTick, 60e3);
+
+  function wakeUp() {
+    if (!awake()) return;
+    if (state.payload) { renderTips(); renderUpdated(); }
+    liveScoreTick();
+    if (app.dataset.view === "live") loadLiveList().then(loadLiveDetail);
+  }
+  document.addEventListener("visibilitychange", wakeUp);
+  if (desktop && desktop.onVisibleChange) desktop.onVisibleChange((shown) => { windowShown = shown; wakeUp(); });
 
   start();
 })();

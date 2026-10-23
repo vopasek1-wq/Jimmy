@@ -262,7 +262,14 @@ i[data-lucide],
 
 .topbar__actions { display: flex; align-items: center; gap: 8px; }
 .window-controls { display: flex; gap: 2px; margin-left: 7px; }
-.progress-text { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; color: var(--accent-bright); }
+.steps { display: inline-flex; gap: 4px; }
+.steps i { font-style: normal; padding: 2px 8px; border-radius: 10px; border: 1px solid var(--border-2); font-size: 11px; color: var(--muted); white-space: nowrap; }
+.steps i.is-done { color: var(--green); border-color: rgba(43, 210, 107, 0.35); }
+.steps i.is-done::before { content: "✓ "; }
+.steps i.is-active { color: var(--accent-bright); border-color: rgba(86, 203, 255, 0.5); background: var(--accent-soft); }
+.updated-label { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.updated-label.is-stale { color: var(--yellow); }
+.progress-text { max-width: 230px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; color: var(--accent-bright); }
 
 /* ---------- Ikonová tlačítka ---------- */
 .icon-btn {

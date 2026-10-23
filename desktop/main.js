@@ -57,6 +57,10 @@ function createWindow() {
   mainWindow.on("unmaximize", sendMaximized);
   mainWindow.webContents.on("did-finish-load", sendMaximized);
 
+  // Minimalizované nebo skryté okno: aplikace přestane obnovovat živé zápasy (po návratu se hned doplní).
+  const sendVisible = () => { if (!mainWindow.isDestroyed()) mainWindow.webContents.send("win:visible", mainWindow.isVisible() && !mainWindow.isMinimized()); };
+  for (const ev of ["minimize", "restore", "show", "hide"]) mainWindow.on(ev, sendVisible);
+
   // Odkazy se otevírají ve výchozím prohlížeči, ne uvnitř aplikace.
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (isHttpUrl(url)) shell.openExternal(url);
