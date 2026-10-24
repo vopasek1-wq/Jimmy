@@ -402,11 +402,13 @@ i[data-lucide],
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-card);
 }
-.card__lead { display: flex; align-items: center; gap: 18px; min-width: 0; }
+.card__lead { display: flex; align-items: center; gap: 8px 18px; min-width: 0; }
+.card__lead .card__title, .card__lead .seg-control button { white-space: nowrap; }
+@media (max-width: 1240px) { .card__lead { flex-wrap: wrap; } }   /* v úzkém okně se přepínače zalomí pod název */
 .card__header { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 20px; flex: none; }
 .card__title { display: flex; align-items: center; gap: 12px; font-size: 16.5px; font-weight: 500; line-height: 20px; letter-spacing: 0.1px; }
 .card__title .lucide { width: 22px; height: 22px; margin: -1px 0; stroke-width: 1.8; }
-.card__note { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card__note { flex: 0 1000 auto; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 
 /* ---------- Malé upozornění vlevo od „Obnovit tipy“ ---------- */
