@@ -445,11 +445,11 @@
   /** Góly v posledních zápasech obou týmů: více / méně než 1,5, 2,5 a 3,5 gólu a oba týmy skórovaly (koláče z Forebetu, jinak ze SofaScore). */
   function goalChartsHtml(t, ch) {
     if (!ch || !ch.home || !ch.away) return "";
-    const cell = (s, key, cls, a, b) => `<div class="dgoals__cell">${donut(s[key], cls)}<span>${a} ${Math.round(s[key])} % · ${b} ${Math.round(100 - s[key])} %</span></div>`;
+    const cell = (s, key, cls) => `<div class="dgoals__cell">${donut(s[key], cls)}</div>`;
     const rows = [["over15", "1,5"], ["over25", "2,5"], ["over35", "3,5"]].map(([key, label]) => `<div class="dgoals__row">
-      ${cell(ch.home, key, "is-over", "více", "méně")}<div class="dgoals__mid"><b>${label}</b><small>gólu</small></div>${cell(ch.away, key, "is-over", "více", "méně")}</div>`).join("");
+      ${cell(ch.home, key, "is-over")}<div class="dgoals__mid"><b>${label}</b><small>gólu</small></div>${cell(ch.away, key, "is-over")}</div>`).join("");
     const btts = Number.isFinite(ch.home.btts) && Number.isFinite(ch.away.btts)
-      ? `<div class="dgoals__row dgoals__row--btts">${cell(ch.home, "btts", "is-yes", "ano", "ne")}<div class="dgoals__mid"><small>oba týmy<br>skórovaly</small></div>${cell(ch.away, "btts", "is-yes", "ano", "ne")}</div>` : "";
+      ? `<div class="dgoals__row dgoals__row--btts">${cell(ch.home, "btts", "is-yes")}<div class="dgoals__mid"><small>oba týmy<br>skórovaly</small></div>${cell(ch.away, "btts", "is-yes")}</div>` : "";
     return `<div class="dstats__title">${ch.n ? `Posledních ${ch.n} zápasů` : "Poslední zápasy"} <small>góly v zápase, podle ${esc(ch.zdroj)}</small></div>
       <div class="dgoals"><div class="dgoals__head"><span>${esc(t.home)}</span><span>${esc(t.away)}</span></div>${rows}${btts}</div>`;
   }
