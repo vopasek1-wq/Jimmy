@@ -692,6 +692,7 @@ i[data-lucide],
    ========================================================================== */
 .live-page { display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 16px; height: calc(100dvh - var(--topbar-h) - var(--notice-h, 0px) - 33px); }
 .live-page > .card { min-height: 0; overflow: hidden; }
+.live-page .card__header { justify-content: flex-end; }
 .live-scroll, .live-detail { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border-3) transparent; }
 .live-detail { margin-top: 12px; padding-right: 4px; }
 .live-group { margin: 14px 0 4px; font-size: 11.5px; letter-spacing: 0.3px; text-transform: uppercase; color: var(--muted); }

@@ -694,12 +694,25 @@
     }
     const s = h.stats;
     const v = statTiles(s);
+    // doplňky do prázdných míst dlaždic: čeká / soutěže, očekávaná vs. skutečná úspěšnost, rozpětí kurzů, zisk na tip
+    const pending = Math.max(0, s.total - s.evaluated);
+    const leagues = new Set(h.tips.map((t) => t.leagueKey)).size;
+    const decided = h.tips.filter((t) => t.outcome === "win" || t.outcome === "loss");
+    const expected = decided.length ? decided.reduce((a, t) => a + t.probability, 0) / decided.length : null;
+    const odds = h.tips.filter((t) => t.odds && !t.oddsEstimated).map((t) => t.odds);
+    const span = (txt) => `<span>${esc(txt)}</span>`;
     $("#history-stats").innerHTML = [
-      stat(String(s.total), "tipů v období", "stat--accent", { icon: "list" }),
+      stat(String(s.total), "tipů v období", "stat--accent", {
+        icon: "list", bar: s.total ? [{ w: (100 * s.evaluated) / s.total, cls: "is-muted" }] : null,
+        note: span(`${pending} čeká na výsledek`) + span(`${leagues} ${leagues === 1 ? "soutěž" : leagues > 0 && leagues < 5 ? "soutěže" : "soutěží"}`),
+      }),
       stat(String(s.evaluated), "vyhodnoceno", "", { bar: v.outcomeBar, note: v.outcomeNote }),
-      stat(v.rate, "úspěšnost", v.rateCls, { bar: v.rateBar, icon: "target" }),
-      stat(s.avgOdds === null ? "–" : nf2.format(s.avgOdds), "průměrný kurz", "", { icon: "coins" }),
-      stat(v.profit, "zisk (vklad 1)", v.profitCls, { note: v.roiChip, icon: "trending-up" }),
+      stat(v.rate, "úspěšnost", v.rateCls, { bar: v.rateBar, icon: "target", note: expected === null ? "" : span(`odhad zdrojů ${Math.round(expected)} %`) }),
+      stat(s.avgOdds === null ? "–" : nf2.format(s.avgOdds), "průměrný kurz", "", {
+        icon: "coins", bar: s.avgOdds ? [{ w: 100 / s.avgOdds, cls: "is-muted" }] : null,
+        note: odds.length ? span(`kurz značí ${Math.round(100 / s.avgOdds)} %`) + span(`${nf2.format(Math.min(...odds))}–${nf2.format(Math.max(...odds))}`) : "",
+      }),
+      stat(v.profit, "zisk (vklad 1)", v.profitCls, { note: v.roiChip + (s.evaluated && s.profit !== null ? span(`${fmtSigned(s.profit / s.evaluated)} na tip`) : ""), icon: "trending-up" }),
     ].join("");
     renderIcons();
 
@@ -988,6 +1001,7 @@
     renderTicketHistory();
     const r = tk.result && tkResultDay(tk.result) === tkTargetDay() ? tk.result : null; // včerejší tikety se v „Dnes“ neukazují
     note.textContent = TK_NOTE;
+    note.hidden = false;
     if (tk.busy) {
       list.innerHTML = `<div class="tk-busy"><span class="tk-busy__spin" aria-hidden="true"></span><p class="tk-busy__text" id="tk-busy-text">${esc(busyText())}</p>
         <p class="tk-busy__hint">Aplikace stahuje ze SofaScore statistiky zápasů a Gemini je pak vyhodnotí a složí tikety. Obvykle to trvá do dvou minut, mezitím můžeš přepnout na jinou záložku.</p></div>`;
@@ -1013,10 +1027,12 @@
       </div>
       ${t.summary ? `<p class="tk-summary"><span class="tk-summary__label">Shrnutí</span>${esc(t.summary)}</p>` : ""}
       </article>`).join("") + omittedHtml(r);
-    const parts = [`Z ${r.analyzed} zápasů z přehledu${r.at ? ` (${r.at})` : ""}`];
-    if (r.covered < r.analyzed) parts.push(`statistiky se našly k ${r.covered}`);
+    // upozornění se ukážou jen při potížích (chybějící statistiky, zahozené tikety)
+    const parts = [];
+    if (r.covered < r.analyzed) parts.push(`Statistiky se našly jen k ${r.covered} z ${r.analyzed} zápasů`);
     if (r.rejected) parts.push(`${r.rejected} ${r.rejected === 1 ? "tiket navržený" : "tiketů navržených"} AI porušil${r.rejected === 1 ? "" : "o"} pravidla a ${r.rejected === 1 ? "byl zahozen" : "bylo zahozeno"}`);
-    note.textContent = `${parts.join(" · ")}. Pravděpodobnost je součin odhadů zdroje – bývá optimistická; kurzy u Tipsportu se mohou lišit a výnos není zaručen. Sázení je jen pro 18+.`;
+    note.textContent = parts.length ? `${parts.join(" · ")}.` : "";
+    note.hidden = !parts.length;
     renderIcons();
   }
 
