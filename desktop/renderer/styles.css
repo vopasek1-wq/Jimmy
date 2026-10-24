@@ -600,13 +600,10 @@ i[data-lucide],
 .stat__chip--neg { background: var(--red-soft); color: var(--red); }
 .stat__chip--muted { background: rgba(255, 255, 255, 0.06); color: var(--muted); }
 .stat-row--5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-/* Dlaždice v Historii: velké číslo na střed a víc vyplněné místo */
-#history-stats .stat { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 128px; padding: 16px 14px 14px; text-align: center; }
-#history-stats .stat__value { font-size: 36px; }
-#history-stats .stat__label { margin-top: 4px; font-size: 13.5px; }
-#history-stats .stat__bar { align-self: stretch; height: 6px; margin-top: 12px; }
-#history-stats .stat__note { justify-content: center; margin-top: 10px; font-size: 12.5px; }
-#history-stats .stat__chip { height: 22px; font-size: 12px; }
+/* Dlaždice v Historii: obsah na střed */
+#history-stats .stat { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+#history-stats .stat__bar { align-self: stretch; }
+#history-stats .stat__note { justify-content: center; }
 .an-top { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 12px; align-items: stretch; }
 .ai-tile { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; text-align: left; color: var(--text-2);
   background: linear-gradient(135deg, rgba(40, 140, 215, 0.26), rgba(20, 90, 170, 0.12)); border: 1px solid rgba(140, 215, 255, 0.28); border-radius: 14px;
