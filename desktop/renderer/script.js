@@ -18,7 +18,7 @@
   };
   // Zbytky nastavení z dřívějších verzí (rozložení karet, starší tikety…) se při startu smažou.
   try {
-    const KEPT = new Set(["day", "live", "league", "sort", "hsort", "hist-range", "tk-day", "tk-result2"]);
+    const KEPT = new Set(["day", "live", "league", "sort", "hsort", "hist-range", "tk-day", "tk-result2", "ev-range"]);
     Object.keys(localStorage).filter((k) => k.startsWith("tips:") && !KEPT.has(k.slice(5))).forEach((k) => localStorage.removeItem(k));
   } catch { /* bez úložiště */ }
 
@@ -137,7 +137,7 @@
     ${extra.note ? `<div class="stat__note">${extra.note}</div>` : ""}</div>`;
 
   /* ---------- Navigace ---------- */
-  const VIEWS = ["overview", "live", "tickets", "analysis", "history"];
+  const VIEWS = ["overview", "live", "tickets", "evaluation", "analysis", "history"];
   const showView = (view) => {
     if (!VIEWS.includes(view)) view = "overview";
     app.dataset.view = view;
@@ -155,6 +155,7 @@
     else stopLive();
     if (view === "analysis") loadAnalysis();
     if (view === "tickets") loadTickets();
+    if (view === "evaluation") loadEvaluation();
     renderCats();
   };
 
@@ -805,7 +806,7 @@
     loadHistory();
   });
 
-  $("#evaluate").addEventListener("click", async () => {
+  async function evaluateResults() {
     if (state.busy || !desktop) return;
     setBusy(true, "Zjišťuji výsledky zápasů…");
     let res;
@@ -814,7 +815,9 @@
     if (res.ok) toast(res.data.message);
     else toast(`Vyhodnocení se nepodařilo: ${res.error}`, "error");
     await loadHistory();
-  });
+    await loadTicketHistory();
+  }
+  $("#evaluate").addEventListener("click", evaluateResults);
 
 
   /* ---------- Živé zápasy (SofaScore) ---------- */
@@ -1039,10 +1042,11 @@
     const live = (state.payload?.tips || []).find((x) => x.id === l.tipId);
     if (live) return { ...live, reason: l.reason || "" };
     const [h, a] = l.home && l.away ? [l.home, l.away] : String(l.matchName).split(" – ");
+    const scoreParts = /^(\d+):(\d+)$/.test(l.score || "") ? l.score.split(":").map(Number) : [null, null];
     return {
       id: l.tipId, home: h, away: a || "", matchName: l.matchName, league: l.league || "", tipLabel: l.tipLabel, probability: l.probability,
       probClass: l.probability > state.limits.highProbability ? "high" : "mid", probSource: "Scores24", odds: l.odds, oddsEstimated: false,
-      kickoff: l.kickoff, status: "upcoming", homeScore: null, awayScore: null, sofascoreId: l.sofascoreId ?? null,
+      kickoff: l.kickoff, status: l.score ? "finished" : "upcoming", homeScore: scoreParts[0], awayScore: scoreParts[1], sofascoreId: l.sofascoreId ?? null,
       url: l.url || "", forebetUrl: l.forebetUrl || "", sofascoreUrl: l.sofascoreUrl || "", outcome: l.outcome ?? null, outcomeSource: null, reason: l.reason || "",
     };
   }
@@ -1139,7 +1143,103 @@
   async function loadTicketHistory() {
     if (!desktop) return;
     const res = await desktop.tickets.history();
-    if (res.ok) { tk.history = res.data; renderTicketHistory(); renderTicketDetail(); }
+    if (res.ok) { tk.history = res.data; renderTicketHistory(); renderTicketDetail(); renderEvaluation(); }
+  }
+
+  /* ---------- Vyhodnocení: uložené tikety s výsledky ---------- */
+  const ev = { range: ["today", "yesterday", "week", "all"].includes(store.get("ev-range")) ? store.get("ev-range") : "all", selected: null };
+  const evDetailEl = $("#ev-detail");
+  const evDetailMatch = $("#ev-detail-match");
+
+  /** Uložené tikety za zvolené období (podle dne zápasů). */
+  function evTickets() {
+    const all = (tk.history && tk.history.tickets) || [];
+    const today = localDay(new Date());
+    if (ev.range === "today") return all.filter((t) => t.day === today);
+    if (ev.range === "yesterday") return all.filter((t) => t.day === shiftDay(today, -1));
+    if (ev.range === "week") return all.filter((t) => t.day >= shiftDay(today, -6) && t.day <= today);
+    return all;
+  }
+
+  const fmtProfit = (p) => (p === null ? "–" : `${p > 0 ? "+" : p < 0 ? "−" : ""}${nf2.format(Math.abs(p))}`);
+  const mean = (list) => (list.length ? list.reduce((a, b) => a + b, 0) / list.length : null);
+
+  function evStatsHtml(list) {
+    const n = (status) => list.filter((t) => t.status === status).length;
+    const [win, loss, voided, pending] = [n("win"), n("loss"), n("void"), n("pending")];
+    const decided = win + loss;
+    const settled = win + loss + voided;
+    const profit = list.filter((t) => t.profit !== null).reduce((s, t) => s + t.profit, 0);
+    const rate = decided ? (100 * win) / decided : null;
+    const tone = rate === null ? "" : rate >= 60 ? "good" : rate >= 45 ? "warn" : "bad";
+    const roi = decided ? (100 * list.filter((t) => t.status === "win" || t.status === "loss").reduce((s, t) => s + t.profit, 0)) / decided : null;
+    const roiText = roi === null ? "bez vyhodnocených" : `ROI ${roi > 0 ? "+" : roi < 0 ? "−" : ""}${nf1.format(Math.abs(roi))} %`;
+    const span = (txt) => `<span>${esc(txt)}</span>`;
+    const expected = mean(list.filter((t) => t.status === "win" || t.status === "loss").map((t) => t.jointProbability));
+    return [
+      stat(String(list.length), "tiketů", "stat--accent", { icon: "ticket", bar: list.length ? [{ w: (100 * settled) / list.length, cls: "is-muted" }] : null, note: span(`${pending} čeká na výsledek`) }),
+      stat(String(win), "vyhráno", "", {
+        bar: settled ? [{ w: (100 * win) / settled, cls: "is-win" }, { w: (100 * loss) / settled, cls: "is-loss" }, { w: (100 * voided) / settled, cls: "is-void" }] : null,
+        note: `<span class="g">${win} V</span><span class="r">${loss} P</span><span class="y">${voided} vr.</span>`,
+      }),
+      stat(rate === null ? "–" : `${Math.round(rate)} %`, "úspěšnost tiketů", tone ? `stat--${tone}` : "", { icon: "target", bar: rate === null ? null : [{ w: rate, cls: `is-${tone}` }], note: expected === null ? "" : span(`odhad ${Math.round(expected)} %`) }),
+      stat(list.length ? nf2.format(mean(list.map((t) => t.totalOdds))) : "–", "průměrný kurz tiketu", "", { icon: "coins" }),
+      stat(decided || voided ? fmtProfit(profit) : "–", "zisk (vklad 1 na tiket)", profit > 0 ? "stat--pos" : profit < 0 ? "stat--neg" : "", {
+        icon: "trending-up", note: `<span class="stat__chip stat__chip--${profit > 0 ? "pos" : profit < 0 ? "neg" : "muted"}">${esc(roiText)}</span>`,
+      }),
+    ].join("");
+  }
+
+  function evCardHtml(t) {
+    const [, m, d] = String(t.day).split("-").map(Number);
+    const count = t.legs.length;
+    const profit = t.status === "pending" ? "čeká" : fmtProfit(t.profit);
+    return `<article class="ev-card ev-card--${t.status}">
+      <div class="ev-card__head"><strong>${esc(t.name)}</strong><small>${d}. ${m}. · ${count} ${count < 5 ? "zápasy" : "zápasů"}</small><span class="tk-hist__status tk-hist__status--${t.status}">${TK_STATUS[t.status]}</span></div>
+      <ul class="ev-legs">${t.legs.map((l) => `<li class="ev-leg is-${l.outcome || "pending"}"${legAttrs(l)}><i>${LEG_MARK[l.outcome] || "…"}</i>
+        <span class="ev-leg__match">${esc(l.matchName)}</span><span class="ev-leg__tip">${esc(l.tipLabel)}</span><span class="ev-leg__score">${esc(l.score || "–")}</span><span class="ev-leg__odds">${esc(nf2.format(l.odds))}</span></li>`).join("")}</ul>
+      <div class="ev-card__foot"><span>Kurz tiketu <b>${esc(nf2.format(t.totalOdds))}</b></span>${t.effectiveOdds && t.effectiveOdds !== t.totalOdds ? `<span>Skutečný kurz <b>${esc(nf2.format(t.effectiveOdds))}</b></span>` : ""}<span>Pravděpodobnost <b>${esc(nf1.format(t.jointProbability))} %</b></span>
+        <span>Zisk <b class="${t.profit > 0 ? "is-pos" : t.profit < 0 ? "is-neg" : ""}">${esc(profit)}</b></span></div>
+    </article>`;
+  }
+
+  function renderEvaluation() {
+    $$("#ev-range [data-evrange]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.evrange === ev.range)));
+    const list = evTickets();
+    $("#ev-stats").innerHTML = evStatsHtml(list);
+    $("#ev-list").innerHTML = !tk.history ? `<p class="empty">${desktop ? "Načítám tikety…" : "Tikety jsou dostupné jen v aplikaci."}</p>`
+      : list.length ? list.map(evCardHtml).join("") : '<p class="empty">V tomto období nejsou žádné uložené tikety.</p>';
+    renderIcons();
+    renderEvalDetail();
+  }
+
+  function renderEvalDetail() {
+    const leg = ev.selected === null ? null : ((tk.history && tk.history.tickets) || []).flatMap((t) => t.legs).find((l) => l.tipId === ev.selected);
+    fillDetail(evDetailEl, evDetailMatch, leg ? legTip(leg) : null, '<p class="detail__empty">Klikni na zápas v tiketu – ukážu výsledek, statistiky a vzájemné zápasy.</p>');
+    $$("#ev-list [data-tip]").forEach((el) => el.classList.toggle("is-selected", Number(el.dataset.tip) === ev.selected));
+  }
+
+  const onEvLegPick = (e) => {
+    if (e.type === "keydown" && e.key !== "Enter" && e.key !== " ") return;
+    const el = e.target.closest("[data-tip]");
+    if (!el) return;
+    e.preventDefault();
+    ev.selected = Number(el.dataset.tip);
+    renderEvalDetail();
+  };
+  $("#ev-list").addEventListener("click", onEvLegPick);
+  $("#ev-list").addEventListener("keydown", onEvLegPick);
+  evDetailEl.addEventListener("click", onDetailLink);
+  $$("#ev-range [data-evrange]").forEach((b) => b.addEventListener("click", () => {
+    ev.range = b.dataset.evrange;
+    store.set("ev-range", ev.range);
+    renderEvaluation();
+  }));
+  $("#ev-run").addEventListener("click", evaluateResults);
+
+  function loadEvaluation() {
+    renderEvaluation();
+    loadTicketHistory();
   }
 
   async function loadTickets() {

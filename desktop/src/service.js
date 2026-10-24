@@ -173,8 +173,13 @@ class TipService {
   _settledTickets() {
     settleFinished(this.db);
     const all = this.db.listTickets();
-    const outcomes = this.db.outcomesByIds(all.flatMap((t) => t.legs.map((l) => l.tipId)));
-    return all.map((t) => settleTicket(t, outcomes));
+    const ids = all.flatMap((t) => t.legs.map((l) => l.tipId));
+    const outcomes = this.db.outcomesByIds(ids);
+    const scores = this.db.scoresByIds(ids);
+    return all.map((t) => {
+      const settled = settleTicket(t, outcomes);
+      return { ...settled, legs: settled.legs.map((l) => ({ ...l, score: scores.get(l.tipId) || "" })) };   // výsledek zápasu u každého tipu
+    });
   }
 
   /** Ladicí soubor s posledním zadáním a odpovědí Gemini pro tikety (přepisuje se). */

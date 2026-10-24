@@ -372,23 +372,28 @@ i[data-lucide],
 .app[data-view="history"] .pages,
 .app[data-view="live"] .pages,
 .app[data-view="analysis"] .pages,
-.app[data-view="tickets"] .pages { display: block; }
+.app[data-view="tickets"] .pages,
+.app[data-view="evaluation"] .pages { display: block; }
 .app[data-view="history"] .board,
 .app[data-view="live"] .board,
 .app[data-view="analysis"] .board,
-.app[data-view="tickets"] .board { display: none; }
+.app[data-view="tickets"] .board,
+.app[data-view="evaluation"] .board { display: none; }
 .app[data-view="live"] .page-history,
 .app[data-view="history"] .live-page,
 .app[data-view="analysis"] .live-page,
 .app[data-view="analysis"] .page-history,
 .app[data-view="tickets"] .live-page,
-.app[data-view="tickets"] .page-history { display: none; }
+.app[data-view="tickets"] .page-history,
+.app[data-view="evaluation"] .live-page,
+.app[data-view="evaluation"] .page-history { display: none; }
 .pages > .analysis-page { display: none; height: calc(100dvh - var(--topbar-h) - 33px); }
 .app[data-view="analysis"] .pages > .analysis-page { display: flex; }
-.pages > .tickets-page { display: none; grid-template-columns: minmax(0, 15fr) minmax(0, 9fr); gap: 16px; height: calc(100dvh - var(--topbar-h) - 33px); }
-.app[data-view="tickets"] .pages > .tickets-page { display: grid; }
-.tickets-page > .card { min-height: 0; overflow: hidden; }
-.tk-main { overflow-x: hidden; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border-3) transparent; }
+.pages > .tickets-page, .pages > .eval-page { display: none; grid-template-columns: minmax(0, 15fr) minmax(0, 9fr); gap: 16px; height: calc(100dvh - var(--topbar-h) - 33px); }
+.app[data-view="tickets"] .pages > .tickets-page,
+.app[data-view="evaluation"] .pages > .eval-page { display: grid; }
+.tickets-page > .card, .eval-page > .card { min-height: 0; overflow: hidden; }
+.tk-main, .ev-main { overflow-x: hidden; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border-3) transparent; }
 
 /* ---------- Karta ---------- */
 .card {
@@ -601,9 +606,9 @@ i[data-lucide],
 .stat__chip--muted { background: rgba(255, 255, 255, 0.06); color: var(--muted); }
 .stat-row--5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 /* Dlaždice v Historii: obsah na střed */
-#history-stats .stat { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-#history-stats .stat__bar { align-self: stretch; }
-#history-stats .stat__note { justify-content: center; }
+#history-stats .stat, #ev-stats .stat { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+#history-stats .stat__bar, #ev-stats .stat__bar { align-self: stretch; }
+#history-stats .stat__note, #ev-stats .stat__note { justify-content: center; }
 .an-top { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 12px; align-items: stretch; }
 .ai-tile { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; text-align: left; color: var(--text-2);
   background: linear-gradient(135deg, rgba(40, 140, 215, 0.26), rgba(20, 90, 170, 0.12)); border: 1px solid rgba(140, 215, 255, 0.28); border-radius: 14px;
@@ -735,8 +740,8 @@ i[data-lucide],
 .stat-line__bar .h { background: var(--accent); }
 .stat-line__bar .a { background: #ff6b6b; }
 @media (max-width: 1100px) {
-  .live-page, .tickets-page { grid-template-columns: 1fr; height: auto; }
-  .live-page > .card, .tickets-page > .card { max-height: 70vh; }
+  .live-page, .tickets-page, .eval-page { grid-template-columns: 1fr; height: auto; }
+  .live-page > .card, .tickets-page > .card, .eval-page > .card { max-height: 70vh; }
 }
 
 /* ==========================================================================
@@ -837,7 +842,7 @@ body { background: var(--bg); }
 .card::before { top: -1px; left: -1px; border-top-width: 2px; border-left-width: 2px; border-top-left-radius: var(--radius-card); }
 .card::after { right: -1px; bottom: -1px; border-bottom-width: 2px; border-right-width: 2px; border-bottom-right-radius: var(--radius-card); }
 /* Karty, které se posouvají, mají rohové čáry zrušené – jinak by se posouvaly s obsahem a objevily se uprostřed stránky. */
-.analysis-page::before, .analysis-page::after, .tk-main::before, .tk-main::after,
+.analysis-page::before, .analysis-page::after, .tk-main::before, .tk-main::after, .ev-main::before, .ev-main::after,
 .page-history::before, .page-history::after { display: none; }
 .card__title { font-weight: 600; }
 .card__title .lucide { color: var(--accent-bright); }
@@ -1043,3 +1048,34 @@ body { background: var(--bg); }
 .dmiss__row { display: flex; flex-direction: column; gap: 1px; font-size: 12px; line-height: 1.4; color: var(--text-2); }
 .dmiss__row b { font-weight: 500; color: var(--text); }
 
+
+/* ==========================================================================
+   Vyhodnocení tiketů
+   ========================================================================== */
+.ev-main .stat-row { margin-top: 0; }
+.ev-controls { margin-top: 14px; }
+.ev-controls .btn { margin-left: auto; }
+.ev-list { display: flex; flex-direction: column; gap: 12px; margin-top: 14px; }
+.ev-card { padding: 12px 14px 10px; background: var(--panel); border: 1px solid var(--border-2); border-radius: 14px; }
+.ev-card--win { border-color: rgba(60, 200, 130, 0.35); }
+.ev-card--loss { border-color: rgba(240, 100, 100, 0.3); }
+.ev-card__head { display: flex; align-items: center; gap: 12px; }
+.ev-card__head strong { font-size: 14px; font-weight: 600; }
+.ev-card__head small { font-size: 12px; color: var(--muted); }
+.ev-card__head .tk-hist__status { margin-left: auto; }
+.ev-legs { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; }
+.ev-leg { display: grid; grid-template-columns: 18px minmax(0, 1.3fr) minmax(0, 1fr) auto 44px; align-items: center; gap: 10px; padding: 6px 8px; margin: 0 -8px; border-top: 1px solid var(--line); border-radius: 8px; font-size: 12.5px; cursor: pointer; transition: background-color 0.14s; }
+.ev-leg:hover { background: rgba(130, 160, 210, 0.1); }
+.ev-leg.is-selected { background: var(--accent-soft); }
+.ev-leg i { font-style: normal; text-align: center; color: var(--muted); }
+.ev-leg.is-win i { color: var(--green); }
+.ev-leg.is-loss i { color: var(--red); }
+.ev-leg.is-void i { color: var(--yellow); }
+.ev-leg__match { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ev-leg__tip { color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ev-leg__score { font-weight: 700; font-variant-numeric: tabular-nums; text-align: center; min-width: 34px; }
+.ev-leg__odds { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+.ev-card__foot { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 6px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+.ev-card__foot b { color: var(--text-2); font-weight: 600; font-variant-numeric: tabular-nums; }
+.ev-card__foot .is-pos { color: var(--green); }
+.ev-card__foot .is-neg { color: var(--red); }

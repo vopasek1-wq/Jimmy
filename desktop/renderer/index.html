@@ -84,6 +84,7 @@
           <li><a class="nav__link is-active" href="#" data-view="overview" aria-current="page"><i data-lucide="house"></i><span>Přehled</span></a></li>
           <li><a class="nav__link" href="#" data-view="live"><i data-lucide="radio"></i><span>Živé zápasy</span></a></li>
           <li><a class="nav__link" href="#" data-view="tickets"><i data-lucide="ticket"></i><span>Tikety</span></a></li>
+          <li><a class="nav__link" href="#" data-view="evaluation"><i data-lucide="clipboard-check"></i><span>Vyhodnocení</span></a></li>
           <li><a class="nav__link" href="#" data-view="analysis"><i data-lucide="brain"></i><span>Analýza</span></a></li>
           <li><a class="nav__link" href="#" data-view="history"><i data-lucide="history"></i><span>Historie</span></a></li>
         </ul>
@@ -171,6 +172,31 @@
               <span class="detail-match" id="tk-detail-match"></span>
             </header>
             <div class="detail" id="tk-detail"></div>
+          </section>
+        </div>
+
+        <div class="eval-page">
+          <section class="card ev-main" aria-labelledby="eval-title">
+            <h2 class="sr-only" id="eval-title">Vyhodnocení tiketů</h2>
+            <div class="stat-row stat-row--5" id="ev-stats"></div>
+            <div class="tk-controls ev-controls">
+              <div class="seg-control" id="ev-range" role="group" aria-label="Období">
+                <button type="button" data-evrange="today" aria-pressed="false">Dnes</button>
+                <button type="button" data-evrange="yesterday" aria-pressed="false">Včera</button>
+                <button type="button" data-evrange="week" aria-pressed="false">7 dní</button>
+                <button type="button" data-evrange="all" aria-pressed="true">Vše</button>
+              </div>
+              <button class="btn btn--ghost" type="button" id="ev-run" title="Zjistí výsledky zápasů ze SofaScore a tikety podle nich vyhodnotí"><i data-lucide="sparkles"></i>Vyhodnotit automaticky</button>
+            </div>
+            <div class="ev-list" id="ev-list"></div>
+          </section>
+
+          <section class="card detail-card" aria-labelledby="ev-detail-title">
+            <header class="card__header">
+              <h2 class="sr-only" id="ev-detail-title">Detail zápasu v tiketu</h2>
+              <span class="detail-match" id="ev-detail-match"></span>
+            </header>
+            <div class="detail" id="ev-detail"></div>
           </section>
         </div>
 

@@ -54,6 +54,8 @@ test("DB: ukládání tiketů (bez duplicit), seznam a výsledky tipů", () => {
   assert.deepEqual([...outcomes], [[ids[0], "win"], [ids[1], "loss"]]);
   assert.equal(settleTicket(list[1], outcomes).status, "loss");
   assert.equal(settleTicket(list[0], outcomes).status, "pending");
+  db.updateLive({ id: ids[0], status: "finished", homeScore: 2, awayScore: 1, sofascoreUrl: "", sofascoreId: null });
+  assert.deepEqual([...db.scoresByIds(ids)], [[ids[0], "2:1"]]);               // jen tipy se známým skóre
   db.close();
 });
 

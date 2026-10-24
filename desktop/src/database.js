@@ -203,6 +203,14 @@ class Database {
     return out;
   }
 
+  /** Skóre tipů podle id: Map id → "2:1" (jen tipy, u kterých je skóre známé). */
+  scoresByIds(ids) {
+    const out = new Map();
+    const stmt = this.db.prepare("SELECT home_score, away_score FROM tips WHERE id=?");
+    for (const id of new Set(ids)) { const r = stmt.get(id); if (r && r.home_score !== null && r.away_score !== null) out.set(id, `${r.home_score}:${r.away_score}`); }
+    return out;
+  }
+
   /** Typ tipu podle id: Map id → { tipCode, leagueKey } (pro rozbor tiketů po skupinách). */
   tipInfoByIds(ids) {
     const out = new Map();
