@@ -23,7 +23,7 @@ vydání **`tipy-latest`**:
 1. Stáhněte `FotbalTipy.exe` a dvakrát na něj klikněte. Nic se neinstaluje.
 2. Pokud Windows SmartScreen zobrazí varování (aplikace není podepsaná): **Další informace → Přesto spustit**.
 3. Okno se otevře hned s posledními uloženými daty a tipy se na pozadí stáhnou (obvykle 20–40 s). Když jsou
-   uložená data mladší než 15 minut, znovu se nestahuje. Okno se vždy otevře maximalizované.
+   uložená data mladší než 15 minut, znovu se nestahuje. Okno se vždy otevře maximalizované, a to na monitoru, kde bylo naposledy (poloha se ukládá do `window.json` ve složce dat; když monitor není připojený, otevře se na hlavním).
 4. **Nová verze:** aplikace při startu (a pak každých 6 hodin) zjistí na GitHubu, jestli je ve vydání `tipy-latest` novější
    sestavení. Pokud ano, v horní liště se objeví štítek **Nová verze** – klik otevře stažení v prohlížeči (po stažení zavřete
    aplikaci a spusťte nový `FotbalTipy.exe`). Novou verzi lze vyhledat i hned tlačítkem **Aktualizace** vlevo dole: když je novější

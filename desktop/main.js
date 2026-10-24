@@ -17,20 +17,25 @@ const { TipService } = require("./src/service");
 const { askGemini, generate } = require("./src/analysis");
 const { createTickets } = require("./src/tickets");
 const { checkForUpdate } = require("./src/updates");
+const { loadState, saveState, pickBounds } = require("./src/windowstate");
 
 const DESIGN_SIZE = { width: 1440, height: 900 };
 const isHttpUrl = (url) => /^https?:\/\//i.test(String(url));
 
 let mainWindow = null;
 let service = null;
+const windowStateFile = () => path.join(app.getPath("userData"), "window.json");
 
 function createWindow() {
-  // Okno se vždy otevře maximalizované; velikost podle návrhu (nikdy větší než pracovní plocha) platí, až když ho uživatel zmenší.
+  // Okno se vždy otevře maximalizované, a to na monitoru, kde bylo naposledy (jinak na hlavním); velikost podle návrhu
+  // (nikdy větší než pracovní plocha) platí, až když ho uživatel zmenší.
   const { workAreaSize } = screen.getPrimaryDisplay();
-  const width = Math.min(DESIGN_SIZE.width, workAreaSize.width);
-  const height = Math.min(DESIGN_SIZE.height, workAreaSize.height);
+  const remembered = pickBounds(loadState(windowStateFile()), screen.getAllDisplays().map((d) => d.workArea));
+  const width = remembered ? remembered.width : Math.min(DESIGN_SIZE.width, workAreaSize.width);
+  const height = remembered ? remembered.height : Math.min(DESIGN_SIZE.height, workAreaSize.height);
 
   mainWindow = new BrowserWindow({
+    ...(remembered ? { x: remembered.x, y: remembered.y } : {}),
     width,
     height,
     minWidth: 1024,
@@ -51,6 +56,17 @@ function createWindow() {
 
   mainWindow.maximize();
   mainWindow.once("ready-to-show", () => mainWindow.show());
+
+  // Poloha okna se průběžně ukládá: při dalším spuštění se otevře na stejném monitoru.
+  let saveTimer = null;
+  const rememberWindow = () => {
+    if (mainWindow.isDestroyed() || mainWindow.isMinimized() || !mainWindow.isVisible()) return;
+    const display = screen.getDisplayMatching(mainWindow.getBounds());
+    saveState(windowStateFile(), { ...mainWindow.getNormalBounds(), display: display.workArea });
+  };
+  const rememberSoon = () => { clearTimeout(saveTimer); saveTimer = setTimeout(rememberWindow, 500); };
+  for (const ev of ["move", "resize", "maximize", "unmaximize"]) mainWindow.on(ev, rememberSoon);
+  mainWindow.on("close", () => { clearTimeout(saveTimer); rememberWindow(); });
 
   const sendMaximized = () => mainWindow.webContents.send("win:maximized", mainWindow.isMaximized());
   mainWindow.on("maximize", sendMaximized);
