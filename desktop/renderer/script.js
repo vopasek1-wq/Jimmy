@@ -523,6 +523,7 @@
     box.innerHTML = `
       <div class="detail__when">Začátek <b>${esc(when)}</b></div>
       <div class="detail__tip">${esc(t.tipLabel)}<span class="detail__state is-${t.probClass}">${t.probClass === "high" ? `NAD ${hi} %` : `${state.limits.minProbability}–${hi} %`}</span></div>
+      ${t.reason ? `<p class="detail__why">${esc(t.reason)}</p>` : ""}
       <div class="stat-row stat-row--detail">${kpis}</div>
       ${facts.length ? `<dl class="facts">${facts.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>` : ""}
       <div class="detail__actions">${links}</div>
@@ -1027,13 +1028,13 @@
   /** Tip pro detail: nejnovější údaje z posledního stažení, u starších tiketů záloha z údajů uložených u nohy tiketu. */
   function legTip(l) {
     const live = (state.payload?.tips || []).find((x) => x.id === l.tipId);
-    if (live) return live;
+    if (live) return { ...live, reason: l.reason || "" };
     const [h, a] = l.home && l.away ? [l.home, l.away] : String(l.matchName).split(" – ");
     return {
       id: l.tipId, home: h, away: a || "", matchName: l.matchName, league: l.league || "", tipLabel: l.tipLabel, probability: l.probability,
       probClass: l.probability > state.limits.highProbability ? "high" : "mid", probSource: "Scores24", odds: l.odds, oddsEstimated: false,
       kickoff: l.kickoff, status: "upcoming", homeScore: null, awayScore: null, sofascoreId: l.sofascoreId ?? null,
-      url: l.url || "", forebetUrl: l.forebetUrl || "", sofascoreUrl: l.sofascoreUrl || "", outcome: l.outcome ?? null, outcomeSource: null,
+      url: l.url || "", forebetUrl: l.forebetUrl || "", sofascoreUrl: l.sofascoreUrl || "", outcome: l.outcome ?? null, outcomeSource: null, reason: l.reason || "",
     };
   }
 
@@ -1088,7 +1089,7 @@
       <div class="tk-legs">${t.legs.map((l) => `<div class="tk-leg"${legAttrs(l)}><div class="tk-leg__row">
           <span class="tk-leg__match">${esc(l.matchName)}</span><span class="tk-leg__odds">${esc(nf2.format(l.odds))}</span>
           <span class="tk-leg__tip">${esc(l.tipLabel)}</span><span class="tk-leg__meta">${esc(kickoffShort(l.kickoff))} · ${esc(fmtPct(l.probability))}</span>
-        </div>${l.reason ? `<p class="tk-leg__why">${esc(l.reason)}</p>` : ""}</div>`).join("")}</div>
+        </div></div>`).join("")}</div>
       <div class="tk-totals">
         ${stat(nf2.format(t.totalOdds), "celkový kurz", "stat--accent")}
         ${stat(`${nf1.format(t.jointProbability)} %`, "pravděpodobnost (součin)")}
@@ -1121,7 +1122,7 @@
     el.innerHTML = '<h3 class="tk-hist__title">Uložené tikety na tento den</h3>'
       + rows.map((t) => `<div class="tk-hist__row">
         <div class="tk-hist__meta"><strong>${esc(t.name)}</strong><span>${esc(fmtKickoff(t.createdAt))}</span></div>
-        <ul class="tk-hist__legs">${t.legs.map((l) => `<li class="is-${l.outcome || "pending"}"${legAttrs(l)}><i>${LEG_MARK[l.outcome] || "…"}</i><span>${esc(l.matchName)}</span><em>${esc(l.tipLabel)} · ${esc(nf2.format(l.odds))}</em>${l.reason ? `<p class="tk-hist__why">${esc(l.reason)}</p>` : ""}</li>`).join("")}</ul>
+        <ul class="tk-hist__legs">${t.legs.map((l) => `<li class="is-${l.outcome || "pending"}"${legAttrs(l)}><i>${LEG_MARK[l.outcome] || "…"}</i><span>${esc(l.matchName)}</span><em>${esc(l.tipLabel)} · ${esc(nf2.format(l.odds))}</em></li>`).join("")}</ul>
         <div class="tk-hist__odds">${esc(nf2.format(t.totalOdds))}</div>
         <span class="tk-hist__status tk-hist__status--${t.status}">${TK_STATUS[t.status]}</span></div>`).join("");
   }
