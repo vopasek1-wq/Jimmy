@@ -393,7 +393,7 @@ i[data-lucide],
 .app[data-view="tickets"] .pages > .tickets-page,
 .app[data-view="evaluation"] .pages > .eval-page { display: grid; }
 .tickets-page > .card, .eval-page > .card { min-height: 0; overflow: hidden; }
-.tk-main, .ev-main { overflow-x: hidden; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border-3) transparent; }
+.tickets-page > .tk-main, .eval-page > .ev-main { overflow-x: hidden; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border-3) transparent; }   /* přebíjí overflow: hidden výše */
 
 /* ---------- Karta ---------- */
 .card {
