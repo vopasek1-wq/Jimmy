@@ -424,7 +424,29 @@
       <span class="dform__meta">${esc([goals, where].filter(Boolean).join(" · "))}</span></div>`;
   };
 
-  function detailStatsBody(t, st) {
+  /** Prstencový koláč: podíl `part` z `total` (střed ukazuje procenta); `cls` = barva výseče (is-over / is-yes). */
+  const donut = (part, total, cls) => {
+    const r = 20;
+    const c = 2 * Math.PI * r;
+    const share = total ? part / total : 0;
+    return `<svg class="donut ${cls}" viewBox="0 0 52 52" aria-hidden="true"><circle class="donut__bg" cx="26" cy="26" r="${r}"/>
+      <circle class="donut__fg" cx="26" cy="26" r="${r}" stroke-dasharray="${(share * c).toFixed(2)} ${c.toFixed(2)}" transform="rotate(-90 26 26)"/>
+      <text x="26" y="30.5" text-anchor="middle">${Math.round(share * 100)} %</text></svg>`;
+  };
+
+  /** Góly v posledních zápasech obou týmů: více / méně než 1,5, 2,5 a 3,5 gólu a oba týmy skórovaly (jako koláče na Forebetu). */
+  function goalChartsHtml(t, ch) {
+    if (!ch || !ch.home || !ch.away) return "";
+    const cell = (s, key, cls, a, b) => `<div class="dgoals__cell">${donut(s[key], s.zapasu, cls)}<span>${a} ${s[key]} · ${b} ${s.zapasu - s[key]}</span></div>`;
+    const rows = [["over15", "1,5"], ["over25", "2,5"], ["over35", "3,5"]].map(([key, label]) => `<div class="dgoals__row">
+      ${cell(ch.home, key, "is-over", "více", "méně")}<div class="dgoals__mid"><b>${label}</b><small>gólu</small></div>${cell(ch.away, key, "is-over", "více", "méně")}</div>`).join("");
+    const btts = `<div class="dgoals__row dgoals__row--btts">${cell(ch.home, "btts", "is-yes", "ano", "ne")}<div class="dgoals__mid"><small>oba týmy<br>skórovaly</small></div>${cell(ch.away, "btts", "is-yes", "ano", "ne")}</div>`;
+    const n = Math.max(ch.home.zapasu, ch.away.zapasu);
+    return `<div class="dstats__title">Posledních ${n} zápasů <small>góly v zápase, podle SofaScore</small></div>
+      <div class="dgoals"><div class="dgoals__head"><span>${esc(t.home)}</span><span>${esc(t.away)}</span></div>${rows}${btts}</div>`;
+  }
+
+  function detailStatsBody(t, st, charts) {
     const parts = [];
     parts.push(`<div class="dstats__title">Forma <small>posledních 5 zápasů, nejnovější vpravo</small></div>`
       + (teamFormRow(t.home, st.forma_domaci, "doma", st.forma_domaci && st.forma_domaci.doma) || '<p class="dstats__none">Forma domácích není k dispozici.</p>')
@@ -440,6 +462,7 @@
     } else if (h) {
       parts.push('<div class="dstats__title">Vzájemné zápasy</div><p class="dstats__none">Dřív spolu nehráli (nebo data nejsou).</p>');
     }
+    parts.push(goalChartsHtml(t, charts));
     const z = st.zraneni;
     if (z) {
       const side = (name, list) => `<div class="dmiss__row"><b>${esc(name)}</b><span>${list.length ? esc(list.join(" · ")) : "bez hlášených absencí"}</span></div>`;
@@ -456,7 +479,7 @@
     if (!c) { loadDetailStats(t); return '<p class="dstats__none">Načítám formu a vzájemné zápasy…</p>'; }
     if (c.loading) return '<p class="dstats__none">Načítám formu a vzájemné zápasy…</p>';
     if (c.error) return `<p class="dstats__none">Statistiky se nepodařilo načíst (${esc(c.error)}).</p>`;
-    return detailStatsBody(t, c.data);
+    return detailStatsBody(t, c.data, c.charts);
   }
 
   async function loadDetailStats(t) {
@@ -464,7 +487,7 @@
     let entry;
     try {
       const res = await desktop.tips.stats(t.sofascoreId);
-      entry = res.ok && res.data.complete ? { data: res.data.stats } : { error: res.ok ? "chybí údaje o formě" : res.error };
+      entry = res.ok && res.data.complete ? { data: res.data.stats, charts: res.data.charts } : { error: res.ok ? "chybí údaje o formě" : res.error };
     } catch (err) {
       entry = { error: err.message || String(err) };
     }
@@ -472,7 +495,7 @@
     const cur = tipByKey(state.selected);
     const box = $("#detail-stats");
     if (box && cur && cur.sofascoreId === t.sofascoreId) {
-      box.innerHTML = entry.error ? `<p class="dstats__none">Statistiky se nepodařilo načíst (${esc(entry.error)}).</p>` : detailStatsBody(cur, entry.data);
+      box.innerHTML = entry.error ? `<p class="dstats__none">Statistiky se nepodařilo načíst (${esc(entry.error)}).</p>` : detailStatsBody(cur, entry.data, entry.charts);
     }
   }
 

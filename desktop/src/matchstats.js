@@ -51,6 +51,14 @@ const record = (views) => (views.length ? {
   dal: avg(views, (v) => v.gf), obdrzel: avg(views, (v) => v.ga),
 } : null);
 
+/** Počty zápasů s více / méně než 1,5, 2,5 a 3,5 gólu a s gólem obou týmů z posledních `n` zápasů (podklad pro koláče v detailu tipu). */
+function goalLines(views, n = 11) {
+  const last = views.slice(0, n);
+  if (!last.length) return null;
+  const over = (line) => last.filter((v) => v.gf + v.ga > line).length;
+  return { zapasu: last.length, over15: over(1.5), over25: over(2.5), over35: over(3.5), btts: last.filter((v) => v.gf > 0 && v.ga > 0).length };
+}
+
 /** Forma týmu z jeho posledních zápasů (odpověď `team/<id>/events/last/0`); null, když nejsou žádné odehrané. */
 function teamForm(data, teamId) {
   const views = finishedEvents(data).map((e) => viewOf(e, teamId)).filter(Boolean);
@@ -63,6 +71,7 @@ function teamForm(data, teamId) {
     goly: { zapasu: last10.length, dal: avg(last10, (v) => v.gf), obdrzel: avg(last10, (v) => v.ga) },
     doma: record(views.filter((v) => v.home).slice(0, 5)),
     venku: record(views.filter((v) => !v.home).slice(0, 5)),
+    serie: goalLines(views),
   };
 }
 
@@ -107,7 +116,7 @@ function buildStats({ homeLast, awayLast, homeId, awayId, h2h, missing }) {
   if (away) stats.forma_hoste = { posledni_zapasy: away.posledni, forma: away.forma, goly_na_zapas: away.goly, venku: away.venku };
   if (h2h) stats.h2h = h2h;
   if (missing) stats.zraneni = missing;
-  return { stats, complete: Boolean(home && away) };
+  return { stats, complete: Boolean(home && away), charts: { home: home && home.serie, away: away && away.serie } };
 }
 
 class MatchStats {

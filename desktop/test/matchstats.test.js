@@ -51,6 +51,18 @@ test("teamForm: forma, góly, domácí a venkovní výkonnost", () => {
   assert.equal(teamForm(null, 1), null);
 });
 
+test("teamForm: série gólů (více než 1,5 / 2,5 / 3,5 a oba skórovali) z posledních zápasů", () => {
+  assert.deepEqual(teamForm(aEvents(), 1).serie, { zapasu: 6, over15: 5, over25: 3, over35: 2, btts: 2 });
+  const many = { events: Array.from({ length: 15 }, (_, i) => ev(A, B, 1, 1, day(i + 1))) };
+  assert.deepEqual(teamForm(many, 1).serie, { zapasu: 11, over15: 11, over25: 0, over35: 0, btts: 11 }); // jen posledních 11
+});
+
+test("buildStats: koláče pro detail tipu (charts) nejdou do podkladů pro AI", () => {
+  const r = buildStats({ homeLast: aEvents(), awayLast: aEvents(), homeId: 1, awayId: 1, h2h: null, missing: null });
+  assert.equal(r.charts.home.zapasu, 6);
+  assert.equal(JSON.stringify(r.stats).includes("over15"), false);
+});
+
 test("h2h: seznam zápasů z pohledu domácího týmu, záložní počty výher", () => {
   const h = h2hFromEvents({ events: [ev(A, B, 2, 1, day(3)), ev(B, A, 1, 1, day(2)), ev(B, A, 3, 0, day(1)), ev(A, [9, "cizí"], 5, 0, day(4))] }, 1, 2);
   assert.deepEqual([h.zapasu, h.domaci_vyhry, h.remizy, h.hoste_vyhry, h.goly_na_zapas, h.oba_skorovaly], [3, 1, 1, 1, 2.7, 2]);
