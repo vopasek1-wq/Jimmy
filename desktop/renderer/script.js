@@ -281,7 +281,7 @@
       if (state.live) {
         const kind = matchState(t, now).kind;
         const playing = kind === "live" || kind === "started";
-        if (playing !== (state.live === "only")) return false;
+        if (state.live === "only" ? !playing : kind !== "wait") return false;   // „Bez živě“ = jen zápasy, které ještě nezačaly
       }
       return matchesQuery(t);
     });
