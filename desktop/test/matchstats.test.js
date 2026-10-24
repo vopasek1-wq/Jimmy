@@ -6,7 +6,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
-const { MatchStats, finishedEvents, teamForm, h2hFromEvents, h2hFromDuel, missingFrom, buildStats } = require("../src/matchstats");
+const { MatchStats, finishedEvents, teamForm, h2hFromEvents, h2hFromDuel, missingFrom, buildStats, chartsWithForebet } = require("../src/matchstats");
 const { SourceError, BlockedError } = require("../src/http");
 
 const T0 = Date.UTC(2025, 2, 12, 12) / 1000; // 12. 3. 2025
@@ -59,8 +59,17 @@ test("teamForm: série gólů (více než 1,5 / 2,5 / 3,5 a oba skórovali) z po
 
 test("buildStats: koláče pro detail tipu (charts) nejdou do podkladů pro AI", () => {
   const r = buildStats({ homeLast: aEvents(), awayLast: aEvents(), homeId: 1, awayId: 1, h2h: null, missing: null });
-  assert.equal(r.charts.home.zapasu, 6);
+  assert.deepEqual(r.charts.home, { over15: 83, over25: 50, over35: 33, btts: 33 }); // podíly v % z 6 zápasů
+  assert.equal(r.charts.zdroj, "SofaScore");
   assert.equal(JSON.stringify(r.stats).includes("over15"), false);
+  assert.equal(buildStats({ homeLast: { events: [] }, awayLast: aEvents(), homeId: 1, awayId: 1, h2h: null, missing: null }).charts, null);
+});
+
+test("chartsWithForebet: koláče z Forebetu mají přednost před spočtenými ze SofaScore", () => {
+  const sofa = { zdroj: "SofaScore", n: 11, home: { over15: 1 }, away: { over15: 2 } };
+  assert.equal(chartsWithForebet(sofa, null), sofa);
+  assert.equal(chartsWithForebet(sofa, { a: { over15: 73 } }), sofa);
+  assert.deepEqual(chartsWithForebet(sofa, { a: { over15: 73 }, b: { over15: 82 } }), { zdroj: "Forebet", n: null, home: { over15: 73 }, away: { over15: 82 } });
 });
 
 test("h2h: seznam zápasů z pohledu domácího týmu, záložní počty výher", () => {

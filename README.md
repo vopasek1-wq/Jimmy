@@ -54,7 +54,7 @@ Záložky pod vyhledáváním: **Přehled** (tabulka tipů a vedle ní detail vy
 * Kliknutí na záhlaví sloupce řadí (pravděpodobnost, kurz, čas, …); hledání v horní liště (**Ctrl + K**) filtruje
   podle týmu, soutěže nebo tipu.
 * Řádek vybereš kliknutím nebo šipkami ↑ ↓; **dvojklik / Enter** otevře zápas na Scores24.
-* Karta **Detail tipu**: pravděpodobnost, kurz, Forebet, zdroje a odkazy na zápas na Scores24 a SofaScore. Pod tím se po kliknutí na tip načte ze SofaScore **forma** obou týmů (posledních 5 zápasů V/R/P, nejnovější vpravo, průměr gólů, bilance doma/venku), **vzájemné zápasy** a **absence** hráčů; po najetí myší na formu se ukážou konkrétní zápasy. Data se 30 minut pamatují (sdílí je i tikety).
+* Karta **Detail tipu**: název zápasu a začátek, pravděpodobnost, kurz a value a odkazy na zápas na Scores24, Forebet a SofaScore. Pod tím se po kliknutí na tip načte ze SofaScore **forma** obou týmů (posledních 5 zápasů V/R/P, nejnovější vpravo, průměr gólů, bilance doma/venku), **vzájemné zápasy**, **koláče gólů z posledních zápasů** (více / méně než 1,5, 2,5 a 3,5 gólu a oba týmy skórovaly; když je stránka zápasu na Forebetu v mezipaměti, bere se z ní, jinak se počítá ze SofaScore) a **absence** hráčů; po najetí myší na formu se ukážou konkrétní zápasy. Data se 30 minut pamatují (sdílí je i tikety).
 * Aplikace se po spuštění vždy otevře **maximalizovaná** (přes celou pracovní plochu, hlavní panel Windows zůstává vidět).
 * **Obnovit tipy** stáhne data znovu.
 

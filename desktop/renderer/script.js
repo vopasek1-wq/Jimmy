@@ -424,25 +424,24 @@
       <span class="dform__meta">${esc([goals, where].filter(Boolean).join(" · "))}</span></div>`;
   };
 
-  /** Prstencový koláč: podíl `part` z `total` (střed ukazuje procenta); `cls` = barva výseče (is-over / is-yes). */
-  const donut = (part, total, cls) => {
+  /** Prstencový koláč: `pct` % výseče barvy `cls` (is-over / is-yes), ve středu procenta. */
+  const donut = (pct, cls) => {
     const r = 20;
     const c = 2 * Math.PI * r;
-    const share = total ? part / total : 0;
     return `<svg class="donut ${cls}" viewBox="0 0 52 52" aria-hidden="true"><circle class="donut__bg" cx="26" cy="26" r="${r}"/>
-      <circle class="donut__fg" cx="26" cy="26" r="${r}" stroke-dasharray="${(share * c).toFixed(2)} ${c.toFixed(2)}" transform="rotate(-90 26 26)"/>
-      <text x="26" y="30.5" text-anchor="middle">${Math.round(share * 100)} %</text></svg>`;
+      <circle class="donut__fg" cx="26" cy="26" r="${r}" stroke-dasharray="${((pct / 100) * c).toFixed(2)} ${c.toFixed(2)}" transform="rotate(-90 26 26)"/>
+      <text x="26" y="30.5" text-anchor="middle">${Math.round(pct)} %</text></svg>`;
   };
 
-  /** Góly v posledních zápasech obou týmů: více / méně než 1,5, 2,5 a 3,5 gólu a oba týmy skórovaly (jako koláče na Forebetu). */
+  /** Góly v posledních zápasech obou týmů: více / méně než 1,5, 2,5 a 3,5 gólu a oba týmy skórovaly (koláče z Forebetu, jinak ze SofaScore). */
   function goalChartsHtml(t, ch) {
     if (!ch || !ch.home || !ch.away) return "";
-    const cell = (s, key, cls, a, b) => `<div class="dgoals__cell">${donut(s[key], s.zapasu, cls)}<span>${a} ${s[key]} · ${b} ${s.zapasu - s[key]}</span></div>`;
+    const cell = (s, key, cls, a, b) => `<div class="dgoals__cell">${donut(s[key], cls)}<span>${a} ${Math.round(s[key])} % · ${b} ${Math.round(100 - s[key])} %</span></div>`;
     const rows = [["over15", "1,5"], ["over25", "2,5"], ["over35", "3,5"]].map(([key, label]) => `<div class="dgoals__row">
       ${cell(ch.home, key, "is-over", "více", "méně")}<div class="dgoals__mid"><b>${label}</b><small>gólu</small></div>${cell(ch.away, key, "is-over", "více", "méně")}</div>`).join("");
-    const btts = `<div class="dgoals__row dgoals__row--btts">${cell(ch.home, "btts", "is-yes", "ano", "ne")}<div class="dgoals__mid"><small>oba týmy<br>skórovaly</small></div>${cell(ch.away, "btts", "is-yes", "ano", "ne")}</div>`;
-    const n = Math.max(ch.home.zapasu, ch.away.zapasu);
-    return `<div class="dstats__title">Posledních ${n} zápasů <small>góly v zápase, podle SofaScore</small></div>
+    const btts = Number.isFinite(ch.home.btts) && Number.isFinite(ch.away.btts)
+      ? `<div class="dgoals__row dgoals__row--btts">${cell(ch.home, "btts", "is-yes", "ano", "ne")}<div class="dgoals__mid"><small>oba týmy<br>skórovaly</small></div>${cell(ch.away, "btts", "is-yes", "ano", "ne")}</div>` : "";
+    return `<div class="dstats__title">${ch.n ? `Posledních ${ch.n} zápasů` : "Poslední zápasy"} <small>góly v zápase, podle ${esc(ch.zdroj)}</small></div>
       <div class="dgoals"><div class="dgoals__head"><span>${esc(t.home)}</span><span>${esc(t.away)}</span></div>${rows}${btts}</div>`;
   }
 
@@ -486,7 +485,7 @@
     detailStats.set(t.sofascoreId, { loading: true });
     let entry;
     try {
-      const res = await desktop.tips.stats(t.sofascoreId);
+      const res = await desktop.tips.stats(t.sofascoreId, t.forebetUrl);
       entry = res.ok && res.data.complete ? { data: res.data.stats, charts: res.data.charts } : { error: res.ok ? "chybí údaje o formě" : res.error };
     } catch (err) {
       entry = { error: err.message || String(err) };
@@ -877,7 +876,7 @@
       }
       return `<i class="card-mark card-mark--${i.kind}"></i>${esc(i.player)}`;
     };
-    return `<ul class="events">${incidents.map((i) => `<li><span class="ev-home">${i.home ? text(i) : ""}</span><span class="ev-min">${i.minute}'</span><span>${i.home ? "" : text(i)}</span></li>`).join("")}</ul>`;
+    return `<ul class="events">${[...incidents].reverse().map((i) => `<li><span class="ev-home">${i.home ? text(i) : ""}</span><span class="ev-min">${i.minute}'</span><span>${i.home ? "" : text(i)}</span></li>`).join("")}</ul>`;
   }
 
   function statsHtml(stats) {

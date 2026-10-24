@@ -185,7 +185,7 @@ function notifyKickoffs() {
   } catch (err) { console.error(err); }
 }
 ipcMain.handle("tips:live", safe(() => service.refreshLive()));
-ipcMain.handle("tips:stats", safe((_e, id) => service.matchDetail(id)));
+ipcMain.handle("tips:stats", safe((_e, id, forebetUrl) => service.matchDetail(id, forebetUrl)));
 ipcMain.handle("tips:refresh", safe((event) => service.refresh(progressTo(event))));
 ipcMain.handle("tips:verify-forebet", safe((event) => service.refresh(progressTo(event), { interactiveForebet: true })));
 ipcMain.handle("history:list", safe((_e, days) => service.history(days ?? null)));

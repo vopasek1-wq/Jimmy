@@ -59,6 +59,17 @@ function goalLines(views, n = 11) {
   return { zapasu: last.length, over15: over(1.5), over25: over(2.5), over35: over(3.5), btts: last.filter((v) => v.gf > 0 && v.ga > 0).length };
 }
 
+/** Počty zápasů → podíly v % (zaokrouhlené), jak je ukazují koláče v detailu tipu. */
+const shares = (serie) => {
+  const pct = (n) => Math.round((100 * n) / serie.zapasu);
+  return { over15: pct(serie.over15), over25: pct(serie.over25), over35: pct(serie.over35), btts: pct(serie.btts) };
+};
+
+/** Koláče z Forebetu (`recent` ze stránky zápasu, v %) mají přednost před těmi, které se spočítaly ze SofaScore. */
+function chartsWithForebet(charts, recent) {
+  return recent && recent.a && recent.b ? { zdroj: "Forebet", n: null, home: recent.a, away: recent.b } : charts;
+}
+
 /** Forma týmu z jeho posledních zápasů (odpověď `team/<id>/events/last/0`); null, když nejsou žádné odehrané. */
 function teamForm(data, teamId) {
   const views = finishedEvents(data).map((e) => viewOf(e, teamId)).filter(Boolean);
@@ -116,7 +127,7 @@ function buildStats({ homeLast, awayLast, homeId, awayId, h2h, missing }) {
   if (away) stats.forma_hoste = { posledni_zapasy: away.posledni, forma: away.forma, goly_na_zapas: away.goly, venku: away.venku };
   if (h2h) stats.h2h = h2h;
   if (missing) stats.zraneni = missing;
-  return { stats, complete: Boolean(home && away), charts: { home: home && home.serie, away: away && away.serie } };
+  return { stats, complete: Boolean(home && away), charts: home && away && home.serie && away.serie ? { zdroj: "SofaScore", n: Math.max(home.serie.zapasu, away.serie.zapasu), home: shares(home.serie), away: shares(away.serie) } : null };
 }
 
 class MatchStats {
@@ -252,4 +263,4 @@ class MatchStats {
   }
 }
 
-module.exports = { MatchStats, finishedEvents, teamForm, h2hFromEvents, h2hFromDuel, missingFrom, buildStats };
+module.exports = { MatchStats, finishedEvents, teamForm, h2hFromEvents, h2hFromDuel, missingFrom, buildStats, chartsWithForebet };

@@ -147,6 +147,33 @@ const DATE_TIME = String.raw`\d{1,2}\/\d{1,2}\/\d{4}\s+\d{1,2}:\d{2}`;
 const TABLE_OU = new RegExp(String.raw`Prob\.\s*%\s*Under\/Over\s*(\d(?:[.,]\d)?)\b[^]*?${DATE_TIME}\s+(\d{1,3})\s+(\d{1,3})\s+(?:Over|Under)\b`, "i");
 const TABLE_BTTS = new RegExp(String.raw`Prob\.\s*%\s*No\s+Yes\b[^]*?${DATE_TIME}\s+(\d{1,3})\s+(\d{1,3})\s+(?:Yes|No)\b`, "i");
 
+/**
+ * Koláče „Recent matches“ na stránce zápasu: podíl zápasů s více než 1,5 / 2,5 / 3,5 gólu a s gólem obou týmů (v %)
+ * z posledních zápasů domácích (a) a hostů (b). Hodnota je v CSS proměnné koláče (`--Over: 73`), záloha je text výseče.
+ * Vrací { a: { over15, over25, over35, btts }, b: {…} }, nebo null, když chybí některé z tří over koláčů některého týmu.
+ */
+function recentMatches($) {
+  const out = { a: {}, b: {} };
+  $(".os_goals_section3_pie_chart[data-team]").each((_, el) => {
+    const pie = $(el);
+    const team = String(pie.attr("data-team") || "").toLowerCase();
+    if (!(team in out)) return;
+    const stat = String(pie.attr("data-stat") || "");
+    const style = String(pie.attr("style") || "");
+    const line = /ov(\d)(?:\.|,)?(\d)?/i.exec(stat);
+    const yes = !line; // čtvrtý koláč ve skupině (zápasy s gólem obou týmů); jeho značka se mohla na webu změnit
+    const key = line ? `over${line[1]}${line[2] || ""}` : "btts";
+    if (!stat) return;
+    const named = new RegExp(`--(?:${yes ? "Yes" : "Over"})\\s*:\\s*(\\d+(?:\\.\\d+)?)`, "i").exec(style);
+    const span = pie.find(yes ? ".__yes" : ".__over").first().text().match(/(\d+(?:[.,]\d+)?)\s*%/);
+    const other = [...style.matchAll(/--(\w+)\s*:\s*(\d+(?:\.\d+)?)/g)].find((m) => !/^(?:no|under)$/i.test(m[1])); // nikdy ne doplněk (Under / No)
+    const value = named ? Number(named[1]) : span ? num(span[1]) : other ? Number(other[2]) : NaN;
+    if (Number.isFinite(value) && value >= 0 && value <= 100) out[team][key] = value;
+  });
+  const ok = (t) => ["over15", "over25", "over35"].every((k) => k in out[t]);
+  return ok("a") && ok("b") ? out : null;
+}
+
 function parseGoals(html) {
   const $ = load(html);
   const text = strippedStrings($.root()).join(" ");
@@ -191,7 +218,9 @@ function parseGoals(html) {
     if (goals.btts.yes === undefined) delete goals.btts.yes;
     if (goals.btts.no === undefined) delete goals.btts.no;
   }
-  const found = Object.keys(goals.over).length + Object.keys(goals.under).length + Object.keys(goals.btts).length;
+  const recent = recentMatches($);
+  if (recent) goals.recent = recent;
+  const found = Object.keys(goals.over).length + Object.keys(goals.under).length + Object.keys(goals.btts).length + (recent ? 1 : 0);
   return found ? goals : null;
 }
 

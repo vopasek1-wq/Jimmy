@@ -9,7 +9,7 @@ const { probabilityClass } = require("./filters");
 const { Pipeline, updateResults, settleFinished } = require("./pipeline");
 const { SofaScoreClient } = require("./scrapers/sofascore");
 const { LiveClient } = require("./live");
-const { MatchStats } = require("./matchstats");
+const { MatchStats, chartsWithForebet } = require("./matchstats");
 const { analyze, recentLosses, buildPrompt } = require("./analysis");
 const { candidatesFrom, settleTicket, ticketStats, dueKickoffs } = require("./tickets");
 const { GoalsCache } = require("./goalscache");
@@ -143,10 +143,12 @@ class TipService {
   }
 
   /** Forma, H2H a absence pro detail tipu (SofaScore; mezipaměť sdílí s tikety). */
-  matchDetail(sofascoreId) {
+  async matchDetail(sofascoreId, forebetUrl = "") {
     const id = Number(sofascoreId);
     if (!Number.isFinite(id) || id <= 0) throw new Error("Zápas nemá přiřazený zápas na SofaScore.");
-    return new MatchStats(this.http, { cache: this.statsCache, delayMs: [150, 400] }).detail(id);
+    const r = await new MatchStats(this.http, { cache: this.statsCache, delayMs: [150, 400] }).detail(id);
+    const goals = forebetUrl ? this.goalsCache.get(String(forebetUrl)) : null; // koláče z Forebetu, když je jeho stránka zápasu v mezipaměti
+    return { ...r, charts: chartsWithForebet(r.charts, goals && goals.recent) };
   }
 
   /** Uloží tikety od AI (pro pozdější vyhodnocení). */

@@ -229,6 +229,26 @@ test("Forebet: pravděpodobnosti gólů ze stránky zápasu", () => {
   assert.deepEqual(g.btts, { yes: 62, no: 38 });
 });
 
+// Koláče „Recent matches“: značky převzaté z HTML stránky zápasu (div.os_goals_section3_pie_chart, --Over, data-team, data-stat)
+const pie = (team, stat, over, vars = `--Over: ${over};`) => `<div style="${vars}" class="os_goals_section3_pie_chart text-fade" data-team="${team}" data-stat="${stat}">
+  <span class="os_pie_chart_value __under">${100 - over}%</span><span class="os_pie_chart_value __over">${over}%</span></div>`;
+const recentPage = (extra = "") => `<html><body>${[["a", [73, 73, 64, 55]], ["b", [82, 73, 55, 55]]].map(([t, v]) => pie(t, "pc-ov1.5", v[0]) + pie(t, "pc-ov2.5", v[1]) + pie(t, "pc-ov3.5", v[2])
+  + `<div style="--Yes: ${v[3]};" class="os_goals_section3_pie_chart" data-team="${t}" data-stat="pc-bts"><span class="__yes">${v[3]}%</span><span class="__no">${100 - v[3]}%</span></div>`).join("")}${extra}</body></html>`;
+
+test("Forebet: koláče posledních zápasů (více než 1,5 / 2,5 / 3,5 gólu a oba skórovali) domácích a hostů", () => {
+  const g = parseGoals(recentPage());
+  assert.deepEqual(g.recent, { a: { over15: 73, over25: 73, over35: 64, btts: 55 }, b: { over15: 82, over25: 73, over35: 55, btts: 55 } });
+  assert.deepEqual(g.over, {});                       // jiné pravděpodobnosti na stránce nejsou, koláče se přesto uloží
+});
+
+test("Forebet: koláče bez hodnoty, bez jednoho týmu nebo s doplňkem (No / Under) se nepoužijí", () => {
+  assert.equal(parseGoals(`<html><body>${pie("a", "pc-ov1.5", 70)}${pie("a", "pc-ov2.5", 60)}${pie("a", "pc-ov3.5", 50)}</body></html>`), null); // hosté chybí
+  const noVar = `<html><body>${["a", "b"].map((t) => ["1.5", "2.5", "3.5"].map((l) => `<div class="os_goals_section3_pie_chart" data-team="${t}" data-stat="pc-ov${l}"></div>`).join("")).join("")}</body></html>`;
+  assert.equal(parseGoals(noVar), null);
+  const g = parseGoals(recentPage(`<div style="--No: 45;" class="os_goals_section3_pie_chart" data-team="a" data-stat="pc-bts2"></div>`));
+  assert.equal(g.recent.a.btts, 55);                  // druhý (nerozpoznaný) koláč s doplňkem No se za „ano“ nebere
+});
+
 test("Forebet: stránka bez gólů → null", () => {
   assert.equal(parseGoals("<html><body><p>Nothing here 1.85</p></body></html>"), null);
   assert.equal(parseGoals("<html><body>Over 2.5 odds 1.85</body></html>"), null);
