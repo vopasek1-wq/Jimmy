@@ -1055,8 +1055,9 @@ body { background: var(--bg); }
 .ev-main .stat-row { margin-top: 0; }
 .ev-controls { margin-top: 14px; }
 .ev-controls .btn { margin-left: auto; }
+.ev-main > * { flex-shrink: 0; }                      /* karta je sloupec: obsah se posouvá, nesmršťuje */
 .ev-list { display: flex; flex-direction: column; gap: 12px; margin-top: 14px; }
-.ev-card { padding: 12px 14px 10px; background: var(--panel); border: 1px solid var(--border-2); border-radius: 14px; }
+.ev-card { flex: none; padding: 12px 14px 10px; background: var(--panel); border: 1px solid var(--border-2); border-radius: 14px; }
 .ev-card--win { border-color: rgba(60, 200, 130, 0.35); }
 .ev-card--loss { border-color: rgba(240, 100, 100, 0.3); }
 .ev-card__head { display: flex; align-items: center; gap: 12px; }
