@@ -484,15 +484,14 @@ i[data-lucide],
 .tbl thead th[aria-sort] .lucide { opacity: 1; }
 .tbl thead th[aria-sort="ascending"] .lucide { transform: rotate(180deg); }
 .tbl td { padding: 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
-.tbl .c-prob, .tbl .c-odds, .tbl .c-value, .tbl .c-fb, .tbl .c-score { text-align: center; }
-.tbl .c-prob button, .tbl .c-odds button, .tbl .c-value button, .tbl .c-fb button, .tbl .c-score button { justify-content: center; }
+.tbl .c-prob, .tbl .c-odds, .tbl .c-value, .tbl .c-score { text-align: center; }
+.tbl .c-prob button, .tbl .c-odds button, .tbl .c-value button, .tbl .c-score button { justify-content: center; }
 .tbl .c-time { white-space: nowrap; color: var(--text-2); font-variant-numeric: tabular-nums; }
-.tbl .c-odds, .tbl .c-value, .tbl .c-fb, .tbl .c-score { font-variant-numeric: tabular-nums; }
+.tbl .c-odds, .tbl .c-value, .tbl .c-score { font-variant-numeric: tabular-nums; }
 .tbl .c-value { font-weight: 500; color: var(--faint); white-space: nowrap; }
 .tbl .c-value.is-pos { color: var(--green); }
 .tbl .c-value.is-neg { color: var(--red); }
 .tbl .c-odds { font-weight: 500; }
-.tbl .c-fb { color: var(--text-2); }
 
 .trow { cursor: pointer; transition: background-color 0.16s; }
 .trow td:first-child { box-shadow: inset 3px 0 0 transparent; }
@@ -536,9 +535,6 @@ i[data-lucide],
 .empty { padding: 28px 8px; text-align: center; font-size: 13px; color: var(--muted); }
 
 /* V užší kartě se skryjí méně důležité sloupce (container queries) */
-@container (max-width: 640px) {
-  .tips .c-fb { display: none; }
-}
 @container (max-width: 520px) {
   .tips .c-time { display: none; }
 }

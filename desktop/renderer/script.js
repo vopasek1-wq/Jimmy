@@ -64,9 +64,6 @@
   };
 
   /* ---------- Stav aplikace ---------- */
-  const FOREBET_CODES = new Set(["1", "X", "2", "1X", "X2", "12", "BTTS", "NOBTTS"]);
-  // Forebet hodnotí 1X2, dvojitou šanci, BTTS a Over/Under celého zápasu (týmové totaly a handicapy ne).
-  const forebetCovers = (code) => FOREBET_CODES.has(code) || /^[OU]\d+(?:\.\d+)?$/.test(code);
   const DAYS = ["today", "tomorrow"];
 
   const state = {
@@ -211,7 +208,6 @@
     prob: (t) => t.probability,
     odds: (t) => t.odds,
     value: valueOf,
-    fb: (t) => t.probForebet,
     source: (t) => t.sources.join(" + "),
     status: (t) => matchState(t).order,
   };
@@ -220,7 +216,7 @@
     score: (t) => (t.homeScore !== null && t.awayScore !== null ? t.homeScore * 100 + t.awayScore : null),
     outcome: (t) => OUTCOME_ORDER[t.outcome] ?? null,
   };
-  const DESC_FIRST = new Set(["prob", "odds", "value", "fb", "score"]);
+  const DESC_FIRST = new Set(["prob", "odds", "value", "score"]);
 
   const sortList = (list, table, { key, dir }) => {
     const value = table[key] || table.time;
@@ -318,13 +314,11 @@
     const ms = matchState(t, now);
     const key = tipUid(t);
     const selected = key === state.selected;
-    const fb = t.probForebet !== null ? fmtPct(t.probForebet) : (forebetCovers(t.tipCode) ? "–" : "n/a");
     return `<tr class="trow is-${t.probClass}${selected ? " is-selected" : ""}${ms.kind === "done" ? " is-done" : ""}${ms.kind === "live" || ms.kind === "started" ? " is-live" : ""}" data-key="${esc(key)}" tabindex="${selected ? 0 : -1}" aria-selected="${selected}">
       <td class="c-time">${esc(fmtKickoff(t.kickoff))}</td>
       <td class="c-match"><span class="match">${matchHtml(t, ms)}</span></td>
       <td class="c-tip">${esc(t.tipLabel)}</td>
       <td class="c-prob"><span class="pill pill--${t.probClass}"${t.probSource !== "Scores24" ? ` title="Scores24 procento neuvedl – hodnota z ${esc(t.probSource)}"` : ""}>${esc(fmtPct(t.probability))}</span></td>
-      <td class="c-fb"${fb === "n/a" ? ' title="Forebet tento trh nehodnotí"' : ""}>${esc(fb)}</td>
       <td class="c-odds"${t.oddsEstimated ? ' title="Odhad z pravděpodobnosti – zdroj kurz neuvedl"' : ""}>${esc(fmtOdds(t))}</td>
       <td class="c-value ${valueOf(t) === null ? "" : valueOf(t) > 0 ? "is-pos" : valueOf(t) < 0 ? "is-neg" : ""}">${esc(fmtValue(valueOf(t)))}</td>
     </tr>`;
