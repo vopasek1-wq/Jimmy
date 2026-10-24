@@ -404,14 +404,6 @@
   const detailEl = $("#detail");
   const detailMatch = $("#detail-match");
 
-  function forebetFact(t) {
-    if (t.probForebet !== null) return `${fmtPct(t.probForebet)}${t.probForebet > state.limits.minProbability ? " – potvrzuje" : " – nepotvrzuje"}`;
-    if (!forebetCovers(t.tipCode)) return "tento trh nehodnotí";
-    const fb = state.payload?.statuses?.Forebet;
-    if (fb && (fb.state === "failed" || fb.state === "skipped")) return "zdroj není dostupný";
-    return "zápas nenalezen";
-  }
-
   /* ---------- Forma, H2H a absence v detailu tipu (SofaScore) ---------- */
   const detailStats = new Map(); // sofascoreId → { loading } | { data } | { error }
 
@@ -491,11 +483,7 @@
     const ms = matchState(t, now);
     const kickoff = Date.parse(t.kickoff);
     const when = `${fmtKickoff(t.kickoff)} · ${ms.kind === "wait" ? untilText(kickoff - now) : ms.text}`;
-    const facts = [
-      ["Začátek", when],
-      ["Forebet", forebetFact(t)],
-      ["Zdroje", t.sources.join(" + ")],
-    ];
+    const facts = [];
     if (t.outcome) {
       const names = { win: "Výhra", loss: "Prohra", void: "Vráceno" };
       facts.push(["Výsledek", `${names[t.outcome] || t.outcome}${t.outcomeSource && t.outcomeSource !== "manual" ? " (automaticky)" : ""}`]);
@@ -510,9 +498,10 @@
     const links = [["scores24", "Scores24", t.url], ["forebet", "Forebet", t.forebetUrl], ["sofascore", "SofaScore", t.sofascoreUrl]]
       .map(([act, name, url]) => `<button class="btn btn--ghost btn--sm" type="button" data-act="${act}"${url ? "" : ` disabled title="${name}: zápas nenalezen"`}><i data-lucide="external-link"></i>${name}</button>`).join("");
     detailEl.innerHTML = `
+      <div class="detail__when">Začátek <b>${esc(when)}</b></div>
       <div class="detail__tip">${esc(t.tipLabel)}<span class="detail__state is-${t.probClass}">${t.probClass === "high" ? `NAD ${hi} %` : `${state.limits.minProbability}–${hi} %`}</span></div>
       <div class="stat-row stat-row--detail">${kpis}</div>
-      <dl class="facts">${facts.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
+      ${facts.length ? `<dl class="facts">${facts.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>` : ""}
       <div class="detail__actions">${links}</div>
       <div class="dstats" id="detail-stats">${detailStatsHtml(t)}</div>`;
     renderIcons();
