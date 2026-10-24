@@ -18,7 +18,7 @@
   };
   // Zbytky nastavení z dřívějších verzí (rozložení karet, starší tikety…) se při startu smažou.
   try {
-    const KEPT = new Set(["day", "league", "sort", "hsort", "hist-range", "tk-day", "tk-result2"]);
+    const KEPT = new Set(["day", "live", "league", "sort", "hsort", "hist-range", "tk-day", "tk-result2"]);
     Object.keys(localStorage).filter((k) => k.startsWith("tips:") && !KEPT.has(k.slice(5))).forEach((k) => localStorage.removeItem(k));
   } catch { /* bez úložiště */ }
 
@@ -75,6 +75,7 @@
     busy: false,
     limits: { minProbability: 60, minOdds: 1.5, highProbability: 75 },
     day: DAYS.includes(store.get("day")) ? store.get("day") : "today",
+    live: ["only", "hide"].includes(store.get("live")) ? store.get("live") : "",   // "only" = jen živé, "hide" = bez živých, "" = všechny
     query: "",
     league: store.get("league") || "",   // vybraná soutěž z levého sloupce ("" = všechny)
     leagues: [],
@@ -277,6 +278,11 @@
     const list = tips.filter((t) => {
       if (!applyDayFilter(t, today, tomorrow)) return false;
       if (state.league && t.leagueKey !== state.league) return false;
+      if (state.live) {
+        const kind = matchState(t, now).kind;
+        const playing = kind === "live" || kind === "started";
+        if (playing !== (state.live === "only")) return false;
+      }
       return matchesQuery(t);
     });
     return sortList(list, TIP_SORT, state.sort);
@@ -286,6 +292,13 @@
     b.addEventListener("click", () => {
       state.day = b.dataset.day;
       store.set("day", state.day);
+      renderTips();
+    });
+  });
+  $$("#live-control [data-live]").forEach((b) => {
+    b.addEventListener("click", () => {
+      state.live = state.live === b.dataset.live ? "" : b.dataset.live;   // druhé kliknutí filtr vypne
+      store.set("live", state.live);
       renderTips();
     });
   });
@@ -325,6 +338,7 @@
       if (!p || !p.updatedAt) return state.error || (p && !p.success) ? "Tipy se nepodařilo načíst – viz upozornění nahoře." : "Zatím nejsou stažené žádné tipy. Klikni na „Obnovit tipy“.";
       return `Zdroje teď neobsahují žádný zápas, který splňuje filtry (nad ${state.limits.minProbability} %, kurz alespoň ${nf2.format(state.limits.minOdds)}).`;
     }
+    if (state.live === "only") return "Právě se nehraje žádný zápas z tipů. Druhé kliknutí na „Živě“ filtr vypne.";
     return `Výběru neodpovídá žádný tip (celkem ${total}). Zkus jiný den, nebo vypni filtry.`;
   };
 
@@ -345,6 +359,7 @@
     $("#tips-table").hidden = state.visible.length === 0;
 
     $$("#day-control [data-day]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.day === state.day)));
+    $$("#live-control [data-live]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.live === state.live)));
     markSort($("#tips-table"), "data-sort", state.sort);
 
     const p = state.payload;
