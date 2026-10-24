@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'">
+  <title>Fotbalové tipy</title>
+  <link rel="icon" href="assets/favicon.png" type="image/png">
+
+  <link rel="stylesheet" href="vendor/fonts.css">
+  <link rel="stylesheet" href="vendor/gridstack.min.css">
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Ikony: Lucide (lokální kopie z J.I.M.M.Y.) – aplikace funguje i offline -->
+  <script defer src="vendor/lucide.min.js"></script>
+  <script defer src="vendor/gridstack-all.js"></script>
+  <script defer src="script.js"></script>
+</head>
+<body>
+  <div class="app" id="app" data-view="overview">
+
+    <!-- ============ LEVÝ SIDEBAR ============ -->
+    <aside class="sidebar" aria-label="Soutěže">
+      <a class="brand" href="#">
+        <img class="brand__logo" src="assets/logo.png" width="36" height="36" alt="">
+        <span class="brand__name">Fotbalové tipy</span>
+      </a>
+
+      <div class="cats" id="cats" aria-label="Soutěže"></div>
+
+      <div class="sidebar__foot">
+        <button class="side-btn" type="button" id="update-btn" title="Vyhledat novou verzi programu">
+          <span class="side-btn__icon"><i data-lucide="refresh-cw"></i></span>
+          <span class="side-btn__text"><span class="side-btn__title">Aktualizace</span><span class="side-btn__sub" id="build-label">Vyhledat novou verzi</span></span>
+        </button>
+        <button class="side-btn" type="button" id="key-btn" title="Gemini API klíč – používá se pro tikety a AI analýzu" aria-haspopup="dialog" aria-expanded="false">
+          <span class="side-btn__icon"><i data-lucide="key-round"></i></span>
+          <span class="side-btn__text"><span class="side-btn__title">Gemini API klíč</span><span class="side-btn__sub" id="key-label">Nenastaven</span></span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Okno pro Gemini API klíč (otevírá se z levého panelu) -->
+    <form class="key-pop" id="key-form" role="dialog" aria-label="Gemini API klíč" hidden>
+      <div class="key-pop__title">Gemini API klíč</div>
+      <p class="key-pop__hint">Používá se pro záložku Tikety i AI analýzu. Ukládá se šifrovaně jen v tomto počítači. Klíč zdarma: aistudio.google.com → Get API key.</p>
+      <input class="input" id="key-input" type="password" placeholder="AIza…" autocomplete="off" aria-label="Gemini API klíč">
+      <div class="key-pop__actions">
+        <button class="btn btn--primary btn--sm" type="submit">Uložit</button>
+        <button class="btn btn--ghost btn--sm" type="button" id="key-remove" hidden>Odebrat</button>
+        <button class="btn btn--ghost btn--sm" type="button" id="key-close">Zavřít</button>
+      </div>
+    </form>
+
+    <!-- ============ HORNÍ LIŠTA ============ -->
+    <header class="topbar">
+      <div class="topbar__row">
+      <form class="search" role="search" onsubmit="return false">
+        <i data-lucide="search"></i>
+        <input class="search__input" id="search" type="search" placeholder="Hledat zápas, ligu nebo tip... (Ctrl + K)" aria-label="Hledat v tipech" autocomplete="off">
+      </form>
+
+      <div class="topbar__actions">
+        <span class="steps" id="steps" aria-hidden="true" hidden><i>Scores24</i><i>Forebet</i><i>SofaScore</i></span>
+        <span class="progress-text" id="progress-text" hidden></span>
+        <span class="updated-label" id="updated-label" hidden></span>
+        <button class="chip chip--update" type="button" id="update-chip" hidden><i data-lucide="download"></i><span>Nová verze</span></button>
+        <span class="chip chip--warn" id="cache-chip" hidden title="Stažení se nepodařilo – zobrazují se poslední uložená data"><i data-lucide="file-clock"></i>z mezipaměti</span>
+        <div class="warn" id="warn" hidden>
+          <button class="warn__btn" type="button" id="warn-btn" aria-haspopup="true" aria-expanded="false" aria-label="Upozornění"><i data-lucide="triangle-alert"></i><span id="warn-count"></span></button>
+          <div class="warn__pop" id="warn-pop" role="status" hidden></div>
+        </div>
+        <button class="btn btn--primary" type="button" id="refresh" title="Stáhnout tipy znovu"><i data-lucide="refresh-cw"></i><span>Obnovit tipy</span></button>
+        <div class="window-controls">
+          <button class="icon-btn" type="button" aria-label="Minimalizovat" data-win="minimize"><i data-lucide="minus"></i></button>
+          <button class="icon-btn" type="button" aria-label="Maximalizovat" data-win="maximize"><i data-lucide="square"></i></button>
+          <button class="icon-btn icon-btn--close" type="button" aria-label="Zavřít" data-win="close"><i data-lucide="x"></i></button>
+        </div>
+      </div>
+      </div>
+      <nav class="tabs" aria-label="Hlavní navigace">
+        <ul class="nav__list">
+          <li><a class="nav__link is-active" href="#" data-view="overview" aria-current="page"><i data-lucide="house"></i><span>Přehled</span></a></li>
+          <li><a class="nav__link" href="#" data-view="live"><i data-lucide="radio"></i><span>Živé zápasy</span></a></li>
+          <li><a class="nav__link" href="#" data-view="tickets"><i data-lucide="ticket"></i><span>Tikety</span></a></li>
+          <li><a class="nav__link" href="#" data-view="evaluation"><i data-lucide="clipboard-check"></i><span>Vyhodnocení</span></a></li>
+          <li><a class="nav__link" href="#" data-view="analysis"><i data-lucide="brain"></i><span>Analýza</span></a></li>
+          <li><a class="nav__link" href="#" data-view="history"><i data-lucide="history"></i><span>Historie</span></a></li>
+        </ul>
+      </nav>
+      <div class="topbar__progress" id="topbar-progress" hidden></div>
+    </header>
+
+    <!-- ============ OBSAH ============ -->
+    <main class="main" id="main">
+      <h1 class="sr-only">Fotbalové tipy</h1>
+
+      <!-- Přehled: přizpůsobitelná mřížka (GridStack) – bloky jde přetahovat a měnit jejich velikost -->
+      <div class="grid-stack board" id="board">
+
+        <div class="grid-stack-item" gs-id="tips" gs-x="0" gs-y="0" gs-w="15" gs-h="48" gs-min-w="9" gs-min-h="14">
+          <div class="grid-stack-item-content">
+            <section class="card tips" aria-labelledby="tips-title">
+              <header class="card__header">
+                <div class="card__lead"><h2 class="card__title" id="tips-title"><i data-lucide="goal"></i>Tipy po filtraci</h2>
+                <div class="seg-control" role="group" aria-label="Zobrazit den" id="day-control">
+                  <button type="button" data-day="today" aria-pressed="true">Dnes</button>
+                  <button type="button" data-day="tomorrow" aria-pressed="false">Zítra</button>
+                </div>
+                <div class="seg-control" role="group" aria-label="Živé zápasy" id="live-control">
+                  <button type="button" data-live="only" aria-pressed="false" title="Jen právě hrané zápasy">Živě</button>
+                  <button type="button" data-live="hide" aria-pressed="false" title="Jen zápasy, které ještě nezačaly (bez živých a skončených)">Bez živě</button>
+                </div></div>
+                <span class="card__note" id="tips-note"></span>
+              </header>
+
+              <div class="table-wrap">
+                <table class="tbl" id="tips-table" aria-label="Fotbalové tipy">
+                  <thead>
+                    <tr>
+                      <th class="c-time"><button type="button" data-sort="time">Začátek<i data-lucide="chevron-down"></i></button></th>
+                      <th class="c-match"><button type="button" data-sort="match">Zápas<i data-lucide="chevron-down"></i></button></th>
+                      <th class="c-tip"><button type="button" data-sort="tip">Tip<i data-lucide="chevron-down"></i></button></th>
+                      <th class="c-prob"><button type="button" data-sort="prob">Pravděp.<i data-lucide="chevron-down"></i></button></th>
+                      <th class="c-odds"><button type="button" data-sort="odds">Kurz<i data-lucide="chevron-down"></i></button></th>
+                      <th class="c-value"><button type="button" data-sort="value" title="Odhadovaná pravděpodobnost minus pravděpodobnost z kurzu (1 / kurz), v procentních bodech">Value<i data-lucide="chevron-down"></i></button></th>
+                    </tr>
+                  </thead>
+                  <tbody id="tips-body"></tbody>
+                </table>
+                <p class="empty" id="tips-empty" hidden></p>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <div class="grid-stack-item" gs-id="detail" gs-x="15" gs-y="0" gs-w="9" gs-h="48" gs-min-w="6" gs-min-h="12">
+          <div class="grid-stack-item-content">
+            <section class="card detail-card" aria-labelledby="detail-title">
+              <header class="card__header">
+                <h2 class="sr-only" id="detail-title">Detail tipu</h2>
+                <span class="detail-match" id="detail-match"></span>
+              </header>
+              <div class="detail" id="detail"></div>
+            </section>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Samostatné stránky z levého menu -->
+      <div class="pages">
+        <div class="tickets-page">
+          <section class="card tk-main" aria-labelledby="tickets-title">
+            <h2 class="sr-only" id="tickets-title">Tikety</h2>
+            <div class="tk-controls">
+              <div class="seg-control" id="tk-day" role="group" aria-label="Den">
+                <button type="button" data-tkday="today" aria-pressed="true">Dnes</button>
+                <button type="button" data-tkday="tomorrow" aria-pressed="false">Zítra</button>
+              </div>
+              <button class="btn btn--primary" type="button" id="tk-create"><i data-lucide="sparkles"></i>Vytvořit tikety (AI)</button>
+            </div>
+            <p class="tk-note" id="tk-note">Aplikace vezme tipy z přehledu a ke každému zápasu stáhne ze SofaScore aktuální statistiky (forma, vzájemné zápasy, góly, zranění, domácí/venkovní výkonnost). Gemini z nich vybere tipy s dobrou oporou v datech a složí tikety. Celkový kurz a pravděpodobnost počítá aplikace; kurzy u Tipsportu se mohou lišit.</p>
+            <div class="tk-list" id="tk-list"></div>
+            <div class="tk-hist" id="tk-history"></div>
+          </section>
+
+          <section class="card detail-card" aria-labelledby="tk-detail-title">
+            <header class="card__header">
+              <h2 class="sr-only" id="tk-detail-title">Detail zápasu v tiketu</h2>
+              <span class="detail-match" id="tk-detail-match"></span>
+            </header>
+            <div class="detail" id="tk-detail"></div>
+          </section>
+        </div>
+
+        <div class="eval-page">
+          <section class="card ev-main" aria-labelledby="eval-title">
+            <h2 class="sr-only" id="eval-title">Vyhodnocení tiketů</h2>
+            <div class="stat-row stat-row--5" id="ev-stats"></div>
+            <div class="tk-controls ev-controls">
+              <div class="seg-control" id="ev-range" role="group" aria-label="Období">
+                <button type="button" data-evrange="today" aria-pressed="false">Dnes</button>
+                <button type="button" data-evrange="yesterday" aria-pressed="false">Včera</button>
+                <button type="button" data-evrange="week" aria-pressed="false">7 dní</button>
+                <button type="button" data-evrange="all" aria-pressed="true">Vše</button>
+              </div>
+              <button class="btn btn--ghost" type="button" id="ev-run" title="Zjistí výsledky zápasů ze SofaScore a tikety podle nich vyhodnotí"><i data-lucide="sparkles"></i>Vyhodnotit automaticky</button>
+            </div>
+            <div class="ev-list" id="ev-list"></div>
+          </section>
+
+          <section class="card detail-card" aria-labelledby="ev-detail-title">
+            <header class="card__header">
+              <h2 class="sr-only" id="ev-detail-title">Detail zápasu v tiketu</h2>
+              <span class="detail-match" id="ev-detail-match"></span>
+            </header>
+            <div class="detail" id="ev-detail"></div>
+          </section>
+        </div>
+
+        <section class="card analysis-page" aria-labelledby="analysis-title">
+          <h2 class="sr-only" id="analysis-title">Analýza úspěšnosti tipů</h2>
+          <div class="an-top">
+            <div class="stat-row stat-row--5" id="an-stats"></div>
+            <button class="ai-tile" type="button" id="ai-run" title="Gemini rozebere kalibraci pravděpodobností a opakované chyby v prohraných tipech">
+              <span class="ai-tile__icon"><i data-lucide="sparkles"></i></span>
+              <span class="ai-tile__text"><span class="ai-tile__title" id="ai-title">Analyzovat pomocí AI</span></span>
+            </button>
+          </div>
+          <div class="an-grid">
+            <div class="live-box"><div class="live-box__title">Odhadnutá pravděpodobnost vs. skutečnost<small>podle pásma</small></div><div id="an-bands"></div></div>
+            <div class="live-box"><div class="live-box__title">Zjištění</div><ul class="an-insights" id="an-insights"></ul></div>
+            <div class="live-box"><div class="live-box__title">Podle typu tipu</div><div id="an-markets"></div></div>
+            <div class="live-box"><div class="live-box__title">Podle soutěže</div><div id="an-leagues"></div></div>
+          </div>
+          <div class="live-box"><div class="live-box__title">Na co sázet a na co ne<small>podle výsledků uložených tiketů a tipů v nich (stálý vklad 1)</small></div><div id="an-advice"></div></div>
+          <div class="live-box"><div class="live-box__title">Tikety od Gemini vs. všechny tipy<small>vklad 1 na tiket / tip; odhad u tiketu = součin pravděpodobností</small></div><div id="an-tickets"></div></div>
+          <div class="live-box ai-box">
+            <div class="live-box__title">AI analýza<small>pošle souhrnné statistiky a posledních 40 prohraných tipů do Google Gemini API tvým klíčem</small></div>
+            <div class="ai-out" id="ai-out" aria-live="polite"></div>
+          </div>
+        </section>
+
+        <section class="live-page" aria-label="Živé zápasy">
+          <div class="card live-list">
+            <header class="card__header">
+              <h2 class="sr-only">Živé zápasy</h2>
+              <span class="card__note" id="live-note"></span>
+            </header>
+            <div class="live-scroll" id="live-list"></div>
+          </div>
+          <div class="card live-detail-card">
+            <header class="card__header">
+              <h2 class="sr-only">Detail zápasu</h2>
+              <button class="btn btn--ghost btn--sm" type="button" id="live-open" hidden><i data-lucide="external-link"></i>SofaScore</button>
+            </header>
+            <div class="live-detail" id="live-detail"></div>
+          </div>
+        </section>
+
+        <section class="card page-history" aria-labelledby="history-title">
+          <h2 class="sr-only" id="history-title">Historie a statistiky</h2>
+          <div class="stat-row stat-row--5" id="history-stats"></div>
+          <div class="toolbar">
+            <div class="seg-control" id="hist-range" role="group" aria-label="Období">
+              <button type="button" data-range="today" aria-pressed="false">Dnes</button>
+              <button type="button" data-range="yesterday" aria-pressed="false">Včera</button>
+              <button type="button" data-range="date" aria-pressed="false">Datum</button>
+              <button type="button" data-range="month" aria-pressed="true">Tento měsíc</button>
+            </div>
+            <input class="input input--date" type="date" id="hist-date" aria-label="Vybrat datum" hidden>
+            <button class="btn btn--primary btn--sm toolbar__right" type="button" id="evaluate"><i data-lucide="sparkles"></i>Vyhodnotit automaticky</button>
+          </div>
+          <div class="table-wrap">
+            <table class="tbl tbl--history" id="history-table" aria-label="Historie tipů">
+              <thead>
+                <tr>
+                  <th class="c-time"><button type="button" data-hsort="time">Datum<i data-lucide="chevron-down"></i></button></th>
+                  <th class="c-match"><button type="button" data-hsort="match">Zápas<i data-lucide="chevron-down"></i></button></th>
+                  <th class="c-tip"><button type="button" data-hsort="tip">Tip<i data-lucide="chevron-down"></i></button></th>
+                  <th class="c-score"><button type="button" data-hsort="score">Skóre<i data-lucide="chevron-down"></i></button></th>
+                  <th class="c-prob"><button type="button" data-hsort="prob">Pravděp.<i data-lucide="chevron-down"></i></button></th>
+                  <th class="c-odds"><button type="button" data-hsort="odds">Kurz<i data-lucide="chevron-down"></i></button></th>
+                  <th class="c-outcome"><button type="button" data-hsort="outcome">Výsledek<i data-lucide="chevron-down"></i></button></th>
+                </tr>
+              </thead>
+              <tbody id="history-body"></tbody>
+            </table>
+            <p class="empty" id="history-empty" hidden>V tomto období nejsou žádné tipy.</p>
+          </div>
+        </section>
+
+      </div>
+
+      <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+    </main>
+  </div>
+</body>
+</html>

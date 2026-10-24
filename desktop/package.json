@@ -1,0 +1,54 @@
+{
+  "name": "fotbalove-tipy",
+  "productName": "Fotbalové tipy",
+  "version": "1.0.0",
+  "description": "Fotbalové tipy – desktopová aplikace pro Windows (Electron), vzhled sjednocený s J.I.M.M.Y.",
+  "author": "Jimmy",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test \"test/*.test.js\"",
+    "dist": "electron-builder --win portable --x64 --publish never"
+  },
+  "dependencies": {
+    "cheerio": "^1.2.0"
+  },
+  "devDependencies": {
+    "electron": "^44.9.0",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "cz.jimmy.fotbalovetipy",
+    "productName": "Fotbalové tipy",
+    "copyright": "© 2026 J.I.M.M.Y.",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "renderer/**/*",
+      "build/icon.png",
+      "package.json"
+    ],
+    "win": {
+      "icon": "build/icon.png",
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "FotbalTipy-${version}-win-${arch}.${ext}",
+      "executableName": "FotbalTipy"
+    },
+    "portable": {
+      "artifactName": "FotbalTipy-${version}-portable.${ext}"
+    }
+  }
+}
