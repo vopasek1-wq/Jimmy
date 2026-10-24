@@ -567,7 +567,6 @@ i[data-lucide],
 .facts { display: grid; grid-template-columns: auto 1fr; gap: 5px 16px; margin-top: 12px; padding: 10px 14px; background: var(--panel); border: 1px solid var(--border-2); border-radius: var(--radius-md); }
 .facts dt { font-size: 12.5px; color: var(--muted); }
 .facts dd { font-size: 13px; font-variant-numeric: tabular-nums; text-align: right; overflow-wrap: anywhere; }
-.facts dd.is-strong { font-weight: 500; }
 .detail__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .stat-row--detail { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
 .stat-row--detail .stat { padding: 9px 11px 8px; }

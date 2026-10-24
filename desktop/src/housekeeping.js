@@ -47,4 +47,4 @@ function tidy(dataDir, opts) {
   return cleanDir(path.join(dataDir, "ladeni"), opts);
 }
 
-module.exports = { cleanDir, tidy, MAX_AGE_MS, MAX_BYTES };
+module.exports = { cleanDir, tidy };

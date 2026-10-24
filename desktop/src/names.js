@@ -17,6 +17,7 @@ const ALIASES = {
   // názvy, které se mezi zdroji liší (přejmenované kluby, anglický × domácí název)
   cologne: "koln", "amed sportif faaliyetler": "amedspor", lisen: "artis brno", "fastav zlin": "trinity zlin",
   "royal charleroi": "charleroi", "sporting charleroi": "charleroi", "oud heverlee": "leuven", "oud heverlee leuven": "leuven", "oh leuven": "leuven",
+  "psv eindhoven": "psv", "feyenoord rotterdam": "feyenoord", "sporting lisbon": "sporting cp", "heart of midlothian": "hearts",
 };
 
 const stripAccents = (text) => text.normalize("NFKD").replace(/[̀-ͯ]/g, "");
@@ -101,4 +102,4 @@ function sameMatch(homeA, awayA, homeB, awayB) {
   return (h + a) / 2;
 }
 
-module.exports = { normalize, teamSimilarity, sameMatch, sequenceRatio };
+module.exports = { normalize, teamSimilarity, sameMatch };

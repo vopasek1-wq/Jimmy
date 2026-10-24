@@ -155,7 +155,8 @@ test("teamSimilarity: aliasy názvů, které se mezi zdroji liší (Cologne × K
   const { teamSimilarity, sameMatch } = require("../src/names");
   for (const [a, b] of [["Cologne", "Köln"], ["Kasimpasa Istanbul", "Kasımpasa SK"], ["Amed Sportif Faaliyetler", "Amedspor"], ["SK Artis Brno", "SK Lisen"],
     ["Fastav Zlin", "FK Trinity Zlin"], ["Eyupspor", "Eyüpspor"], ["Schalke", "Schalke 04"],
-    ["Royal Charleroi", "Sporting Charleroi"], ["Oud Heverlee", "OH Leuven"], ["Lommel", "Lommel United"]]) {
+    ["Royal Charleroi", "Sporting Charleroi"], ["Oud Heverlee", "OH Leuven"], ["Lommel", "Lommel United"],
+    ["PSV", "PSV Eindhoven"], ["Feyenoord Rotterdam", "Feyenoord"], ["Sporting Lisbon", "Sporting CP"], ["Heart of Midlothian", "Hearts"]]) {
     assert.ok(teamSimilarity(a, b) >= 0.9, `${a} × ${b}`);
   }
   assert.ok(sameMatch("Fastav Zlin", "Sigma", "FK Trinity Zlin", "Sigma Olomouc") > 0.9);

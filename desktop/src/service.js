@@ -92,7 +92,6 @@ class TipService {
     }
   }
 
-  /** `period` = počet dní, null (vše), nebo { from, to } z kalendáře. */
   /**
    * Rychlá aktualizace skóre právě hraných zápasů ze SofaScore (jeden dotaz na ligu a den).
    * Vrací pole tipů, nebo null, když nic nehraje.
@@ -228,4 +227,4 @@ class TipService {
   close() { this.db.close(); }
 }
 
-module.exports = { TipService, serializeTip };
+module.exports = { TipService };

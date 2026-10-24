@@ -99,4 +99,4 @@ function ticketAdvice(settled, tipInfo = new Map()) {
   return { tickets: done.length, legs: legsById.size, bet: bet.slice(0, 5), avoid: avoid.slice(0, 5), note };
 }
 
-module.exports = { ticketAdvice, MIN_TICKETS, MIN_LEGS };
+module.exports = { ticketAdvice, MIN_LEGS };

@@ -212,4 +212,4 @@ class WindowBrowser {
   }
 }
 
-module.exports = { WindowBrowser, BrowserUnavailable, chromeUserAgent, EXPAND_SCRIPT };
+module.exports = { WindowBrowser, BrowserUnavailable, chromeUserAgent };

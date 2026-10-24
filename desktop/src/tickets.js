@@ -276,6 +276,6 @@ async function createTickets({ candidates, collect, ask, calibration = null, pro
 }
 
 module.exports = {
-  candidatesFrom, buildTicketPrompt, parseTickets, parseJson, createTickets, settleTicket, ticketStats, dueKickoffs,
-  MIN_LEGS, MAX_LEGS, MIN_TOTAL_ODDS, MAX_CANDIDATES,
+  candidatesFrom, buildTicketPrompt, parseTickets, createTickets, settleTicket, ticketStats, dueKickoffs,
+  MIN_LEGS,
 };

@@ -21,7 +21,7 @@
   <div class="app" id="app" data-view="overview">
 
     <!-- ============ LEVÝ SIDEBAR ============ -->
-    <aside class="sidebar" id="sidebar" aria-label="Soutěže">
+    <aside class="sidebar" aria-label="Soutěže">
       <a class="brand" href="#">
         <img class="brand__logo" src="assets/logo.png" width="36" height="36" alt="">
         <span class="brand__name">Fotbalové tipy</span>
@@ -56,7 +56,7 @@
     <!-- ============ HORNÍ LIŠTA ============ -->
     <header class="topbar">
       <div class="topbar__row">
-      <form class="search" role="search" id="search-form" onsubmit="return false">
+      <form class="search" role="search" onsubmit="return false">
         <i data-lucide="search"></i>
         <input class="search__input" id="search" type="search" placeholder="Hledat zápas, ligu nebo tip... (Ctrl + K)" aria-label="Hledat v tipech" autocomplete="off">
       </form>
@@ -110,7 +110,7 @@
                 <span class="card__note" id="tips-note"></span>
               </header>
 
-              <div class="table-wrap" id="tips-wrap">
+              <div class="table-wrap">
                 <table class="tbl" id="tips-table" aria-label="Fotbalové tipy">
                   <thead>
                     <tr>

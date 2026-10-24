@@ -124,4 +124,4 @@ class SofaScoreClient {
   }
 }
 
-module.exports = { SofaScoreClient, parseEvents, MATCH_TOLERANCE_MS };
+module.exports = { SofaScoreClient, parseEvents };

@@ -47,4 +47,4 @@ function buildDiagnostics({ version, electron, platform, run, tips = [], dir, no
   return `${out.join("\n")}\n`;
 }
 
-module.exports = { buildDiagnostics, readLimited };
+module.exports = { buildDiagnostics };

@@ -64,4 +64,4 @@ function utcDateTime(isoDate, hh, mm) {
 
 const utcDateOf = (date) => date.toISOString().slice(0, 10);
 
-module.exports = { localParts, localDate, todayLocal, addDays, fmtStamp, fmtHourMinute, utcDateTime, utcDateOf, localToUtc };
+module.exports = { localDate, todayLocal, addDays, fmtStamp, fmtHourMinute, utcDateTime, utcDateOf, localToUtc };

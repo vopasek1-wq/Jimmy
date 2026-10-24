@@ -205,4 +205,4 @@ async function askGemini(options) {
   return (await generate(options)).text;
 }
 
-module.exports = { analyze, recentLosses, buildPrompt, askGemini, generate, marketGroup, summarize };
+module.exports = { analyze, recentLosses, buildPrompt, askGemini, generate, marketGroup };

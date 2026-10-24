@@ -16,6 +16,11 @@
       try { localStorage.setItem(`tips:${key}`, JSON.stringify(value)); } catch { /* bez úložiště */ }
     },
   };
+  // Zbytky nastavení z dřívějších verzí (rozložení karet, starší tikety…) se při startu smažou.
+  try {
+    const KEPT = new Set(["day", "league", "sort", "hsort", "hist-range", "tk-day", "tk-result2"]);
+    Object.keys(localStorage).filter((k) => k.startsWith("tips:") && !KEPT.has(k.slice(5))).forEach((k) => localStorage.removeItem(k));
+  } catch { /* bez úložiště */ }
 
   /* Všechna data ze zdrojů se do HTML vkládají jen přes esc(). */
   const ESC = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
@@ -1239,7 +1244,6 @@
   }
 
   /* ---------- Mřížka Přehledu (GridStack, pevné rozložení) ---------- */
-  let relayout = () => {};
   const setupBoard = () => {
     const GS = window.GridStack?.GridStack || window.GridStack;
     const boardEl = $("#board");
@@ -1261,8 +1265,7 @@
       animate: false,
       staticGrid: true,              // rozložení je pevné
     }, boardEl);
-    relayout = () => grid.cellHeight(rowHeight());
-    window.addEventListener("resize", relayout);
+    window.addEventListener("resize", () => grid.cellHeight(rowHeight()));
   };
   setupBoard();
 

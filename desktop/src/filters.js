@@ -56,4 +56,4 @@ function probabilityClass(probability) {
   return probability > config.HIGH_PROBABILITY ? HIGH : MID;
 }
 
-module.exports = { isWomens, HIGH, MID, ensureOdds, passesFilters, mayPass, applyFilters, probabilityClass };
+module.exports = { isWomens, HIGH, MID, passesFilters, mayPass, applyFilters, probabilityClass };

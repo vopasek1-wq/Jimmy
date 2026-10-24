@@ -253,4 +253,4 @@ class Scores24Scraper {
   }
 }
 
-module.exports = { Scores24Scraper, parsePage, parseRow, classifyStatus, kickoffOf, rowToTip, mergeBlocks };
+module.exports = { Scores24Scraper, parsePage, parseRow, classifyStatus, kickoffOf, rowToTip };

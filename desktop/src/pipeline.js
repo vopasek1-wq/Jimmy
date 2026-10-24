@@ -330,4 +330,4 @@ async function updateResults(db, http, { progress = () => {}, maxAgeDays = 14, n
   return { done, message: `${message}.` };
 }
 
-module.exports = { Pipeline, combine, updateResults, settleFinished, findForebet, findRow, forebetCoverage };
+module.exports = { Pipeline, combine, updateResults, settleFinished, forebetCoverage };
