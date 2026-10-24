@@ -108,6 +108,7 @@ Vyhodnocují se běžné trhy (1X2, dvojitá šance, Over/Under, oba týmy skór
 ## Tikety (Gemini)
 
 Záložka **Tikety** nechá Gemini poskládat kombinace (tikety) z tipů v Přehledu, které pak ručně zadáš do Tipsportu (ten nemá API). Přepínač **Dnes / Zítra** ukazuje tikety jen pro zvolený den (včerejší tikety se mezi dnešními neukazují); výsledky starších tiketů jsou v Analýze (srovnání tiketů a „Na co sázet a na co ne“).
+Rozložení je stejné jako v Přehledu: vlevo tikety, vpravo **detail zápasu** (stejná karta jako v Přehledu – pravděpodobnost, kurz, odkazy, forma, vzájemné zápasy, koláče gólů, absence). Zobrazí se po kliknutí na zápas v tiketu, i v uložených tiketech.
 Zvolíš den (Dnes / Zítra) a klikneš na **Vytvořit tikety (AI)** – počet tipů ani tiketů se nezadává, určí je Gemini. Postup:
 
 1. **Statistiky ze SofaScore.** Z tipů v Přehledu se vezmou ty, které ještě nezačaly a mají **skutečný** kurz (ne odhadnutý; nejvýš 20 nejlepších

@@ -151,6 +151,7 @@ function parseTickets(text, candidates) {
       legs: picked.map((l) => ({
         id: l.ticketId, tipId: l.id, matchName: l.matchName, league: l.leagueShort || l.league, kickoff: l.kickoff, tipLabel: l.tipLabel,
         odds: l.odds, probability: l.probability, probForebet: l.probForebet ?? null, value: l.value, reason: reasons.get(l.ticketId) || "",
+        home: l.home, away: l.away, sofascoreId: l.sofascoreId ?? null, url: l.url || "", forebetUrl: l.forebetUrl || "", sofascoreUrl: l.sofascoreUrl || "", // pro detail zápasu v záložce Tikety
       })),
       totalOdds: Math.round(odds * 100) / 100,
       jointProbability: Math.round(prob * 1000) / 10,

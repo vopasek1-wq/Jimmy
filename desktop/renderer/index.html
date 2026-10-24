@@ -147,19 +147,29 @@
 
       <!-- Samostatné stránky z levého menu -->
       <div class="pages">
-        <section class="card tickets-page" aria-labelledby="tickets-title">
-          <h2 class="sr-only" id="tickets-title">Tikety</h2>
-          <div class="tk-controls">
-            <div class="seg-control" id="tk-day" role="group" aria-label="Den">
-              <button type="button" data-tkday="today" aria-pressed="true">Dnes</button>
-              <button type="button" data-tkday="tomorrow" aria-pressed="false">Zítra</button>
+        <div class="tickets-page">
+          <section class="card tk-main" aria-labelledby="tickets-title">
+            <h2 class="sr-only" id="tickets-title">Tikety</h2>
+            <div class="tk-controls">
+              <div class="seg-control" id="tk-day" role="group" aria-label="Den">
+                <button type="button" data-tkday="today" aria-pressed="true">Dnes</button>
+                <button type="button" data-tkday="tomorrow" aria-pressed="false">Zítra</button>
+              </div>
+              <button class="btn btn--primary" type="button" id="tk-create"><i data-lucide="sparkles"></i>Vytvořit tikety (AI)</button>
             </div>
-            <button class="btn btn--primary" type="button" id="tk-create"><i data-lucide="sparkles"></i>Vytvořit tikety (AI)</button>
-          </div>
-          <p class="tk-note" id="tk-note">Aplikace vezme tipy z přehledu a ke každému zápasu stáhne ze SofaScore aktuální statistiky (forma, vzájemné zápasy, góly, zranění, domácí/venkovní výkonnost). Gemini z nich vybere tipy s dobrou oporou v datech a složí tikety. Celkový kurz a pravděpodobnost počítá aplikace; kurzy u Tipsportu se mohou lišit.</p>
-          <div class="tk-list" id="tk-list"></div>
-          <div class="tk-hist" id="tk-history"></div>
-        </section>
+            <p class="tk-note" id="tk-note">Aplikace vezme tipy z přehledu a ke každému zápasu stáhne ze SofaScore aktuální statistiky (forma, vzájemné zápasy, góly, zranění, domácí/venkovní výkonnost). Gemini z nich vybere tipy s dobrou oporou v datech a složí tikety. Celkový kurz a pravděpodobnost počítá aplikace; kurzy u Tipsportu se mohou lišit.</p>
+            <div class="tk-list" id="tk-list"></div>
+            <div class="tk-hist" id="tk-history"></div>
+          </section>
+
+          <section class="card detail-card" aria-labelledby="tk-detail-title">
+            <header class="card__header">
+              <h2 class="sr-only" id="tk-detail-title">Detail zápasu v tiketu</h2>
+              <span class="detail-match" id="tk-detail-match"></span>
+            </header>
+            <div class="detail" id="tk-detail"></div>
+          </section>
+        </div>
 
         <section class="card analysis-page" aria-labelledby="analysis-title">
           <h2 class="sr-only" id="analysis-title">Analýza úspěšnosti tipů</h2>

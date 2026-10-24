@@ -491,21 +491,17 @@
       entry = { error: err.message || String(err) };
     }
     if (entry.error) detailStats.delete(t.sofascoreId); else detailStats.set(t.sofascoreId, entry); // při chybě se příště zkusí znovu
-    const cur = tipByKey(state.selected);
-    const box = $("#detail-stats");
-    if (box && cur && cur.sofascoreId === t.sofascoreId) {
-      box.innerHTML = entry.error ? `<p class="dstats__none">Statistiky se nepodařilo načíst (${esc(entry.error)}).</p>` : detailStatsBody(cur, entry.data, entry.charts);
-    }
+    $$(`.dstats[data-sofa="${t.sofascoreId}"]`).forEach((box) => {
+      box.innerHTML = entry.error ? `<p class="dstats__none">Statistiky se nepodařilo načíst (${esc(entry.error)}).</p>` : detailStatsBody(t, entry.data, entry.charts);
+    });
   }
 
-  function renderDetail() {
-    const t = tipByKey(state.selected);
-    detailMatch.textContent = t ? t.matchName : "";
-    detailMatch.title = t ? t.matchName : "";
-    if (!t) {
-      detailEl.innerHTML = `<p class="detail__empty">${state.visible.length ? "Vyber tip v tabulce." : "Žádný tip k zobrazení."}<br>Dvojklik na řádek otevře zápas na Scores24.</p>`;
-      return;
-    }
+  /** Detail tipu `t` v kartě (`box` = obsah, `matchEl` = název zápasu v záhlaví); stejný pro Přehled i Tikety. */
+  function fillDetail(box, matchEl, t, emptyHtml) {
+    box._tip = t || null;
+    matchEl.textContent = t ? t.matchName : "";
+    matchEl.title = t ? t.matchName : "";
+    if (!t) { box.innerHTML = emptyHtml; return; }
     const now = Date.now();
     const ms = matchState(t, now);
     const kickoff = Date.parse(t.kickoff);
@@ -524,27 +520,30 @@
     ].join("");
     const links = [["scores24", "Scores24", t.url], ["forebet", "Forebet", t.forebetUrl], ["sofascore", "SofaScore", t.sofascoreUrl]]
       .map(([act, name, url]) => `<button class="btn btn--ghost btn--sm" type="button" data-act="${act}"${url ? "" : ` disabled title="${name}: zápas nenalezen"`}><i data-lucide="external-link"></i>${name}</button>`).join("");
-    detailEl.innerHTML = `
+    box.innerHTML = `
       <div class="detail__when">Začátek <b>${esc(when)}</b></div>
       <div class="detail__tip">${esc(t.tipLabel)}<span class="detail__state is-${t.probClass}">${t.probClass === "high" ? `NAD ${hi} %` : `${state.limits.minProbability}–${hi} %`}</span></div>
       <div class="stat-row stat-row--detail">${kpis}</div>
       ${facts.length ? `<dl class="facts">${facts.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>` : ""}
       <div class="detail__actions">${links}</div>
-      <div class="dstats" id="detail-stats">${detailStatsHtml(t)}</div>`;
+      <div class="dstats" data-sofa="${t.sofascoreId || ""}">${detailStatsHtml(t)}</div>`;
     renderIcons();
   }
 
-  detailEl.addEventListener("click", async (e) => {
-    const btn = e.target.closest("button[data-act]");
+  function renderDetail() {
     const t = tipByKey(state.selected);
+    fillDetail(detailEl, detailMatch, t, `<p class="detail__empty">${state.visible.length ? "Vyber tip v tabulce." : "Žádný tip k zobrazení."}<br>Dvojklik na řádek otevře zápas na Scores24.</p>`);
+  }
+
+  /** Tlačítka s odkazy v detailu (Přehled i Tikety): odkaz podle tipu, který je v kartě právě zobrazený. */
+  const onDetailLink = (e) => {
+    const btn = e.target.closest("button[data-act]");
+    const t = e.currentTarget._tip;
     if (!btn || !t) return;
-    switch (btn.dataset.act) {
-      case "scores24": openExternal(t.url); break;
-      case "forebet": openExternal(t.forebetUrl); break;
-      case "sofascore": openExternal(t.sofascoreUrl); break;
-      default: break;
-    }
-  });
+    const url = { scores24: t.url, forebet: t.forebetUrl, sofascore: t.sofascoreUrl }[btn.dataset.act];
+    if (url) openExternal(url);
+  };
+  detailEl.addEventListener("click", onDetailLink);
 
   /* ---------- Upozornění (zdroj selhal, bez internetu…) ---------- */
   const warnEl = $("#warn");
@@ -1002,6 +1001,7 @@
     day: ["today", "tomorrow"].includes(store.get("tk-day")) ? store.get("tk-day") : "today",
     result: store.get("tk-result2"),   // naposledy vytvořené tikety (zůstanou i po restartu; ukážou se jen u dne, pro který vznikly)
     busy: false, step: "", startedAt: 0, timer: null,
+    selected: null,                    // tipId zápasu, jehož detail je vpravo
   };
   const CERTAINTY_CS = { good: "Vysoká jistota", ok: "Střední jistota", risky: "Nižší jistota" };
   const TK_NOTE = $("#tk-note").textContent;
@@ -1021,7 +1021,49 @@
   /** Den, pro který uložený výsledek vznikl (starší uložené výsledky: den prvního zápasu). */
   const tkResultDay = (r) => r.forDay || (r.tickets && r.tickets[0] && r.tickets[0].legs[0] ? localDay(new Date(r.tickets[0].legs[0].kickoff)) : null);
 
+  const tkDetailEl = $("#tk-detail");
+  const tkDetailMatch = $("#tk-detail-match");
+
+  /** Tip pro detail: nejnovější údaje z posledního stažení, u starších tiketů záloha z údajů uložených u nohy tiketu. */
+  function legTip(l) {
+    const live = (state.payload?.tips || []).find((x) => x.id === l.tipId);
+    if (live) return live;
+    const [h, a] = l.home && l.away ? [l.home, l.away] : String(l.matchName).split(" – ");
+    return {
+      id: l.tipId, home: h, away: a || "", matchName: l.matchName, league: l.league || "", tipLabel: l.tipLabel, probability: l.probability,
+      probClass: l.probability > state.limits.highProbability ? "high" : "mid", probSource: "Scores24", odds: l.odds, oddsEstimated: false,
+      kickoff: l.kickoff, status: "upcoming", homeScore: null, awayScore: null, sofascoreId: l.sofascoreId ?? null,
+      url: l.url || "", forebetUrl: l.forebetUrl || "", sofascoreUrl: l.sofascoreUrl || "", outcome: l.outcome ?? null, outcomeSource: null,
+    };
+  }
+
+  const tkLegs = () => [...((tk.result && tk.result.tickets) || []), ...((tk.history && tk.history.tickets) || [])].flatMap((t) => t.legs);
+
+  function renderTicketDetail() {
+    const leg = tk.selected === null ? null : tkLegs().find((l) => l.tipId === tk.selected);
+    fillDetail(tkDetailEl, tkDetailMatch, leg ? legTip(leg) : null, '<p class="detail__empty">Klikni na zápas v tiketu – ukážu statistiky, formu a vzájemné zápasy.</p>');
+    $$("#tk-list [data-tip], #tk-history [data-tip]").forEach((el) => el.classList.toggle("is-selected", Number(el.dataset.tip) === tk.selected));
+  }
+
+  const onLegPick = (e) => {
+    if (e.type === "keydown" && e.key !== "Enter" && e.key !== " ") return;
+    const el = e.target.closest("[data-tip]");
+    if (!el) return;
+    e.preventDefault();
+    tk.selected = Number(el.dataset.tip);
+    renderTicketDetail();
+  };
+  ["#tk-list", "#tk-history"].forEach((sel) => { $(sel).addEventListener("click", onLegPick); $(sel).addEventListener("keydown", onLegPick); });
+  tkDetailEl.addEventListener("click", onDetailLink);
+
+  const legAttrs = (l) => (Number.isFinite(l.tipId) ? ` data-tip="${l.tipId}" tabindex="0" role="button"` : "");
+
   function renderTickets() {
+    renderTicketList();
+    renderTicketDetail();
+  }
+
+  function renderTicketList() {
     $$("#tk-day [data-tkday]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.tkday === tk.day)));
     const note = $("#tk-note");
     const list = $("#tk-list");
@@ -1043,7 +1085,7 @@
     }
     list.innerHTML = r.tickets.map((t) => `<article class="tk-card">
       <div class="tk-head"><span class="tk-name">${esc(t.name)}</span>${t.verdict ? `<span class="tk-verdict tk-verdict--${t.verdict}">${CERTAINTY_CS[t.verdict] || ""}</span>` : ""}</div>
-      <div class="tk-legs">${t.legs.map((l) => `<div class="tk-leg"><div class="tk-leg__row">
+      <div class="tk-legs">${t.legs.map((l) => `<div class="tk-leg"${legAttrs(l)}><div class="tk-leg__row">
           <span class="tk-leg__match">${esc(l.matchName)}</span><span class="tk-leg__odds">${esc(nf2.format(l.odds))}</span>
           <span class="tk-leg__tip">${esc(l.tipLabel)}</span><span class="tk-leg__meta">${esc(kickoffShort(l.kickoff))} · ${esc(fmtPct(l.probability))}</span>
         </div>${l.reason ? `<p class="tk-leg__why">${esc(l.reason)}</p>` : ""}</div>`).join("")}</div>
@@ -1079,7 +1121,7 @@
     el.innerHTML = '<h3 class="tk-hist__title">Uložené tikety na tento den</h3>'
       + rows.map((t) => `<div class="tk-hist__row">
         <div class="tk-hist__meta"><strong>${esc(t.name)}</strong><span>${esc(fmtKickoff(t.createdAt))}</span></div>
-        <ul class="tk-hist__legs">${t.legs.map((l) => `<li class="is-${l.outcome || "pending"}"><i>${LEG_MARK[l.outcome] || "…"}</i><span>${esc(l.matchName)}</span><em>${esc(l.tipLabel)} · ${esc(nf2.format(l.odds))}</em>${l.reason ? `<p class="tk-hist__why">${esc(l.reason)}</p>` : ""}</li>`).join("")}</ul>
+        <ul class="tk-hist__legs">${t.legs.map((l) => `<li class="is-${l.outcome || "pending"}"${legAttrs(l)}><i>${LEG_MARK[l.outcome] || "…"}</i><span>${esc(l.matchName)}</span><em>${esc(l.tipLabel)} · ${esc(nf2.format(l.odds))}</em>${l.reason ? `<p class="tk-hist__why">${esc(l.reason)}</p>` : ""}</li>`).join("")}</ul>
         <div class="tk-hist__odds">${esc(nf2.format(t.totalOdds))}</div>
         <span class="tk-hist__status tk-hist__status--${t.status}">${TK_STATUS[t.status]}</span></div>`).join("");
   }
@@ -1087,7 +1129,7 @@
   async function loadTicketHistory() {
     if (!desktop) return;
     const res = await desktop.tickets.history();
-    if (res.ok) { tk.history = res.data; renderTicketHistory(); }
+    if (res.ok) { tk.history = res.data; renderTicketHistory(); renderTicketDetail(); }
   }
 
   async function loadTickets() {
