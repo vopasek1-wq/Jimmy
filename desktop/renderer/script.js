@@ -297,7 +297,7 @@
   });
   $$("#live-control [data-live]").forEach((b) => {
     b.addEventListener("click", () => {
-      state.live = b.dataset.live === "all" ? "" : b.dataset.live;
+      state.live = state.live === b.dataset.live ? "" : b.dataset.live;   // druhé kliknutí filtr vypne
       store.set("live", state.live);
       renderTips();
     });
@@ -338,7 +338,7 @@
       if (!p || !p.updatedAt) return state.error || (p && !p.success) ? "Tipy se nepodařilo načíst – viz upozornění nahoře." : "Zatím nejsou stažené žádné tipy. Klikni na „Obnovit tipy“.";
       return `Zdroje teď neobsahují žádný zápas, který splňuje filtry (nad ${state.limits.minProbability} %, kurz alespoň ${nf2.format(state.limits.minOdds)}).`;
     }
-    if (state.live === "only") return "Právě se nehraje žádný zápas z tipů. Zobraz „Všechny zápasy“.";
+    if (state.live === "only") return "Právě se nehraje žádný zápas z tipů. Druhé kliknutí na „Živě“ filtr vypne.";
     return `Výběru neodpovídá žádný tip (celkem ${total}). Zkus jiný den, nebo vypni filtry.`;
   };
 
@@ -359,7 +359,7 @@
     $("#tips-table").hidden = state.visible.length === 0;
 
     $$("#day-control [data-day]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.day === state.day)));
-    $$("#live-control [data-live]").forEach((b) => b.setAttribute("aria-pressed", String((b.dataset.live === "all" ? "" : b.dataset.live) === state.live)));
+    $$("#live-control [data-live]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.live === state.live)));
     markSort($("#tips-table"), "data-sort", state.sort);
 
     const p = state.payload;
