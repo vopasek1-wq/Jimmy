@@ -278,7 +278,7 @@
       if (state.live) {
         const kind = matchState(t, now).kind;
         const playing = kind === "live" || kind === "started";
-        if (state.live === "only" ? !playing : kind !== "wait") return false;   // „Bez živě“ = jen zápasy, které ještě nezačaly
+        if (state.live === "only" ? !playing : kind !== "wait") return false;   // „Nadcházející“ = jen zápasy, které ještě nezačaly
       }
       return matchesQuery(t);
     });
@@ -334,6 +334,7 @@
       return `Zdroje teď neobsahují žádný zápas, který splňuje filtry (nad ${state.limits.minProbability} %, kurz alespoň ${nf2.format(state.limits.minOdds)}).`;
     }
     if (state.live === "only") return "Právě se nehraje žádný zápas z tipů. Druhé kliknutí na „Živě“ filtr vypne.";
+    if (state.live === "hide") return "Žádný nadcházející zápas – všechny už začaly nebo skončily. Druhé kliknutí na „Nadcházející“ filtr vypne.";
     return `Výběru neodpovídá žádný tip (celkem ${total}). Zkus jiný den, nebo vypni filtry.`;
   };
 
