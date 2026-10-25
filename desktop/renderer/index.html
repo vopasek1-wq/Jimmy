@@ -85,6 +85,7 @@
           <li><a class="nav__link" href="#" data-view="live"><i data-lucide="radio"></i><span>Živé zápasy</span></a></li>
           <li><a class="nav__link" href="#" data-view="tickets"><i data-lucide="ticket"></i><span>Tikety</span></a></li>
           <li><a class="nav__link" href="#" data-view="evaluation"><i data-lucide="clipboard-check"></i><span>Vyhodnocení</span></a></li>
+          <li><a class="nav__link" href="#" data-view="analysis"><i data-lucide="brain"></i><span>Analýza</span></a></li>
           <li><a class="nav__link" href="#" data-view="history"><i data-lucide="history"></i><span>Historie</span></a></li>
         </ul>
       </nav>
@@ -179,10 +180,6 @@
             <h2 class="sr-only" id="eval-title">Vyhodnocení tiketů</h2>
             <div class="stat-row stat-row--5" id="ev-stats"></div>
             <div class="tk-controls ev-controls">
-              <div class="seg-control ev-mode" role="group" aria-label="Zobrazení">
-                <button type="button" data-evmode="tickets" aria-pressed="true">Tikety</button>
-                <button type="button" data-evmode="analysis" aria-pressed="false">Analýza</button>
-              </div>
               <div class="seg-control" id="ev-range" role="group" aria-label="Období">
                 <button type="button" data-evrange="today" aria-pressed="false">Dnes</button>
                 <button type="button" data-evrange="yesterday" aria-pressed="false">Včera</button>
@@ -205,15 +202,9 @@
 
         <section class="card analysis-page" aria-labelledby="analysis-title">
           <h2 class="sr-only" id="analysis-title">Analýza úspěšnosti tipů</h2>
-          <div class="an-mode">
-            <div class="seg-control ev-mode" role="group" aria-label="Zobrazení">
-              <button type="button" data-evmode="tickets" aria-pressed="false">Tikety</button>
-              <button type="button" data-evmode="analysis" aria-pressed="true">Analýza</button>
-            </div>
-          </div>
           <div class="an-top">
             <div class="stat-row stat-row--5" id="an-stats"></div>
-            <button class="ai-tile" type="button" id="ai-run" title="Gemini rozebere kalibraci pravděpodobností a opakované chyby v prohraných tipech">
+            <button class="ai-tile" type="button" id="ai-run" title="Gemini slovně rozebere tvoje vyhodnocené tikety: co vyšlo, co ne a proč">
               <span class="ai-tile__icon"><i data-lucide="sparkles"></i></span>
               <span class="ai-tile__text"><span class="ai-tile__title" id="ai-title">Analyzovat pomocí AI</span></span>
             </button>
@@ -227,7 +218,7 @@
           <div class="live-box"><div class="live-box__title">Na co sázet a na co ne<small>podle výsledků uložených tiketů a tipů v nich (stálý vklad 1)</small></div><div id="an-advice"></div></div>
           <div class="live-box"><div class="live-box__title">Tikety od Gemini vs. všechny tipy<small>vklad 1 na tiket / tip; odhad u tiketu = součin pravděpodobností</small></div><div id="an-tickets"></div></div>
           <div class="live-box ai-box">
-            <div class="live-box__title">AI analýza<small>pošle souhrnné statistiky a posledních 40 prohraných tipů do Google Gemini API tvým klíčem</small></div>
+            <div class="live-box__title">Slovní analýza tiketů (AI)<small>pošle vyhodnocené tikety z Vyhodnocení (zápasy, tipy, kurzy, výsledky) do Google Gemini API tvým klíčem</small></div>
             <div class="ai-out" id="ai-out" aria-live="polite"></div>
           </div>
         </section>

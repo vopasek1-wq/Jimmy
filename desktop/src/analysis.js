@@ -78,22 +78,48 @@ function analyze(allTips) {
   return { overall, bands, markets, leagues, sources, insights, pending: allTips.filter((t) => !t.outcome).length };
 }
 
-/** Poslední prohrané tipy (podklad pro hledání opakujících se chyb). */
-function recentLosses(allTips, limit = 40) {
-  return allTips.filter((t) => t.outcome === "loss").slice(0, limit).map((t) => ({
-    zapas: t.matchName, soutez: t.league, tip: t.tipLabel, pravdepodobnost: t.probability, kurz: t.odds, kurzOdhad: t.oddsEstimated,
-    skore: t.homeScore !== null && t.awayScore !== null ? `${t.homeScore}:${t.awayScore}` : null,
-  }));
-}
-
 const SYSTEM = "Jsi analytik sázkových tipů. Odpovídáš česky, stručně a věcně, bez emoji. Nic si nevymýšlíš – opíráš se jen o dodaná data, "
   + "u malých vzorků výslovně upozorni, že závěry jsou nejisté. Nikdy nesliboj zisk a nepodporuj sázení nad možnosti uživatele.";
 
-function buildPrompt(summary, losses) {
-  const data = JSON.stringify({ celkem: summary.overall, pasma_pravdepodobnosti: summary.bands, typy_tipu: summary.markets, souteze: summary.leagues, zdroj_pravdepodobnosti: summary.sources, posledni_prohry: losses });
-  return `Tady jsou statistiky mých vyhodnocených fotbalových tipů (pravděpodobnost = odhad zdroje, actual = skutečná úspěšnost v %, gap = actual − predicted v procentních bodech, roi v %).\n\n${data}\n\n`
-    + "Napiš: 1) hlavní zjištění o kalibraci pravděpodobnosti (kde odhad nesedí se skutečností), 2) opakující se chyby (typy tipů, soutěže, pásma, vzorce v posledních prohrách), "
-    + "3) 2–4 konkrétní doporučení, jak s tipy zacházet. Použij krátké odstavce nebo odrážky začínající „- “.";
+const MAX_ANALYZED_TICKETS = 25;   // víc tiketů do jednoho dotazu nedáváme (délka zadání = spotřeba limitu Gemini API)
+const RESULT_CS = { win: "výhra", loss: "prohra", void: "vráceno" };
+const VERDICT_CS = { good: "vysoká", ok: "střední", risky: "nižší" };
+
+/** Vyhodnocené tiketů → podklad pro slovní rozbor od AI (nejnovější první, nejvýš MAX_ANALYZED_TICKETS); čekající tikety se jen spočítají. */
+function ticketsForAnalysis(settled) {
+  const decided = settled.filter((t) => t.status === "win" || t.status === "loss" || t.status === "void");
+  const wins = decided.filter((t) => t.status === "win").length;
+  const losses = decided.filter((t) => t.status === "loss").length;
+  const real = decided.filter((t) => t.status !== "void");
+  const expected = real.length ? real.reduce((s, t) => s + t.jointProbability, 0) / real.length : null;
+  const profit = real.reduce((s, t) => s + t.profit, 0);
+  const clip = (text) => String(text || "").slice(0, 200);
+  return {
+    souhrn: {
+      tiketu_vyhodnoceno: decided.length, vyhrane: wins, prohrane: losses, vracene: decided.length - wins - losses,
+      cekajici: settled.filter((t) => t.status === "pending").length,
+      skutecna_uspesnost_pct: real.length ? pct((100 * wins) / real.length) : null, odhadovana_uspesnost_pct: expected === null ? null : pct(expected),
+      zisk_pri_vkladu_1_na_tiket: pct(profit), roi_pct: real.length ? pct((100 * profit) / real.length) : null,
+    },
+    tikety: decided.slice(0, MAX_ANALYZED_TICKETS).map((t) => ({
+      nazev: t.name, den: t.day, jistota: VERDICT_CS[t.verdict] || null, vysledek: RESULT_CS[t.status], kurz: t.totalOdds, pravdepodobnost_pct: t.jointProbability, zisk: pct(t.profit),
+      shrnuti: clip(t.summary),
+      tipy: t.legs.map((l) => ({
+        zapas: l.matchName, soutez: l.league, tip: l.tipLabel, kurz: l.odds, pravdepodobnost_pct: l.probability,
+        vysledek: RESULT_CS[l.outcome] || "bez výsledku", skore: l.score || null, zduvodneni: clip(l.reason),
+      })),
+    })),
+  };
+}
+
+/** Zadání pro Gemini: slovní rozbor vyhodnocených tiketů (co vyšlo, co ne a proč, doporučení). */
+function buildTicketsPrompt(settled) {
+  const data = ticketsForAnalysis(settled);
+  return `Tady jsou moje vyhodnocené tikety z fotbalových tipů (kurz = kombinovaný kurz tiketu, pravdepodobnost_pct = odhad ze součinu pravděpodobností zdroje, `
+    + `zisk = výhra − vklad při vkladu 1 na tiket, jedna prohra shodí celý tiket, vrácený zápas se z kurzu vyjme; u každého tipu je výsledek, skóre a původní zdůvodnění z AI):\n\n${JSON.stringify(data)}\n\n`
+    + "Napiš slovní analýzu těchto tiketů: 1) celkový obraz (jak tikety dopadly, odhad vs. skutečnost, ROI), 2) co fungovalo (typy tipů, soutěže, velikost kurzu, počet zápasů v tiketu, shoda se zdůvodněním), "
+    + "3) kde se chybovalo – zaměř se na zápasy, které prohrané tikety shodily, a na opakující se vzorce (typ tipu, soutěž, kurz, jistota tiketu, zdůvodnění, které se nenaplnilo), "
+    + "4) 2–4 konkrétní doporučení pro sestavování dalších tiketů. Opírej se jen o dodaná data a uváděj konkrétní zápasy a čísla. Použij krátké odstavce nebo odrážky začínající „- “.";
 }
 
 // „latest“ aliasy sledují aktuální modely Gemini; při nedostupnosti nebo přetížení se zkusí další (lehčí) model.
@@ -217,4 +243,4 @@ async function askGemini(options) {
   return (await generate(options)).text;
 }
 
-module.exports = { analyze, recentLosses, buildPrompt, askGemini, generate, marketGroup };
+module.exports = { analyze, buildTicketsPrompt, ticketsForAnalysis, askGemini, generate, marketGroup };

@@ -3,7 +3,7 @@
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { analyze, marketGroup, buildPrompt, recentLosses, askGemini, generate } = require("../src/analysis");
+const { analyze, marketGroup, buildTicketsPrompt, ticketsForAnalysis, askGemini, generate } = require("../src/analysis");
 
 const tip = (probability, outcome, o = {}) => ({ probability, outcome, tipCode: "1", league: "Premier League", odds: 1.8, oddsEstimated: false, matchName: "A – B", tipLabel: "x", homeScore: 0, awayScore: 1, ...o });
 
@@ -34,12 +34,22 @@ test("analyze: ROI jen ze skutečných kurzů a prázdná data", () => {
   assert.deepEqual(analyze([]).overall, { n: 0, wins: 0, predicted: null, actual: null, gap: null, roi: null });
 });
 
-test("buildPrompt a recentLosses", () => {
-  const tips = [tip(80, "loss"), tip(80, "win")];
-  const losses = recentLosses(tips);
-  assert.equal(losses.length, 1);
-  const p = buildPrompt(analyze(tips), losses);
-  assert.ok(p.includes("pasma_pravdepodobnosti") && p.includes("posledni_prohry"));
+const settledTicket = (status, o = {}) => ({ name: "Tiket 1", day: "2026-10-24", verdict: "good", summary: "Samí favorité.", totalOdds: 2.4, jointProbability: 55, profit: status === "win" ? 1.4 : status === "loss" ? -1 : status === "void" ? 0 : null, status,
+  legs: [{ matchName: "A – B", league: "Anglie", tipLabel: "Výhra domácích", odds: 1.5, probability: 75, outcome: status === "loss" ? "loss" : status === "pending" ? null : "win", score: "2:0", reason: "Doma silní." }], ...o });
+
+test("ticketsForAnalysis: souhrn vyhodnocených tiketů, čekající se jen spočítají, nejvýš 25 tiketů", () => {
+  const d = ticketsForAnalysis([settledTicket("win"), settledTicket("loss"), settledTicket("void"), settledTicket("pending")]);
+  assert.deepEqual([d.souhrn.tiketu_vyhodnoceno, d.souhrn.vyhrane, d.souhrn.prohrane, d.souhrn.vracene, d.souhrn.cekajici], [3, 1, 1, 1, 1]);
+  assert.deepEqual([d.souhrn.skutecna_uspesnost_pct, d.souhrn.odhadovana_uspesnost_pct, d.souhrn.roi_pct], [50, 55, 20]);   // vrácený tiket se do úspěšnosti ani ROI nepočítá
+  assert.equal(d.tikety.length, 3);
+  assert.deepEqual(d.tikety[0].tipy[0], { zapas: "A – B", soutez: "Anglie", tip: "Výhra domácích", kurz: 1.5, pravdepodobnost_pct: 75, vysledek: "výhra", skore: "2:0", zduvodneni: "Doma silní." });
+  assert.equal(ticketsForAnalysis(Array.from({ length: 40 }, () => settledTicket("win"))).tikety.length, 25);
+  assert.equal(ticketsForAnalysis([]).souhrn.roi_pct, null);
+});
+
+test("buildTicketsPrompt: tikety i pokyny pro slovní rozbor", () => {
+  const p = buildTicketsPrompt([settledTicket("loss")]);
+  assert.ok(p.includes('"zduvodneni":"Doma silní."') && p.includes("slovní analýzu těchto tiketů") && p.includes("doporučení"));
 });
 
 test("askGemini: úspěch, záložní model a chyby", async () => {

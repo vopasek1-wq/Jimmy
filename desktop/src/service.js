@@ -10,7 +10,7 @@ const { Pipeline, updateResults, settleFinished } = require("./pipeline");
 const { SofaScoreClient } = require("./scrapers/sofascore");
 const { LiveClient } = require("./live");
 const { MatchStats, chartsWithForebet } = require("./matchstats");
-const { analyze, recentLosses, buildPrompt } = require("./analysis");
+const { analyze, buildTicketsPrompt } = require("./analysis");
 const { candidatesFrom, settleTicket, ticketStats, dueKickoffs } = require("./tickets");
 const { GoalsCache } = require("./goalscache");
 const { ticketAdvice } = require("./advice");
@@ -125,10 +125,13 @@ class TipService {
     return analyze(this.db.history(null).map(serializeTip));
   }
 
-  /** Text pro AI: souhrn statistik + poslední prohry. */
+  /** Zadání pro AI: slovní rozbor vyhodnocených tiketů (ze záložky Vyhodnocení). */
   aiPrompt() {
-    const tips = this.db.history(null).map(serializeTip);
-    return buildPrompt(analyze(tips), recentLosses(tips));
+    const settled = this._settledTickets();
+    if (!settled.some((t) => t.status === "win" || t.status === "loss" || t.status === "void")) {
+      throw new Error("Zatím nejsou vyhodnocené žádné tikety. Vytvoř je v záložce Tikety a po zápasech je nech vyhodnotit v záložce Vyhodnocení.");
+    }
+    return buildTicketsPrompt(settled);
   }
 
   /** Tipy z přehledu pro tikety (z posledního stažení; jen ty, které ještě nezačaly) a statistika dosavadní úspěšnosti. */
