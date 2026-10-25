@@ -100,6 +100,14 @@ test("generate: volby požadavku (JSON režim, teplota, limit tokenů) a vrácen
   assert.equal(sent.generationConfig.responseMimeType, undefined);
   const cut = async () => okText("{\"tikety\":[", { finishReason: "MAX_TOKENS" });
   await assert.rejects(() => generate({ fetchFn: cut, apiKey: "k", prompt: "q", json: true }), /useklá/);
+  const limits = [];
+  const growing = async (_url, init) => {                     // useklá odpověď se zopakuje s dvojnásobným limitem
+    const limit = JSON.parse(init.body).generationConfig.maxOutputTokens;
+    limits.push(limit);
+    return limit < 16000 ? okText("{\"tikety\":[", { finishReason: "MAX_TOKENS" }) : okText("{\"tikety\":[]}");
+  };
+  assert.equal((await generate({ fetchFn: growing, apiKey: "k", prompt: "q", json: true, maxTokens: 8000 })).text, "{\"tikety\":[]}");
+  assert.deepEqual(limits, [8000, 16000]);
   const thought = async () => ({ status: 200, ok: true, json: async () => ({ candidates: [{ content: { parts: [{ text: "úvaha", thought: true }, { text: "odpověď" }] } }] }) });
   assert.equal(await askGemini({ fetchFn: thought, apiKey: "k", prompt: "q" }), "odpověď");
 });

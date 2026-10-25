@@ -10,7 +10,7 @@ const MIN_LEGS = 2;
 const MAX_LEGS = 5;
 const MIN_TOTAL_ODDS = 2;       // minimální kombinovaný kurz tiketu
 const MAX_CANDIDATES = 20;      // víc zápasů najednou je zbytečně dlouhé stahování i zadání
-const ASSEMBLE_TIMEOUT = 150000;
+const ASSEMBLE_TIMEOUT = 240000;
 
 const JISTOTA = { vysoka: "good", vysoke: "good", high: "good", dobry: "good", good: "good", stredni: "ok", medium: "ok", prumerny: "ok", ok: "ok",
   nizsi: "risky", nizka: "risky", low: "risky", rizikovy: "risky", risky: "risky" };
@@ -258,7 +258,7 @@ async function createTickets({ candidates, collect, ask, calibration = null, pro
   let parsed = null;
   let text = "";
   for (let attempt = 0; !parsed; attempt += 1) {
-    text = (await ask({ prompt, json: true, temperature: null, maxTokens: 8000, timeoutMs: ASSEMBLE_TIMEOUT })).text;
+    text = (await ask({ prompt, json: true, temperature: null, maxTokens: 16000, timeoutMs: ASSEMBLE_TIMEOUT })).text;
     try {
       parsed = parseTickets(text, usable);
     } catch (err) {

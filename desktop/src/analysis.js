@@ -99,6 +99,7 @@ function buildPrompt(summary, losses) {
 // „latest“ aliasy sledují aktuální modely Gemini; při nedostupnosti nebo přetížení se zkusí další (lehčí) model.
 const MODELS = ["gemini-flash-latest", "gemini-2.5-flash", "gemini-flash-lite-latest", "gemini-2.5-flash-lite"];
 const SERVER_ERRORS = new Set([500, 502, 503, 504]);
+const MAX_TOKENS_CAP = 32768; // strop limitu odpovědi, když ji model useklo (do limitu se počítá i „přemýšlení“ modelu)
 const ATTEMPTS = 2;        // pokusů na model při chybě serveru (přetížení)
 const MAX_QUOTA_WAIT = 20; // s: na minutový limit se počká jen krátce, jinak se zkusí další model
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -151,6 +152,7 @@ async function generate({ fetchFn, apiKey, prompt, system = SYSTEM, json = false
   const timer = setTimeout(() => ctl.abort(), timeoutMs);
   try {
     const failures = [];
+    let tokens = maxTokens || (json ? 8000 : 4000);
     for (const model of MODELS) {
       for (let attempt = 0; attempt < ATTEMPTS; attempt += 1) {
         const resp = await fetchFn(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
@@ -160,7 +162,7 @@ async function generate({ fetchFn, apiKey, prompt, system = SYSTEM, json = false
             systemInstruction: { parts: [{ text: system }] },
             contents: [{ role: "user", parts: [{ text: prompt }] }],
             generationConfig: {
-              maxOutputTokens: maxTokens || (json ? 8000 : 4000),
+              maxOutputTokens: tokens,
               ...(temperature === null ? {} : { temperature }),
               ...(json ? { responseMimeType: "application/json" } : {}),
             },
@@ -187,7 +189,10 @@ async function generate({ fetchFn, apiKey, prompt, system = SYSTEM, json = false
         const parts = (cand.content || {}).parts || [];
         const text = parts.filter((p) => !p.thought).map((p) => p.text || "").join("\n").trim();
         if (!text) throw new Error("AI nevrátila žádný text (odpověď mohla být zablokovaná).");
-        if (json && cand.finishReason === "MAX_TOKENS") throw new Error("Odpověď AI byla příliš dlouhá a useklá – zkus to znovu.");
+        if (json && cand.finishReason === "MAX_TOKENS") {
+          if (tokens < MAX_TOKENS_CAP) { tokens = Math.min(tokens * 2, MAX_TOKENS_CAP); attempt -= 1; continue; }   // useklá odpověď: znovu s dvojnásobným limitem
+          throw new Error("Odpověď AI byla příliš dlouhá a useklá – zkus to znovu.");
+        }
         return { text, model };
       }
     }
