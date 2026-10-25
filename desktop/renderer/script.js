@@ -1274,6 +1274,7 @@
     $("#tk-create").disabled = false;
     tk.result = { ...(res.ok ? res.data : { error: res.error }), forDay, at: fmtKickoff(new Date().toISOString()) };
     if (res.ok) store.set("tk-result2", tk.result);
+    if (res.ok && res.data.reused) toast("Podklady se od minula nezměnily – použila se předchozí odpověď Gemini, nový dotaz se neposlal.");
     renderTickets();
     loadTicketHistory();
   });

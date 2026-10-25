@@ -108,6 +108,14 @@ test("generate: volby požadavku (JSON režim, teplota, limit tokenů) a vrácen
   };
   assert.equal((await generate({ fetchFn: growing, apiKey: "k", prompt: "q", json: true, maxTokens: 8000 })).text, "{\"tikety\":[]}");
   assert.deepEqual(limits, [8000, 16000]);
+  const sentConfigs = [];
+  const picky = async (_url, init) => {                       // model, který omezení „přemýšlení“ nezná: zopakuje se bez něj
+    const cfg = JSON.parse(init.body).generationConfig;
+    sentConfigs.push(cfg.thinkingConfig);
+    return cfg.thinkingConfig ? { status: 400, ok: false, json: async () => ({ error: { message: "Thinking budget is not supported for this model" } }) } : okText("hotovo");
+  };
+  assert.equal((await generate({ fetchFn: picky, apiKey: "k", prompt: "q", thinkingBudget: 1024 })).text, "hotovo");
+  assert.deepEqual(sentConfigs, [{ thinkingBudget: 1024 }, undefined]);
   const thought = async () => ({ status: 200, ok: true, json: async () => ({ candidates: [{ content: { parts: [{ text: "úvaha", thought: true }, { text: "odpověď" }] } }] }) });
   assert.equal(await askGemini({ fetchFn: thought, apiKey: "k", prompt: "q" }), "odpověď");
 });

@@ -11,6 +11,8 @@ const MAX_LEGS = 5;
 const MIN_TOTAL_ODDS = 2;       // minimální kombinovaný kurz tiketu
 const MAX_CANDIDATES = 20;      // víc zápasů najednou je zbytečně dlouhé stahování i zadání
 const ASSEMBLE_TIMEOUT = 240000;
+const THINKING_BUDGET = 1024;   // omezení „přemýšlení“ modelu: šetří limit tokenů i denní kvótu Gemini API
+const ANSWER_TTL_MS = 20 * 60e3;
 
 const JISTOTA = { vysoka: "good", vysoke: "good", high: "good", dobry: "good", good: "good", stredni: "ok", medium: "ok", prumerny: "ok", ok: "ok",
   nizsi: "risky", nizka: "risky", low: "risky", rizikovy: "risky", risky: "risky" };
@@ -59,7 +61,7 @@ function buildTicketPrompt(candidates, stats, { calibration = null, now = new Da
     + `- Maximálně ${MAX_LEGS} zápasy na tiket, minimálně ${MIN_LEGS}.\n`
     + `- Minimální kombinovaný kurz tiketu (součin kurzů tipů) je ${MIN_TOTAL_ODDS.toFixed(2)}. Tiket, který to nesplňuje, nevytvářej.\n`
     + `- Každý zápas smí být nejvýš v jednom tiketu (tikety se v zápasech nepřekrývají).\n`
-    + `- Zdůvodnění piš ke KAŽDÉMU zápasu v tiketu zvlášť („zduvodneni“ u daného tipu): 1–2 věty, stručné, věcné a srozumitelné pro běžného sázkaře; odkaž na formu týmů, vzájemné zápasy, góly, zranění nebo domácí/venkovní výkonnost z dodaných statistik právě pro tento zápas. Nepřidávej čísla ani fakta, která ve statistikách nejsou. Chybějící údaj (zraneni není uvedeno) nic nedokazuje.\n`
+    + `- Zdůvodnění piš ke KAŽDÉMU zápasu v tiketu zvlášť („zduvodneni“ u daného tipu): 1–2 krátké věty (celkem nejvýš 35 slov), věcně a srozumitelně pro běžného sázkaře; odkaž na formu týmů, vzájemné zápasy, góly, zranění nebo domácí/venkovní výkonnost z dodaných statistik právě pro tento zápas. Nepřidávej čísla ani fakta, která ve statistikách nejsou. Chybějící údaj (zraneni není uvedeno) nic nedokazuje.\n`
     + `- Shrnutí tiketu („shrnuti“): jedna krátká věta, proč jsou tyto zápasy pohromadě (např. „samé silné domácí týmy“). Neopakuj v něm zdůvodnění jednotlivých zápasů.\n`
     + `- U každého zápasu, který v žádném tiketu není, uveď v poli "vynechane" jeho id a důvod (nejvýš 12 slov, např. „forma hostů tip nepodporuje“, „chybí údaje o H2H i zraněních“).\n`
     + `- Piš česky.\n`
@@ -241,7 +243,7 @@ function ticketStats(settled) {
  * (matchstats.js), `ask` je funkce `generate` z analysis.js (s klíčem a síťovou funkcí), `progress` dostává zprávy o průběhu.
  * Vrací { tickets, note, analyzed, covered, rejected, omitted } (omitted = zápasy mimo tikety s důvodem; `log` dostane text pro ladicí soubor).
  */
-async function createTickets({ candidates, collect, ask, calibration = null, progress = () => {}, now = new Date(), hint = "", log = () => {} }) {
+async function createTickets({ candidates, collect, ask, calibration = null, progress = () => {}, now = new Date(), hint = "", log = () => {}, reuse = null }) {
   if (candidates.length < MIN_LEGS) {
     throw new Error(`Na tikety je málo vhodných tipů (${candidates.length}): potřebuju alespoň ${MIN_LEGS}, které ještě nezačaly a mají skutečný kurz. Zkus jiný den, nebo nejdřív stáhni tipy.`);
   }
@@ -257,26 +259,46 @@ async function createTickets({ candidates, collect, ask, calibration = null, pro
   const prompt = buildTicketPrompt(usable, data.stats, { calibration, now });
   let parsed = null;
   let text = "";
+  let reused = false;
+  const key = reuse ? answerKey(prompt) : null;
+  const known = reuse && reuse.get(key);                 // stejné podklady jako před chvílí: bez nového dotazu na Gemini
+  if (known) {
+    try { parsed = parseTickets(known, usable); text = known; reused = true; progress("Podklady se nezměnily – používám předchozí odpověď Gemini (bez nového dotazu)…"); } catch { parsed = null; }
+  }
   for (let attempt = 0; !parsed; attempt += 1) {
-    text = (await ask({ prompt, json: true, temperature: null, maxTokens: 16000, timeoutMs: ASSEMBLE_TIMEOUT })).text;
+    text = (await ask({ prompt, json: true, temperature: null, maxTokens: 16000, thinkingBudget: THINKING_BUDGET, timeoutMs: ASSEMBLE_TIMEOUT })).text;
     try {
       parsed = parseTickets(text, usable);
     } catch (err) {
       if (attempt) { log(`Tikety – ${new Date().toISOString()}\nNeplatná odpověď Gemini:\n${text}\n`); throw err; }      // neplatný JSON: jeden další pokus
     }
   }
-  log([`Tikety – ${new Date().toISOString()}`, `Zápasů: ${candidates.length}, se statistikami: ${usable.length}, tiketů: ${parsed.tickets.length}, zahozených: ${parsed.rejected.length}`, "",
+  if (reuse && !reused) reuse.set(key, text);
+  log([`Tikety – ${new Date().toISOString()}${reused ? " (použita předchozí odpověď)" : ""}`, `Zápasů: ${candidates.length}, se statistikami: ${usable.length}, tiketů: ${parsed.tickets.length}, zahozených: ${parsed.rejected.length}`, "",
     "=== ODPOVĚĎ GEMINI ===", text, "", "=== ZAHOZENÉ TIKETY ===", ...parsed.rejected, "", "=== ZADÁNÍ ===", prompt, ""].join("\n"));
   if (!parsed.tickets.length && parsed.rejected.length) {
     throw new Error(`AI navrhla tikety, které nesplňují pravidla (${parsed.rejected.slice(0, 3).join("; ")}). Zkus to znovu.`);
   }
   return {
-    tickets: parsed.tickets, note: parsed.note, analyzed: candidates.length, covered: usable.length, rejected: parsed.rejected.length,
+    tickets: parsed.tickets, note: parsed.note, reused, analyzed: candidates.length, covered: usable.length, rejected: parsed.rejected.length,
     omitted: omittedMatches(candidates, new Set(usable.map((c) => c.ticketId)), parsed),
   };
 }
 
+/** Klíč odpovědi: otisk zadání (stejné zadání = stejné podklady). */
+const answerKey = (prompt) => require("node:crypto").createHash("sha1").update(String(prompt)).digest("hex");
+
+/** Krátkodobá paměť odpovědí AI podle klíče zadání (ve stejném běhu aplikace); platí `ttlMs`. */
+function answerCache({ ttlMs = ANSWER_TTL_MS, now = () => Date.now() } = {}) {
+  const items = new Map();
+  return {
+    get: (key) => { const e = items.get(key); return e && now() - e.at < ttlMs ? e.text : null; },
+    set: (key, text) => { items.set(key, { at: now(), text }); if (items.size > 20) items.delete(items.keys().next().value); },
+  };
+}
+
 module.exports = {
+  answerCache, answerKey,
   candidatesFrom, buildTicketPrompt, parseTickets, createTickets, settleTicket, ticketStats, dueKickoffs,
   MIN_LEGS,
 };

@@ -147,12 +147,13 @@ function failureMessage(failures) {
  * Při chybě zkouší další modely; když selžou všechny, vyhodí chybu se skutečným důvodem (limit, přetížení …).
  * Vrací { text, model }.
  */
-async function generate({ fetchFn, apiKey, prompt, system = SYSTEM, json = false, temperature = 0.4, maxTokens, timeoutMs = 120000, sleep = wait }) {
+async function generate({ fetchFn, apiKey, prompt, system = SYSTEM, json = false, temperature = 0.4, maxTokens, thinkingBudget, timeoutMs = 120000, sleep = wait }) {
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), timeoutMs);
   try {
     const failures = [];
     let tokens = maxTokens || (json ? 8000 : 4000);
+    const noThinking = new Set(); // modely, které omezení „přemýšlení“ odmítly
     for (const model of MODELS) {
       for (let attempt = 0; attempt < ATTEMPTS; attempt += 1) {
         const resp = await fetchFn(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
@@ -165,6 +166,7 @@ async function generate({ fetchFn, apiKey, prompt, system = SYSTEM, json = false
               maxOutputTokens: tokens,
               ...(temperature === null ? {} : { temperature }),
               ...(json ? { responseMimeType: "application/json" } : {}),
+              ...(thinkingBudget !== undefined && !noThinking.has(model) ? { thinkingConfig: { thinkingBudget } } : {}),
             },
           }),
         });
@@ -172,6 +174,11 @@ async function generate({ fetchFn, apiKey, prompt, system = SYSTEM, json = false
         const err = body.error || {};
         if (resp.status === 400 && /API key not valid|API_KEY_INVALID/i.test(JSON.stringify(err))) throw new Error("API klíč není platný.");
         if (resp.status === 401 || resp.status === 403) throw new Error(`Klíč nemá přístup ke Gemini API (${err.message || `HTTP ${resp.status}`}).`);
+        if (resp.status === 400 && thinkingBudget !== undefined && !noThinking.has(model) && /thinking/i.test(JSON.stringify(err))) { // model omezení nezná: bez něj
+          noThinking.add(model);
+          attempt -= 1;
+          continue;
+        }
         if (resp.status === 404) { failures.push(errorInfo(model, 404, { ...err, message: err.message || "Model nenalezen." })); break; }
         if (resp.status === 429) {                       // limit: krátká pauza jen když ji Google doporučí, jinak další model
           const info = errorInfo(model, 429, err);

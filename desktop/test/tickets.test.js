@@ -3,7 +3,7 @@
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { candidatesFrom, buildTicketPrompt, parseTickets, createTickets } = require("../src/tickets");
+const { candidatesFrom, buildTicketPrompt, parseTickets, createTickets, answerCache } = require("../src/tickets");
 const { localDate } = require("../src/timeutil");
 
 const NOW = new Date(Date.UTC(2026, 9, 21, 10, 0));
@@ -163,6 +163,27 @@ test("createTickets: statistiky → jediný dotaz na Gemini jen se zápasy, kter
   assert.ok(messages.includes("Stahuji statistiky…") && messages.some((m) => /Gemini vyhodnocuje/.test(m)));
   assert.deepEqual([r.tickets.length, r.analyzed, r.covered], [1, 4, 3]);
   assert.equal(r.tickets[0].summary, "Dobrá forma.");
+});
+
+test("createTickets: stejné podklady do 20 minut = předchozí odpověď bez nového dotazu na Gemini; omezené přemýšlení modelu", async () => {
+  const c = four();
+  const ids = c.map((x) => x.ticketId);
+  const f = fakes({ covered: ids, replies: [json({ tikety: [{ nazev: "Tiket 1", jistota: "stredni", tipy: [ids[0], ids[1]] }] })] });
+  let clock = 0;
+  const reuse = answerCache({ now: () => clock });
+  const first = await createTickets({ candidates: c, collect: f.collect, ask: f.ask, now: NOW, reuse });
+  assert.equal(f.calls.ask.length, 1);
+  assert.equal(f.calls.ask[0].thinkingBudget, 1024);
+  assert.equal(first.reused, false);
+  const msgs = [];
+  const second = await createTickets({ candidates: c, collect: f.collect, ask: f.ask, now: NOW, reuse, progress: (m) => msgs.push(m) });
+  assert.equal(f.calls.ask.length, 1);                                   // žádný další dotaz
+  assert.deepEqual([second.reused, second.tickets.length], [true, 1]);
+  assert.ok(msgs.some((m) => /předchozí odpověď/.test(m)));
+  clock = 21 * 60e3;                                                      // po 20 minutách platí odpověď už jen starší
+  const f2 = fakes({ covered: ids, replies: [json({ tikety: [{ nazev: "Tiket 1", tipy: [ids[0], ids[1]] }] })] });
+  const third = await createTickets({ candidates: c, collect: f2.collect, ask: f2.ask, now: NOW, reuse });
+  assert.deepEqual([f2.calls.ask.length, third.reused], [1, false]);
 });
 
 test("createTickets: málo zápasů se statistikami = srozumitelná chyba a Gemini se nevolá", async () => {

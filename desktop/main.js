@@ -15,7 +15,7 @@ const { HttpClient } = require("./src/http");
 const { WindowBrowser, chromeUserAgent } = require("./src/browser");
 const { TipService } = require("./src/service");
 const { askGemini, generate } = require("./src/analysis");
-const { createTickets } = require("./src/tickets");
+const { createTickets, answerCache, answerKey } = require("./src/tickets");
 const { checkForUpdate } = require("./src/updates");
 const { loadState, saveState, pickBounds } = require("./src/windowstate");
 
@@ -169,10 +169,19 @@ ipcMain.handle("analysis:set-key", safe((_e, key) => {
   fs.writeFileSync(keyFile(), safeStorage.encryptString(k));
   return true;
 }));
+// Stejné zadání do 20 minut = stejná odpověď bez nového dotazu (šetří denní limit Gemini API).
+const ticketAnswers = answerCache();
+const analysisAnswers = answerCache();
 ipcMain.handle("analysis:run", safe(async () => {
   const apiKey = readKey();
   if (!apiKey) throw new Error("Nejdřív zadej Gemini API klíč.");
-  return askGemini({ fetchFn: (url, init) => net.fetch(url, init), apiKey, prompt: service.aiPrompt() });
+  const prompt = service.aiPrompt();
+  const key = answerKey(prompt);
+  const known = analysisAnswers.get(key);
+  if (known) return known;
+  const text = await askGemini({ fetchFn: (url, init) => net.fetch(url, init), apiKey, prompt, thinkingBudget: 1024 });
+  analysisAnswers.set(key, text);
+  return text;
 }));
 ipcMain.handle("tickets:create", safe(async (event, req) => {
   const apiKey = readKey();
@@ -182,7 +191,7 @@ ipcMain.handle("tickets:create", safe(async (event, req) => {
   const ask = (options) => generate({ fetchFn: (url, init) => net.fetch(url, init), apiKey, ...options });
   const progress = (message) => { if (!event.sender.isDestroyed()) event.sender.send("tickets:progress", message); };
   const result = await createTickets({
-    candidates, calibration, ask, progress,
+    candidates, calibration, ask, progress, reuse: ticketAnswers,
     collect: (list, report) => service.collectTicketStats(list, report),
     hint: ` Podrobnosti: ${service.ticketDiagnosticsFile()}`,
     log: (text) => service.writeTicketLog(text),

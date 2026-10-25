@@ -129,6 +129,8 @@ Zvolíš den (Dnes / Zítra) a klikneš na **Vytvořit tikety (AI)** – počet 
    (od Gemini, nebo že se k němu statistiky nepodařilo stáhnout / tiket byl zahozen pro porušení pravidel). Poslední zadání a odpověď
    Gemini jsou v souboru `ladeni\tikety-odpoved.txt`.
 
+**Šetření limitu Gemini API (bezplatný klíč má denní i minutový limit):** tikety se sestavují **jedním dotazem** na všechny zápasy. Přemýšlení modelu je omezené (jeho tokeny se počítají do limitu odpovědi i do kvóty) a zdůvodnění jsou krátká. Když se zadání do 20 minut nezmění (stejné zápasy, kurzy i statistiky), použije se předchozí odpověď a **žádný nový dotaz se neposílá** (stejně u **Analyzovat pomocí AI**). Useklá odpověď se zopakuje jen s větším limitem, nevolá se nadarmo víckrát.
+
 Pravidla, která aplikace u odpovědi **kontroluje** (tiket, který je porušuje, zahodí): 2–5 zápasů na tiket, kombinovaný kurz alespoň 2,00,
 každý zápas nejvýš v jednom tiketu a žádné neznámé tipy. **U každého tipu v tiketu** je jeho vlastní krátké zdůvodnění (1–2 věty, forma týmů, H2H, góly, zranění; ukáže se v detailu zápasu vpravo nad pravděpodobností), u tiketu jednověté shrnutí
 a úroveň jistoty; **celkový kurz, pravděpodobnost (součin) a odhad výnosu počítá aplikace sama**. Používá se stejný Gemini klíč
