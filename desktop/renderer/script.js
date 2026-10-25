@@ -973,6 +973,10 @@
     return (words.length > 1 ? words[0][0] + words[1][0] : short.slice(0, 2)).toUpperCase();
   };
 
+  // Levý sloupec: ligy se jmenují podle zemí (Francie, Itálie…), evropské poháry zůstávají pod svým názvem.
+  const COUNTRY_BADGE = { EPL: "EN", LALIGA: "ES", SERIEA: "IT", BUNDESLIGA: "DE", LIGUE1: "FR", EREDIVISIE: "NL", PORTUGAL: "PT", BELGIE: "BE", TURECKO: "TR", SKOTSKO: "SC", CESKO: "CZ" };
+  const leagueLabel = (l) => (String(l.nameCs || "").includes(" – ") ? l.nameCs.split(" – ")[0] : l.short);
+
   /** Počty zápasů podle soutěže pro právě otevřenou záložku. */
   function leagueCounts() {
     const view = app.dataset.view;
@@ -992,9 +996,9 @@
   function renderCats() {
     if (!state.leagues.length) { catsEl.innerHTML = ""; return; }
     const { counts, total } = leagueCounts();
-    const item = (key, name, badge, count) => `<button type="button" class="cat${state.league === key ? " is-active" : ""}${count ? "" : " is-empty"}" data-league="${esc(key)}" title="${esc(name)}" aria-pressed="${state.league === key}">
+    const item = (key, name, badge, count, title = name) => `<button type="button" class="cat${state.league === key ? " is-active" : ""}${count ? "" : " is-empty"}" data-league="${esc(key)}" title="${esc(title)}" aria-pressed="${state.league === key}">
       <span class="cat__badge">${esc(badge)}</span><span class="cat__name">${esc(name)}</span><span class="cat__count">${count}</span></button>`;
-    catsEl.innerHTML = `<div class="cats__title">Soutěže</div>${item("", "Všechny soutěže", "★", total)}${state.leagues.map((l) => item(l.key, l.short, badgeOf(l.short), counts[l.key] || 0)).join("")}`;
+    catsEl.innerHTML = `<div class="cats__title">Soutěže</div>${item("", "Všechny soutěže", "★", total)}${state.leagues.map((l) => item(l.key, leagueLabel(l), COUNTRY_BADGE[l.key] || badgeOf(l.short), counts[l.key] || 0, l.nameCs || l.short)).join("")}`;
   }
 
   catsEl.addEventListener("click", (e) => {
