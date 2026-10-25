@@ -18,7 +18,7 @@
   };
   // Zbytky nastavení z dřívějších verzí (rozložení karet, starší tikety…) se při startu smažou.
   try {
-    const KEPT = new Set(["day", "live", "league", "sort", "hsort", "hist-range", "tk-day", "tk-result2", "ev-range"]);
+    const KEPT = new Set(["day", "live", "league", "sort", "hsort", "hist-range", "tk-day", "tk-result2", "ev-range", "ev-mode"]);
     Object.keys(localStorage).filter((k) => k.startsWith("tips:") && !KEPT.has(k.slice(5))).forEach((k) => localStorage.removeItem(k));
   } catch { /* bez úložiště */ }
 
@@ -137,10 +137,11 @@
     ${extra.note ? `<div class="stat__note">${extra.note}</div>` : ""}</div>`;
 
   /* ---------- Navigace ---------- */
-  const VIEWS = ["overview", "live", "tickets", "evaluation", "analysis", "history"];
+  const VIEWS = ["overview", "live", "tickets", "evaluation", "history"];
   const showView = (view) => {
     if (!VIEWS.includes(view)) view = "overview";
     app.dataset.view = view;
+    app.dataset.evmode = ev.mode;
     $$(".nav__link").forEach((l) => {
       const active = l.dataset.view === view;
       l.classList.toggle("is-active", active);
@@ -153,7 +154,6 @@
     if (view === "history") loadHistory();
     if (view === "live") startLive();
     else stopLive();
-    if (view === "analysis") loadAnalysis();
     if (view === "tickets") loadTickets();
     if (view === "evaluation") loadEvaluation();
     renderCats();
@@ -1152,7 +1152,10 @@
   }
 
   /* ---------- Vyhodnocení: uložené tikety s výsledky ---------- */
-  const ev = { range: ["today", "yesterday", "week", "all"].includes(store.get("ev-range")) ? store.get("ev-range") : "all", selected: null };
+  const ev = {
+    range: ["today", "yesterday", "week", "all"].includes(store.get("ev-range")) ? store.get("ev-range") : "all", selected: null,
+    mode: store.get("ev-mode") === "analysis" ? "analysis" : "tickets",   // Tikety (výsledky) × Analýza (úspěšnost tipů a tiketů, AI)
+  };
   const evDetailEl = $("#ev-detail");
   const evDetailMatch = $("#ev-detail-match");
 
@@ -1242,9 +1245,19 @@
   }));
   $("#ev-run").addEventListener("click", evaluateResults);
 
+  /** Přepíná Tikety × Analýza uvnitř záložky Vyhodnocení. */
+  function setEvMode(mode) {
+    ev.mode = mode === "analysis" ? "analysis" : "tickets";
+    store.set("ev-mode", ev.mode);
+    app.dataset.evmode = ev.mode;
+    $$("[data-evmode]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.evmode === ev.mode)));
+    $("#main").scrollTop = 0;
+    if (ev.mode === "analysis") loadAnalysis(); else { renderEvaluation(); loadTicketHistory(); }
+  }
+  $$("[data-evmode]").forEach((b) => b.addEventListener("click", () => setEvMode(b.dataset.evmode)));
+
   function loadEvaluation() {
-    renderEvaluation();
-    loadTicketHistory();
+    setEvMode(ev.mode);
   }
 
   async function loadTickets() {

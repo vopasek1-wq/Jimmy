@@ -107,7 +107,7 @@ Vyhodnocují se běžné trhy (1X2, dvojitá šance, Over/Under, oba týmy skór
 
 ## Tikety (Gemini)
 
-Záložka **Tikety** nechá Gemini poskládat kombinace (tikety) z tipů v Přehledu, které pak ručně zadáš do Tipsportu (ten nemá API). Přepínač **Dnes / Zítra** ukazuje tikety jen pro zvolený den (včerejší tikety se mezi dnešními neukazují); výsledky starších tiketů jsou v Analýze (srovnání tiketů a „Na co sázet a na co ne“).
+Záložka **Tikety** nechá Gemini poskládat kombinace (tikety) z tipů v Přehledu, které pak ručně zadáš do Tipsportu (ten nemá API). Přepínač **Dnes / Zítra** ukazuje tikety jen pro zvolený den (včerejší tikety se mezi dnešními neukazují); výsledky tiketů jsou v záložce **Vyhodnocení** (a v její části **Analýza** je srovnání tiketů a „Na co sázet a na co ne“).
 Rozložení je stejné jako v Přehledu: vlevo tikety, vpravo **detail zápasu** (stejná karta jako v Přehledu – pravděpodobnost, kurz, odkazy, forma, vzájemné zápasy, koláče gólů, absence). Zobrazí se po kliknutí na zápas v tiketu, i v uložených tiketech.
 
 ### Vyhodnocení tiketů
@@ -134,11 +134,11 @@ Zvolíš den (Dnes / Zítra) a klikneš na **Vytvořit tikety (AI)** – počet 
 Pravidla, která aplikace u odpovědi **kontroluje** (tiket, který je porušuje, zahodí): 2–5 zápasů na tiket, kombinovaný kurz alespoň 2,00,
 každý zápas nejvýš v jednom tiketu a žádné neznámé tipy. **U každého tipu v tiketu** je jeho vlastní krátké zdůvodnění (1–2 věty, forma týmů, H2H, góly, zranění; ukáže se v detailu zápasu vpravo nad pravděpodobností), u tiketu jednověté shrnutí
 a úroveň jistoty; **celkový kurz, pravděpodobnost (součin) a odhad výnosu počítá aplikace sama**. Používá se stejný Gemini klíč
-jako v Analýze; poslední tikety zůstanou po restartu.
+jako ve Vyhodnocení; poslední tikety zůstanou po restartu.
 
 **Uložené tikety a jejich výsledky.** Každý vytvořený tiket se uloží (stejná sada tipů ve stejný den jen jednou). Pod aktuálními tikety je
 seznam **Dřívější tikety** s výsledkem: tiket je *vyhraný*, když vyjdou všechny jeho tipy, *prohraný* hned po první prohře, vrácený tip se
-z kurzu vyjme. Výsledky tipů se berou z automatického vyhodnocení. V **Analýze** je srovnání „tikety od Gemini × všechny tipy jednotlivě“
+z kurzu vyjme. Výsledky tipů se berou z automatického vyhodnocení. V části **Analýza** záložky Vyhodnocení je srovnání „tikety od Gemini × všechny tipy jednotlivě“
 (odhad = součin pravděpodobností, úspěšnost, rozdíl, ROI při vkladu 1). Patnáct minut před začátkem zápasu z čekajícího tiketu přijde
 systémové oznámení (jednou na zápas).
 
@@ -151,7 +151,7 @@ důvod (vyčerpaný denní/minutový limit, model bez limitu na bezplatném klí
 
 ## Analýza úspěšnosti
 
-Záložka **Analýza** porovnává odhadnutou pravděpodobnost tipů se skutečnými výsledky (počítají se jen výhry a prohry, ne vrácené
+Analýza je součástí záložky **Vyhodnocení** (přepínač **Tikety / Analýza** nahoře) a porovnává odhadnutou pravděpodobnost tipů se skutečnými výsledky (počítají se jen výhry a prohry, ne vrácené
 sázky): úspěšnost po pásmech 60–70 / 70–80 / 80–90 / 90–100 %, podle typu tipu a podle soutěže, včetně rozdílu v procentních bodech
 a ROI. Pod tabulkami jsou textová **zjištění** (např. „tipy s pravděpodobností 80–90 % vycházejí jen v 50 % případů“); u malého
 počtu tipů (pod 30) aplikace upozorní, že závěry jsou orientační.

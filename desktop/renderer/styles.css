@@ -371,24 +371,24 @@ i[data-lucide],
 .pages { display: none; padding: 8px; }
 .app[data-view="history"] .pages,
 .app[data-view="live"] .pages,
-.app[data-view="analysis"] .pages,
 .app[data-view="tickets"] .pages,
 .app[data-view="evaluation"] .pages { display: block; }
 .app[data-view="history"] .board,
 .app[data-view="live"] .board,
-.app[data-view="analysis"] .board,
 .app[data-view="tickets"] .board,
 .app[data-view="evaluation"] .board { display: none; }
 .app[data-view="live"] .page-history,
 .app[data-view="history"] .live-page,
-.app[data-view="analysis"] .live-page,
-.app[data-view="analysis"] .page-history,
 .app[data-view="tickets"] .live-page,
 .app[data-view="tickets"] .page-history,
 .app[data-view="evaluation"] .live-page,
 .app[data-view="evaluation"] .page-history { display: none; }
 .pages > .analysis-page { display: none; height: calc(100dvh - var(--topbar-h) - 33px); }
-.app[data-view="analysis"] .pages > .analysis-page { display: flex; }
+/* Analýza je součástí záložky Vyhodnocení: přepínač Tikety / Analýza */
+.app[data-view="evaluation"][data-evmode="analysis"] .pages > .analysis-page { display: flex; }
+.app[data-view="evaluation"][data-evmode="analysis"] .pages > .eval-page { display: none; }
+.ev-mode { align-self: flex-start; }
+.an-mode { display: flex; margin-bottom: 14px; flex: none; }
 .pages > .tickets-page, .pages > .eval-page { display: none; grid-template-columns: minmax(0, 15fr) minmax(0, 9fr); gap: 16px; height: calc(100dvh - var(--topbar-h) - 33px); }
 .app[data-view="tickets"] .pages > .tickets-page,
 .app[data-view="evaluation"] .pages > .eval-page { display: grid; }

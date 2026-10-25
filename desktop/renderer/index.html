@@ -85,7 +85,6 @@
           <li><a class="nav__link" href="#" data-view="live"><i data-lucide="radio"></i><span>Živé zápasy</span></a></li>
           <li><a class="nav__link" href="#" data-view="tickets"><i data-lucide="ticket"></i><span>Tikety</span></a></li>
           <li><a class="nav__link" href="#" data-view="evaluation"><i data-lucide="clipboard-check"></i><span>Vyhodnocení</span></a></li>
-          <li><a class="nav__link" href="#" data-view="analysis"><i data-lucide="brain"></i><span>Analýza</span></a></li>
           <li><a class="nav__link" href="#" data-view="history"><i data-lucide="history"></i><span>Historie</span></a></li>
         </ul>
       </nav>
@@ -180,6 +179,10 @@
             <h2 class="sr-only" id="eval-title">Vyhodnocení tiketů</h2>
             <div class="stat-row stat-row--5" id="ev-stats"></div>
             <div class="tk-controls ev-controls">
+              <div class="seg-control ev-mode" role="group" aria-label="Zobrazení">
+                <button type="button" data-evmode="tickets" aria-pressed="true">Tikety</button>
+                <button type="button" data-evmode="analysis" aria-pressed="false">Analýza</button>
+              </div>
               <div class="seg-control" id="ev-range" role="group" aria-label="Období">
                 <button type="button" data-evrange="today" aria-pressed="false">Dnes</button>
                 <button type="button" data-evrange="yesterday" aria-pressed="false">Včera</button>
@@ -202,6 +205,12 @@
 
         <section class="card analysis-page" aria-labelledby="analysis-title">
           <h2 class="sr-only" id="analysis-title">Analýza úspěšnosti tipů</h2>
+          <div class="an-mode">
+            <div class="seg-control ev-mode" role="group" aria-label="Zobrazení">
+              <button type="button" data-evmode="tickets" aria-pressed="false">Tikety</button>
+              <button type="button" data-evmode="analysis" aria-pressed="true">Analýza</button>
+            </div>
+          </div>
           <div class="an-top">
             <div class="stat-row stat-row--5" id="an-stats"></div>
             <button class="ai-tile" type="button" id="ai-run" title="Gemini rozebere kalibraci pravděpodobností a opakované chyby v prohraných tipech">
