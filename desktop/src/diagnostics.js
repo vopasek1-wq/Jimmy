@@ -1,5 +1,5 @@
 // Textová diagnostika pro vývojáře (v aplikaci Ctrl + Shift + D ji zkopíruje do schránky): verze, stav zdrojů posledního
-// stahování, pokrytí Forebetu a SofaScore a obsah ladicích souborů ze složky `ladeni`. Neobsahuje nic osobního ani API klíč.
+// stahování, pokrytí Forebetu a SofaScore a obsah dvou ladicích souborů ze složky `ladeni` (souhrn stahování a statistiky pro tikety). Neobsahuje nic osobního ani API klíč.
 "use strict";
 
 const fs = require("node:fs");
@@ -17,9 +17,7 @@ function readLimited(file, limit) {
 
 // [soubor, limit znaků]
 const FILES = [
-  ["zdroje-diagnostika.txt", 8000],
-  ["forebet-diagnostika.txt", 3000],
-  ["forebet-seznam-diagnostika.txt", 8000],
+  ["zdroje-diagnostika.txt", 10000],
   ["tikety-statistiky.txt", 6000],
 ];
 

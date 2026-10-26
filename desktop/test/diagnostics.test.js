@@ -8,7 +8,7 @@ const os = require("node:os");
 const path = require("node:path");
 
 const { Pipeline, forebetCoverage } = require("../src/pipeline");
-const { ForebetScraper, listDiagnostics } = require("../src/scrapers/forebet");
+const { ForebetScraper } = require("../src/scrapers/forebet");
 const { buildDiagnostics } = require("../src/diagnostics");
 const { SourceError } = require("../src/http");
 const { s24Row, s24Block, s24Page, forebetRow, forebetPage, sofaEvent } = require("./helpers/html");
@@ -54,30 +54,19 @@ test("Pipeline: po stažení vznikne zdroje-diagnostika.txt se stavem zdrojů, p
   assert.match(text, /Stav zdrojů:\n  Scores24: ok – 1 tipů\n  Forebet: ok – 1 zápasů/);
   assert.match(text, /Scores24: 1 tipů před filtry; po filtrech 1/);
   assert.match(text, /Tipů ze Scores24: 1, spárováno s Forebetem: 1/);
+  assert.match(text, /Stránky Forebetu:\n.*sledované ligy: /);
   assert.match(text, /Výsledek zápasu \(1X2\): 1 \(Forebet 1\)/);
   assert.match(text, /SofaScore: zápas nalezen u 1 z 1 tipů/);
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
-test("Forebet: když se na skutečné stránce nenajde žádný zápas, uloží se HTML a přehled struktury", async () => {
-  const dir = tmp();
+test("Forebet: když se na stránce nenajde žádný zápas, skončí chybou a nic se neukládá; stránka kontroly robota je Cloudflare", async () => {
   const html = '<html><body><div class="novyZapas"><span class="tym">A</span> <span class="tym">B</span></div><time datetime="2026-10-18 15:30">x</time></body></html>';
   const scraper = new ForebetScraper({ getText: async () => html }, { loadHtml: async () => html });
-  await assert.rejects(() => scraper.fetch(() => {}, { debugDir: dir }), (e) => e instanceof SourceError && /nejsou rozpoznatelné zápasy/.test(e.message));
-  assert.equal(fs.readFileSync(path.join(dir, "forebet-seznam.html"), "utf8"), html);
-  const diag = fs.readFileSync(path.join(dir, "forebet-seznam-diagnostika.txt"), "utf8");
-  assert.match(diag, /div\.rcnt: 0, \.fprc: 0/);
-  assert.match(diag, /time\[datetime\]: 1/);
-  assert.match(diag, /Nejčastější třídy: .*tym:2/);
-  assert.match(listDiagnostics(html), /Začátek textu: A B x/);
+  await assert.rejects(() => scraper.fetch(() => {}), (e) => e instanceof SourceError && /nejsou rozpoznatelné zápasy/.test(e.message));
 
-  // stránka kontroly robota se neukládá
-  const blocked = tmp();
   const cf = "<html><head><title>Just a moment...</title></head><body>cf-browser-verification</body></html>";
-  await assert.rejects(() => new ForebetScraper({ getText: async () => cf }, { loadHtml: async () => cf }).fetch(() => {}, { debugDir: blocked }), /Cloudflare/);
-  assert.deepEqual(fs.readdirSync(blocked), []);
-  fs.rmSync(dir, { recursive: true, force: true });
-  fs.rmSync(blocked, { recursive: true, force: true });
+  await assert.rejects(() => new ForebetScraper({ getText: async () => cf }, { loadHtml: async () => cf }).fetch(() => {}), /Cloudflare/);
 });
 
 test("buildDiagnostics: verze, stav zdrojů, obsah ladicích souborů (zkrácený) a chybějící soubory", () => {
@@ -93,7 +82,8 @@ test("buildDiagnostics: verze, stav zdrojů, obsah ladicích souborů (zkrácen�
   assert.match(text, /Forebet: failed – Cloudflare\n  upozornění: Forebet: Cloudflare/);
   assert.match(text, /tipů v posledním stažení: 2 \(zdroj pravděpodobnosti: Scores24 1, Forebet 1\), s Forebetem 1, se SofaScore 1/);
   assert.match(text, /===== zdroje-diagnostika\.txt =====\nStav zdrojů:\n  Forebet: failed/);
-  assert.match(text, /===== forebet-diagnostika\.txt =====\n\(soubor není\)/);
+  assert.match(text, /===== tikety-statistiky\.txt =====\n/);
+  assert.doesNotMatch(text, /forebet-diagnostika/);
   assert.match(text, /… \(zkráceno, celkem 7000 znaků\)/);                  // tikety-statistiky.txt má 7000 znaků, limit 6000
   assert.match(buildDiagnostics({ version: "1", electron: "1", platform: "x", run: null, dir }), /Zatím žádné stažení tipů\./);
   fs.rmSync(dir, { recursive: true, force: true });

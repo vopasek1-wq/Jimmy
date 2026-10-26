@@ -201,8 +201,7 @@ si ověření pamatuje.
 > Seznam zápasů (1 / X / 2) se u uživatele na běžném domácím internetu načetl (130 zápasů), ale **čtení
 > pravděpodobností gólů ze stránky zápasu nebylo ověřeno na živé stránce** – hledá se podle viditelného textu
 > („Over 2.5 … 55 %“, „Both teams to score … Yes … No …“), ne podle tříd. Když na stránce zápasu nic takového
-> nenajde, ukáže se nahoře upozornění a první stažená stránka se uloží do `%APPDATA%\FotbalTipy\ladeni\forebet-zapas.html`
-> – s ní jde parser opravit (`parseGoals` v `desktop/src/scrapers/forebet.js`).
+> nenajde, ukáže se nahoře upozornění (`parseGoals` v `desktop/src/scrapers/forebet.js`).
 
 ### Diagnostika pro vývojáře
 
@@ -213,9 +212,7 @@ API klíč ani nic osobního. Ladicí soubory ve složce `ladeni` se přepisují
 
 | Soubor | Co v něm je |
 |---|---|
-| `zdroje-diagnostika.txt` | stav zdrojů, párování tipů s Forebetem (časový rozsah, nespárované tipy s nejbližším zápasem), pokrytí SofaScore |
-| `forebet-seznam-diagnostika.txt`, `forebet-seznam.html` | přehled načtených stránek Forebetu (přehled „dnes“ a stránky lig: odkud, kolik zápasů, nabídka lig a ukázka řádku); celé HTML jen když přehled „dnes“ nevrátil žádný zápas |
-| `forebet-diagnostika.txt`, `forebet-zapas.html` | jen když se nepodaří přečíst pravděpodobnosti gólů ze stránky zápasu |
+| `zdroje-diagnostika.txt` | stav zdrojů, přehled načtených stránek Forebetu (odkud, kolik zápasů, jak se našly sledované ligy), párování tipů s Forebetem (časový rozsah, nespárované tipy s nejbližším zápasem), pokrytí SofaScore |
 | `tikety-statistiky.txt` | co se stáhlo ze SofaScore pro tikety (po zápasech) |
 
 ## Vývoj
@@ -255,7 +252,7 @@ desktop/
 |---|---|
 | Okno se otevře, ale tabulka je prázdná | Podívejte se na pruh nahoře a na stav zdrojů; filtr *Dnes* ukazuje jen dnešní zápasy – zkuste *Dnes a zítra* nebo *Vše*. |
 | „Forebet: Cloudflare kontrola neprošla“ | Klikněte na **Ověřit Forebet**, nebo Forebet nechte být. |
-| „Forebet: … pravděpodobnosti gólů“ nahoře | Struktura stránky zápasu se liší od předpokladu – stiskněte **Ctrl + Shift + D** a pošlete diagnostiku (případně soubor `ladeni\forebet-zapas.html`). |
+| „Forebet: … pravděpodobnosti gólů“ nahoře | Struktura stránky zápasu se liší od předpokladu – stiskněte **Ctrl + Shift + D** a pošlete diagnostiku. |
 | Forebet se u většiny tipů nezobrazuje | Stiskněte **Ctrl + Shift + D**: v `zdroje-diagnostika.txt` je vidět, kolik tipů se s Forebetem spárovalo a u nespárovaných nejbližší zápas (rozdílné jméno týmu, čas nebo liga). |
 | Windows SmartScreen aplikaci blokuje | *Další informace → Přesto spustit* (aplikace není podepsaná). |
 | Zápasy mají posunutý čas | Časy se převádějí z UTC do `Europe/Prague`; zkontrolujte systémové datum a čas. |

@@ -7,7 +7,11 @@ const path = require("node:path");
 const DAY_MS = 24 * 3600 * 1000;
 const MAX_AGE_MS = 7 * DAY_MS;
 const MAX_BYTES = 2 * 1024 * 1024;
-const LEGACY = ["forebet-goals.json"]; // soubory starších verzí, které už nikdo nečte
+// soubory starších verzí, které už nikdo nečte (cesty od datové složky)
+const LEGACY = [
+  "forebet-goals.json",
+  "ladeni/forebet-zapas.html", "ladeni/forebet-diagnostika.txt", "ladeni/forebet-seznam.html", "ladeni/forebet-seznam-diagnostika.txt", "ladeni/tikety-odpoved.txt",
+];
 
 /**
  * Smaže soubory starší než `maxAgeMs`; když zbylé zabírají víc než `maxBytes`, maže další od nejstarších.

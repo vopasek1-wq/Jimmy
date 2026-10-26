@@ -40,11 +40,16 @@ test("cleanDir: přes strop se maže od nejstarších, nejnovější soubor zůs
   assert.deepEqual(cleanDir(only, { now: NOW, maxBytes: 100 }).removed, []);     // jediný soubor se nemaže
 });
 
-test("cleanDir/tidy: chybějící složka nevadí; tidy odstraní starou mezipaměť gólů", () => {
+test("cleanDir/tidy: chybějící složka nevadí; tidy odstraní starou mezipaměť gólů a staré ladicí soubory Forebetu", () => {
   assert.deepEqual(cleanDir(path.join(os.tmpdir(), "neexistuje-hk-xyz")), { removed: [], bytes: 0 });
   const data = fs.mkdtempSync(path.join(os.tmpdir(), "hk-"));
   fs.writeFileSync(path.join(data, "forebet-goals.json"), "{}");
   fs.writeFileSync(path.join(data, "forebet-goals-v2.json"), "{}");
+  fs.mkdirSync(path.join(data, "ladeni"));
+  for (const name of ["forebet-zapas.html", "forebet-diagnostika.txt", "forebet-seznam.html", "forebet-seznam-diagnostika.txt", "tikety-odpoved.txt", "zdroje-diagnostika.txt"]) {
+    fs.writeFileSync(path.join(data, "ladeni", name), "x");
+  }
   tidy(data);
-  assert.deepEqual(fs.readdirSync(data), ["forebet-goals-v2.json"]);
+  assert.deepEqual(fs.readdirSync(data).sort(), ["forebet-goals-v2.json", "ladeni"]);
+  assert.deepEqual(fs.readdirSync(path.join(data, "ladeni")), ["zdroje-diagnostika.txt"]);
 });

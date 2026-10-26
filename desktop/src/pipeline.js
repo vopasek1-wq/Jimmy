@@ -156,6 +156,7 @@ class Pipeline {
     for (const name of [SOURCE_SCORES24, SOURCE_FOREBET, SOURCE_SOFASCORE]) setStatus(result, name, "pending");
     let s24 = null;
     let forebet = null;
+    let forebetReport = [];
     let goalsInfo = null;
     const stages = {}; // doba jednotlivých kroků v sekundách (do diagnostiky)
     let lapAt = Date.now();
@@ -183,7 +184,8 @@ class Pipeline {
       const scraper = new ForebetScraper(this.http, this.browser);
       // Stránky lig na Forebetu se načítají jen pro ligy, které Scores24 právě nabízí.
       const leagues = new Set([...s24.rows, ...s24.tips].map((x) => x.leagueKey).filter(Boolean));
-      forebet = await scraper.fetch(progress, { interactive: interactiveForebet, debugDir: this.debugDir, leagues });
+      forebet = await scraper.fetch(progress, { interactive: interactiveForebet, leagues });
+      forebetReport = scraper.report;
       let message = `${forebet.length} zápasů`;
       let state = "ok";
 
@@ -196,7 +198,7 @@ class Pipeline {
         if (m && m.url) { wanted.add(m); if (t.tipCode === "BTTS" || t.tipCode === "NOBTTS") m.needBtts = true; }
       }
       if (wanted.size) {
-        const g = await scraper.fetchGoals([...wanted], progress, { debugDir: this.debugDir, cache: this.goalsCache });
+        const g = await scraper.fetchGoals([...wanted], progress, { cache: this.goalsCache });
         if (this.goalsCache) this.goalsCache.save();
         goalsInfo = g;
         message += `, góly u ${g.parsed} z ${g.wanted} zápasů${g.cached ? ` (${g.cached} z mezipaměti)` : ""}`;
@@ -230,12 +232,12 @@ class Pipeline {
 
     lap("SofaScore");
     result.tips = tips.sort((a, b) => a.kickoff - b.kickoff || b.probability - a.probability);
-    this._writeDiagnostics(result, { s24, forebet, goalsInfo, sofa, stages });
+    this._writeDiagnostics(result, { s24, forebet, forebetReport, goalsInfo, sofa, stages });
     return this._finish(result);
   }
 
   /** Souhrn posledního stahování do `ladeni/zdroje-diagnostika.txt` (přepisuje se): stav zdrojů, párování Forebetu, pokrytí SofaScore. */
-  _writeDiagnostics(result, { s24, forebet, goalsInfo, sofa, stages = {} }) {
+  _writeDiagnostics(result, { s24, forebet, forebetReport = [], goalsInfo, sofa, stages = {} }) {
     if (!this.debugDir) return;
     try {
       const lines = [`Stahování tipů – ${new Date().toISOString()}`, "", "Stav zdrojů:"];
@@ -245,6 +247,7 @@ class Pipeline {
       lines.push("", `Scores24: ${s24 ? s24.tips.length : 0} tipů před filtry; po filtrech ${result.tips.length}`);
       if (forebet) {
         lines.push(...forebetCoverage(s24 ? s24.tips : [], forebet));
+        if (forebetReport.length) lines.push("Stránky Forebetu:", ...forebetReport.map((l) => `  ${l}`));
         if (goalsInfo) lines.push(`Stránky zápasů (góly): přečteno ${goalsInfo.parsed} z ${goalsInfo.wanted}${goalsInfo.cached ? `, z toho ${goalsInfo.cached} z mezipaměti` : ""}${goalsInfo.errors.length ? `; chyby: ${goalsInfo.errors.slice(0, 3).join(" | ")}` : ""}`);
       } else {
         lines.push("Forebet: žádná data");

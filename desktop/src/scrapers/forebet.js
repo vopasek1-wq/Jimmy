@@ -13,8 +13,6 @@
 const config = require("../config");
 const { BlockedError, SourceError, looksBlocked } = require("../http");
 const { parseOdds } = require("../odds");
-const fs = require("node:fs");
-const path = require("node:path");
 const { load, collapse, strippedStrings } = require("../dom");
 const { localToUtc } = require("../timeutil");
 
@@ -226,20 +224,6 @@ function parseGoals(html) {
 
 const hasBtts = (goals) => Boolean(goals && goals.btts && (goals.btts.yes !== undefined || goals.btts.no !== undefined));
 
-/** Krátká diagnostika pro případ, že se stránka zápasu nepodařilo přečíst (jde ji poslat vývojáři). */
-function goalsDiagnostics(url, html) {
-  const text = strippedStrings(load(html).root()).join(" ");
-  const windows = [];
-  const re = /over|under|both teams|btts|goals?\b|yes\b/gi;
-  let last = -999;
-  for (let m = re.exec(text); m && windows.length < 40; m = re.exec(text)) {
-    if (m.index - last < 120) continue;
-    last = m.index;
-    windows.push(text.slice(Math.max(0, m.index - 60), m.index + 160));
-  }
-  return [`URL: ${url}`, `Délka HTML: ${html.length}`, `Zablokováno: ${looksBlocked(200, html)}`, `Délka textu: ${text.length}`, "--- úryvky kolem „over/under/goals/yes“ ---", ...windows].join("\n");
-}
-
 const LEAGUE_LINK = /\/football-tips-and-predictions-for-([a-z0-9-]+)\/([a-z0-9-]+)\/?$/i;
 
 /** Odkazy na stránky lig z nabídky Forebetu: [{ path: "england/premier-league", url }] v pořadí na stránce, bez duplicit. */
@@ -282,62 +266,17 @@ function leagueTargets(links, keys) {
   return out;
 }
 
-/** Přehled struktury stránky se seznamem zápasů (značky lig, odkazy na ligy, ukázka řádků, nejčastější třídy). */
-function listDiagnostics(html, { brief = false } = {}) {
-  const $ = load(html);
-  const count = (sel) => $(sel).length;
-  const tags = new Map();
-  $(".shortTag").each((_, el) => { const t = text($(el)); if (t) tags.set(t, (tags.get(t) || 0) + 1); });
-  const head = [
-    `Délka HTML: ${html.length}`, `Zablokováno: ${looksBlocked(200, html)}`,
-    `div.rcnt: ${count("div.rcnt")}, .fprc: ${count(".fprc")}, .homeTeam: ${count(".homeTeam")}, .awayTeam: ${count(".awayTeam")}, `
-      + `time[datetime]: ${count("time[datetime]")}, .shortTag: ${count(".shortTag")}, a.tnmscn: ${count("a.tnmscn")}`,
-    `Značky lig na stránce (${tags.size}): ${[...tags].slice(0, 40).map(([t, n]) => `${t}:${n}`).join(" ")}`,
-  ];
-  if (brief) return head.join("\n");
-  const links = leagueLinks(html);
-  const tracked = config.LEAGUES.filter((l) => l.enabled).map((lg) => {
+/** Jak se sledované ligy našly v nabídce Forebetu: „EPL=england/premier-league LALIGA=NENALEZENO …“ (pro diagnostiku). */
+function trackedLeagues(links) {
+  return config.LEAGUES.filter((l) => l.enabled).map((lg) => {
     const hit = links.find((l) => (lg.forebetPaths || []).some((re) => re.test(l.path)));
     return `${lg.key}=${hit ? hit.path : "NENALEZENO"}`;
-  });
-  const classes = new Map();
-  $("[class]").each((_, el) => { for (const c of String($(el).attr("class")).split(/\s+/)) if (c) classes.set(c, (classes.get(c) || 0) + 1); });
-  const top = [...classes].sort((a, b) => b[1] - a[1]).slice(0, 25).map(([c, n]) => `${c}:${n}`).join(" ");
-  const sample = $("div.rcnt").toArray().slice(0, 1).map((el) => collapse($.html(el)).slice(0, 1200));
-  // ukázka nabídky: země s ligami podle odkazů (pro případ, že se sledovaná liga nenašla)
-  const countries = new Map();
-  for (const l of links) { const [c, lg] = l.path.split("/"); countries.set(c, [...(countries.get(c) || []), lg]); }
-  const menu = [...countries].filter(([c]) => /^(england|spain|italy|germany|france|netherlands|portugal|belgium|turkey|scotland|czech|europe|world|international|uefa)/.test(c))
-    .map(([c, l]) => `${c}: ${l.slice(0, 6).join(", ")}`).join(" | ");
-  return [
-    ...head,
-    `Odkazy na ligy v nabídce: ${links.length}; sledované ligy: ${tracked.join(" ")}`,
-    `Nabídka sledovaných zemí: ${menu || "–"}`,
-    ...sample.map((h) => `HTML řádku: ${h}`),
-    `Nejčastější třídy: ${top}`, `Začátek textu: ${strippedStrings($.root()).join(" ").slice(0, 200)}`,
-  ].join("\n");
+  }).join(" ");
 }
 
-/** Textový přehled jednoho načteného seznamu pro ladicí soubor (první stránka podrobně, ostatní stručně). */
-function listReport({ url, html, matches, via, error }, detailed) {
-  const tracked = matches.filter((m) => m.leagueKey).length;
-  const out = [`=== ${url} ===`];
-  if (error) out.push(`Chyba: ${error}`);
-  out.push(`Načteno přes: ${via || "?"}; zápasů ${matches.length}, ze sledovaných lig ${tracked}`);
-  if (html && !looksBlocked(200, html)) out.push(listDiagnostics(html, { brief: !detailed }));
-  return out.join("\n");
-}
-
-/** Uloží přehledy (vždy) a HTML první stránky, ze které se nepodařilo přečíst žádný zápas. */
-function dumpLists(debugDir, lists) {
-  if (!debugDir || !lists.length) return;
-  try {
-    fs.mkdirSync(debugDir, { recursive: true });
-    const first = lists[0];
-    if (first.html && !looksBlocked(200, first.html) && !first.matches.length) fs.writeFileSync(path.join(debugDir, "forebet-seznam.html"), first.html.slice(0, 200000));
-    const body = lists.map((l, i) => listReport(l, i === 0)).join("\n\n");
-    fs.writeFileSync(path.join(debugDir, "forebet-seznam-diagnostika.txt"), `${new Date().toISOString()}\n${body}\n`);
-  } catch { /* ladicí soubor je jen bonus */ }
+/** Jeden řádek o načtené stránce pro diagnostiku: adresa, odkud, kolik zápasů a případná chyba. */
+function pageLine({ url, matches, via, error }) {
+  return `${url}: ${error ? `chyba – ${error}` : `${via || "?"}, zápasů ${matches.length}, ze sledovaných lig ${matches.filter((m) => m.leagueKey).length}`}`;
 }
 
 const LEAGUE_CONCURRENCY = 3;
@@ -433,9 +372,9 @@ class ForebetScraper {
   /**
    * Zápasy z Forebetu: přehled „dnes“ slouží hlavně jako zdroj odkazů na stránky lig; pak se načtou stránky sledovaných lig
    * (`leagues` = klíče lig, které Scores24 teď nabízí), jejich zápasy mají jistě správnou ligu. Starý přehled se bere, jen když
-   * nevyšlo nic jiného. @param {object} [opts] { interactive, debugDir, leagues }
+   * nevyšlo nic jiného. Stručný přehled načtených stránek zůstane v `this.report` (řádky pro diagnostiku). @param {object} [opts] { interactive, leagues }
    */
-  async fetch(progress = () => {}, { interactive = false, debugDir = null, leagues = null } = {}) {
+  async fetch(progress = () => {}, { interactive = false, leagues = null } = {}) {
     progress("Forebet: stahuji pravděpodobnosti…");
     const merged = [];
     const seen = new Set();
@@ -446,6 +385,7 @@ class ForebetScraper {
       }
     };
     const reports = [];
+    this.report = [];
     let firstError = null;
     let links = [];
 
@@ -455,7 +395,7 @@ class ForebetScraper {
       links = leagueLinks(today.html);
       add(today.matches);
     } catch (err) {
-      if (err instanceof BlockedError) { dumpLists(debugDir, reports); throw err; } // ověření je třeba u všech stránek stejně
+      if (err instanceof BlockedError) throw err; // ověření je třeba u všech stránek stejně
       firstError = err;
       reports.push({ url: config.FOREBET_TODAY_URL, html: "", matches: [], via: "", error: err.message || String(err) });
     }
@@ -479,7 +419,7 @@ class ForebetScraper {
         reports.push({ url: config.FOREBET_URL, html: "", matches: [], via: "", error: err.message || String(err) });
       }
     }
-    dumpLists(debugDir, reports);
+    this.report = [`Odkazy na ligy v nabídce: ${links.length}; sledované ligy: ${trackedLeagues(links)}`, ...reports.map(pageLine)];
     if (!merged.length) throw firstError || new SourceError("Forebet: na stránce nejsou rozpoznatelné zápasy (změnila se struktura webu?).");
     return merged;
   }
@@ -488,11 +428,10 @@ class ForebetScraper {
    * Doplní `goals` k zápasům ze seznamu načtením jejich stránek (max. `limit`).
    * Vrací { wanted, parsed, errors } – chyby jednotlivých stránek nic neshodí.
    */
-  async fetchGoals(matches, progress = () => {}, { limit = 25, debugDir = null, cache = null } = {}) {
+  async fetchGoals(matches, progress = () => {}, { limit = 25, cache = null } = {}) {
     const todo = [...new Set(matches.filter((m) => m && m.url))].slice(0, limit);
     const summary = { wanted: todo.length, parsed: 0, cached: 0, errors: [] };
     let useBrowser = false;
-    let dumped = false;
     for (const [i, m] of todo.entries()) {
       const hit = cache && cache.get(m.url);
       // nedávno staženo → bez dotazu; tip „oba týmy skórují“ ale potřebuje i BTTS, bez něj se stránka stáhne znovu
@@ -517,14 +456,6 @@ class ForebetScraper {
           if (again) { m.goals = again; useBrowser = true; } else html = rendered;
         }
         if (m.goals) { summary.parsed += 1; if (cache) cache.set(m.url, m.goals); }
-        if ((!m.goals || (m.needBtts && !hasBtts(m.goals))) && debugDir && !dumped) { // ladicí soubor: stránka, ze které se nepodařilo přečíst góly / BTTS
-          dumped = true;
-          try {
-            fs.mkdirSync(debugDir, { recursive: true });
-            fs.writeFileSync(path.join(debugDir, "forebet-zapas.html"), html.slice(0, 200000));
-            fs.writeFileSync(path.join(debugDir, "forebet-diagnostika.txt"), goalsDiagnostics(m.url, html));
-          } catch { /* ladicí soubor je jen bonus */ }
-        }
       } catch (err) {
         summary.errors.push(err.message || String(err));
         if (summary.errors.length >= 3 && !summary.parsed) break; // zjevně to nejde – nezdržovat
@@ -534,4 +465,4 @@ class ForebetScraper {
   }
 }
 
-module.exports = { ForebetScraper, parsePage, parseGoals, pageReady, listDiagnostics, leagueLinks, leagueTargets };
+module.exports = { ForebetScraper, parsePage, parseGoals, pageReady, leagueLinks, leagueTargets };

@@ -311,22 +311,19 @@ test("Forebet: odkazy na ligy z nabídky a výběr stránek sledovaných lig", (
 });
 
 test("Forebet: přehled dnes → stránky sledovaných lig, zápasy mají ligu podle stránky", async () => {
-  const fs = require("node:fs");
-  const os = require("node:os");
-  const path = require("node:path");
   const today = withMenu(forebetPage([eplRow("Tirana", "Vllaznia", [50, 30, 20])], "Alb1"), "england/premier-league", "italy/serie-a");
   const epl = forebetPage([eplRow("Arsenal", "Everton", [60, 25, 15], "/en/football/matches/arsenal-everton-1")], "Zzz");
   const seriea = forebetPage([eplRow("Torino", "Monza", [50, 30, 20], "/en/football/matches/torino-monza-2")], "Zzz");
   const asked = [];
   const http = { getText: async (url) => { asked.push(url); return url.endsWith("for-today") ? today : url.endsWith("premier-league") ? epl : seriea; } };
   const browser = { loadHtml: async () => { throw new Error("okno nemělo být potřeba"); } };
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "fb-"));
-  const ms = await new forebet.ForebetScraper(http, browser).fetch(() => {}, { debugDir: dir, leagues: ["EPL", "SERIEA"] });
+  const scraper = new forebet.ForebetScraper(http, browser);
+  const ms = await scraper.fetch(() => {}, { leagues: ["EPL", "SERIEA"] });
   assert.deepEqual(asked.map((u) => u.split("for-").pop()), ["today", "england/premier-league", "italy/serie-a"]);
   assert.deepEqual(ms.map((m) => [m.home, m.leagueKey]), [["Tirana", null], ["Arsenal", "EPL"], ["Torino", "SERIEA"]]);
-  const diag = fs.readFileSync(path.join(dir, "forebet-seznam-diagnostika.txt"), "utf8");
-  assert.match(diag, /for-england\/premier-league {2}\[EPL, nabídka\] ===\nNačteno přes: HTTP; zápasů 1, ze sledovaných lig 1/);
-  assert.match(diag, /sledované ligy: EPL=england\/premier-league .*LALIGA=NENALEZENO/);
+  const report = scraper.report.join("\n");
+  assert.match(report, /for-england\/premier-league.*: HTTP, zápasů 1, ze sledovaných lig 1/);
+  assert.match(report, /sledované ligy: EPL=england\/premier-league .*LALIGA=NENALEZENO/);
 });
 
 test("Forebet: blokace → zbylé stránky lig se načtou v jednom okně prohlížeče", async () => {
@@ -374,12 +371,7 @@ test("Forebet: když nevyjde ani přehled ani ligy, použije se starý přehled;
   await assert.rejects(() => new forebet.ForebetScraper({ getText: async () => { throw new SourceError("HTTP 404"); } }, browser).fetch(), /404/);
 });
 
-test("Forebet: nabídka a značky v diagnostice, ligu poznáme i z onclick znaku ligy", () => {
-  const html = withMenu(forebetPage([eplRow("A", "B", [50, 30, 20])], "Alb1"), "england/premier-league", "england/championship");
-  const diag = forebet.listDiagnostics(html);
-  assert.match(diag, /Značky lig na stránce \(1\): Alb1:1/);
-  assert.match(diag, /Odkazy na ligy v nabídce: 2; sledované ligy: EPL=england\/premier-league/);
-  assert.match(diag, /Nabídka sledovaných zemí: england: premier-league, championship/);
+test("Forebet: ligu poznáme i z onclick znaku ligy", () => {
   const row = '<div class="rcnt"><img onclick="getstag(this,1,\'England\',\'Premier League\',\'england/premier-league\',\'en\')"><span class="shortTag">Zzz</span>'
     + '<span class="homeTeam">A</span><span class="awayTeam">B</span><div class="fprc"><span>50</span><span>30</span><span>20</span></div></div>';
   assert.equal(forebet.parsePage(`<html><body>${row}</body></html>`)[0].leagueKey, "EPL");
@@ -447,25 +439,20 @@ test("Forebet: stránky lig se stahují po třech najednou; když se objeví ov�
   assert.equal(ms.filter((m) => m.leagueKey).length, 5);                        // všech pět lig má zápas
 });
 
-test("Forebet: tip BTTS bez BTTS v mezipaměti stáhne stránku znovu a při neúspěchu uloží ladicí soubor", async () => {
-  const fs = require("node:fs");
-  const os = require("node:os");
-  const path = require("node:path");
+test("Forebet: tip BTTS bez BTTS v mezipaměti stáhne stránku znovu", async () => {
   const { GoalsCache } = require("../src/goalscache");
   const cache = new GoalsCache(null);
   cache.set("https://www.forebet.com/en/football/matches/x-1", { over: { 2.5: 60 }, under: { 2.5: 40 }, btts: {} });
   const page = "<html><body><p>Over 2.5 goals 61%</p><p>Under 2.5 goals 39%</p><p>Both teams to score: something else</p></body></html>";
   let asked = 0;
   const http = { getText: async () => { asked += 1; return page; } };
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "fb-"));
   const m = { url: "https://www.forebet.com/en/football/matches/x-1", needBtts: true };
   const other = { url: "https://www.forebet.com/en/football/matches/y-2" };
   cache.set(other.url, { over: { 2.5: 55 }, under: {}, btts: {} });
-  const sum = await new forebet.ForebetScraper(http, { loadHtml: async () => page }).fetchGoals([m, other], () => {}, { debugDir: dir, cache });
+  const sum = await new forebet.ForebetScraper(http, { loadHtml: async () => page }).fetchGoals([m, other], () => {}, { cache });
   assert.equal(asked >= 1, true);
   assert.equal(sum.cached, 1);                                   // jen zápas bez potřeby BTTS zůstal z mezipaměti
   assert.equal(m.goals.over["2.5"], 61);
-  assert.ok(fs.existsSync(path.join(dir, "forebet-diagnostika.txt")));
 });
 
 test("Forebet: góly a BTTS z tabulek na skutečné stránce zápasu (text ze zachycené diagnostiky)", () => {

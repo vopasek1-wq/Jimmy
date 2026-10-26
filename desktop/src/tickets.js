@@ -245,7 +245,7 @@ function ticketStats(settled) {
 /**
  * Celý postup: statistiky ze SofaScore → sestavení tiketů v Gemini. `collect(candidates, progress)` stáhne statistiky
  * (matchstats.js), `ask` je funkce `generate` z analysis.js (s klíčem a síťovou funkcí), `progress` dostává zprávy o průběhu.
- * Vrací { tickets, note, analyzed, covered, rejected, omitted } (omitted = zápasy mimo tikety s důvodem; `log` dostane text pro ladicí soubor).
+ * Vrací { tickets, note, analyzed, covered, rejected, omitted } (omitted = zápasy mimo tikety s důvodem).
  */
 async function createTickets({ candidates, collect, ask, calibration = null, progress = () => {}, now = new Date(), hint = "", reuse = null }) {
   if (candidates.length < MIN_LEGS) {
