@@ -18,7 +18,7 @@
   };
   // Zbytky nastavení z dřívějších verzí (rozložení karet, starší tikety…) se při startu smažou.
   try {
-    const KEPT = new Set(["day", "live", "league", "sort", "hsort", "hist-range", "tk-day", "tk-result2", "ev-range"]);
+    const KEPT = new Set(["day", "live", "league", "sort", "hsort", "hist-range", "tk-day", "tk-result2", "ev-range", "ev-ai"]);
     Object.keys(localStorage).filter((k) => k.startsWith("tips:") && !KEPT.has(k.slice(5))).forEach((k) => localStorage.removeItem(k));
   } catch { /* bez úložiště */ }
 
@@ -1030,7 +1030,7 @@
 
   /** Seznam zápasů, které skončily mimo tikety, každý s důvodem (rozbalovací). */
   const omittedHtml = (r) => (r && r.omitted && r.omitted.length
-    ? `<section class="tk-omitted tk-wide"><h3 class="tk-omitted__title">Nezařazeno do tiketů: ${r.omitted.length} z ${r.analyzed} zápasů – proč?</h3><ul>${r.omitted.map((o) => `<li>
+    ? `<section class="tk-omitted tk-wide"><h3 class="tk-omitted__title">Nezařazeno do tiketů: ${r.omitted.length} z ${r.analyzed} zápasů – proč?</h3><ul>${r.omitted.map((o) => `<li${legAttrs(o)}>
         <span class="tk-omitted__match">${esc(o.matchName)}</span><span class="tk-omitted__tip">${esc(o.tipLabel)} · ${esc(nf2.format(o.odds))}</span><span class="tk-omitted__why">${esc(o.reason)}</span></li>`).join("")}</ul></section>`
     : "");
 
@@ -1056,7 +1056,12 @@
     };
   }
 
-  const tkLegs = () => [...((tk.result && tk.result.tickets) || []), ...((tk.history && tk.history.tickets) || [])].flatMap((t) => t.legs);
+  // zápasy, na které jde v Tiketech kliknout: nohy právě vytvořených tiketů, zápasy mimo ně (Nezařazeno, s důvodem) a nohy uložených tiketů
+  const tkLegs = () => [
+    ...((tk.result && tk.result.tickets) || []).flatMap((t) => t.legs),
+    ...((tk.result && tk.result.omitted) || []).map((o) => ({ ...o, reason: `Nezařazeno do tiketů: ${o.reason}` })),
+    ...((tk.history && tk.history.tickets) || []).flatMap((t) => t.legs),
+  ];
 
   function renderTicketDetail() {
     const leg = tk.selected === null ? null : tkLegs().find((l) => l.tipId === tk.selected);
@@ -1152,9 +1157,7 @@
   }
 
   /* ---------- Vyhodnocení: uložené tikety s výsledky ---------- */
-  const ev = { range: ["today", "yesterday", "week", "all"].includes(store.get("ev-range")) ? store.get("ev-range") : "all", selected: null };
-  const evDetailEl = $("#ev-detail");
-  const evDetailMatch = $("#ev-detail-match");
+  const ev = { range: ["today", "yesterday", "week", "all"].includes(store.get("ev-range")) ? store.get("ev-range") : "all" };
 
   /** Uložené tikety za zvolené období (podle dne zápasů). */
   function evTickets() {
@@ -1201,7 +1204,7 @@
     const profit = t.status === "pending" ? "čeká" : fmtProfit(t.profit);
     return `<article class="ev-card ev-card--${t.status}">
       <div class="ev-card__head"><strong>${esc(t.name)}</strong><small>${d}. ${m}. · ${count} ${count < 5 ? "zápasy" : "zápasů"}</small><span class="tk-hist__status tk-hist__status--${t.status}">${TK_STATUS[t.status]}</span></div>
-      <ul class="ev-legs">${t.legs.map((l) => `<li class="ev-leg is-${l.outcome || "pending"}"${legAttrs(l)}><i>${LEG_MARK[l.outcome] || "…"}</i>
+      <ul class="ev-legs">${t.legs.map((l) => `<li class="ev-leg is-${l.outcome || "pending"}"><i>${LEG_MARK[l.outcome] || "…"}</i>
         <span class="ev-leg__match">${esc(l.matchName)}</span><span class="ev-leg__tip">${esc(l.tipLabel)}</span><span class="ev-leg__score">${esc(l.score || "–")}</span><span class="ev-leg__odds">${esc(nf2.format(l.odds))}</span></li>`).join("")}</ul>
       <div class="ev-card__foot"><span>Kurz tiketu <b>${esc(nf2.format(t.totalOdds))}</b></span>${t.effectiveOdds && t.effectiveOdds !== t.totalOdds ? `<span>Skutečný kurz <b>${esc(nf2.format(t.effectiveOdds))}</b></span>` : ""}<span>Pravděpodobnost <b>${esc(nf1.format(t.jointProbability))} %</b></span>
         <span>Zisk <b class="${t.profit > 0 ? "is-pos" : t.profit < 0 ? "is-neg" : ""}">${esc(profit)}</b></span></div>
@@ -1215,26 +1218,43 @@
     $("#ev-list").innerHTML = !tk.history ? `<p class="empty">${desktop ? "Načítám tikety…" : "Tikety jsou dostupné jen v aplikaci."}</p>`
       : list.length ? list.map(evCardHtml).join("") : '<p class="empty">V tomto období nejsou žádné uložené tikety.</p>';
     renderIcons();
-    renderEvalDetail();
   }
 
-  function renderEvalDetail() {
-    const leg = ev.selected === null ? null : ((tk.history && tk.history.tickets) || []).flatMap((t) => t.legs).find((l) => l.tipId === ev.selected);
-    fillDetail(evDetailEl, evDetailMatch, leg ? legTip(leg) : null, '<p class="detail__empty">Klikni na zápas v tiketu – ukážu výsledek, statistiky a vzájemné zápasy.</p>');
-    $$("#ev-list [data-tip]").forEach((el) => el.classList.toggle("is-selected", Number(el.dataset.tip) === ev.selected));
+  /* ---------- Slovní vyhodnocení tiketů (Gemini) – pravá část záložky Vyhodnocení ---------- */
+  const evAi = { busy: false, saved: store.get("ev-ai") };   // { text, at }: poslední rozbor zůstane i po restartu
+
+  function renderEvAi(errorText = "") {
+    const out = $("#ev-ai-out");
+    const note = $("#ev-ai-note");
+    const btn = $("#ev-ai-run");
+    btn.disabled = evAi.busy;
+    btn.classList.toggle("is-busy", evAi.busy);
+    $("span", btn).textContent = evAi.busy ? "Vyhodnocuji…" : "Vyhodnotit pomocí AI";
+    note.textContent = "";
+    if (evAi.busy) { out.innerHTML = "<p>AI rozebírá tikety…</p>"; return; }
+    if (errorText) { out.innerHTML = `<p class="is-error">${esc(errorText)}</p>`; return; }
+    if (evAi.saved && evAi.saved.text) {
+      out.innerHTML = aiHtml(evAi.saved.text);
+      note.textContent = `Vytvořeno ${fmtKickoff(evAi.saved.at)}`;
+      return;
+    }
+    out.innerHTML = '<p class="detail__empty">Klikni na „Vyhodnotit pomocí AI“ – Gemini slovně rozebere tvoje vyhodnocené tikety: co je špatně a na co si dát pozor.</p>';
   }
 
-  const onEvLegPick = (e) => {
-    if (e.type === "keydown" && e.key !== "Enter" && e.key !== " ") return;
-    const el = e.target.closest("[data-tip]");
-    if (!el) return;
-    e.preventDefault();
-    ev.selected = Number(el.dataset.tip);
-    renderEvalDetail();
-  };
-  $("#ev-list").addEventListener("click", onEvLegPick);
-  $("#ev-list").addEventListener("keydown", onEvLegPick);
-  evDetailEl.addEventListener("click", onDetailLink);
+  $("#ev-ai-run").addEventListener("click", async () => {
+    if (!desktop || evAi.busy) return;
+    if (!geminiKey.has) { openKey(); renderEvAi("Nejdřív zadej Gemini API klíč (vlevo dole)."); return; }
+    evAi.busy = true;
+    renderEvAi();
+    let res;
+    try { res = await desktop.analysis.run(); } catch (err) { res = { ok: false, error: err.message }; }
+    evAi.busy = false;
+    if (res.ok) {
+      evAi.saved = { text: res.data, at: new Date().toISOString() };
+      store.set("ev-ai", evAi.saved);
+      renderEvAi();
+    } else renderEvAi(res.error);
+  });
   $$("#ev-range [data-evrange]").forEach((b) => b.addEventListener("click", () => {
     ev.range = b.dataset.evrange;
     store.set("ev-range", ev.range);
@@ -1244,6 +1264,8 @@
 
   function loadEvaluation() {
     renderEvaluation();
+    renderEvAi();
+    renderIcons();
     loadTicketHistory();
   }
 
@@ -1281,7 +1303,7 @@
   });
 
   /* ---------- Analýza úspěšnosti tipů (+ AI) ---------- */
-  const an = { data: null, tickets: null, busy: false };
+  const an = { data: null, tickets: null };
   const signed1 = (v) => (v === null ? "–" : `${v > 0 ? "+" : v < 0 ? "−" : ""}${nf1.format(Math.abs(v))}`);
 
   function tableHtml(rows, nameHead) {
@@ -1398,22 +1420,6 @@
     openKey(false);
     loadKey();
   });
-  $("#ai-run").addEventListener("click", async () => {
-    if (!desktop || an.busy) return;
-    if (!geminiKey.has) { openKey(); $("#ai-out").innerHTML = '<p class="is-error">Nejdřív zadej Gemini API klíč (vlevo dole).</p>'; return; }
-    an.busy = true;
-    $("#ai-run").disabled = true;
-    $("#ai-run").classList.add("is-busy");
-    $("#ai-title").textContent = "Analyzuji…";
-    $("#ai-out").innerHTML = "<p>AI rozebírá tikety…</p>";
-    const res = await desktop.analysis.run();
-    an.busy = false;
-    $("#ai-run").disabled = false;
-    $("#ai-run").classList.remove("is-busy");
-    $("#ai-title").textContent = "Analyzovat pomocí AI";
-    $("#ai-out").innerHTML = res.ok ? aiHtml(res.data) : `<p class="is-error">${esc(res.error)}</p>`;
-  });
-
   /* ---------- Vykreslení všeho ---------- */
   function renderAll() {
     renderTips();

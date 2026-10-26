@@ -140,9 +140,35 @@ class TipService {
     return { candidates: candidatesFrom(tips, { day }), calibration: this.analysis() };
   }
 
-  /** Statistiky zápasů (forma, H2H, góly, zranění) ze SofaScore pro tikety; ladicí soubor jde do složky `ladeni`. */
-  collectTicketStats(candidates, progress = () => {}) {
+  /**
+   * Statistiky zápasů (forma, H2H, góly, zranění) ze SofaScore pro tikety; ladicí soubor jde do složky `ladeni`.
+   * Zápasy, které ještě nemají přiřazený zápas na SofaScore, si aplikace nejdřív najde sama (a uloží si to).
+   */
+  async collectTicketStats(candidates, progress = () => {}) {
+    await this.linkSofaScore(candidates, progress);
     return new MatchStats(this.http, { debugDir: path.join(this.dataDir, "ladeni"), cache: this.statsCache }).collect(candidates, progress);
+  }
+
+  /** Doplní `sofascoreId` kandidátům, kteří ho nemají (hledá se podle soutěže, týmů a času); nalezené ID se uloží i do databáze. */
+  async linkSofaScore(candidates, progress = () => {}) {
+    const missing = candidates.filter((c) => !c.sofascoreId);
+    if (!missing.length) return 0;
+    progress(`Hledám na SofaScore ${missing.length} ${missing.length === 1 ? "zápas" : "zápasů"}, které ještě nemají přiřazená data…`);
+    const copies = missing.map((c) => ({ ...c, kickoff: new Date(c.kickoff) }));
+    try {
+      await new SofaScoreClient(this.http).enrich(copies);
+    } catch {
+      return 0;                                                  // bez SofaScore se tikety dělat nedají, ale hlášku dá až stahování statistik
+    }
+    let found = 0;
+    copies.forEach((copy, i) => {
+      if (!copy.sofascoreId) return;
+      missing[i].sofascoreId = copy.sofascoreId;
+      missing[i].sofascoreUrl = copy.sofascoreUrl;
+      found += 1;
+      try { this.db.updateLive({ id: missing[i].id, status: copy.status, homeScore: copy.homeScore ?? null, awayScore: copy.awayScore ?? null, sofascoreUrl: copy.sofascoreUrl, sofascoreId: copy.sofascoreId }); } catch { /* uložení je jen bonus */ }
+    });
+    return found;
   }
 
   /** Forma, H2H a absence pro detail tipu (SofaScore; mezipaměť sdílí s tikety). */

@@ -191,24 +191,19 @@
             <div class="ev-list" id="ev-list"></div>
           </section>
 
-          <section class="card detail-card" aria-labelledby="ev-detail-title">
+          <section class="card ev-ai" aria-labelledby="ev-ai-title">
             <header class="card__header">
-              <h2 class="sr-only" id="ev-detail-title">Detail zápasu v tiketu</h2>
-              <span class="detail-match" id="ev-detail-match"></span>
+              <h2 class="card__title" id="ev-ai-title"><i data-lucide="sparkles"></i>Slovní vyhodnocení tiketů</h2>
+              <button class="btn btn--primary btn--sm" type="button" id="ev-ai-run" title="Gemini slovně rozebere vyhodnocené tikety: co je špatně a na co si dát pozor. Pošle je do Google Gemini API tvým klíčem."><i data-lucide="sparkles"></i><span>Vyhodnotit pomocí AI</span></button>
             </header>
-            <div class="detail" id="ev-detail"></div>
+            <div class="ev-ai__note" id="ev-ai-note"></div>
+            <div class="ai-out ev-ai__out" id="ev-ai-out" aria-live="polite"></div>
           </section>
         </div>
 
         <section class="card analysis-page" aria-labelledby="analysis-title">
           <h2 class="sr-only" id="analysis-title">Analýza úspěšnosti tipů</h2>
-          <div class="an-top">
-            <div class="stat-row stat-row--5" id="an-stats"></div>
-            <button class="ai-tile" type="button" id="ai-run" title="Gemini slovně rozebere tvoje vyhodnocené tikety: co vyšlo, co ne a proč">
-              <span class="ai-tile__icon"><i data-lucide="sparkles"></i></span>
-              <span class="ai-tile__text"><span class="ai-tile__title" id="ai-title">Analyzovat pomocí AI</span></span>
-            </button>
-          </div>
+          <div class="stat-row stat-row--5" id="an-stats"></div>
           <div class="an-grid">
             <div class="live-box"><div class="live-box__title">Odhadnutá pravděpodobnost vs. skutečnost<small>podle pásma</small></div><div id="an-bands"></div></div>
             <div class="live-box"><div class="live-box__title">Zjištění</div><ul class="an-insights" id="an-insights"></ul></div>
@@ -217,10 +212,6 @@
           </div>
           <div class="live-box"><div class="live-box__title">Na co sázet a na co ne<small>podle výsledků uložených tiketů a tipů v nich (stálý vklad 1)</small></div><div id="an-advice"></div></div>
           <div class="live-box"><div class="live-box__title">Tikety od Gemini vs. všechny tipy<small>vklad 1 na tiket / tip; odhad u tiketu = součin pravděpodobností</small></div><div id="an-tickets"></div></div>
-          <div class="live-box ai-box">
-            <div class="live-box__title">Slovní analýza tiketů (AI)<small>pošle vyhodnocené tikety z Vyhodnocení (zápasy, tipy, kurzy, výsledky) do Google Gemini API tvým klíčem</small></div>
-            <div class="ai-out" id="ai-out" aria-live="polite"></div>
-          </div>
         </section>
 
         <section class="live-page" aria-label="Živé zápasy">

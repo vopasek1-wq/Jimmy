@@ -185,7 +185,11 @@ function omittedMatches(candidates, usableIds, parsed) {
     } else {
       [kind, reason] = ["model", "Gemini ho do žádného tiketu nezařadil a nezdůvodnil proč"];
     }
-    out.push({ id: c.ticketId, matchName: c.matchName, tipLabel: c.tipLabel, odds: c.odds, probability: c.probability, kickoff: c.kickoff, kind, reason });
+    out.push({
+      id: c.ticketId, matchName: c.matchName, tipLabel: c.tipLabel, odds: c.odds, probability: c.probability, kickoff: c.kickoff, kind, reason,
+      tipId: c.id, home: c.home, away: c.away, league: c.leagueShort || c.league, sofascoreId: c.sofascoreId ?? null,    // pro detail zápasu s klikem v záložce Tikety
+      url: c.url || "", forebetUrl: c.forebetUrl || "", sofascoreUrl: c.sofascoreUrl || "",
+    });
   }
   return out;
 }

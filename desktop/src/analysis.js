@@ -117,9 +117,12 @@ function buildTicketsPrompt(settled) {
   const data = ticketsForAnalysis(settled);
   return `Tady jsou moje vyhodnocené tikety z fotbalových tipů (kurz = kombinovaný kurz tiketu, pravdepodobnost_pct = odhad ze součinu pravděpodobností zdroje, `
     + `zisk = výhra − vklad při vkladu 1 na tiket, jedna prohra shodí celý tiket, vrácený zápas se z kurzu vyjme; u každého tipu je výsledek, skóre a původní zdůvodnění z AI):\n\n${JSON.stringify(data)}\n\n`
-    + "Napiš slovní analýzu těchto tiketů: 1) celkový obraz (jak tikety dopadly, odhad vs. skutečnost, ROI), 2) co fungovalo (typy tipů, soutěže, velikost kurzu, počet zápasů v tiketu, shoda se zdůvodněním), "
-    + "3) kde se chybovalo – zaměř se na zápasy, které prohrané tikety shodily, a na opakující se vzorce (typ tipu, soutěž, kurz, jistota tiketu, zdůvodnění, které se nenaplnilo), "
-    + "4) 2–4 konkrétní doporučení pro sestavování dalších tiketů. Opírej se jen o dodaná data a uváděj konkrétní zápasy a čísla. Použij krátké odstavce nebo odrážky začínající „- “.";
+    + "Napiš slovní vyhodnocení těchto tiketů (analýzu pro mě jako sázkaře) v těchto částech s krátkým nadpisem v **tučně**: "
+    + "1) **Jak tikety dopadly** (2–3 věty: úspěšnost, odhad vs. skutečnost, ROI), "
+    + "2) **Co je špatně** – které zápasy a tipy prohrané tikety shodily a jaké chyby se opakují (typ tipu, soutěž, výše kurzu, počet zápasů v tiketu, jistota tiketu, zdůvodnění, které se nenaplnilo), "
+    + "3) **Na co si dát pozor** – konkrétní rizika a varovné signály, které je dobré hlídat při dalších tiketech, "
+    + "4) **Co dělat jinak** – 2–4 konkrétní doporučení pro sestavování dalších tiketů. "
+    + "Opírej se jen o dodaná data, uváděj konkrétní zápasy a čísla a u malého vzorku to výslovně uveď. Použij krátké odstavce nebo odrážky začínající „- “.";
 }
 
 // „latest“ aliasy sledují aktuální modely Gemini; při nedostupnosti nebo přetížení se zkusí další (lehčí) model.

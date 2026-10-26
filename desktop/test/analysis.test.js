@@ -49,7 +49,7 @@ test("ticketsForAnalysis: souhrn vyhodnocených tiketů, čekající se jen spo�
 
 test("buildTicketsPrompt: tikety i pokyny pro slovní rozbor", () => {
   const p = buildTicketsPrompt([settledTicket("loss")]);
-  assert.ok(p.includes('"zduvodneni":"Doma silní."') && p.includes("slovní analýzu těchto tiketů") && p.includes("doporučení"));
+  assert.ok(p.includes('"zduvodneni":"Doma silní."') && p.includes("Co je špatně") && p.includes("Na co si dát pozor") && p.includes("doporučení"));
 });
 
 test("askGemini: úspěch, záložní model a chyby", async () => {
