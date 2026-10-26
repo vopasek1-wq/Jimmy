@@ -975,7 +975,8 @@
   };
 
   // Levý sloupec: ligy se jmenují podle zemí (Francie, Itálie…), evropské poháry zůstávají pod svým názvem.
-  const COUNTRY_BADGE = { EPL: "EN", LALIGA: "ES", SERIEA: "IT", BUNDESLIGA: "DE", LIGUE1: "FR", EREDIVISIE: "NL", PORTUGAL: "PT", BELGIE: "BE", TURECKO: "TR", SKOTSKO: "SC", CESKO: "CZ" };
+  // Vlajky (flag-icons, MIT; soubory ve vendor/flags): emoji vlajky Windows neukazuje. Poháry nejsou země, ty zůstávají se zkratkou.
+  const COUNTRY_FLAG = { EPL: "gb-eng", LALIGA: "es", SERIEA: "it", BUNDESLIGA: "de", LIGUE1: "fr", EREDIVISIE: "nl", PORTUGAL: "pt", BELGIE: "be", TURECKO: "tr", SKOTSKO: "gb-sct", CESKO: "cz" };
   const leagueLabel = (l) => (String(l.nameCs || "").includes(" – ") ? l.nameCs.split(" – ")[0] : l.short);
 
   /** Počty zápasů podle soutěže pro právě otevřenou záložku. */
@@ -998,8 +999,8 @@
     if (!state.leagues.length) { catsEl.innerHTML = ""; return; }
     const { counts, total } = leagueCounts();
     const item = (key, name, badge, count, title = name) => `<button type="button" class="cat${state.league === key ? " is-active" : ""}${count ? "" : " is-empty"}" data-league="${esc(key)}" title="${esc(title)}" aria-pressed="${state.league === key}">
-      <span class="cat__badge">${esc(badge)}</span><span class="cat__name">${esc(name)}</span><span class="cat__count">${count}</span></button>`;
-    catsEl.innerHTML = `<div class="cats__title">Soutěže</div>${item("", "Všechny soutěže", "★", total)}${state.leagues.map((l) => item(l.key, leagueLabel(l), COUNTRY_BADGE[l.key] || badgeOf(l.short), counts[l.key] || 0, l.nameCs || l.short)).join("")}`;
+      ${badge.startsWith("flag:") ? `<span class="cat__badge cat__badge--flag"><img src="vendor/flags/${esc(badge.slice(5))}.svg" alt="" width="26" height="26"></span>` : `<span class="cat__badge">${esc(badge)}</span>`}<span class="cat__name">${esc(name)}</span><span class="cat__count">${count}</span></button>`;
+    catsEl.innerHTML = `<div class="cats__title">Soutěže</div>${item("", "Všechny soutěže", "★", total)}${state.leagues.map((l) => item(l.key, leagueLabel(l), COUNTRY_FLAG[l.key] ? `flag:${COUNTRY_FLAG[l.key]}` : badgeOf(l.short), counts[l.key] || 0, l.nameCs || l.short)).join("")}`;
   }
 
   catsEl.addEventListener("click", (e) => {
