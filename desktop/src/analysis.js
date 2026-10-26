@@ -159,6 +159,8 @@ function failureMessage(failures) {
         : `Překročený limit Gemini API (model ${main.model}). Zkus to za minutu, u bezplatného klíče platí minutové i denní limity.`;
   } else if (server.length) {
     head = "Gemini je teď přetížené (zkoušel jsem i záložní modely). Zkus to za pár minut.";
+  } else if (failures.length && failures.every((f) => f.timeout)) {
+    head = "Gemini teď odpovídá příliš pomalu (žádný z modelů neodpověděl včas). Zkus to za chvíli znovu.";
   } else {
     head = main ? main.text || "Model Gemini není dostupný." : "Model Gemini není dostupný.";
   }
@@ -173,8 +175,8 @@ function failureMessage(failures) {
  * Při chybě zkouší další modely; když selžou všechny, vyhodí chybu se skutečným důvodem (limit, přetížení …).
  * Vrací { text, model }.
  */
-async function generate({ fetchFn, apiKey, prompt, system = SYSTEM, json = false, temperature = 0.4, maxTokens, thinkingBudget, timeoutMs = 120000, sleep = wait }) {
-  const ctl = new AbortController();
+async function generate({ fetchFn, apiKey, prompt, system = SYSTEM, json = false, temperature = 0.4, maxTokens, thinkingBudget, timeoutMs = 240000, requestTimeoutMs = 75000, sleep = wait }) {
+  const ctl = new AbortController();                      // celkový čas na všechny modely a pokusy
   const timer = setTimeout(() => ctl.abort(), timeoutMs);
   try {
     const failures = [];
@@ -182,21 +184,39 @@ async function generate({ fetchFn, apiKey, prompt, system = SYSTEM, json = false
     const noThinking = new Set(); // modely, které omezení „přemýšlení“ odmítly
     for (const model of MODELS) {
       for (let attempt = 0; attempt < ATTEMPTS; attempt += 1) {
-        const resp = await fetchFn(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-          method: "POST", signal: ctl.signal,
-          headers: { "x-goog-api-key": apiKey, "content-type": "application/json" },
-          body: JSON.stringify({
-            systemInstruction: { parts: [{ text: system }] },
-            contents: [{ role: "user", parts: [{ text: prompt }] }],
-            generationConfig: {
-              maxOutputTokens: tokens,
-              ...(temperature === null ? {} : { temperature }),
-              ...(json ? { responseMimeType: "application/json" } : {}),
-              ...(thinkingBudget !== undefined && !noThinking.has(model) ? { thinkingConfig: { thinkingBudget } } : {}),
-            },
-          }),
-        });
-        const body = await resp.json().catch(() => ({}));
+        // Každý dotaz má vlastní časový limit: model, který se „zasekl“, se opustí a zkusí se další (nečeká se na něj celý limit).
+        const reqCtl = new AbortController();
+        const onAbort = () => reqCtl.abort();
+        ctl.signal.addEventListener("abort", onAbort);
+        const reqTimer = setTimeout(() => reqCtl.abort(), requestTimeoutMs);
+        let resp;
+        let body;
+        try {
+          resp = await fetchFn(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+            method: "POST", signal: reqCtl.signal,
+            headers: { "x-goog-api-key": apiKey, "content-type": "application/json" },
+            body: JSON.stringify({
+              systemInstruction: { parts: [{ text: system }] },
+              contents: [{ role: "user", parts: [{ text: prompt }] }],
+              generationConfig: {
+                maxOutputTokens: tokens,
+                ...(temperature === null ? {} : { temperature }),
+                ...(json ? { responseMimeType: "application/json" } : {}),
+                ...(thinkingBudget !== undefined && !noThinking.has(model) ? { thinkingConfig: { thinkingBudget } } : {}),
+              },
+            }),
+          });
+          body = await resp.json().catch(() => ({}));
+        } catch (err) {
+          if (err.name === "AbortError" && !ctl.signal.aborted) {      // vypršel jen tento dotaz (ne celkový limit): zkusí se další model
+            failures.push({ model, status: 0, timeout: true, text: `bez odpovědi do ${Math.round(requestTimeoutMs / 1000)} s` });
+            break;
+          }
+          throw err;
+        } finally {
+          clearTimeout(reqTimer);
+          ctl.signal.removeEventListener("abort", onAbort);
+        }
         const err = body.error || {};
         if (resp.status === 400 && /API key not valid|API_KEY_INVALID/i.test(JSON.stringify(err))) throw new Error("API klíč není platný.");
         if (resp.status === 401 || resp.status === 403) throw new Error(`Klíč nemá přístup ke Gemini API (${err.message || `HTTP ${resp.status}`}).`);

@@ -130,6 +130,24 @@ test("generate: volby požadavku (JSON režim, teplota, limit tokenů) a vrácen
   assert.equal(await askGemini({ fetchFn: thought, apiKey: "k", prompt: "q" }), "odpověď");
 });
 
+/** Dotaz, který se nikdy nedokončí, dokud ho někdo nepřeruší (signál od `generate`). */
+const hang = (_url, init) => new Promise((_resolve, reject) => {
+  init.signal.addEventListener("abort", () => { const e = new Error("aborted"); e.name = "AbortError"; reject(e); });
+});
+
+test("generate: zaseknutý model se po vlastním limitu opustí a zkusí se další; když zaseknou všechny, zpráva to řekne", async () => {
+  const urls = [];
+  const stuckFirst = async (url, init) => {
+    urls.push(url);
+    return url.includes("gemini-flash-latest:") ? hang(url, init) : okText("z druhého modelu");
+  };
+  const r = await generate({ fetchFn: stuckFirst, apiKey: "k", prompt: "q", requestTimeoutMs: 20, timeoutMs: 5000 });
+  assert.equal(r.text, "z druhého modelu");
+  assert.equal(urls.length, 2);
+  await assert.rejects(() => generate({ fetchFn: hang, apiKey: "k", prompt: "q", requestTimeoutMs: 10, timeoutMs: 5000 }), /odpovídá příliš pomalu/);
+  await assert.rejects(() => generate({ fetchFn: hang, apiKey: "k", prompt: "q", requestTimeoutMs: 5000, timeoutMs: 30 }), /neodpověděla včas/);   // celkový limit
+});
+
 test("generate: model s nulovým limitem (účet zdarma) se přeskočí hned a zpráva řekne pravý důvod", async () => {
   const urls = [];
   const zero = async (url) => {

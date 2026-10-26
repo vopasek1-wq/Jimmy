@@ -10,7 +10,7 @@ const MIN_LEGS = 2;
 const MAX_LEGS = 5;
 const MIN_TOTAL_ODDS = 2;       // minimální kombinovaný kurz tiketu
 const MAX_CANDIDATES = 20;      // víc zápasů najednou je zbytečně dlouhé stahování i zadání
-const ASSEMBLE_TIMEOUT = 240000;
+const ASSEMBLE_TIMEOUT = 330000;
 const THINKING_BUDGET = 1024;   // omezení „přemýšlení“ modelu: šetří limit tokenů i denní kvótu Gemini API
 const ANSWER_TTL_MS = 20 * 60e3;
 
@@ -266,7 +266,7 @@ async function createTickets({ candidates, collect, ask, calibration = null, pro
     try { parsed = parseTickets(known, usable); text = known; reused = true; progress("Podklady se nezměnily – používám předchozí odpověď Gemini (bez nového dotazu)…"); } catch { parsed = null; }
   }
   for (let attempt = 0; !parsed; attempt += 1) {
-    text = (await ask({ prompt, json: true, temperature: null, maxTokens: 16000, thinkingBudget: THINKING_BUDGET, timeoutMs: ASSEMBLE_TIMEOUT })).text;
+    text = (await ask({ prompt, json: true, temperature: null, maxTokens: 16000, thinkingBudget: THINKING_BUDGET, timeoutMs: ASSEMBLE_TIMEOUT, requestTimeoutMs: 110000 })).text;
     try {
       parsed = parseTickets(text, usable);
     } catch (err) {
