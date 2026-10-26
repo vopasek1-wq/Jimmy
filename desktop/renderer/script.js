@@ -1028,9 +1028,16 @@
   const busyText = () => `${tk.step || "Připravuji tikety…"} (${Math.round((Date.now() - tk.startedAt) / 1000)} s)`;
   const tickBusy = () => { const el = $("#tk-busy-text"); if (el) el.textContent = busyText(); };
 
+  /** Zápas mimo tikety s doplněným id tipu: starší výsledky ho neměly uložené, tak se najde v Přehledu podle názvu zápasu a tipu. */
+  const withTipId = (o) => {
+    if (Number.isFinite(o.tipId)) return o;
+    const t = (state.payload?.tips || []).find((x) => x.matchName === o.matchName && x.tipLabel === o.tipLabel);
+    return t ? { ...o, tipId: t.id } : o;
+  };
+
   /** Seznam zápasů, které skončily mimo tikety, každý s důvodem (rozbalovací). */
   const omittedHtml = (r) => (r && r.omitted && r.omitted.length
-    ? `<section class="tk-omitted tk-wide"><h3 class="tk-omitted__title">Nezařazeno do tiketů: ${r.omitted.length} z ${r.analyzed} zápasů – proč?</h3><ul>${r.omitted.map((o) => `<li${legAttrs(o)}>
+    ? `<section class="tk-omitted tk-wide"><h3 class="tk-omitted__title">Nezařazeno do tiketů: ${r.omitted.length} z ${r.analyzed} zápasů – proč?</h3><ul>${r.omitted.map(withTipId).map((o) => `<li${legAttrs(o)}>
         <span class="tk-omitted__match">${esc(o.matchName)}</span><span class="tk-omitted__tip">${esc(o.tipLabel)} · ${esc(nf2.format(o.odds))}</span><span class="tk-omitted__why">${esc(o.reason)}</span></li>`).join("")}</ul></section>`
     : "");
 
@@ -1059,7 +1066,7 @@
   // zápasy, na které jde v Tiketech kliknout: nohy právě vytvořených tiketů, zápasy mimo ně (Nezařazeno, s důvodem) a nohy uložených tiketů
   const tkLegs = () => [
     ...((tk.result && tk.result.tickets) || []).flatMap((t) => t.legs),
-    ...((tk.result && tk.result.omitted) || []).map((o) => ({ ...o, reason: `Nezařazeno do tiketů: ${o.reason}` })),
+    ...((tk.result && tk.result.omitted) || []).map(withTipId).map((o) => ({ ...o, reason: `Nezařazeno do tiketů: ${o.reason}` })),
     ...((tk.history && tk.history.tickets) || []).flatMap((t) => t.legs),
   ];
 
