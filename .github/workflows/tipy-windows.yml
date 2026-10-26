@@ -45,21 +45,6 @@ jobs:
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
 
-      # Kontrola ikony zabaleného .exe (jen výpis do logu): průhledné okraje = míč bez pozadí, tmavé rohy = ikona s podkladem.
-      - name: Kontrola ikony v exe
-        shell: pwsh
-        run: |
-          Add-Type -AssemblyName System.Drawing
-          foreach ($f in (Get-ChildItem "dist\win-unpacked\FotbalTipy.exe", "dist\FotbalTipy-*-portable.exe")) {
-            $icon = [System.Drawing.Icon]::ExtractAssociatedIcon($f.FullName)
-            $bmp = $icon.ToBitmap()
-            $w = $bmp.Width; $h = $bmp.Height
-            $transparent = 0; $total = $w * $h
-            for ($x = 0; $x -lt $w; $x++) { for ($y = 0; $y -lt $h; $y++) { if ($bmp.GetPixel($x, $y).A -lt 10) { $transparent++ } } }
-            $c = @($bmp.GetPixel(0, 0), $bmp.GetPixel($w - 1, 0), $bmp.GetPixel(0, $h - 1), $bmp.GetPixel($w - 1, $h - 1), $bmp.GetPixel([int]($w / 2), [int]($h / 2)))
-            Write-Host "$($f.Name): ikona ${w}x${h}, průhledných pixelů $transparent z $total; rohy a střed (A,R,G,B): $(($c | ForEach-Object { "$($_.A),$($_.R),$($_.G),$($_.B)" }) -join ' | ')"
-          }
-
       # Aplikace musí naběhnout a založit databázi (ověří i node:sqlite v zabalené aplikaci).
       - name: Zkušební spuštění aplikace
         shell: pwsh
