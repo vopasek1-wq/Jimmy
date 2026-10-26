@@ -247,7 +247,7 @@ function ticketStats(settled) {
  * (matchstats.js), `ask` je funkce `generate` z analysis.js (s klíčem a síťovou funkcí), `progress` dostává zprávy o průběhu.
  * Vrací { tickets, note, analyzed, covered, rejected, omitted } (omitted = zápasy mimo tikety s důvodem; `log` dostane text pro ladicí soubor).
  */
-async function createTickets({ candidates, collect, ask, calibration = null, progress = () => {}, now = new Date(), hint = "", log = () => {}, reuse = null }) {
+async function createTickets({ candidates, collect, ask, calibration = null, progress = () => {}, now = new Date(), hint = "", reuse = null }) {
   if (candidates.length < MIN_LEGS) {
     throw new Error(`Na tikety je málo vhodných tipů (${candidates.length}): potřebuju alespoň ${MIN_LEGS}, které ještě nezačaly a mají skutečný kurz. Zkus jiný den, nebo nejdřív stáhni tipy.`);
   }
@@ -274,12 +274,10 @@ async function createTickets({ candidates, collect, ask, calibration = null, pro
     try {
       parsed = parseTickets(text, usable);
     } catch (err) {
-      if (attempt) { log(`Tikety – ${new Date().toISOString()}\nNeplatná odpověď Gemini:\n${text}\n`); throw err; }      // neplatný JSON: jeden další pokus
+      if (attempt) throw err;                               // neplatný JSON: jeden další pokus
     }
   }
   if (reuse && !reused) reuse.set(key, text);
-  log([`Tikety – ${new Date().toISOString()}${reused ? " (použita předchozí odpověď)" : ""}`, `Zápasů: ${candidates.length}, se statistikami: ${usable.length}, tiketů: ${parsed.tickets.length}, zahozených: ${parsed.rejected.length}`, "",
-    "=== ODPOVĚĎ GEMINI ===", text, "", "=== ZAHOZENÉ TIKETY ===", ...parsed.rejected, "", "=== ZADÁNÍ ===", prompt, ""].join("\n"));
   if (!parsed.tickets.length && parsed.rejected.length) {
     throw new Error(`AI navrhla tikety, které nesplňují pravidla (${parsed.rejected.slice(0, 3).join("; ")}). Zkus to znovu.`);
   }

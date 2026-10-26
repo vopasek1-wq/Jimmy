@@ -15,13 +15,12 @@ function readLimited(file, limit) {
   }
 }
 
-// [soubor, limit znaků, od-do značky (odpověď Gemini bez dlouhého zadání)]
+// [soubor, limit znaků]
 const FILES = [
   ["zdroje-diagnostika.txt", 8000],
   ["forebet-diagnostika.txt", 3000],
   ["forebet-seznam-diagnostika.txt", 8000],
   ["tikety-statistiky.txt", 6000],
-  ["tikety-odpoved.txt", 4500, "=== ZADÁNÍ ==="],
 ];
 
 /** @param {object} o { version, electron, platform, run, tips, dir, now } */
@@ -37,12 +36,10 @@ function buildDiagnostics({ version, electron, platform, run, tips = [], dir, no
   } else {
     out.push("Zatím žádné stažení tipů.");
   }
-  for (const [name, limit, cutAt] of FILES) {
-    let text = readLimited(path.join(dir, name), cutAt ? limit * 4 : limit);
+  for (const [name, limit] of FILES) {
+    const text = readLimited(path.join(dir, name), limit);
     out.push("", `===== ${name} =====`);
-    if (text === null) { out.push("(soubor není)"); continue; }
-    if (cutAt && text.includes(cutAt)) text = text.slice(0, text.indexOf(cutAt)).trimEnd();
-    out.push(text.length > limit ? `${text.slice(0, limit)}\n… (zkráceno)` : text.trimEnd());
+    out.push(text === null ? "(soubor není)" : text.trimEnd());
   }
   return `${out.join("\n")}\n`;
 }

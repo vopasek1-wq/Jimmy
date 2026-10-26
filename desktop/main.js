@@ -111,14 +111,20 @@ ipcMain.handle("app:info", () => ({
 
 /* ---------- Nová verze (GitHub vydání „tipy-latest“) ---------- */
 let update = null; // poslední zjištěné novější sestavení { current, latest, url, published }
-async function checkUpdate() {
-  // vývojová verze (npm start) se nekontroluje, jen zabalená aplikace
-  if (!app.isPackaged && !process.env.TIPSTER_UPDATE_TEST) return;
+/** Jediná cesta kontroly (automatické i ruční): zapamatuje novější sestavení a okno o něm informuje, když je nové. */
+async function lookForUpdate() {
   const info = await checkForUpdate({ fetchFn: (url, init) => net.fetch(url, init), version: app.getVersion() });
-  if (info.error || !info.available) return;
-  const isNew = !update || update.latest !== info.latest;
-  update = info;
-  if (isNew && mainWindow && !mainWindow.webContents.isDestroyed()) mainWindow.webContents.send("update:available", info);
+  if (info.available) {
+    const isNew = !update || update.latest !== info.latest;
+    update = info;
+    if (isNew && mainWindow && !mainWindow.webContents.isDestroyed()) mainWindow.webContents.send("update:available", info);
+  }
+  return info;
+}
+async function checkUpdate() {
+  // vývojová verze (npm start) se automaticky nekontroluje, jen zabalená aplikace
+  if (!app.isPackaged && !process.env.TIPSTER_UPDATE_TEST) return;
+  await lookForUpdate();
 }
 ipcMain.handle("update:get", () => update);
 
@@ -140,10 +146,8 @@ const safe = (fn) => async (...args) => {
 ipcMain.handle("tips:cached", safe(() => service.loadCached()));
 // Ruční kontrola (tlačítko „Aktualizace“): na rozdíl od automatické běží i ve vývojové verzi a chybu hlásí.
 ipcMain.handle("update:check", safe(async () => {
-  const info = await checkForUpdate({ fetchFn: (url, init) => net.fetch(url, init), version: app.getVersion() });
-  if (info.notFound) return { notFound: true, current: info.current, url: config.RELEASE_PAGE }; // soukromý repozitář
+  const info = await lookForUpdate();
   if (info.error) throw new Error(info.error);
-  if (info.available) update = info;
   return info;
 }));
 
@@ -194,7 +198,6 @@ ipcMain.handle("tickets:create", safe(async (event, req) => {
     candidates, calibration, ask, progress, reuse: ticketAnswers,
     collect: (list, report) => service.collectTicketStats(list, report),
     hint: ` Podrobnosti: ${service.ticketDiagnosticsFile()}`,
-    log: (text) => service.writeTicketLog(text),
   });
   try { service.saveTickets(result.tickets); } catch (err) { console.error(err); } // uložení nesmí shodit výsledek
   return result;

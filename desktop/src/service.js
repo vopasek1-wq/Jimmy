@@ -211,17 +211,6 @@ class TipService {
     });
   }
 
-  /** Ladicí soubor s posledním zadáním a odpovědí Gemini pro tikety (přepisuje se). */
-  writeTicketLog(text) {
-    try {
-      const dir = path.join(this.dataDir, "ladeni");
-      fs.mkdirSync(dir, { recursive: true });
-      fs.writeFileSync(path.join(dir, "tikety-odpoved.txt"), text, "utf8");
-    } catch {
-      /* ladicí soubor není nutný */
-    }
-  }
-
   /** Diagnostika pro vývojáře (text); uloží se i do `ladeni/diagnostika.txt`. */
   diagnosticsText(info) {
     const dir = path.join(this.dataDir, "ladeni");

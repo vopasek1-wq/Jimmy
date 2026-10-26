@@ -143,7 +143,6 @@ test("MatchStats.collect: stahuje zápas jednou i při dvou tipech, nepoužiteln
   assert.match(diag, /t1 A – B \| SofaScore ID 101 \| OK/);
   assert.match(diag, /t3 C – D \| SofaScore ID 102 \| NEÚPLNÉ \{"event":"404"\}/);
   assert.match(diag, /t4 E – F \| SofaScore ID chybí/);
-  assert.match(diag, /--- event ---/);
   fs.rmSync(dir, { recursive: true, force: true });
 });
 

@@ -29,9 +29,8 @@ vydání **`tipy-latest`**:
    aplikaci a spusťte nový `FotbalTipy.exe`). Novou verzi lze vyhledat i hned tlačítkem **Aktualizace** vlevo dole: když je novější
    sestavení, tlačítko se změní na „Stáhnout verzi N“ a další klik otevře stažení; když ne, tlačítko se zezelená a změní na „Máš aktuální verzi“
    (pod ním je číslo vaší verze; další klik zkontroluje znovu). Verze aplikace je `1.0.<číslo sestavení>` (workflow ho dosadí z čísla běhu).
-   Zjišťuje se přes GitHub API a když to nejde (limit dotazů, blokace), přes Atom kanál vydání na github.com; při selhání obou cest
-   aplikace ukáže skutečný důvod (stav HTTP, chyba spojení). U soukromého repozitáře (vydání bez přihlášení nejde přečíst, obě cesty vrátí 404) tlačítko **Aktualizace** jen otevře stránku vydání v prohlížeči, kde číslo verze porovnáte ručně. Automatická kontrola běží jen v zabalené aplikaci a funguje až od sestavení,
-   které ji obsahuje.
+   Zjišťuje se jedním dotazem na GitHub API; když se kontrola nepodaří, aplikace ukáže skutečný důvod (stav HTTP, chyba spojení).
+   Automatická kontrola běží jen v zabalené aplikaci a funguje až od sestavení, které ji obsahuje.
 
 Data (databáze `tipy.sqlite3`, nastavení okna) jsou ve `%APPDATA%\FotbalTipy`; vydání se nijak neváže na složku
 s `.exe`. Pro zkoušení lze složku přesměrovat proměnnou prostředí `TIPSTER_DATA_DIR`.
@@ -126,8 +125,7 @@ Zvolíš den (Dnes / Zítra) a klikneš na **Vytvořit tikety (AI)** – počet 
    (silná / střední / slabá / nedostatečná data). Do tiketů zařadí zápasy se silnou a střední oporou, slabé a bez dat vynechá a zařazené
    rozdělí tak, že nejjistější tipy jsou pohromadě (první tiket je nejjistější). Tipy samotné **neupravuje** (nemění typ sázky ani kurz),
    jen je hodnotí. Pod tikety je rozbalovací seznam **Nezařazeno do tiketů – proč?**: u každého zápasu, který v tiketu není, je důvod
-   (od Gemini, nebo že se k němu statistiky nepodařilo stáhnout / tiket byl zahozen pro porušení pravidel). Poslední zadání a odpověď
-   Gemini jsou v souboru `ladeni\tikety-odpoved.txt`.
+   (od Gemini, nebo že se k němu statistiky nepodařilo stáhnout / tiket byl zahozen pro porušení pravidel).
 
 **Šetření limitu Gemini API (bezplatný klíč má denní i minutový limit):** tikety se sestavují **jedním dotazem** na všechny zápasy. Přemýšlení modelu je omezené (jeho tokeny se počítají do limitu odpovědi i do kvóty) a zdůvodnění jsou krátká. Když se zadání do 20 minut nezmění (stejné zápasy, kurzy i statistiky), použije se předchozí odpověď a **žádný nový dotaz se neposílá** (stejně u **Vyhodnotit pomocí AI**). Useklá odpověď se zopakuje jen s větším limitem, nevolá se nadarmo víckrát. Každý dotaz má vlastní časový limit (75 s u analýzy, 110 s u tiketů): model, který se zasekne, se opustí a zkusí se záložní, takže se nečeká celé čtyři minuty na jeden.
 
@@ -220,8 +218,7 @@ API klíč ani nic osobního. Ladicí soubory ve složce `ladeni` se přepisují
 | `zdroje-diagnostika.txt` | stav zdrojů, párování tipů s Forebetem (časový rozsah, nespárované tipy s nejbližším zápasem), pokrytí SofaScore |
 | `forebet-seznam-diagnostika.txt`, `forebet-seznam.html` | přehled načtených stránek Forebetu (přehled „dnes“ a stránky lig: odkud, kolik zápasů, nabídka lig a ukázka řádku); celé HTML jen když přehled „dnes“ nevrátil žádný zápas |
 | `forebet-diagnostika.txt`, `forebet-zapas.html` | jen když se nepodaří přečíst pravděpodobnosti gólů ze stránky zápasu |
-| `tikety-statistiky.txt` | co se stáhlo ze SofaScore pro tikety (po zápasech) a ukázky odpovědí |
-| `tikety-odpoved.txt` | poslední zadání a odpověď Gemini pro tikety |
+| `tikety-statistiky.txt` | co se stáhlo ze SofaScore pro tikety (po zápasech) |
 
 ## Vývoj
 

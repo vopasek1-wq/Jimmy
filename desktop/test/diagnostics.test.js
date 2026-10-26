@@ -84,7 +84,6 @@ test("buildDiagnostics: verze, stav zdrojů, obsah ladicích souborů (zkrácen�
   const dir = tmp();
   fs.writeFileSync(path.join(dir, "zdroje-diagnostika.txt"), "Stav zdrojů:\n  Forebet: failed\n");
   fs.writeFileSync(path.join(dir, "tikety-statistiky.txt"), `${"x".repeat(7000)}`);
-  fs.writeFileSync(path.join(dir, "tikety-odpoved.txt"), "hlavička\n=== ODPOVĚĎ GEMINI ===\n{\"tikety\":[]}\n\n=== ZADÁNÍ ===\nTAJNÉ ZADÁNÍ PRO AI\n");
   const text = buildDiagnostics({
     version: "1.0.38", electron: "44.9.0", platform: "win32 10.0.22631", dir, now: new Date("2026-10-23T08:00:00Z"),
     run: { finishedAt: new Date("2026-10-23T07:50:00Z"), statuses: { Forebet: { name: "Forebet", state: "failed", message: "Cloudflare" } }, warnings: ["Forebet: Cloudflare"] },
@@ -95,9 +94,7 @@ test("buildDiagnostics: verze, stav zdrojů, obsah ladicích souborů (zkrácen�
   assert.match(text, /tipů v posledním stažení: 2 \(zdroj pravděpodobnosti: Scores24 1, Forebet 1\), s Forebetem 1, se SofaScore 1/);
   assert.match(text, /===== zdroje-diagnostika\.txt =====\nStav zdrojů:\n  Forebet: failed/);
   assert.match(text, /===== forebet-diagnostika\.txt =====\n\(soubor není\)/);
-  assert.match(text, /… \(zkráceno\)/);                                    // tikety-statistiky.txt má 7000 znaků, limit 6000
-  assert.match(text, /=== ODPOVĚĎ GEMINI ===\n\{"tikety":\[\]\}/);
-  assert.ok(!text.includes("TAJNÉ ZADÁNÍ"), "dlouhé zadání pro AI se do souhrnu nedává");
+  assert.match(text, /… \(zkráceno, celkem 7000 znaků\)/);                  // tikety-statistiky.txt má 7000 znaků, limit 6000
   assert.match(buildDiagnostics({ version: "1", electron: "1", platform: "x", run: null, dir }), /Zatím žádné stažení tipů\./);
   fs.rmSync(dir, { recursive: true, force: true });
 });

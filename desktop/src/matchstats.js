@@ -1,7 +1,7 @@
 // Statistiky zápasů ze SofaScore pro tikety: forma obou týmů (posledních 5 zápasů), vzájemné zápasy (H2H), střelecká
 // produktivita, domácí/venkovní výkonnost a zranění. Je to veřejný JSON webu SofaScore (stejně jako sofascore.js a live.js);
 // oficiální popis neexistuje, proto je každá část nepovinná: co se nenačte nebo nejde přečíst, se jen označí jako nedostupné.
-// Podrobnosti (i ukázky odpovědí) jdou do ladicího souboru `ladeni/tikety-statistiky.txt`.
+// Podrobnosti jdou do ladicího souboru `ladeni/tikety-statistiky.txt`.
 "use strict";
 
 const fs = require("node:fs");
@@ -145,7 +145,6 @@ class MatchStats {
     this.concurrency = concurrency;
     this.blockedStreak = 0;
     this.blocked = false;
-    this.samples = {};
   }
 
   /** Jeden dotaz; chyba zdroje nic neshodí, jen se zapíše do `notes` (null = data nejsou). */
@@ -155,7 +154,6 @@ class MatchStats {
       const data = await this.http.getJson(url, { headers: HEADERS, delayMs: this.delayMs });
       this.blockedStreak = 0;
       notes[kind] = "ok";
-      if (!this.samples[kind]) this.samples[kind] = JSON.stringify(data).slice(0, 700);
       return data;
     } catch (err) {
       if (!(err instanceof SourceError)) throw err;
@@ -253,8 +251,6 @@ class MatchStats {
         const r = results.get(c.sofascoreId);
         lines.push(`${c.ticketId} ${c.matchName} | SofaScore ID ${c.sofascoreId || "chybí"} | ${r ? (r.complete ? "OK" : "NEÚPLNÉ") : "-"} ${r ? JSON.stringify(r.notes) : ""}`);
       }
-      lines.push("", "Ukázky odpovědí (začátek JSON; slouží k ověření tvaru dat):");
-      for (const [kind, sample] of Object.entries(this.samples)) lines.push(`--- ${kind} ---`, sample);
       fs.mkdirSync(this.debugDir, { recursive: true });
       fs.writeFileSync(path.join(this.debugDir, "tikety-statistiky.txt"), `${lines.join("\n")}\n`, "utf8");
     } catch {

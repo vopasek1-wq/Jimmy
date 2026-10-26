@@ -224,7 +224,7 @@ test("createTickets: žádný vhodný tiket (s poznámkou), neplatný JSON se zo
   await assert.rejects(() => createTickets({ candidates: c, collect: limit.collect, ask: limit.ask, now: NOW }), /Vyčerpaný denní limit/);
 });
 
-test("createTickets: nezařazené zápasy mají důvod (AI, bez statistik, jiný tip téhož zápasu, zahozený tiket) a ladicí soubor dostane odpověď", async () => {
+test("createTickets: nezařazené zápasy mají důvod (AI, bez statistik, jiný tip téhož zápasu, zahozený tiket)", async () => {
   const c = candidatesFrom([at(2), at(3), at(4), at(5), at(6), at(7, { sofascoreId: null }), at(8, { home: "D2", away: "H2", matchName: "D2 – H2", kickoff: at(2).kickoff, tipLabel: "Oba týmy dají gól – ano" })], { now: NOW });
   const idOf = (home, label) => c.find((x) => x.home === home && (!label || x.tipLabel === label)).ticketId;
   const [d2, d3, d4, d5, d6, d7] = ["D2", "D3", "D4", "D5", "D6", "D7"].map((h) => idOf(h));
@@ -237,8 +237,7 @@ test("createTickets: nezařazené zápasy mají důvod (AI, bez statistik, jiný
       vynechane: [{ id: d5, duvod: "forma domácích tip nepodporuje" }],
     })],
   });
-  const logs = [];
-  const r = await createTickets({ candidates: c, collect: f.collect, ask: f.ask, now: NOW, log: (t) => logs.push(t) });
+  const r = await createTickets({ candidates: c, collect: f.collect, ask: f.ask, now: NOW });
   assert.equal(r.tickets.length, 1);
   assert.equal(r.rejected, 1);
   const why = Object.fromEntries(r.omitted.map((o) => [o.id, [o.kind, o.reason]]));
@@ -248,10 +247,6 @@ test("createTickets: nezařazené zápasy mají důvod (AI, bez statistik, jiný
   assert.deepEqual(why[d7], ["nodata", "zápas se nepodařilo najít na SofaScore"]);
   assert.deepEqual(why[d2btts], ["same", "zápas je už v tiketu s jiným tipem"]);
   assert.equal(r.omitted.length, 5);               // 7 zápasů − 2 v tiketu
-  assert.equal(logs.length, 1);
-  assert.match(logs[0], /=== ODPOVĚĎ GEMINI ===\n\{"tikety"/);
-  assert.match(logs[0], /=== ZAHOZENÉ TIKETY ===\nTiket 2: neznámý tip t99/);
-  assert.match(logs[0], /=== ZADÁNÍ ===\nZ nabídky níže sestav tikety/);
 
   // AI zápas nezmínila ani nezařadila → obecný důvod
   const silent = fakes({ covered: [d2, d3, d4], replies: [json({ tikety: [{ tipy: [d2, d3] }] })] });

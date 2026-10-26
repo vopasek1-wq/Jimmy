@@ -1540,12 +1540,9 @@
     renderUpdateBtn(true);
     const res = await desktop.update.check();
     if (res.ok && res.data.available) showUpdate(res.data);
-    upToDate = Boolean(res.ok && !res.data.available && !res.data.notFound && !res.data.error);
+    upToDate = Boolean(res.ok && !res.data.available);
     renderUpdateBtn();
-    if (res.ok && res.data.notFound) {                  // vydání bez přihlášení nejde přečíst: ukáže se stránka vydání v prohlížeči
-      openExternal(res.data.url);
-      toast(`Novou verzi nejde zjistit automaticky. Otevřel jsem stránku vydání – číslo je v názvu (ty máš ${res.data.current || "starší"}).`);
-    } else if (!res.ok) toast(res.error, "error");
+    if (!res.ok) toast(res.error, "error");
     else if (res.data.available) toast(`Je k dispozici verze ${res.data.latest} (máš ${res.data.current}). Klikni na „Stáhnout“.`);
   });
   if (desktop) {
