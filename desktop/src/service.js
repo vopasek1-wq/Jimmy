@@ -125,11 +125,11 @@ class TipService {
     return analyze(this.db.history(null).map(serializeTip));
   }
 
-  /** Zadání pro AI: slovní rozbor vyhodnocených tiketů (ze záložky Vyhodnocení). */
+  /** Zadání pro AI: slovní rozbor vyhodnocených tiketů (ze záložky Tikety). */
   aiPrompt() {
     const settled = this._settledTickets();
     if (!settled.some((t) => t.status === "win" || t.status === "loss" || t.status === "void")) {
-      throw new Error("Zatím nejsou vyhodnocené žádné tikety. Vytvoř je v záložce Tikety a po zápasech je nech vyhodnotit v záložce Vyhodnocení.");
+      throw new Error("Zatím nejsou vyhodnocené žádné tikety. Vytvoř je v záložce Tikety a po zápasech je nech vyhodnotit tlačítkem „Vyhodnotit automaticky“.");
     }
     return buildTicketsPrompt(settled);
   }

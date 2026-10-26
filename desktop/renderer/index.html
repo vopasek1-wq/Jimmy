@@ -84,7 +84,6 @@
           <li><a class="nav__link is-active" href="#" data-view="overview" aria-current="page"><i data-lucide="house"></i><span>Přehled</span></a></li>
           <li><a class="nav__link" href="#" data-view="live"><i data-lucide="radio"></i><span>Živé zápasy</span></a></li>
           <li><a class="nav__link" href="#" data-view="tickets"><i data-lucide="ticket"></i><span>Tikety</span></a></li>
-          <li><a class="nav__link" href="#" data-view="evaluation"><i data-lucide="clipboard-check"></i><span>Vyhodnocení</span></a></li>
           <li><a class="nav__link" href="#" data-view="analysis"><i data-lucide="brain"></i><span>Analýza</span></a></li>
           <li><a class="nav__link" href="#" data-view="history"><i data-lucide="history"></i><span>Historie</span></a></li>
         </ul>
@@ -154,50 +153,47 @@
         <div class="tickets-page">
           <section class="card tk-main" aria-labelledby="tickets-title">
             <h2 class="sr-only" id="tickets-title">Tikety</h2>
-            <div class="tk-controls">
-              <div class="seg-control" id="tk-day" role="group" aria-label="Den">
+            <div class="stat-row stat-row--5" id="tk-stats"></div>
+            <div class="tk-controls tk-controls--first">
+              <span class="tk-controls__label">Vytvořit pro</span>
+              <div class="seg-control" id="tk-day" role="group" aria-label="Den, pro který se tikety vytvářejí">
                 <button type="button" data-tkday="today" aria-pressed="true">Dnes</button>
                 <button type="button" data-tkday="tomorrow" aria-pressed="false">Zítra</button>
               </div>
               <button class="btn btn--primary" type="button" id="tk-create"><i data-lucide="sparkles"></i>Vytvořit tikety (AI)</button>
             </div>
-            <p class="tk-note" id="tk-note">Aplikace vezme tipy z přehledu a ke každému zápasu stáhne ze SofaScore aktuální statistiky (forma, vzájemné zápasy, góly, zranění, domácí/venkovní výkonnost). Gemini z nich vybere tipy s dobrou oporou v datech a složí tikety. Celkový kurz a pravděpodobnost počítá aplikace; kurzy u Tipsportu se mohou lišit.</p>
-            <div class="tk-list" id="tk-list"></div>
-            <div class="tk-hist" id="tk-history"></div>
-          </section>
-
-          <section class="card detail-card" aria-labelledby="tk-detail-title">
-            <header class="card__header">
-              <h2 class="sr-only" id="tk-detail-title">Detail zápasu v tiketu</h2>
-              <span class="detail-match" id="tk-detail-match"></span>
-            </header>
-            <div class="detail" id="tk-detail"></div>
-          </section>
-        </div>
-
-        <div class="eval-page">
-          <section class="card ev-main" aria-labelledby="eval-title">
-            <h2 class="sr-only" id="eval-title">Vyhodnocení tiketů</h2>
-            <div class="stat-row stat-row--5" id="ev-stats"></div>
-            <div class="tk-controls ev-controls">
-              <div class="seg-control" id="ev-range" role="group" aria-label="Období">
-                <button type="button" data-evrange="today" aria-pressed="false">Dnes</button>
-                <button type="button" data-evrange="yesterday" aria-pressed="false">Včera</button>
-                <button type="button" data-evrange="week" aria-pressed="false">7 dní</button>
-                <button type="button" data-evrange="all" aria-pressed="true">Vše</button>
+            <div class="tk-controls">
+              <div class="seg-control" id="tk-range" role="group" aria-label="Zobrazená období">
+                <button type="button" data-tkrange="tomorrow" aria-pressed="false">Zítra</button>
+                <button type="button" data-tkrange="today" aria-pressed="false">Dnes</button>
+                <button type="button" data-tkrange="yesterday" aria-pressed="false">Včera</button>
+                <button type="button" data-tkrange="week" aria-pressed="false">7 dní</button>
+                <button type="button" data-tkrange="all" aria-pressed="true">Vše</button>
               </div>
-              <button class="btn btn--ghost" type="button" id="ev-run" title="Zjistí výsledky zápasů ze SofaScore a tikety podle nich vyhodnotí"><i data-lucide="sparkles"></i>Vyhodnotit automaticky</button>
+              <button class="btn btn--ghost" type="button" id="tk-evaluate" title="Zjistí výsledky zápasů ze SofaScore a tikety podle nich vyhodnotí"><i data-lucide="sparkles"></i>Vyhodnotit automaticky</button>
             </div>
-            <div class="ev-list" id="ev-list"></div>
+            <p class="tk-note" id="tk-note"></p>
+            <div id="tk-status"></div>
+            <div class="tk-list" id="tk-list"></div>
+            <div id="tk-omitted"></div>
           </section>
 
-          <section class="card ev-ai" aria-labelledby="ev-ai-title">
-            <header class="card__header">
-              <h2 class="card__title" id="ev-ai-title"><i data-lucide="sparkles"></i>Slovní vyhodnocení tiketů</h2>
-              <button class="btn btn--primary btn--sm" type="button" id="ev-ai-run" title="Gemini slovně rozebere vyhodnocené tikety: co je špatně a na co si dát pozor. Pošle je do Google Gemini API tvým klíčem."><i data-lucide="sparkles"></i><span>Vyhodnotit pomocí AI</span></button>
-            </header>
-            <div class="ev-ai__note" id="ev-ai-note"></div>
-            <div class="ai-out ev-ai__out" id="ev-ai-out" aria-live="polite"></div>
+          <section class="card tk-side" aria-label="Detail zápasu a slovní vyhodnocení">
+            <div class="seg-control tk-side__switch" id="tk-pane" role="group" aria-label="Pravý panel">
+              <button type="button" data-tkpane="detail" aria-pressed="true">Detail zápasu</button>
+              <button type="button" data-tkpane="ai" aria-pressed="false">Slovní vyhodnocení</button>
+            </div>
+            <div class="tk-pane" id="tk-pane-detail">
+              <header class="card__header"><span class="detail-match" id="tk-detail-match"></span></header>
+              <div class="detail" id="tk-detail"></div>
+            </div>
+            <div class="tk-pane" id="tk-pane-ai" hidden>
+              <div class="tk-ai__bar">
+                <button class="btn btn--primary btn--sm" type="button" id="tk-ai-run" title="Gemini slovně rozebere vyhodnocené tikety: co je špatně a na co si dát pozor. Pošle je do Google Gemini API tvým klíčem."><i data-lucide="sparkles"></i><span>Vyhodnotit pomocí AI</span></button>
+                <span class="tk-ai__note" id="tk-ai-note"></span>
+              </div>
+              <div class="ai-out tk-ai__out" id="tk-ai-out" aria-live="polite"></div>
+            </div>
           </section>
         </div>
 
