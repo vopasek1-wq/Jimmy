@@ -40,7 +40,6 @@
   --yellow-soft: rgba(245, 197, 66, 0.15);
   --red: #ff6b6b;
   --red-soft: rgba(255, 107, 107, 0.15);
-  --blue: #3b8ff0;
   --orange: #ff6a3d;
   --orange-soft: rgba(255, 106, 61, 0.11);
   --danger: #c42b1c;
@@ -48,7 +47,6 @@
   /* Tvar a hloubka */
   --radius-card: 18px;
   --radius-md: 12px;
-  --radius-sm: 6px;
   --shadow-card:
     0 12px 32px -14px rgba(0, 0, 0, 0.7),
     0 2px 6px rgba(0, 0, 0, 0.35),
@@ -61,12 +59,9 @@
   --topbar-h: 106px;        /* celá horní část: řádek s hledáním + záložky */
   --topbar-row: 62px;
   --tabs-h: 44px;
-  --rightbar-w: 360px;
-  --gap: 16px;
 
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
   --font: "Roboto", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
-  --mono: "Cascadia Mono", Consolas, "SF Mono", Menlo, monospace;
 }
 
 /* ---------- Reset / základ ---------- */

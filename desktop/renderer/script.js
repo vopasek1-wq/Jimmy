@@ -1310,7 +1310,7 @@
     loadTicketHistory();
   });
 
-  /* ---------- Analýza úspěšnosti tipů (+ AI) ---------- */
+  /* ---------- Analýza úspěšnosti tipů a tiketů ---------- */
   const an = { data: null, tickets: null };
   const signed1 = (v) => (v === null ? "–" : `${v > 0 ? "+" : v < 0 ? "−" : ""}${nf1.format(Math.abs(v))}`);
 
