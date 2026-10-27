@@ -217,7 +217,6 @@ ipcMain.handle("tips:stats", safe((_e, id, forebetUrl) => service.matchDetail(id
 ipcMain.handle("tips:refresh", safe((event) => service.refresh(progressTo(event))));
 ipcMain.handle("tips:verify-forebet", safe((event) => service.refresh(progressTo(event), { interactiveForebet: true })));
 ipcMain.handle("history:list", safe((_e, days) => service.history(days ?? null)));
-ipcMain.handle("history:set-outcome", safe((_e, { id, outcome }) => service.setOutcome(id, outcome)));
 ipcMain.handle("history:evaluate", safe((event) => service.evaluate(progressTo(event))));
 
 /* ---------- Životní cyklus ---------- */

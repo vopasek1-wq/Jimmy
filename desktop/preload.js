@@ -47,7 +47,6 @@ contextBridge.exposeInMainWorld("desktop", {
   },
   history: {
     list: (days) => ipcRenderer.invoke("history:list", days),
-    setOutcome: (id, outcome) => ipcRenderer.invoke("history:set-outcome", { id, outcome }),
     evaluate: () => ipcRenderer.invoke("history:evaluate"),
   },
 });

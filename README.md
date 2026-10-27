@@ -222,7 +222,7 @@ Potřebujete Node.js 22+ (aplikace používá vestavěné `node:sqlite` z Electr
 cd desktop
 npm install
 npm start          :: spustí aplikaci
-npm test           :: 82 testů (parsery, filtry, databáze, pipeline, HTTP)
+npm test           :: testy (parsery, filtry, databáze, pipeline, HTTP, tikety, analýza)
 npm run dist       :: portable .exe do desktop\dist (na Windows)
 ```
 
@@ -235,12 +235,15 @@ desktop/
   src/
     config.js             prahy filtrů, seznam lig, adresy zdrojů
     markets.js, odds.js,  typy tipů a vyhodnocení výsledku, převod kurzů, párování názvů týmů
-    names.js, filters.js, models.js, timeutil.js
+    names.js, filters.js, models.js, timeutil.js, dom.js
     http.js, browser.js   HTTP klient (pauzy, opakování, detekce blokace) a sdílené skryté okno prohlížeče
     scrapers/             scores24.js, forebet.js, sofascore.js
     pipeline.js           sloučení zdrojů → filtry → obohacení; automatické vyhodnocení výsledků
-    database.js           SQLite: běhy, tipy, historie, statistiky
+    matchstats.js, live.js  statistiky zápasů a živé zápasy ze SofaScore
+    tickets.js, analysis.js, advice.js  tikety a analýza přes Gemini, rady k tipům
+    database.js           SQLite: běhy, tipy, tikety, historie, statistiky
     service.js            propojení všeho pro okno
+    updates.js, diagnostics.js, housekeeping.js, goalscache.js, windowstate.js  kontrola nové verze, diagnostika, úklid, mezipaměť, poloha okna
   renderer/               rozhraní (index.html, styles.css, script.js, vendor/ = GridStack, Lucide, Roboto)
   test/                   node:test + ukázkové stránky ve struktuře živých webů
 ```
