@@ -2,8 +2,7 @@
 
 Desktopová aplikace pro Windows (**Electron, `.exe` bez instalace**), která po spuštění sama stáhne fotbalové tipy,
 vyfiltruje je podle kvality a ukáže je v přehledné tabulce. Zaměřuje se na top evropské ligy a poháry UEFA
-a jako cílovou sázkovou kancelář počítá s **Tipsportem**. Vzhled a ovládání jsou ve stejném systému jako
-**J.I.M.M.Y.** (tmavé téma, okno bez rámečku, levé menu, karty).
+a jako cílovou sázkovou kancelář počítá s **Tipsportem**. Vzhled: tmavé téma, okno bez rámečku, levé menu, karty.
 
 | Zdroj | K čemu slouží | Jak se čte |
 |---|---|---|
@@ -35,10 +34,7 @@ vydání **`tipy-latest`**:
 Data (databáze `tipy.sqlite3`, nastavení okna) jsou ve `%APPDATA%\FotbalTipy`; vydání se nijak neváže na složku
 s `.exe`. Pro zkoušení lze složku přesměrovat proměnnou prostředí `TIPSTER_DATA_DIR`.
 
-> Vydání `tipy-latest` není označené jako „Latest“, takže nepřebije odkaz `/releases/latest/download/JIMMY.exe`.
-> Workflow aplikace J.I.M.M.Y. ale uchovává jen 5 nejnovějších vydání **všech** druhů – po pěti jejích dalších
-> sestaveních může vydání `tipy-latest` zmizet. Stačí pak spustit *Actions → Fotbalové tipy – Windows build →
-> Run workflow*.
+> Kdyby vydání `tipy-latest` chybělo, stačí spustit *Actions → Fotbalové tipy – Windows build → Run workflow*.
 
 ## Vzhled
 

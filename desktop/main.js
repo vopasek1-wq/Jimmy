@@ -40,7 +40,7 @@ function createWindow() {
     height,
     minWidth: 1024,
     minHeight: 640,
-    frame: false, // vlastní titulní lišta (stejně jako J.I.M.M.Y.)
+    frame: false, // vlastní titulní lišta
     backgroundColor: "#080f17",
     title: "Fotbalové tipy",
     icon: path.join(__dirname, "build", "icon.png"),
@@ -230,7 +230,7 @@ if (!app.requestSingleInstanceLock()) {
   });
 
   app.whenReady().then(async () => {
-    app.setAppUserModelId("cz.jimmy.fotbalovetipy");
+    app.setAppUserModelId("cz.fotbalovetipy");
 
     // Stahování přes síťový stack Chromia (systémová proxy a certifikáty Windows).
     const userAgent = chromeUserAgent(app.userAgentFallback);
