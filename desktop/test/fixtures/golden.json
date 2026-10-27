@@ -1,0 +1,7568 @@
+{
+"parseOdds": [
+[
+"1.85",
+1.85
+],
+[
+"1,85",
+1.85
+],
+[
+"2",
+2.0
+],
+[
+"-143",
+1.7
+],
+[
+"-118",
+1.85
+],
+[
+"-213",
+1.47
+],
+[
+"+150",
+2.5
+],
+[
+"150",
+2.5
+],
+[
+"−147",
+1.68
+],
+[
+"5/4",
+2.25
+],
+[
+"1/2",
+1.5
+],
+[
+"-",
+null
+],
+[
+"",
+null
+],
+[
+"abc",
+null
+],
+[
+"1.00",
+null
+],
+[
+"0.5",
+null
+],
+[
+"-50",
+null
+],
+[
+"12.5",
+12.5
+],
+[
+"99",
+99.0
+],
+[
+"100",
+2.0
+],
+[
+"1 85",
+2.85
+],
+[
+"+1000",
+11.0
+],
+[
+"-1000",
+1.1
+],
+[
+"7/2",
+4.5
+],
+[
+"0/0",
+null
+]
+],
+"estimateOdds": [
+[
+0,
+null
+],
+[
+5,
+18.8
+],
+[
+50,
+1.88
+],
+[
+60,
+1.57
+],
+[
+61,
+1.54
+],
+[
+62,
+1.52
+],
+[
+70,
+1.34
+],
+[
+75,
+1.25
+],
+[
+85,
+1.11
+],
+[
+99,
+0.95
+],
+[
+100,
+null
+],
+[
+-3,
+null
+]
+],
+"normalizePick": [
+[
+"Arsenal to Win",
+"Nottingham Forest",
+"Arsenal",
+"2",
+"2 – výhra Arsenal"
+],
+[
+"Nottingham Forest to Win",
+"Nottingham Forest",
+"Arsenal",
+"1",
+"1 – výhra Nottingham Forest"
+],
+[
+"Draw",
+"Nottingham Forest",
+"Arsenal",
+"X",
+"X – remíza"
+],
+[
+"Both Teams to Score –  (Yes)",
+"Nottingham Forest",
+"Arsenal",
+"BTTS",
+"Oba týmy dají gól – ano"
+],
+[
+"Both Teams to Score – (No)",
+"Nottingham Forest",
+"Arsenal",
+"NOBTTS",
+"Oba týmy dají gól – ne"
+],
+[
+"Total goals Over (2,5)",
+"Nottingham Forest",
+"Arsenal",
+"O2.5",
+"Over 2,5 gólu"
+],
+[
+"Total goals Under (3,5)",
+"Nottingham Forest",
+"Arsenal",
+"U3.5",
+"Under 3,5 gólu"
+],
+[
+"Total goals Over (3)",
+"Nottingham Forest",
+"Arsenal",
+"O3",
+"Over 3 gólu"
+],
+[
+"Total goals Over (2,25)",
+"Nottingham Forest",
+"Arsenal",
+"O2.25",
+"Over 2,25 gólu"
+],
+[
+"Nottingham Forest Total goals Over (1,5)",
+"Nottingham Forest",
+"Arsenal",
+"HO1.5",
+"Nottingham Forest: over 1,5 gólu"
+],
+[
+"Arsenal Total goals Under (0,5)",
+"Nottingham Forest",
+"Arsenal",
+"AU0.5",
+"Arsenal: under 0,5 gólu"
+],
+[
+"Arsenal Handicap (0)",
+"Nottingham Forest",
+"Arsenal",
+"AH2:0",
+"Arsenal: bez remízy"
+],
+[
+"Arsenal Handicap (+1,5)",
+"Nottingham Forest",
+"Arsenal",
+"AH2:+1.5",
+"Arsenal: handicap +1,5"
+],
+[
+"Nottingham Forest Handicap (-1)",
+"Nottingham Forest",
+"Arsenal",
+"AH1:-1",
+"Nottingham Forest: handicap -1"
+],
+[
+"Arsenal will not lose",
+"Nottingham Forest",
+"Arsenal",
+"X2",
+"X2 – Arsenal neprohraje"
+],
+[
+"Nottingham Forest or Draw",
+"Nottingham Forest",
+"Arsenal",
+"1X",
+"1X – Nottingham Forest neprohraje"
+],
+[
+"Draw or Arsenal",
+"Nottingham Forest",
+"Arsenal",
+"X2",
+"X2 – Arsenal neprohraje"
+],
+[
+"Nottingham Forest or Arsenal",
+"Nottingham Forest",
+"Arsenal",
+"12",
+"12 – nebude remíza"
+],
+[
+"Total corners Over (9,5)",
+"Nottingham Forest",
+"Arsenal",
+"OTHER:Total corners Over (9,5)",
+"Total corners Over (9,5)"
+],
+[
+"",
+"Nottingham Forest",
+"Arsenal",
+"OTHER:",
+""
+],
+[
+"Real Madrid Castilla to Win",
+"Real Madrid",
+"Real Madrid Castilla",
+"2",
+"2 – výhra Real Madrid Castilla"
+],
+[
+"Brighton & Hove Albion Total goals Over (1,5)",
+"Brighton & Hove Albion",
+"Crystal Palace",
+"HO1.5",
+"Brighton & Hove Albion: over 1,5 gólu"
+],
+[
+"Como 1907 Handicap (+1,5)",
+"Fiorentina",
+"Como 1907",
+"AH2:+1.5",
+"Como 1907: handicap +1,5"
+],
+[
+"Cagliari Calcio will not lose",
+"Monza",
+"Cagliari Calcio",
+"X2",
+"X2 – Cagliari Calcio neprohraje"
+],
+[
+"Lazio Rome Handicap (+1,5)",
+"Juventus Turin",
+"Lazio Rome",
+"AH2:+1.5",
+"Lazio Rome: handicap +1,5"
+],
+[
+"Arsenal to Win or Draw",
+"Nottingham Forest",
+"Arsenal",
+"X2",
+"X2 – Arsenal neprohraje"
+],
+[
+"Total goals Over (2,5) ",
+"Nottingham Forest",
+"Arsenal",
+"O2.5",
+"Over 2,5 gólu"
+],
+[
+"TOTAL GOALS UNDER (1)",
+"Nottingham Forest",
+"Arsenal",
+"U1",
+"Under 1 gólu"
+]
+],
+"evaluate": [
+[
+"1",
+0,
+0,
+"loss"
+],
+[
+"1",
+1,
+0,
+"win"
+],
+[
+"1",
+0,
+1,
+"loss"
+],
+[
+"1",
+1,
+1,
+"loss"
+],
+[
+"1",
+2,
+1,
+"win"
+],
+[
+"1",
+1,
+2,
+"loss"
+],
+[
+"1",
+2,
+0,
+"win"
+],
+[
+"1",
+0,
+2,
+"loss"
+],
+[
+"1",
+3,
+0,
+"win"
+],
+[
+"1",
+3,
+1,
+"win"
+],
+[
+"1",
+2,
+2,
+"loss"
+],
+[
+"1",
+4,
+3,
+"win"
+],
+[
+"X",
+0,
+0,
+"win"
+],
+[
+"X",
+1,
+0,
+"loss"
+],
+[
+"X",
+0,
+1,
+"loss"
+],
+[
+"X",
+1,
+1,
+"win"
+],
+[
+"X",
+2,
+1,
+"loss"
+],
+[
+"X",
+1,
+2,
+"loss"
+],
+[
+"X",
+2,
+0,
+"loss"
+],
+[
+"X",
+0,
+2,
+"loss"
+],
+[
+"X",
+3,
+0,
+"loss"
+],
+[
+"X",
+3,
+1,
+"loss"
+],
+[
+"X",
+2,
+2,
+"win"
+],
+[
+"X",
+4,
+3,
+"loss"
+],
+[
+"2",
+0,
+0,
+"loss"
+],
+[
+"2",
+1,
+0,
+"loss"
+],
+[
+"2",
+0,
+1,
+"win"
+],
+[
+"2",
+1,
+1,
+"loss"
+],
+[
+"2",
+2,
+1,
+"loss"
+],
+[
+"2",
+1,
+2,
+"win"
+],
+[
+"2",
+2,
+0,
+"loss"
+],
+[
+"2",
+0,
+2,
+"win"
+],
+[
+"2",
+3,
+0,
+"loss"
+],
+[
+"2",
+3,
+1,
+"loss"
+],
+[
+"2",
+2,
+2,
+"loss"
+],
+[
+"2",
+4,
+3,
+"loss"
+],
+[
+"1X",
+0,
+0,
+"win"
+],
+[
+"1X",
+1,
+0,
+"win"
+],
+[
+"1X",
+0,
+1,
+"loss"
+],
+[
+"1X",
+1,
+1,
+"win"
+],
+[
+"1X",
+2,
+1,
+"win"
+],
+[
+"1X",
+1,
+2,
+"loss"
+],
+[
+"1X",
+2,
+0,
+"win"
+],
+[
+"1X",
+0,
+2,
+"loss"
+],
+[
+"1X",
+3,
+0,
+"win"
+],
+[
+"1X",
+3,
+1,
+"win"
+],
+[
+"1X",
+2,
+2,
+"win"
+],
+[
+"1X",
+4,
+3,
+"win"
+],
+[
+"X2",
+0,
+0,
+"win"
+],
+[
+"X2",
+1,
+0,
+"loss"
+],
+[
+"X2",
+0,
+1,
+"win"
+],
+[
+"X2",
+1,
+1,
+"win"
+],
+[
+"X2",
+2,
+1,
+"loss"
+],
+[
+"X2",
+1,
+2,
+"win"
+],
+[
+"X2",
+2,
+0,
+"loss"
+],
+[
+"X2",
+0,
+2,
+"win"
+],
+[
+"X2",
+3,
+0,
+"loss"
+],
+[
+"X2",
+3,
+1,
+"loss"
+],
+[
+"X2",
+2,
+2,
+"win"
+],
+[
+"X2",
+4,
+3,
+"loss"
+],
+[
+"12",
+0,
+0,
+"loss"
+],
+[
+"12",
+1,
+0,
+"win"
+],
+[
+"12",
+0,
+1,
+"win"
+],
+[
+"12",
+1,
+1,
+"loss"
+],
+[
+"12",
+2,
+1,
+"win"
+],
+[
+"12",
+1,
+2,
+"win"
+],
+[
+"12",
+2,
+0,
+"win"
+],
+[
+"12",
+0,
+2,
+"win"
+],
+[
+"12",
+3,
+0,
+"win"
+],
+[
+"12",
+3,
+1,
+"win"
+],
+[
+"12",
+2,
+2,
+"loss"
+],
+[
+"12",
+4,
+3,
+"win"
+],
+[
+"BTTS",
+0,
+0,
+"loss"
+],
+[
+"BTTS",
+1,
+0,
+"loss"
+],
+[
+"BTTS",
+0,
+1,
+"loss"
+],
+[
+"BTTS",
+1,
+1,
+"win"
+],
+[
+"BTTS",
+2,
+1,
+"win"
+],
+[
+"BTTS",
+1,
+2,
+"win"
+],
+[
+"BTTS",
+2,
+0,
+"loss"
+],
+[
+"BTTS",
+0,
+2,
+"loss"
+],
+[
+"BTTS",
+3,
+0,
+"loss"
+],
+[
+"BTTS",
+3,
+1,
+"win"
+],
+[
+"BTTS",
+2,
+2,
+"win"
+],
+[
+"BTTS",
+4,
+3,
+"win"
+],
+[
+"NOBTTS",
+0,
+0,
+"win"
+],
+[
+"NOBTTS",
+1,
+0,
+"win"
+],
+[
+"NOBTTS",
+0,
+1,
+"win"
+],
+[
+"NOBTTS",
+1,
+1,
+"loss"
+],
+[
+"NOBTTS",
+2,
+1,
+"loss"
+],
+[
+"NOBTTS",
+1,
+2,
+"loss"
+],
+[
+"NOBTTS",
+2,
+0,
+"win"
+],
+[
+"NOBTTS",
+0,
+2,
+"win"
+],
+[
+"NOBTTS",
+3,
+0,
+"win"
+],
+[
+"NOBTTS",
+3,
+1,
+"loss"
+],
+[
+"NOBTTS",
+2,
+2,
+"loss"
+],
+[
+"NOBTTS",
+4,
+3,
+"loss"
+],
+[
+"O2.5",
+0,
+0,
+"loss"
+],
+[
+"O2.5",
+1,
+0,
+"loss"
+],
+[
+"O2.5",
+0,
+1,
+"loss"
+],
+[
+"O2.5",
+1,
+1,
+"loss"
+],
+[
+"O2.5",
+2,
+1,
+"win"
+],
+[
+"O2.5",
+1,
+2,
+"win"
+],
+[
+"O2.5",
+2,
+0,
+"loss"
+],
+[
+"O2.5",
+0,
+2,
+"loss"
+],
+[
+"O2.5",
+3,
+0,
+"win"
+],
+[
+"O2.5",
+3,
+1,
+"win"
+],
+[
+"O2.5",
+2,
+2,
+"win"
+],
+[
+"O2.5",
+4,
+3,
+"win"
+],
+[
+"U2.5",
+0,
+0,
+"win"
+],
+[
+"U2.5",
+1,
+0,
+"win"
+],
+[
+"U2.5",
+0,
+1,
+"win"
+],
+[
+"U2.5",
+1,
+1,
+"win"
+],
+[
+"U2.5",
+2,
+1,
+"loss"
+],
+[
+"U2.5",
+1,
+2,
+"loss"
+],
+[
+"U2.5",
+2,
+0,
+"win"
+],
+[
+"U2.5",
+0,
+2,
+"win"
+],
+[
+"U2.5",
+3,
+0,
+"loss"
+],
+[
+"U2.5",
+3,
+1,
+"loss"
+],
+[
+"U2.5",
+2,
+2,
+"loss"
+],
+[
+"U2.5",
+4,
+3,
+"loss"
+],
+[
+"O3",
+0,
+0,
+"loss"
+],
+[
+"O3",
+1,
+0,
+"loss"
+],
+[
+"O3",
+0,
+1,
+"loss"
+],
+[
+"O3",
+1,
+1,
+"loss"
+],
+[
+"O3",
+2,
+1,
+"void"
+],
+[
+"O3",
+1,
+2,
+"void"
+],
+[
+"O3",
+2,
+0,
+"loss"
+],
+[
+"O3",
+0,
+2,
+"loss"
+],
+[
+"O3",
+3,
+0,
+"void"
+],
+[
+"O3",
+3,
+1,
+"win"
+],
+[
+"O3",
+2,
+2,
+"win"
+],
+[
+"O3",
+4,
+3,
+"win"
+],
+[
+"U3",
+0,
+0,
+"win"
+],
+[
+"U3",
+1,
+0,
+"win"
+],
+[
+"U3",
+0,
+1,
+"win"
+],
+[
+"U3",
+1,
+1,
+"win"
+],
+[
+"U3",
+2,
+1,
+"void"
+],
+[
+"U3",
+1,
+2,
+"void"
+],
+[
+"U3",
+2,
+0,
+"win"
+],
+[
+"U3",
+0,
+2,
+"win"
+],
+[
+"U3",
+3,
+0,
+"void"
+],
+[
+"U3",
+3,
+1,
+"loss"
+],
+[
+"U3",
+2,
+2,
+"loss"
+],
+[
+"U3",
+4,
+3,
+"loss"
+],
+[
+"O2",
+0,
+0,
+"loss"
+],
+[
+"O2",
+1,
+0,
+"loss"
+],
+[
+"O2",
+0,
+1,
+"loss"
+],
+[
+"O2",
+1,
+1,
+"void"
+],
+[
+"O2",
+2,
+1,
+"win"
+],
+[
+"O2",
+1,
+2,
+"win"
+],
+[
+"O2",
+2,
+0,
+"void"
+],
+[
+"O2",
+0,
+2,
+"void"
+],
+[
+"O2",
+3,
+0,
+"win"
+],
+[
+"O2",
+3,
+1,
+"win"
+],
+[
+"O2",
+2,
+2,
+"win"
+],
+[
+"O2",
+4,
+3,
+"win"
+],
+[
+"HO1.5",
+0,
+0,
+"loss"
+],
+[
+"HO1.5",
+1,
+0,
+"loss"
+],
+[
+"HO1.5",
+0,
+1,
+"loss"
+],
+[
+"HO1.5",
+1,
+1,
+"loss"
+],
+[
+"HO1.5",
+2,
+1,
+"win"
+],
+[
+"HO1.5",
+1,
+2,
+"loss"
+],
+[
+"HO1.5",
+2,
+0,
+"win"
+],
+[
+"HO1.5",
+0,
+2,
+"loss"
+],
+[
+"HO1.5",
+3,
+0,
+"win"
+],
+[
+"HO1.5",
+3,
+1,
+"win"
+],
+[
+"HO1.5",
+2,
+2,
+"win"
+],
+[
+"HO1.5",
+4,
+3,
+"win"
+],
+[
+"HU1.5",
+0,
+0,
+"win"
+],
+[
+"HU1.5",
+1,
+0,
+"win"
+],
+[
+"HU1.5",
+0,
+1,
+"win"
+],
+[
+"HU1.5",
+1,
+1,
+"win"
+],
+[
+"HU1.5",
+2,
+1,
+"loss"
+],
+[
+"HU1.5",
+1,
+2,
+"win"
+],
+[
+"HU1.5",
+2,
+0,
+"loss"
+],
+[
+"HU1.5",
+0,
+2,
+"win"
+],
+[
+"HU1.5",
+3,
+0,
+"loss"
+],
+[
+"HU1.5",
+3,
+1,
+"loss"
+],
+[
+"HU1.5",
+2,
+2,
+"loss"
+],
+[
+"HU1.5",
+4,
+3,
+"loss"
+],
+[
+"AO1.5",
+0,
+0,
+"loss"
+],
+[
+"AO1.5",
+1,
+0,
+"loss"
+],
+[
+"AO1.5",
+0,
+1,
+"loss"
+],
+[
+"AO1.5",
+1,
+1,
+"loss"
+],
+[
+"AO1.5",
+2,
+1,
+"loss"
+],
+[
+"AO1.5",
+1,
+2,
+"win"
+],
+[
+"AO1.5",
+2,
+0,
+"loss"
+],
+[
+"AO1.5",
+0,
+2,
+"win"
+],
+[
+"AO1.5",
+3,
+0,
+"loss"
+],
+[
+"AO1.5",
+3,
+1,
+"loss"
+],
+[
+"AO1.5",
+2,
+2,
+"win"
+],
+[
+"AO1.5",
+4,
+3,
+"win"
+],
+[
+"AU0.5",
+0,
+0,
+"win"
+],
+[
+"AU0.5",
+1,
+0,
+"win"
+],
+[
+"AU0.5",
+0,
+1,
+"loss"
+],
+[
+"AU0.5",
+1,
+1,
+"loss"
+],
+[
+"AU0.5",
+2,
+1,
+"loss"
+],
+[
+"AU0.5",
+1,
+2,
+"loss"
+],
+[
+"AU0.5",
+2,
+0,
+"win"
+],
+[
+"AU0.5",
+0,
+2,
+"loss"
+],
+[
+"AU0.5",
+3,
+0,
+"win"
+],
+[
+"AU0.5",
+3,
+1,
+"loss"
+],
+[
+"AU0.5",
+2,
+2,
+"loss"
+],
+[
+"AU0.5",
+4,
+3,
+"loss"
+],
+[
+"AH1:0",
+0,
+0,
+"void"
+],
+[
+"AH1:0",
+1,
+0,
+"win"
+],
+[
+"AH1:0",
+0,
+1,
+"loss"
+],
+[
+"AH1:0",
+1,
+1,
+"void"
+],
+[
+"AH1:0",
+2,
+1,
+"win"
+],
+[
+"AH1:0",
+1,
+2,
+"loss"
+],
+[
+"AH1:0",
+2,
+0,
+"win"
+],
+[
+"AH1:0",
+0,
+2,
+"loss"
+],
+[
+"AH1:0",
+3,
+0,
+"win"
+],
+[
+"AH1:0",
+3,
+1,
+"win"
+],
+[
+"AH1:0",
+2,
+2,
+"void"
+],
+[
+"AH1:0",
+4,
+3,
+"win"
+],
+[
+"AH2:0",
+0,
+0,
+"void"
+],
+[
+"AH2:0",
+1,
+0,
+"loss"
+],
+[
+"AH2:0",
+0,
+1,
+"win"
+],
+[
+"AH2:0",
+1,
+1,
+"void"
+],
+[
+"AH2:0",
+2,
+1,
+"loss"
+],
+[
+"AH2:0",
+1,
+2,
+"win"
+],
+[
+"AH2:0",
+2,
+0,
+"loss"
+],
+[
+"AH2:0",
+0,
+2,
+"win"
+],
+[
+"AH2:0",
+3,
+0,
+"loss"
+],
+[
+"AH2:0",
+3,
+1,
+"loss"
+],
+[
+"AH2:0",
+2,
+2,
+"void"
+],
+[
+"AH2:0",
+4,
+3,
+"loss"
+],
+[
+"AH2:+1.5",
+0,
+0,
+"win"
+],
+[
+"AH2:+1.5",
+1,
+0,
+"win"
+],
+[
+"AH2:+1.5",
+0,
+1,
+"win"
+],
+[
+"AH2:+1.5",
+1,
+1,
+"win"
+],
+[
+"AH2:+1.5",
+2,
+1,
+"win"
+],
+[
+"AH2:+1.5",
+1,
+2,
+"win"
+],
+[
+"AH2:+1.5",
+2,
+0,
+"loss"
+],
+[
+"AH2:+1.5",
+0,
+2,
+"win"
+],
+[
+"AH2:+1.5",
+3,
+0,
+"loss"
+],
+[
+"AH2:+1.5",
+3,
+1,
+"loss"
+],
+[
+"AH2:+1.5",
+2,
+2,
+"win"
+],
+[
+"AH2:+1.5",
+4,
+3,
+"win"
+],
+[
+"AH1:-1",
+0,
+0,
+"loss"
+],
+[
+"AH1:-1",
+1,
+0,
+"void"
+],
+[
+"AH1:-1",
+0,
+1,
+"loss"
+],
+[
+"AH1:-1",
+1,
+1,
+"loss"
+],
+[
+"AH1:-1",
+2,
+1,
+"void"
+],
+[
+"AH1:-1",
+1,
+2,
+"loss"
+],
+[
+"AH1:-1",
+2,
+0,
+"win"
+],
+[
+"AH1:-1",
+0,
+2,
+"loss"
+],
+[
+"AH1:-1",
+3,
+0,
+"win"
+],
+[
+"AH1:-1",
+3,
+1,
+"win"
+],
+[
+"AH1:-1",
+2,
+2,
+"loss"
+],
+[
+"AH1:-1",
+4,
+3,
+"void"
+],
+[
+"AH1:-0.5",
+0,
+0,
+"loss"
+],
+[
+"AH1:-0.5",
+1,
+0,
+"win"
+],
+[
+"AH1:-0.5",
+0,
+1,
+"loss"
+],
+[
+"AH1:-0.5",
+1,
+1,
+"loss"
+],
+[
+"AH1:-0.5",
+2,
+1,
+"win"
+],
+[
+"AH1:-0.5",
+1,
+2,
+"loss"
+],
+[
+"AH1:-0.5",
+2,
+0,
+"win"
+],
+[
+"AH1:-0.5",
+0,
+2,
+"loss"
+],
+[
+"AH1:-0.5",
+3,
+0,
+"win"
+],
+[
+"AH1:-0.5",
+3,
+1,
+"win"
+],
+[
+"AH1:-0.5",
+2,
+2,
+"loss"
+],
+[
+"AH1:-0.5",
+4,
+3,
+"win"
+],
+[
+"AH2:+0.75",
+0,
+0,
+null
+],
+[
+"AH2:+0.75",
+1,
+0,
+null
+],
+[
+"AH2:+0.75",
+0,
+1,
+null
+],
+[
+"AH2:+0.75",
+1,
+1,
+null
+],
+[
+"AH2:+0.75",
+2,
+1,
+null
+],
+[
+"AH2:+0.75",
+1,
+2,
+null
+],
+[
+"AH2:+0.75",
+2,
+0,
+null
+],
+[
+"AH2:+0.75",
+0,
+2,
+null
+],
+[
+"AH2:+0.75",
+3,
+0,
+null
+],
+[
+"AH2:+0.75",
+3,
+1,
+null
+],
+[
+"AH2:+0.75",
+2,
+2,
+null
+],
+[
+"AH2:+0.75",
+4,
+3,
+null
+],
+[
+"O2.25",
+0,
+0,
+null
+],
+[
+"O2.25",
+1,
+0,
+null
+],
+[
+"O2.25",
+0,
+1,
+null
+],
+[
+"O2.25",
+1,
+1,
+null
+],
+[
+"O2.25",
+2,
+1,
+null
+],
+[
+"O2.25",
+1,
+2,
+null
+],
+[
+"O2.25",
+2,
+0,
+null
+],
+[
+"O2.25",
+0,
+2,
+null
+],
+[
+"O2.25",
+3,
+0,
+null
+],
+[
+"O2.25",
+3,
+1,
+null
+],
+[
+"O2.25",
+2,
+2,
+null
+],
+[
+"O2.25",
+4,
+3,
+null
+],
+[
+"OTHER:x",
+0,
+0,
+null
+],
+[
+"OTHER:x",
+1,
+0,
+null
+],
+[
+"OTHER:x",
+0,
+1,
+null
+],
+[
+"OTHER:x",
+1,
+1,
+null
+],
+[
+"OTHER:x",
+2,
+1,
+null
+],
+[
+"OTHER:x",
+1,
+2,
+null
+],
+[
+"OTHER:x",
+2,
+0,
+null
+],
+[
+"OTHER:x",
+0,
+2,
+null
+],
+[
+"OTHER:x",
+3,
+0,
+null
+],
+[
+"OTHER:x",
+3,
+1,
+null
+],
+[
+"OTHER:x",
+2,
+2,
+null
+],
+[
+"OTHER:x",
+4,
+3,
+null
+]
+],
+"forebetProbability": [
+[
+"1",
+50,
+30,
+20,
+50
+],
+[
+"X",
+50,
+30,
+20,
+30
+],
+[
+"2",
+50,
+30,
+20,
+20
+],
+[
+"1X",
+50,
+30,
+20,
+80
+],
+[
+"X2",
+50,
+30,
+20,
+50
+],
+[
+"12",
+50,
+30,
+20,
+70
+],
+[
+"BTTS",
+50,
+30,
+20,
+null
+]
+],
+"normalize": [
+[
+"Brighton & Hove Albion",
+"brighton and hove albion"
+],
+[
+"Brighton",
+"brighton"
+],
+[
+"Tottenham Hotspur",
+"tottenham hotspur"
+],
+[
+"Tottenham",
+"tottenham hotspur"
+],
+[
+"Coventry",
+"coventry"
+],
+[
+"Coventry City",
+"coventry city"
+],
+[
+"Como 1907",
+"como 1907"
+],
+[
+"Como",
+"como"
+],
+[
+"Udinese Calcio",
+"udinese"
+],
+[
+"Udinese",
+"udinese"
+],
+[
+"1. FC Köln",
+"1 koln"
+],
+[
+"FC Koln",
+"koln"
+],
+[
+"Manchester Utd",
+"manchester united"
+],
+[
+"Manchester United",
+"manchester united"
+],
+[
+"Inter",
+"inter"
+],
+[
+"Internazionale",
+"inter"
+],
+[
+"Racing",
+"racing"
+],
+[
+"Racing Santander",
+"racing santander"
+],
+[
+"Bayern Munich",
+"bayern munich"
+],
+[
+"Bayern Munchen",
+"bayern munchen"
+],
+[
+"Manchester City",
+"manchester city"
+],
+[
+"Real Madrid",
+"real madrid"
+],
+[
+"Real Sociedad",
+"real sociedad"
+],
+[
+"Arsenal",
+"arsenal"
+],
+[
+"Everton",
+"everton"
+],
+[
+"Newcastle United",
+"newcastle united"
+],
+[
+"Atletico Madrid",
+"atletico"
+],
+[
+"Paris Saint-Germain",
+"paris saint germain"
+],
+[
+"PSG",
+"paris saint germain"
+],
+[
+"Borussia M'gladbach",
+"borussia m gladbach"
+],
+[
+"Borussia Monchengladbach",
+"monchengladbach"
+],
+[
+"Sparta Prague",
+"sparta praha"
+],
+[
+"Slavia Praha",
+"slavia praha"
+],
+[
+"Olympique Marseille",
+"marseille"
+],
+[
+"Marseille",
+"marseille"
+],
+[
+"Atlético  Madrid",
+"atletico"
+],
+[
+"  AC Milan ",
+"milan"
+],
+[
+"Milan",
+"milan"
+],
+[
+"Real Betis",
+"real betis"
+],
+[
+"Betis",
+"betis"
+],
+[
+"1. FC Slovacko",
+"1 slovacko"
+],
+[
+"Slovacko",
+"slovacko"
+],
+[
+"Sigma Olomouc",
+"sigma olomouc"
+],
+[
+"Sigma",
+"sigma"
+],
+[
+"Banik Ostrava",
+"banik ostrava"
+],
+[
+"FC Banik Ostrava",
+"banik ostrava"
+]
+],
+"similarity": [
+[
+"Brighton & Hove Albion",
+"Tottenham Hotspur",
+0.34146341463414637
+],
+[
+"Brighton & Hove Albion",
+"Tottenham",
+0.34146341463414637
+],
+[
+"Brighton & Hove Albion",
+"Coventry",
+0.25
+],
+[
+"Brighton & Hove Albion",
+"Coventry City",
+0.2702702702702703
+],
+[
+"Brighton & Hove Albion",
+"Como 1907",
+0.12121212121212122
+],
+[
+"Brighton & Hove Albion",
+"Como",
+0.14285714285714285
+],
+[
+"Brighton & Hove Albion",
+"Udinese Calcio",
+0.1935483870967742
+],
+[
+"Brighton & Hove Albion",
+"Udinese",
+0.1935483870967742
+],
+[
+"Brighton & Hove Albion",
+"FC Koln",
+0.14285714285714285
+],
+[
+"Brighton & Hove Albion",
+"Manchester Utd",
+0.14634146341463414
+],
+[
+"Brighton & Hove Albion",
+"Manchester United",
+0.14634146341463414
+],
+[
+"Brighton & Hove Albion",
+"Inter",
+0.06896551724137931
+],
+[
+"Brighton & Hove Albion",
+"Internazionale",
+0.06896551724137931
+],
+[
+"Brighton & Hove Albion",
+"Racing",
+0.2
+],
+[
+"Brighton & Hove Albion",
+"Racing Santander",
+0.4
+],
+[
+"Brighton & Hove Albion",
+"Manchester City",
+0.20512820512820512
+],
+[
+"Brighton & Hove Albion",
+"Real Madrid",
+0.17142857142857143
+],
+[
+"Brighton & Hove Albion",
+"Real Sociedad",
+0.2702702702702703
+],
+[
+"Brighton & Hove Albion",
+"Everton",
+0.25806451612903225
+],
+[
+"Brighton & Hove Albion",
+"Newcastle United",
+0.2
+],
+[
+"Brighton & Hove Albion",
+"Paris Saint-Germain",
+0.18604651162790697
+],
+[
+"Brighton & Hove Albion",
+"PSG",
+0.18604651162790697
+],
+[
+"Brighton & Hove Albion",
+"Sparta Prague",
+0.16666666666666666
+],
+[
+"Brighton & Hove Albion",
+"Slavia Praha",
+0.16666666666666666
+],
+[
+"Brighton & Hove Albion",
+"Olympique Marseille",
+0.18181818181818182
+],
+[
+"Brighton & Hove Albion",
+"Marseille",
+0.18181818181818182
+],
+[
+"Brighton & Hove Albion",
+"Milan",
+0.20689655172413793
+],
+[
+"Brighton & Hove Albion",
+"Real Betis",
+0.35294117647058826
+],
+[
+"Brighton & Hove Albion",
+"Slovacko",
+0.25
+],
+[
+"Brighton & Hove Albion",
+"Sigma Olomouc",
+0.2702702702702703
+],
+[
+"Brighton & Hove Albion",
+"Sigma",
+0.20689655172413793
+],
+[
+"Brighton & Hove Albion",
+"FC Banik Ostrava",
+0.3783783783783784
+],
+[
+"Brighton",
+"Brighton & Hove Albion",
+0.92
+],
+[
+"Brighton",
+"Tottenham Hotspur",
+0.24
+],
+[
+"Brighton",
+"Tottenham",
+0.24
+],
+[
+"Brighton",
+"Coventry",
+0.125
+],
+[
+"Brighton",
+"Coventry City",
+0.2857142857142857
+],
+[
+"Brighton",
+"Como 1907",
+0.11764705882352941
+],
+[
+"Brighton",
+"Como",
+0.16666666666666666
+],
+[
+"Brighton",
+"Udinese Calcio",
+0.26666666666666666
+],
+[
+"Brighton",
+"Udinese",
+0.26666666666666666
+],
+[
+"Brighton",
+"FC Koln",
+0.3333333333333333
+],
+[
+"Brighton",
+"Manchester Utd",
+0.24
+],
+[
+"Brighton",
+"Manchester United",
+0.24
+],
+[
+"Brighton",
+"Inter",
+0.15384615384615385
+],
+[
+"Brighton",
+"Internazionale",
+0.15384615384615385
+],
+[
+"Brighton",
+"Racing",
+0.42857142857142855
+],
+[
+"Brighton",
+"Racing Santander",
+0.4166666666666667
+],
+[
+"Brighton",
+"Manchester City",
+0.2608695652173913
+],
+[
+"Brighton",
+"Real Madrid",
+0.21052631578947367
+],
+[
+"Brighton",
+"Real Sociedad",
+0.19047619047619047
+],
+[
+"Brighton",
+"Everton",
+0.5333333333333333
+],
+[
+"Brighton",
+"Newcastle United",
+0.16666666666666666
+],
+[
+"Brighton",
+"Paris Saint-Germain",
+0.2962962962962963
+],
+[
+"Brighton",
+"PSG",
+0.2962962962962963
+],
+[
+"Brighton",
+"Sparta Prague",
+0.2
+],
+[
+"Brighton",
+"Slavia Praha",
+0.2
+],
+[
+"Brighton",
+"Olympique Marseille",
+0.23529411764705882
+],
+[
+"Brighton",
+"Marseille",
+0.23529411764705882
+],
+[
+"Brighton",
+"Milan",
+0.3076923076923077
+],
+[
+"Brighton",
+"Real Betis",
+0.2222222222222222
+],
+[
+"Brighton",
+"Slovacko",
+0.125
+],
+[
+"Brighton",
+"Sigma Olomouc",
+0.2857142857142857
+],
+[
+"Brighton",
+"Sigma",
+0.3076923076923077
+],
+[
+"Brighton",
+"FC Banik Ostrava",
+0.19047619047619047
+],
+[
+"Tottenham Hotspur",
+"Udinese Calcio",
+0.16666666666666666
+],
+[
+"Tottenham Hotspur",
+"Udinese",
+0.16666666666666666
+],
+[
+"Tottenham",
+"Tottenham Hotspur",
+1.0
+],
+[
+"Tottenham",
+"Udinese Calcio",
+0.16666666666666666
+],
+[
+"Tottenham",
+"Udinese",
+0.16666666666666666
+],
+[
+"Coventry",
+"Tottenham Hotspur",
+0.4
+],
+[
+"Coventry",
+"Tottenham",
+0.4
+],
+[
+"Coventry",
+"Coventry City",
+0.92
+],
+[
+"Coventry",
+"Udinese Calcio",
+0.13333333333333333
+],
+[
+"Coventry",
+"Udinese",
+0.13333333333333333
+],
+[
+"Coventry",
+"FC Koln",
+0.3333333333333333
+],
+[
+"Coventry",
+"Manchester Utd",
+0.32
+],
+[
+"Coventry",
+"Manchester United",
+0.32
+],
+[
+"Coventry",
+"Inter",
+0.46153846153846156
+],
+[
+"Coventry",
+"Internazionale",
+0.46153846153846156
+],
+[
+"Coventry",
+"Racing",
+0.2857142857142857
+],
+[
+"Coventry",
+"Racing Santander",
+0.3333333333333333
+],
+[
+"Coventry",
+"Manchester City",
+0.43478260869565216
+],
+[
+"Coventry",
+"Real Madrid",
+0.21052631578947367
+],
+[
+"Coventry",
+"Real Sociedad",
+0.19047619047619047
+],
+[
+"Coventry",
+"Everton",
+0.4
+],
+[
+"Coventry",
+"Newcastle United",
+0.3333333333333333
+],
+[
+"Coventry",
+"Paris Saint-Germain",
+0.2222222222222222
+],
+[
+"Coventry",
+"PSG",
+0.2222222222222222
+],
+[
+"Coventry",
+"Sparta Prague",
+0.2
+],
+[
+"Coventry",
+"Slavia Praha",
+0.2
+],
+[
+"Coventry",
+"Olympique Marseille",
+0.11764705882352941
+],
+[
+"Coventry",
+"Marseille",
+0.11764705882352941
+],
+[
+"Coventry",
+"Milan",
+0.15384615384615385
+],
+[
+"Coventry",
+"Real Betis",
+0.2222222222222222
+],
+[
+"Coventry",
+"Slovacko",
+0.25
+],
+[
+"Coventry",
+"Sigma Olomouc",
+0.09523809523809523
+],
+[
+"Coventry",
+"Sigma",
+0.0
+],
+[
+"Coventry",
+"FC Banik Ostrava",
+0.2857142857142857
+],
+[
+"Coventry City",
+"Tottenham Hotspur",
+0.3333333333333333
+],
+[
+"Coventry City",
+"Tottenham",
+0.3333333333333333
+],
+[
+"Coventry City",
+"Udinese Calcio",
+0.1
+],
+[
+"Coventry City",
+"Udinese",
+0.1
+],
+[
+"Coventry City",
+"FC Koln",
+0.23529411764705882
+],
+[
+"Coventry City",
+"Manchester Utd",
+0.3333333333333333
+],
+[
+"Coventry City",
+"Manchester United",
+0.3333333333333333
+],
+[
+"Coventry City",
+"Inter",
+0.3333333333333333
+],
+[
+"Coventry City",
+"Internazionale",
+0.3333333333333333
+],
+[
+"Coventry City",
+"Racing",
+0.3157894736842105
+],
+[
+"Coventry City",
+"Racing Santander",
+0.27586206896551724
+],
+[
+"Coventry City",
+"Manchester City",
+0.5
+],
+[
+"Coventry City",
+"Real Madrid",
+0.25
+],
+[
+"Coventry City",
+"Real Sociedad",
+0.23076923076923078
+],
+[
+"Coventry City",
+"Everton",
+0.3
+],
+[
+"Coventry City",
+"Newcastle United",
+0.3448275862068966
+],
+[
+"Coventry City",
+"Paris Saint-Germain",
+0.25
+],
+[
+"Coventry City",
+"PSG",
+0.25
+],
+[
+"Coventry City",
+"Sparta Prague",
+0.16
+],
+[
+"Coventry City",
+"Slavia Praha",
+0.16
+],
+[
+"Coventry City",
+"Olympique Marseille",
+0.18181818181818182
+],
+[
+"Coventry City",
+"Marseille",
+0.18181818181818182
+],
+[
+"Coventry City",
+"Milan",
+0.1111111111111111
+],
+[
+"Coventry City",
+"Real Betis",
+0.2608695652173913
+],
+[
+"Coventry City",
+"Slovacko",
+0.2857142857142857
+],
+[
+"Coventry City",
+"Sigma Olomouc",
+0.07692307692307693
+],
+[
+"Coventry City",
+"Sigma",
+0.1111111111111111
+],
+[
+"Coventry City",
+"FC Banik Ostrava",
+0.23076923076923078
+],
+[
+"Como 1907",
+"Tottenham Hotspur",
+0.23076923076923078
+],
+[
+"Como 1907",
+"Tottenham",
+0.23076923076923078
+],
+[
+"Como 1907",
+"Coventry",
+0.23529411764705882
+],
+[
+"Como 1907",
+"Coventry City",
+0.2727272727272727
+],
+[
+"Como 1907",
+"Udinese Calcio",
+0.0
+],
+[
+"Como 1907",
+"Udinese",
+0.0
+],
+[
+"Como 1907",
+"FC Koln",
+0.15384615384615385
+],
+[
+"Como 1907",
+"Manchester Utd",
+0.15384615384615385
+],
+[
+"Como 1907",
+"Manchester United",
+0.15384615384615385
+],
+[
+"Como 1907",
+"Inter",
+0.0
+],
+[
+"Como 1907",
+"Internazionale",
+0.0
+],
+[
+"Como 1907",
+"Racing",
+0.13333333333333333
+],
+[
+"Como 1907",
+"Racing Santander",
+0.16
+],
+[
+"Como 1907",
+"Manchester City",
+0.16666666666666666
+],
+[
+"Como 1907",
+"Real Madrid",
+0.1
+],
+[
+"Como 1907",
+"Real Sociedad",
+0.09090909090909091
+],
+[
+"Como 1907",
+"Everton",
+0.125
+],
+[
+"Como 1907",
+"Newcastle United",
+0.16
+],
+[
+"Como 1907",
+"Paris Saint-Germain",
+0.07142857142857142
+],
+[
+"Como 1907",
+"PSG",
+0.07142857142857142
+],
+[
+"Como 1907",
+"Sparta Prague",
+0.09523809523809523
+],
+[
+"Como 1907",
+"Slavia Praha",
+0.09523809523809523
+],
+[
+"Como 1907",
+"Olympique Marseille",
+0.1111111111111111
+],
+[
+"Como 1907",
+"Marseille",
+0.1111111111111111
+],
+[
+"Como 1907",
+"Milan",
+0.14285714285714285
+],
+[
+"Como 1907",
+"Real Betis",
+0.10526315789473684
+],
+[
+"Como 1907",
+"Slovacko",
+0.23529411764705882
+],
+[
+"Como 1907",
+"Sigma Olomouc",
+0.2727272727272727
+],
+[
+"Como 1907",
+"Sigma",
+0.14285714285714285
+],
+[
+"Como 1907",
+"FC Banik Ostrava",
+0.09090909090909091
+],
+[
+"Como",
+"Tottenham Hotspur",
+0.2857142857142857
+],
+[
+"Como",
+"Tottenham",
+0.2857142857142857
+],
+[
+"Como",
+"Coventry",
+0.3333333333333333
+],
+[
+"Como",
+"Coventry City",
+0.23529411764705882
+],
+[
+"Como",
+"Como 1907",
+0.92
+],
+[
+"Como",
+"Udinese Calcio",
+0.0
+],
+[
+"Como",
+"Udinese",
+0.0
+],
+[
+"Como",
+"FC Koln",
+0.25
+],
+[
+"Como",
+"Manchester Utd",
+0.09523809523809523
+],
+[
+"Como",
+"Manchester United",
+0.09523809523809523
+],
+[
+"Como",
+"Inter",
+0.0
+],
+[
+"Como",
+"Internazionale",
+0.0
+],
+[
+"Como",
+"Racing",
+0.2
+],
+[
+"Como",
+"Racing Santander",
+0.1
+],
+[
+"Como",
+"Manchester City",
+0.10526315789473684
+],
+[
+"Como",
+"Real Madrid",
+0.13333333333333333
+],
+[
+"Como",
+"Real Sociedad",
+0.11764705882352941
+],
+[
+"Como",
+"Everton",
+0.18181818181818182
+],
+[
+"Como",
+"Newcastle United",
+0.1
+],
+[
+"Como",
+"Paris Saint-Germain",
+0.08695652173913043
+],
+[
+"Como",
+"PSG",
+0.08695652173913043
+],
+[
+"Como",
+"Sparta Prague",
+0.0
+],
+[
+"Como",
+"Slavia Praha",
+0.0
+],
+[
+"Como",
+"Olympique Marseille",
+0.15384615384615385
+],
+[
+"Como",
+"Marseille",
+0.15384615384615385
+],
+[
+"Como",
+"Milan",
+0.2222222222222222
+],
+[
+"Como",
+"Real Betis",
+0.0
+],
+[
+"Como",
+"Slovacko",
+0.3333333333333333
+],
+[
+"Como",
+"Sigma Olomouc",
+0.35294117647058826
+],
+[
+"Como",
+"Sigma",
+0.2222222222222222
+],
+[
+"Como",
+"FC Banik Ostrava",
+0.11764705882352941
+],
+[
+"Udinese",
+"Udinese Calcio",
+1.0
+],
+[
+"1. FC Köln",
+"Brighton & Hove Albion",
+0.26666666666666666
+],
+[
+"1. FC Köln",
+"Brighton",
+0.2857142857142857
+],
+[
+"1. FC Köln",
+"Tottenham Hotspur",
+0.17391304347826086
+],
+[
+"1. FC Köln",
+"Tottenham",
+0.17391304347826086
+],
+[
+"1. FC Köln",
+"Coventry",
+0.2857142857142857
+],
+[
+"1. FC Köln",
+"Coventry City",
+0.10526315789473684
+],
+[
+"1. FC Köln",
+"Como 1907",
+0.13333333333333333
+],
+[
+"1. FC Köln",
+"Como",
+0.2
+],
+[
+"1. FC Köln",
+"Udinese Calcio",
+0.15384615384615385
+],
+[
+"1. FC Köln",
+"Udinese",
+0.15384615384615385
+],
+[
+"1. FC Köln",
+"FC Koln",
+0.92
+],
+[
+"1. FC Köln",
+"Manchester Utd",
+0.17391304347826086
+],
+[
+"1. FC Köln",
+"Manchester United",
+0.17391304347826086
+],
+[
+"1. FC Köln",
+"Inter",
+0.18181818181818182
+],
+[
+"1. FC Köln",
+"Internazionale",
+0.18181818181818182
+],
+[
+"1. FC Köln",
+"Racing",
+0.16666666666666666
+],
+[
+"1. FC Köln",
+"Racing Santander",
+0.18181818181818182
+],
+[
+"1. FC Köln",
+"Bayern Munich",
+0.21052631578947367
+],
+[
+"1. FC Köln",
+"Bayern Munchen",
+0.2
+],
+[
+"1. FC Köln",
+"Manchester City",
+0.09523809523809523
+],
+[
+"1. FC Köln",
+"Real Madrid",
+0.11764705882352941
+],
+[
+"1. FC Köln",
+"Real Sociedad",
+0.21052631578947367
+],
+[
+"1. FC Köln",
+"Arsenal",
+0.15384615384615385
+],
+[
+"1. FC Köln",
+"Everton",
+0.3076923076923077
+],
+[
+"1. FC Köln",
+"Newcastle United",
+0.18181818181818182
+],
+[
+"1. FC Köln",
+"Atletico Madrid",
+0.14285714285714285
+],
+[
+"1. FC Köln",
+"Paris Saint-Germain",
+0.16
+],
+[
+"1. FC Köln",
+"PSG",
+0.16
+],
+[
+"1. FC Köln",
+"Borussia M'gladbach",
+0.16
+],
+[
+"1. FC Köln",
+"Borussia Monchengladbach",
+0.19047619047619047
+],
+[
+"1. FC Köln",
+"Sparta Prague",
+0.1111111111111111
+],
+[
+"1. FC Köln",
+"Slavia Praha",
+0.1111111111111111
+],
+[
+"1. FC Köln",
+"Olympique Marseille",
+0.13333333333333333
+],
+[
+"1. FC Köln",
+"Marseille",
+0.13333333333333333
+],
+[
+"1. FC Köln",
+"Atlético  Madrid",
+0.14285714285714285
+],
+[
+"1. FC Köln",
+"Milan",
+0.36363636363636365
+],
+[
+"1. FC Köln",
+"Real Betis",
+0.125
+],
+[
+"1. FC Köln",
+"Betis",
+0.0
+],
+[
+"1. FC Köln",
+"1. FC Slovacko",
+0.5
+],
+[
+"1. FC Köln",
+"Slovacko",
+0.2857142857142857
+],
+[
+"1. FC Köln",
+"Sigma Olomouc",
+0.3157894736842105
+],
+[
+"1. FC Köln",
+"Sigma",
+0.0
+],
+[
+"1. FC Köln",
+"Banik Ostrava",
+0.21052631578947367
+],
+[
+"1. FC Köln",
+"FC Banik Ostrava",
+0.21052631578947367
+],
+[
+"FC Koln",
+"Tottenham Hotspur",
+0.19047619047619047
+],
+[
+"FC Koln",
+"Tottenham",
+0.19047619047619047
+],
+[
+"FC Koln",
+"Udinese Calcio",
+0.18181818181818182
+],
+[
+"FC Koln",
+"Udinese",
+0.18181818181818182
+],
+[
+"FC Koln",
+"Manchester Utd",
+0.09523809523809523
+],
+[
+"FC Koln",
+"Manchester United",
+0.09523809523809523
+],
+[
+"FC Koln",
+"Inter",
+0.2222222222222222
+],
+[
+"FC Koln",
+"Internazionale",
+0.2222222222222222
+],
+[
+"FC Koln",
+"Racing",
+0.2
+],
+[
+"FC Koln",
+"Racing Santander",
+0.1
+],
+[
+"FC Koln",
+"Manchester City",
+0.10526315789473684
+],
+[
+"FC Koln",
+"Real Madrid",
+0.13333333333333333
+],
+[
+"FC Koln",
+"Real Sociedad",
+0.11764705882352941
+],
+[
+"FC Koln",
+"Newcastle United",
+0.2
+],
+[
+"FC Koln",
+"Paris Saint-Germain",
+0.08695652173913043
+],
+[
+"FC Koln",
+"PSG",
+0.08695652173913043
+],
+[
+"FC Koln",
+"Sparta Prague",
+0.0
+],
+[
+"FC Koln",
+"Slavia Praha",
+0.125
+],
+[
+"FC Koln",
+"Olympique Marseille",
+0.15384615384615385
+],
+[
+"FC Koln",
+"Marseille",
+0.15384615384615385
+],
+[
+"FC Koln",
+"Milan",
+0.4444444444444444
+],
+[
+"FC Koln",
+"Real Betis",
+0.14285714285714285
+],
+[
+"FC Koln",
+"Slovacko",
+0.3333333333333333
+],
+[
+"FC Koln",
+"Sigma Olomouc",
+0.23529411764705882
+],
+[
+"FC Koln",
+"Sigma",
+0.0
+],
+[
+"Manchester Utd",
+"Tottenham Hotspur",
+0.17647058823529413
+],
+[
+"Manchester Utd",
+"Tottenham",
+0.17647058823529413
+],
+[
+"Manchester Utd",
+"Udinese Calcio",
+0.3333333333333333
+],
+[
+"Manchester Utd",
+"Udinese",
+0.3333333333333333
+],
+[
+"Manchester Utd",
+"Racing",
+0.17391304347826086
+],
+[
+"Manchester Utd",
+"Racing Santander",
+0.30303030303030304
+],
+[
+"Manchester Utd",
+"Real Madrid",
+0.35714285714285715
+],
+[
+"Manchester Utd",
+"Real Sociedad",
+0.3333333333333333
+],
+[
+"Manchester Utd",
+"Newcastle United",
+0.5
+],
+[
+"Manchester Utd",
+"Paris Saint-Germain",
+0.16666666666666666
+],
+[
+"Manchester Utd",
+"PSG",
+0.16666666666666666
+],
+[
+"Manchester Utd",
+"Sparta Prague",
+0.13793103448275862
+],
+[
+"Manchester Utd",
+"Slavia Praha",
+0.13793103448275862
+],
+[
+"Manchester Utd",
+"Olympique Marseille",
+0.3076923076923077
+],
+[
+"Manchester Utd",
+"Marseille",
+0.3076923076923077
+],
+[
+"Manchester Utd",
+"Milan",
+0.2727272727272727
+],
+[
+"Manchester Utd",
+"Real Betis",
+0.2222222222222222
+],
+[
+"Manchester Utd",
+"Slovacko",
+0.16
+],
+[
+"Manchester Utd",
+"Sigma Olomouc",
+0.2
+],
+[
+"Manchester Utd",
+"Sigma",
+0.18181818181818182
+],
+[
+"Manchester United",
+"Tottenham Hotspur",
+0.17647058823529413
+],
+[
+"Manchester United",
+"Tottenham",
+0.17647058823529413
+],
+[
+"Manchester United",
+"Udinese Calcio",
+0.3333333333333333
+],
+[
+"Manchester United",
+"Udinese",
+0.3333333333333333
+],
+[
+"Manchester United",
+"Manchester Utd",
+1.0
+],
+[
+"Manchester United",
+"Racing",
+0.17391304347826086
+],
+[
+"Manchester United",
+"Racing Santander",
+0.30303030303030304
+],
+[
+"Manchester United",
+"Real Madrid",
+0.35714285714285715
+],
+[
+"Manchester United",
+"Real Sociedad",
+0.3333333333333333
+],
+[
+"Manchester United",
+"Newcastle United",
+0.5
+],
+[
+"Manchester United",
+"Paris Saint-Germain",
+0.16666666666666666
+],
+[
+"Manchester United",
+"PSG",
+0.16666666666666666
+],
+[
+"Manchester United",
+"Sparta Prague",
+0.13793103448275862
+],
+[
+"Manchester United",
+"Slavia Praha",
+0.13793103448275862
+],
+[
+"Manchester United",
+"Olympique Marseille",
+0.3076923076923077
+],
+[
+"Manchester United",
+"Marseille",
+0.3076923076923077
+],
+[
+"Manchester United",
+"Milan",
+0.2727272727272727
+],
+[
+"Manchester United",
+"Real Betis",
+0.2222222222222222
+],
+[
+"Manchester United",
+"Slovacko",
+0.16
+],
+[
+"Manchester United",
+"Sigma Olomouc",
+0.2
+],
+[
+"Manchester United",
+"Sigma",
+0.18181818181818182
+],
+[
+"Inter",
+"Tottenham Hotspur",
+0.2727272727272727
+],
+[
+"Inter",
+"Tottenham",
+0.2727272727272727
+],
+[
+"Inter",
+"Udinese Calcio",
+0.5
+],
+[
+"Inter",
+"Udinese",
+0.5
+],
+[
+"Inter",
+"Manchester Utd",
+0.36363636363636365
+],
+[
+"Inter",
+"Manchester United",
+0.36363636363636365
+],
+[
+"Inter",
+"Internazionale",
+1.0
+],
+[
+"Inter",
+"Racing",
+0.36363636363636365
+],
+[
+"Inter",
+"Racing Santander",
+0.47619047619047616
+],
+[
+"Inter",
+"Manchester City",
+0.4
+],
+[
+"Inter",
+"Real Madrid",
+0.125
+],
+[
+"Inter",
+"Real Sociedad",
+0.2222222222222222
+],
+[
+"Inter",
+"Newcastle United",
+0.2857142857142857
+],
+[
+"Inter",
+"Paris Saint-Germain",
+0.4166666666666667
+],
+[
+"Inter",
+"PSG",
+0.4166666666666667
+],
+[
+"Inter",
+"Sparta Prague",
+0.23529411764705882
+],
+[
+"Inter",
+"Slavia Praha",
+0.23529411764705882
+],
+[
+"Inter",
+"Olympique Marseille",
+0.2857142857142857
+],
+[
+"Inter",
+"Marseille",
+0.2857142857142857
+],
+[
+"Inter",
+"Milan",
+0.4
+],
+[
+"Inter",
+"Real Betis",
+0.13333333333333333
+],
+[
+"Inter",
+"Slovacko",
+0.0
+],
+[
+"Inter",
+"Sigma Olomouc",
+0.1111111111111111
+],
+[
+"Inter",
+"Sigma",
+0.2
+],
+[
+"Internazionale",
+"Tottenham Hotspur",
+0.2727272727272727
+],
+[
+"Internazionale",
+"Tottenham",
+0.2727272727272727
+],
+[
+"Internazionale",
+"Udinese Calcio",
+0.5
+],
+[
+"Internazionale",
+"Udinese",
+0.5
+],
+[
+"Internazionale",
+"Manchester Utd",
+0.36363636363636365
+],
+[
+"Internazionale",
+"Manchester United",
+0.36363636363636365
+],
+[
+"Internazionale",
+"Racing",
+0.36363636363636365
+],
+[
+"Internazionale",
+"Racing Santander",
+0.47619047619047616
+],
+[
+"Internazionale",
+"Manchester City",
+0.4
+],
+[
+"Internazionale",
+"Real Madrid",
+0.125
+],
+[
+"Internazionale",
+"Real Sociedad",
+0.2222222222222222
+],
+[
+"Internazionale",
+"Newcastle United",
+0.2857142857142857
+],
+[
+"Internazionale",
+"Paris Saint-Germain",
+0.4166666666666667
+],
+[
+"Internazionale",
+"PSG",
+0.4166666666666667
+],
+[
+"Internazionale",
+"Sparta Prague",
+0.23529411764705882
+],
+[
+"Internazionale",
+"Slavia Praha",
+0.23529411764705882
+],
+[
+"Internazionale",
+"Olympique Marseille",
+0.2857142857142857
+],
+[
+"Internazionale",
+"Marseille",
+0.2857142857142857
+],
+[
+"Internazionale",
+"Milan",
+0.4
+],
+[
+"Internazionale",
+"Real Betis",
+0.13333333333333333
+],
+[
+"Internazionale",
+"Slovacko",
+0.0
+],
+[
+"Internazionale",
+"Sigma Olomouc",
+0.1111111111111111
+],
+[
+"Internazionale",
+"Sigma",
+0.2
+],
+[
+"Racing",
+"Tottenham Hotspur",
+0.08695652173913043
+],
+[
+"Racing",
+"Tottenham",
+0.08695652173913043
+],
+[
+"Racing",
+"Udinese Calcio",
+0.3076923076923077
+],
+[
+"Racing",
+"Udinese",
+0.3076923076923077
+],
+[
+"Racing",
+"Racing Santander",
+0.92
+],
+[
+"Racing",
+"Real Madrid",
+0.35294117647058826
+],
+[
+"Racing",
+"Real Sociedad",
+0.42105263157894735
+],
+[
+"Racing",
+"Sparta Prague",
+0.2222222222222222
+],
+[
+"Racing",
+"Slavia Praha",
+0.2222222222222222
+],
+[
+"Racing",
+"Real Betis",
+0.375
+],
+[
+"Racing",
+"Slovacko",
+0.2857142857142857
+],
+[
+"Racing",
+"Sigma Olomouc",
+0.21052631578947367
+],
+[
+"Racing",
+"Sigma",
+0.18181818181818182
+],
+[
+"Racing Santander",
+"Tottenham Hotspur",
+0.06060606060606061
+],
+[
+"Racing Santander",
+"Tottenham",
+0.06060606060606061
+],
+[
+"Racing Santander",
+"Udinese Calcio",
+0.34782608695652173
+],
+[
+"Racing Santander",
+"Udinese",
+0.34782608695652173
+],
+[
+"Racing Santander",
+"Real Madrid",
+0.2962962962962963
+],
+[
+"Racing Santander",
+"Real Sociedad",
+0.41379310344827586
+],
+[
+"Racing Santander",
+"Sparta Prague",
+0.21428571428571427
+],
+[
+"Racing Santander",
+"Slavia Praha",
+0.21428571428571427
+],
+[
+"Racing Santander",
+"Real Betis",
+0.3076923076923077
+],
+[
+"Racing Santander",
+"Slovacko",
+0.16666666666666666
+],
+[
+"Racing Santander",
+"Sigma Olomouc",
+0.13793103448275862
+],
+[
+"Racing Santander",
+"Sigma",
+0.09523809523809523
+],
+[
+"Bayern Munich",
+"Brighton & Hove Albion",
+0.32432432432432434
+],
+[
+"Bayern Munich",
+"Brighton",
+0.2857142857142857
+],
+[
+"Bayern Munich",
+"Tottenham Hotspur",
+0.13333333333333333
+],
+[
+"Bayern Munich",
+"Tottenham",
+0.13333333333333333
+],
+[
+"Bayern Munich",
+"Coventry",
+0.09523809523809523
+],
+[
+"Bayern Munich",
+"Coventry City",
+0.23076923076923078
+],
+[
+"Bayern Munich",
+"Como 1907",
+0.09090909090909091
+],
+[
+"Bayern Munich",
+"Como",
+0.11764705882352941
+],
+[
+"Bayern Munich",
+"Udinese Calcio",
+0.1
+],
+[
+"Bayern Munich",
+"Udinese",
+0.1
+],
+[
+"Bayern Munich",
+"FC Koln",
+0.11764705882352941
+],
+[
+"Bayern Munich",
+"Manchester Utd",
+0.4666666666666667
+],
+[
+"Bayern Munich",
+"Manchester United",
+0.4666666666666667
+],
+[
+"Bayern Munich",
+"Inter",
+0.2222222222222222
+],
+[
+"Bayern Munich",
+"Internazionale",
+0.2222222222222222
+],
+[
+"Bayern Munich",
+"Racing",
+0.21052631578947367
+],
+[
+"Bayern Munich",
+"Racing Santander",
+0.20689655172413793
+],
+[
+"Bayern Munich",
+"Manchester City",
+0.35714285714285715
+],
+[
+"Bayern Munich",
+"Real Madrid",
+0.3333333333333333
+],
+[
+"Bayern Munich",
+"Real Sociedad",
+0.15384615384615385
+],
+[
+"Bayern Munich",
+"Everton",
+0.3
+],
+[
+"Bayern Munich",
+"Newcastle United",
+0.41379310344827586
+],
+[
+"Bayern Munich",
+"Paris Saint-Germain",
+0.25
+],
+[
+"Bayern Munich",
+"PSG",
+0.25
+],
+[
+"Bayern Munich",
+"Borussia M'gladbach",
+0.25
+],
+[
+"Bayern Munich",
+"Borussia Monchengladbach",
+0.2857142857142857
+],
+[
+"Bayern Munich",
+"Sparta Prague",
+0.32
+],
+[
+"Bayern Munich",
+"Slavia Praha",
+0.24
+],
+[
+"Bayern Munich",
+"Olympique Marseille",
+0.2727272727272727
+],
+[
+"Bayern Munich",
+"Marseille",
+0.2727272727272727
+],
+[
+"Bayern Munich",
+"Milan",
+0.2222222222222222
+],
+[
+"Bayern Munich",
+"Real Betis",
+0.2608695652173913
+],
+[
+"Bayern Munich",
+"Betis",
+0.3333333333333333
+],
+[
+"Bayern Munich",
+"Slovacko",
+0.19047619047619047
+],
+[
+"Bayern Munich",
+"Sigma Olomouc",
+0.38461538461538464
+],
+[
+"Bayern Munich",
+"Sigma",
+0.1111111111111111
+],
+[
+"Bayern Munich",
+"FC Banik Ostrava",
+0.3076923076923077
+],
+[
+"Bayern Munchen",
+"Brighton & Hove Albion",
+0.42105263157894735
+],
+[
+"Bayern Munchen",
+"Brighton",
+0.2727272727272727
+],
+[
+"Bayern Munchen",
+"Tottenham Hotspur",
+0.12903225806451613
+],
+[
+"Bayern Munchen",
+"Tottenham",
+0.12903225806451613
+],
+[
+"Bayern Munchen",
+"Coventry",
+0.2727272727272727
+],
+[
+"Bayern Munchen",
+"Coventry City",
+0.2222222222222222
+],
+[
+"Bayern Munchen",
+"Como 1907",
+0.08695652173913043
+],
+[
+"Bayern Munchen",
+"Como",
+0.1111111111111111
+],
+[
+"Bayern Munchen",
+"Udinese Calcio",
+0.19047619047619047
+],
+[
+"Bayern Munchen",
+"Udinese",
+0.19047619047619047
+],
+[
+"Bayern Munchen",
+"FC Koln",
+0.1111111111111111
+],
+[
+"Bayern Munchen",
+"Manchester Utd",
+0.3870967741935484
+],
+[
+"Bayern Munchen",
+"Manchester United",
+0.3870967741935484
+],
+[
+"Bayern Munchen",
+"Inter",
+0.21052631578947367
+],
+[
+"Bayern Munchen",
+"Internazionale",
+0.21052631578947367
+],
+[
+"Bayern Munchen",
+"Racing",
+0.2
+],
+[
+"Bayern Munchen",
+"Racing Santander",
+0.2
+],
+[
+"Bayern Munchen",
+"Bayern Munich",
+0.8888888888888888
+],
+[
+"Bayern Munchen",
+"Manchester City",
+0.3448275862068966
+],
+[
+"Bayern Munchen",
+"Real Madrid",
+0.24
+],
+[
+"Bayern Munchen",
+"Real Sociedad",
+0.14814814814814814
+],
+[
+"Bayern Munchen",
+"Everton",
+0.2857142857142857
+],
+[
+"Bayern Munchen",
+"Newcastle United",
+0.4
+],
+[
+"Bayern Munchen",
+"Paris Saint-Germain",
+0.24242424242424243
+],
+[
+"Bayern Munchen",
+"PSG",
+0.24242424242424243
+],
+[
+"Bayern Munchen",
+"Borussia M'gladbach",
+0.24242424242424243
+],
+[
+"Bayern Munchen",
+"Borussia Monchengladbach",
+0.41379310344827586
+],
+[
+"Bayern Munchen",
+"Sparta Prague",
+0.3076923076923077
+],
+[
+"Bayern Munchen",
+"Slavia Praha",
+0.23076923076923078
+],
+[
+"Bayern Munchen",
+"Olympique Marseille",
+0.2608695652173913
+],
+[
+"Bayern Munchen",
+"Marseille",
+0.2608695652173913
+],
+[
+"Bayern Munchen",
+"Milan",
+0.21052631578947367
+],
+[
+"Bayern Munchen",
+"Real Betis",
+0.16666666666666666
+],
+[
+"Bayern Munchen",
+"Betis",
+0.21052631578947367
+],
+[
+"Bayern Munchen",
+"Slovacko",
+0.18181818181818182
+],
+[
+"Bayern Munchen",
+"Sigma Olomouc",
+0.37037037037037035
+],
+[
+"Bayern Munchen",
+"Sigma",
+0.10526315789473684
+],
+[
+"Bayern Munchen",
+"FC Banik Ostrava",
+0.2222222222222222
+],
+[
+"Manchester City",
+"Tottenham Hotspur",
+0.1875
+],
+[
+"Manchester City",
+"Tottenham",
+0.1875
+],
+[
+"Manchester City",
+"Udinese Calcio",
+0.36363636363636365
+],
+[
+"Manchester City",
+"Udinese",
+0.36363636363636365
+],
+[
+"Manchester City",
+"Manchester Utd",
+0.5
+],
+[
+"Manchester City",
+"Manchester United",
+0.5
+],
+[
+"Manchester City",
+"Racing",
+0.2857142857142857
+],
+[
+"Manchester City",
+"Racing Santander",
+0.3225806451612903
+],
+[
+"Manchester City",
+"Real Madrid",
+0.3076923076923077
+],
+[
+"Manchester City",
+"Real Sociedad",
+0.2857142857142857
+],
+[
+"Manchester City",
+"Newcastle United",
+0.45161290322580644
+],
+[
+"Manchester City",
+"Paris Saint-Germain",
+0.17647058823529413
+],
+[
+"Manchester City",
+"PSG",
+0.17647058823529413
+],
+[
+"Manchester City",
+"Sparta Prague",
+0.14814814814814814
+],
+[
+"Manchester City",
+"Slavia Praha",
+0.14814814814814814
+],
+[
+"Manchester City",
+"Olympique Marseille",
+0.3333333333333333
+],
+[
+"Manchester City",
+"Marseille",
+0.3333333333333333
+],
+[
+"Manchester City",
+"Milan",
+0.3
+],
+[
+"Manchester City",
+"Real Betis",
+0.24
+],
+[
+"Manchester City",
+"Slovacko",
+0.17391304347826086
+],
+[
+"Manchester City",
+"Sigma Olomouc",
+0.21428571428571427
+],
+[
+"Manchester City",
+"Sigma",
+0.2
+],
+[
+"Real Madrid",
+"Tottenham Hotspur",
+0.07142857142857142
+],
+[
+"Real Madrid",
+"Tottenham",
+0.07142857142857142
+],
+[
+"Real Madrid",
+"Udinese Calcio",
+0.1111111111111111
+],
+[
+"Real Madrid",
+"Udinese",
+0.1111111111111111
+],
+[
+"Real Madrid",
+"Real Sociedad",
+0.5
+],
+[
+"Real Madrid",
+"Sparta Prague",
+0.34782608695652173
+],
+[
+"Real Madrid",
+"Slavia Praha",
+0.2608695652173913
+],
+[
+"Real Madrid",
+"Slovacko",
+0.10526315789473684
+],
+[
+"Real Madrid",
+"Sigma Olomouc",
+0.16666666666666666
+],
+[
+"Real Madrid",
+"Sigma",
+0.25
+],
+[
+"Real Sociedad",
+"Tottenham Hotspur",
+0.06666666666666667
+],
+[
+"Real Sociedad",
+"Tottenham",
+0.06666666666666667
+],
+[
+"Real Sociedad",
+"Udinese Calcio",
+0.3
+],
+[
+"Real Sociedad",
+"Udinese",
+0.3
+],
+[
+"Real Sociedad",
+"Sparta Prague",
+0.32
+],
+[
+"Real Sociedad",
+"Slavia Praha",
+0.24
+],
+[
+"Real Sociedad",
+"Slovacko",
+0.19047619047619047
+],
+[
+"Real Sociedad",
+"Sigma Olomouc",
+0.3076923076923077
+],
+[
+"Real Sociedad",
+"Sigma",
+0.1111111111111111
+],
+[
+"Arsenal",
+"Brighton & Hove Albion",
+0.25806451612903225
+],
+[
+"Arsenal",
+"Brighton",
+0.26666666666666666
+],
+[
+"Arsenal",
+"Tottenham Hotspur",
+0.25
+],
+[
+"Arsenal",
+"Tottenham",
+0.25
+],
+[
+"Arsenal",
+"Coventry",
+0.26666666666666666
+],
+[
+"Arsenal",
+"Coventry City",
+0.2
+],
+[
+"Arsenal",
+"Como 1907",
+0.0
+],
+[
+"Arsenal",
+"Como",
+0.0
+],
+[
+"Arsenal",
+"Udinese Calcio",
+0.2857142857142857
+],
+[
+"Arsenal",
+"Udinese",
+0.2857142857142857
+],
+[
+"Arsenal",
+"FC Koln",
+0.18181818181818182
+],
+[
+"Arsenal",
+"Manchester Utd",
+0.25
+],
+[
+"Arsenal",
+"Manchester United",
+0.25
+],
+[
+"Arsenal",
+"Inter",
+0.16666666666666666
+],
+[
+"Arsenal",
+"Internazionale",
+0.16666666666666666
+],
+[
+"Arsenal",
+"Racing",
+0.3076923076923077
+],
+[
+"Arsenal",
+"Racing Santander",
+0.17391304347826086
+],
+[
+"Arsenal",
+"Bayern Munich",
+0.3
+],
+[
+"Arsenal",
+"Bayern Munchen",
+0.38095238095238093
+],
+[
+"Arsenal",
+"Manchester City",
+0.18181818181818182
+],
+[
+"Arsenal",
+"Real Madrid",
+0.4444444444444444
+],
+[
+"Arsenal",
+"Real Sociedad",
+0.4
+],
+[
+"Arsenal",
+"Everton",
+0.2857142857142857
+],
+[
+"Arsenal",
+"Newcastle United",
+0.34782608695652173
+],
+[
+"Arsenal",
+"Atletico Madrid",
+0.26666666666666666
+],
+[
+"Arsenal",
+"Paris Saint-Germain",
+0.38461538461538464
+],
+[
+"Arsenal",
+"PSG",
+0.38461538461538464
+],
+[
+"Arsenal",
+"Borussia M'gladbach",
+0.15384615384615385
+],
+[
+"Arsenal",
+"Borussia Monchengladbach",
+0.2727272727272727
+],
+[
+"Arsenal",
+"Sparta Prague",
+0.3157894736842105
+],
+[
+"Arsenal",
+"Slavia Praha",
+0.3157894736842105
+],
+[
+"Arsenal",
+"Olympique Marseille",
+0.625
+],
+[
+"Arsenal",
+"Marseille",
+0.625
+],
+[
+"Arsenal",
+"Atlético  Madrid",
+0.26666666666666666
+],
+[
+"Arsenal",
+"Milan",
+0.3333333333333333
+],
+[
+"Arsenal",
+"Real Betis",
+0.47058823529411764
+],
+[
+"Arsenal",
+"Betis",
+0.16666666666666666
+],
+[
+"Arsenal",
+"Slovacko",
+0.13333333333333333
+],
+[
+"Arsenal",
+"Sigma Olomouc",
+0.2
+],
+[
+"Arsenal",
+"Sigma",
+0.16666666666666666
+],
+[
+"Arsenal",
+"Banik Ostrava",
+0.3
+],
+[
+"Arsenal",
+"FC Banik Ostrava",
+0.3
+],
+[
+"Everton",
+"Tottenham Hotspur",
+0.25
+],
+[
+"Everton",
+"Tottenham",
+0.25
+],
+[
+"Everton",
+"Udinese Calcio",
+0.2857142857142857
+],
+[
+"Everton",
+"Udinese",
+0.2857142857142857
+],
+[
+"Everton",
+"FC Koln",
+0.36363636363636365
+],
+[
+"Everton",
+"Manchester Utd",
+0.3333333333333333
+],
+[
+"Everton",
+"Manchester United",
+0.3333333333333333
+],
+[
+"Everton",
+"Inter",
+0.3333333333333333
+],
+[
+"Everton",
+"Internazionale",
+0.3333333333333333
+],
+[
+"Everton",
+"Racing",
+0.3076923076923077
+],
+[
+"Everton",
+"Racing Santander",
+0.17391304347826086
+],
+[
+"Everton",
+"Manchester City",
+0.36363636363636365
+],
+[
+"Everton",
+"Real Madrid",
+0.2222222222222222
+],
+[
+"Everton",
+"Real Sociedad",
+0.2
+],
+[
+"Everton",
+"Newcastle United",
+0.2608695652173913
+],
+[
+"Everton",
+"Paris Saint-Germain",
+0.23076923076923078
+],
+[
+"Everton",
+"PSG",
+0.23076923076923078
+],
+[
+"Everton",
+"Sparta Prague",
+0.21052631578947367
+],
+[
+"Everton",
+"Slavia Praha",
+0.21052631578947367
+],
+[
+"Everton",
+"Olympique Marseille",
+0.25
+],
+[
+"Everton",
+"Marseille",
+0.25
+],
+[
+"Everton",
+"Milan",
+0.16666666666666666
+],
+[
+"Everton",
+"Real Betis",
+0.35294117647058826
+],
+[
+"Everton",
+"Slovacko",
+0.26666666666666666
+],
+[
+"Everton",
+"Sigma Olomouc",
+0.1
+],
+[
+"Everton",
+"Sigma",
+0.0
+],
+[
+"Everton",
+"FC Banik Ostrava",
+0.1
+],
+[
+"Newcastle United",
+"Tottenham Hotspur",
+0.18181818181818182
+],
+[
+"Newcastle United",
+"Tottenham",
+0.18181818181818182
+],
+[
+"Newcastle United",
+"Udinese Calcio",
+0.34782608695652173
+],
+[
+"Newcastle United",
+"Udinese",
+0.34782608695652173
+],
+[
+"Newcastle United",
+"Racing",
+0.09090909090909091
+],
+[
+"Newcastle United",
+"Racing Santander",
+0.125
+],
+[
+"Newcastle United",
+"Real Madrid",
+0.4444444444444444
+],
+[
+"Newcastle United",
+"Real Sociedad",
+0.3448275862068966
+],
+[
+"Newcastle United",
+"Paris Saint-Germain",
+0.22857142857142856
+],
+[
+"Newcastle United",
+"PSG",
+0.22857142857142856
+],
+[
+"Newcastle United",
+"Sparta Prague",
+0.21428571428571427
+],
+[
+"Newcastle United",
+"Slavia Praha",
+0.14285714285714285
+],
+[
+"Newcastle United",
+"Olympique Marseille",
+0.24
+],
+[
+"Newcastle United",
+"Real Betis",
+0.23076923076923078
+],
+[
+"Newcastle United",
+"Slovacko",
+0.08333333333333333
+],
+[
+"Newcastle United",
+"Sigma Olomouc",
+0.06896551724137931
+],
+[
+"Newcastle United",
+"Sigma",
+0.09523809523809523
+],
+[
+"Atletico Madrid",
+"Brighton & Hove Albion",
+0.25
+],
+[
+"Atletico Madrid",
+"Brighton",
+0.25
+],
+[
+"Atletico Madrid",
+"Tottenham Hotspur",
+0.16
+],
+[
+"Atletico Madrid",
+"Tottenham",
+0.16
+],
+[
+"Atletico Madrid",
+"Coventry",
+0.25
+],
+[
+"Atletico Madrid",
+"Coventry City",
+0.19047619047619047
+],
+[
+"Atletico Madrid",
+"Como 1907",
+0.23529411764705882
+],
+[
+"Atletico Madrid",
+"Como",
+0.3333333333333333
+],
+[
+"Atletico Madrid",
+"Udinese Calcio",
+0.13333333333333333
+],
+[
+"Atletico Madrid",
+"Udinese",
+0.13333333333333333
+],
+[
+"Atletico Madrid",
+"FC Koln",
+0.16666666666666666
+],
+[
+"Atletico Madrid",
+"Manchester Utd",
+0.32
+],
+[
+"Atletico Madrid",
+"Manchester United",
+0.32
+],
+[
+"Atletico Madrid",
+"Inter",
+0.3076923076923077
+],
+[
+"Atletico Madrid",
+"Internazionale",
+0.3076923076923077
+],
+[
+"Atletico Madrid",
+"Racing",
+0.2857142857142857
+],
+[
+"Atletico Madrid",
+"Racing Santander",
+0.25
+],
+[
+"Atletico Madrid",
+"Bayern Munich",
+0.38095238095238093
+],
+[
+"Atletico Madrid",
+"Bayern Munchen",
+0.2727272727272727
+],
+[
+"Atletico Madrid",
+"Manchester City",
+0.34782608695652173
+],
+[
+"Atletico Madrid",
+"Real Madrid",
+0.3157894736842105
+],
+[
+"Atletico Madrid",
+"Real Sociedad",
+0.2857142857142857
+],
+[
+"Atletico Madrid",
+"Everton",
+0.26666666666666666
+],
+[
+"Atletico Madrid",
+"Newcastle United",
+0.4166666666666667
+],
+[
+"Atletico Madrid",
+"Paris Saint-Germain",
+0.2962962962962963
+],
+[
+"Atletico Madrid",
+"PSG",
+0.2962962962962963
+],
+[
+"Atletico Madrid",
+"Borussia M'gladbach",
+0.2222222222222222
+],
+[
+"Atletico Madrid",
+"Borussia Monchengladbach",
+0.17391304347826086
+],
+[
+"Atletico Madrid",
+"Sparta Prague",
+0.2
+],
+[
+"Atletico Madrid",
+"Slavia Praha",
+0.2
+],
+[
+"Atletico Madrid",
+"Olympique Marseille",
+0.35294117647058826
+],
+[
+"Atletico Madrid",
+"Marseille",
+0.35294117647058826
+],
+[
+"Atletico Madrid",
+"Atlético  Madrid",
+1.0
+],
+[
+"Atletico Madrid",
+"Milan",
+0.15384615384615385
+],
+[
+"Atletico Madrid",
+"Real Betis",
+0.5555555555555556
+],
+[
+"Atletico Madrid",
+"Betis",
+0.46153846153846156
+],
+[
+"Atletico Madrid",
+"Slovacko",
+0.375
+],
+[
+"Atletico Madrid",
+"Sigma Olomouc",
+0.2857142857142857
+],
+[
+"Atletico Madrid",
+"Sigma",
+0.15384615384615385
+],
+[
+"Atletico Madrid",
+"Banik Ostrava",
+0.19047619047619047
+],
+[
+"Atletico Madrid",
+"FC Banik Ostrava",
+0.19047619047619047
+],
+[
+"Paris Saint-Germain",
+"Tottenham Hotspur",
+0.1111111111111111
+],
+[
+"Paris Saint-Germain",
+"Tottenham",
+0.1111111111111111
+],
+[
+"Paris Saint-Germain",
+"Udinese Calcio",
+0.23076923076923078
+],
+[
+"Paris Saint-Germain",
+"Udinese",
+0.23076923076923078
+],
+[
+"Paris Saint-Germain",
+"Racing",
+0.32
+],
+[
+"Paris Saint-Germain",
+"Racing Santander",
+0.5142857142857142
+],
+[
+"Paris Saint-Germain",
+"Real Madrid",
+0.2
+],
+[
+"Paris Saint-Germain",
+"Real Sociedad",
+0.25
+],
+[
+"Paris Saint-Germain",
+"Sparta Prague",
+0.3870967741935484
+],
+[
+"Paris Saint-Germain",
+"Slavia Praha",
+0.1935483870967742
+],
+[
+"Paris Saint-Germain",
+"Real Betis",
+0.20689655172413793
+],
+[
+"Paris Saint-Germain",
+"Slovacko",
+0.07407407407407407
+],
+[
+"Paris Saint-Germain",
+"Sigma Olomouc",
+0.25
+],
+[
+"Paris Saint-Germain",
+"Sigma",
+0.3333333333333333
+],
+[
+"PSG",
+"Tottenham Hotspur",
+0.1111111111111111
+],
+[
+"PSG",
+"Tottenham",
+0.1111111111111111
+],
+[
+"PSG",
+"Udinese Calcio",
+0.23076923076923078
+],
+[
+"PSG",
+"Udinese",
+0.23076923076923078
+],
+[
+"PSG",
+"Racing",
+0.32
+],
+[
+"PSG",
+"Racing Santander",
+0.5142857142857142
+],
+[
+"PSG",
+"Real Madrid",
+0.2
+],
+[
+"PSG",
+"Real Sociedad",
+0.25
+],
+[
+"PSG",
+"Paris Saint-Germain",
+1.0
+],
+[
+"PSG",
+"Sparta Prague",
+0.3870967741935484
+],
+[
+"PSG",
+"Slavia Praha",
+0.1935483870967742
+],
+[
+"PSG",
+"Real Betis",
+0.20689655172413793
+],
+[
+"PSG",
+"Slovacko",
+0.07407407407407407
+],
+[
+"PSG",
+"Sigma Olomouc",
+0.25
+],
+[
+"PSG",
+"Sigma",
+0.3333333333333333
+],
+[
+"Borussia M'gladbach",
+"Brighton & Hove Albion",
+0.13953488372093023
+],
+[
+"Borussia M'gladbach",
+"Brighton",
+0.14814814814814814
+],
+[
+"Borussia M'gladbach",
+"Tottenham Hotspur",
+0.2777777777777778
+],
+[
+"Borussia M'gladbach",
+"Tottenham",
+0.2777777777777778
+],
+[
+"Borussia M'gladbach",
+"Coventry",
+0.14814814814814814
+],
+[
+"Borussia M'gladbach",
+"Coventry City",
+0.1875
+],
+[
+"Borussia M'gladbach",
+"Como 1907",
+0.14285714285714285
+],
+[
+"Borussia M'gladbach",
+"Como",
+0.17391304347826086
+],
+[
+"Borussia M'gladbach",
+"Udinese Calcio",
+0.15384615384615385
+],
+[
+"Borussia M'gladbach",
+"Udinese",
+0.15384615384615385
+],
+[
+"Borussia M'gladbach",
+"FC Koln",
+0.17391304347826086
+],
+[
+"Borussia M'gladbach",
+"Manchester Utd",
+0.16666666666666666
+],
+[
+"Borussia M'gladbach",
+"Manchester United",
+0.16666666666666666
+],
+[
+"Borussia M'gladbach",
+"Inter",
+0.08333333333333333
+],
+[
+"Borussia M'gladbach",
+"Internazionale",
+0.08333333333333333
+],
+[
+"Borussia M'gladbach",
+"Racing",
+0.24
+],
+[
+"Borussia M'gladbach",
+"Racing Santander",
+0.17142857142857143
+],
+[
+"Borussia M'gladbach",
+"Manchester City",
+0.17647058823529413
+],
+[
+"Borussia M'gladbach",
+"Real Madrid",
+0.4
+],
+[
+"Borussia M'gladbach",
+"Real Sociedad",
+0.25
+],
+[
+"Borussia M'gladbach",
+"Everton",
+0.07692307692307693
+],
+[
+"Borussia M'gladbach",
+"Newcastle United",
+0.17142857142857143
+],
+[
+"Borussia M'gladbach",
+"Paris Saint-Germain",
+0.3684210526315789
+],
+[
+"Borussia M'gladbach",
+"PSG",
+0.3684210526315789
+],
+[
+"Borussia M'gladbach",
+"Borussia Monchengladbach",
+0.5294117647058824
+],
+[
+"Borussia M'gladbach",
+"Sparta Prague",
+0.3225806451612903
+],
+[
+"Borussia M'gladbach",
+"Slavia Praha",
+0.3870967741935484
+],
+[
+"Borussia M'gladbach",
+"Olympique Marseille",
+0.2857142857142857
+],
+[
+"Borussia M'gladbach",
+"Marseille",
+0.2857142857142857
+],
+[
+"Borussia M'gladbach",
+"Milan",
+0.25
+],
+[
+"Borussia M'gladbach",
+"Real Betis",
+0.13793103448275862
+],
+[
+"Borussia M'gladbach",
+"Slovacko",
+0.2222222222222222
+],
+[
+"Borussia M'gladbach",
+"Sigma Olomouc",
+0.375
+],
+[
+"Borussia M'gladbach",
+"Sigma",
+0.25
+],
+[
+"Borussia M'gladbach",
+"FC Banik Ostrava",
+0.125
+],
+[
+"Borussia Monchengladbach",
+"Brighton & Hove Albion",
+0.2564102564102564
+],
+[
+"Borussia Monchengladbach",
+"Brighton",
+0.17391304347826086
+],
+[
+"Borussia Monchengladbach",
+"Tottenham Hotspur",
+0.3125
+],
+[
+"Borussia Monchengladbach",
+"Tottenham",
+0.3125
+],
+[
+"Borussia Monchengladbach",
+"Coventry",
+0.2608695652173913
+],
+[
+"Borussia Monchengladbach",
+"Coventry City",
+0.2857142857142857
+],
+[
+"Borussia Monchengladbach",
+"Como 1907",
+0.16666666666666666
+],
+[
+"Borussia Monchengladbach",
+"Como",
+0.21052631578947367
+],
+[
+"Borussia Monchengladbach",
+"Udinese Calcio",
+0.18181818181818182
+],
+[
+"Borussia Monchengladbach",
+"Udinese",
+0.18181818181818182
+],
+[
+"Borussia Monchengladbach",
+"FC Koln",
+0.21052631578947367
+],
+[
+"Borussia Monchengladbach",
+"Manchester Utd",
+0.4375
+],
+[
+"Borussia Monchengladbach",
+"Manchester United",
+0.4375
+],
+[
+"Borussia Monchengladbach",
+"Inter",
+0.2
+],
+[
+"Borussia Monchengladbach",
+"Internazionale",
+0.2
+],
+[
+"Borussia Monchengladbach",
+"Racing",
+0.2857142857142857
+],
+[
+"Borussia Monchengladbach",
+"Racing Santander",
+0.3225806451612903
+],
+[
+"Borussia Monchengladbach",
+"Manchester City",
+0.4
+],
+[
+"Borussia Monchengladbach",
+"Real Madrid",
+0.23076923076923078
+],
+[
+"Borussia Monchengladbach",
+"Real Sociedad",
+0.35714285714285715
+],
+[
+"Borussia Monchengladbach",
+"Everton",
+0.18181818181818182
+],
+[
+"Borussia Monchengladbach",
+"Newcastle United",
+0.3225806451612903
+],
+[
+"Borussia Monchengladbach",
+"Paris Saint-Germain",
+0.11764705882352941
+],
+[
+"Borussia Monchengladbach",
+"PSG",
+0.11764705882352941
+],
+[
+"Borussia Monchengladbach",
+"Sparta Prague",
+0.14814814814814814
+],
+[
+"Borussia Monchengladbach",
+"Slavia Praha",
+0.2962962962962963
+],
+[
+"Borussia Monchengladbach",
+"Olympique Marseille",
+0.25
+],
+[
+"Borussia Monchengladbach",
+"Marseille",
+0.25
+],
+[
+"Borussia Monchengladbach",
+"Milan",
+0.3
+],
+[
+"Borussia Monchengladbach",
+"Real Betis",
+0.24
+],
+[
+"Borussia Monchengladbach",
+"Slovacko",
+0.2608695652173913
+],
+[
+"Borussia Monchengladbach",
+"Sigma Olomouc",
+0.21428571428571427
+],
+[
+"Borussia Monchengladbach",
+"Sigma",
+0.2
+],
+[
+"Borussia Monchengladbach",
+"FC Banik Ostrava",
+0.14285714285714285
+],
+[
+"Sparta Prague",
+"Tottenham Hotspur",
+0.20689655172413793
+],
+[
+"Sparta Prague",
+"Tottenham",
+0.20689655172413793
+],
+[
+"Sparta Prague",
+"Udinese Calcio",
+0.10526315789473684
+],
+[
+"Sparta Prague",
+"Udinese",
+0.10526315789473684
+],
+[
+"Slavia Praha",
+"Tottenham Hotspur",
+0.13793103448275862
+],
+[
+"Slavia Praha",
+"Tottenham",
+0.13793103448275862
+],
+[
+"Slavia Praha",
+"Udinese Calcio",
+0.10526315789473684
+],
+[
+"Slavia Praha",
+"Udinese",
+0.10526315789473684
+],
+[
+"Slavia Praha",
+"Sparta Prague",
+0.5
+],
+[
+"Slavia Praha",
+"Slovacko",
+0.3
+],
+[
+"Olympique Marseille",
+"Tottenham Hotspur",
+0.15384615384615385
+],
+[
+"Olympique Marseille",
+"Tottenham",
+0.15384615384615385
+],
+[
+"Olympique Marseille",
+"Udinese Calcio",
+0.25
+],
+[
+"Olympique Marseille",
+"Udinese",
+0.25
+],
+[
+"Olympique Marseille",
+"Racing",
+0.26666666666666666
+],
+[
+"Olympique Marseille",
+"Racing Santander",
+0.16
+],
+[
+"Olympique Marseille",
+"Real Madrid",
+0.4
+],
+[
+"Olympique Marseille",
+"Real Sociedad",
+0.2727272727272727
+],
+[
+"Olympique Marseille",
+"Paris Saint-Germain",
+0.21428571428571427
+],
+[
+"Olympique Marseille",
+"PSG",
+0.21428571428571427
+],
+[
+"Olympique Marseille",
+"Sparta Prague",
+0.19047619047619047
+],
+[
+"Olympique Marseille",
+"Slavia Praha",
+0.19047619047619047
+],
+[
+"Olympique Marseille",
+"Real Betis",
+0.21052631578947367
+],
+[
+"Olympique Marseille",
+"Slovacko",
+0.11764705882352941
+],
+[
+"Olympique Marseille",
+"Sigma Olomouc",
+0.2727272727272727
+],
+[
+"Olympique Marseille",
+"Sigma",
+0.2857142857142857
+],
+[
+"Marseille",
+"Tottenham Hotspur",
+0.15384615384615385
+],
+[
+"Marseille",
+"Tottenham",
+0.15384615384615385
+],
+[
+"Marseille",
+"Udinese Calcio",
+0.25
+],
+[
+"Marseille",
+"Udinese",
+0.25
+],
+[
+"Marseille",
+"Racing",
+0.26666666666666666
+],
+[
+"Marseille",
+"Racing Santander",
+0.16
+],
+[
+"Marseille",
+"Real Madrid",
+0.4
+],
+[
+"Marseille",
+"Real Sociedad",
+0.2727272727272727
+],
+[
+"Marseille",
+"Newcastle United",
+0.32
+],
+[
+"Marseille",
+"Paris Saint-Germain",
+0.21428571428571427
+],
+[
+"Marseille",
+"PSG",
+0.21428571428571427
+],
+[
+"Marseille",
+"Sparta Prague",
+0.19047619047619047
+],
+[
+"Marseille",
+"Slavia Praha",
+0.19047619047619047
+],
+[
+"Marseille",
+"Olympique Marseille",
+1.0
+],
+[
+"Marseille",
+"Milan",
+0.42857142857142855
+],
+[
+"Marseille",
+"Real Betis",
+0.21052631578947367
+],
+[
+"Marseille",
+"Slovacko",
+0.11764705882352941
+],
+[
+"Marseille",
+"Sigma Olomouc",
+0.2727272727272727
+],
+[
+"Marseille",
+"Sigma",
+0.2857142857142857
+],
+[
+"Atlético  Madrid",
+"Brighton & Hove Albion",
+0.25
+],
+[
+"Atlético  Madrid",
+"Brighton",
+0.25
+],
+[
+"Atlético  Madrid",
+"Tottenham Hotspur",
+0.16
+],
+[
+"Atlético  Madrid",
+"Tottenham",
+0.16
+],
+[
+"Atlético  Madrid",
+"Coventry",
+0.25
+],
+[
+"Atlético  Madrid",
+"Coventry City",
+0.19047619047619047
+],
+[
+"Atlético  Madrid",
+"Como 1907",
+0.23529411764705882
+],
+[
+"Atlético  Madrid",
+"Como",
+0.3333333333333333
+],
+[
+"Atlético  Madrid",
+"Udinese Calcio",
+0.13333333333333333
+],
+[
+"Atlético  Madrid",
+"Udinese",
+0.13333333333333333
+],
+[
+"Atlético  Madrid",
+"FC Koln",
+0.16666666666666666
+],
+[
+"Atlético  Madrid",
+"Manchester Utd",
+0.32
+],
+[
+"Atlético  Madrid",
+"Manchester United",
+0.32
+],
+[
+"Atlético  Madrid",
+"Inter",
+0.3076923076923077
+],
+[
+"Atlético  Madrid",
+"Internazionale",
+0.3076923076923077
+],
+[
+"Atlético  Madrid",
+"Racing",
+0.2857142857142857
+],
+[
+"Atlético  Madrid",
+"Racing Santander",
+0.25
+],
+[
+"Atlético  Madrid",
+"Bayern Munich",
+0.38095238095238093
+],
+[
+"Atlético  Madrid",
+"Bayern Munchen",
+0.2727272727272727
+],
+[
+"Atlético  Madrid",
+"Manchester City",
+0.34782608695652173
+],
+[
+"Atlético  Madrid",
+"Real Madrid",
+0.3157894736842105
+],
+[
+"Atlético  Madrid",
+"Real Sociedad",
+0.2857142857142857
+],
+[
+"Atlético  Madrid",
+"Everton",
+0.26666666666666666
+],
+[
+"Atlético  Madrid",
+"Newcastle United",
+0.4166666666666667
+],
+[
+"Atlético  Madrid",
+"Paris Saint-Germain",
+0.2962962962962963
+],
+[
+"Atlético  Madrid",
+"PSG",
+0.2962962962962963
+],
+[
+"Atlético  Madrid",
+"Borussia M'gladbach",
+0.2222222222222222
+],
+[
+"Atlético  Madrid",
+"Borussia Monchengladbach",
+0.17391304347826086
+],
+[
+"Atlético  Madrid",
+"Sparta Prague",
+0.2
+],
+[
+"Atlético  Madrid",
+"Slavia Praha",
+0.2
+],
+[
+"Atlético  Madrid",
+"Olympique Marseille",
+0.35294117647058826
+],
+[
+"Atlético  Madrid",
+"Marseille",
+0.35294117647058826
+],
+[
+"Atlético  Madrid",
+"Milan",
+0.15384615384615385
+],
+[
+"Atlético  Madrid",
+"Real Betis",
+0.5555555555555556
+],
+[
+"Atlético  Madrid",
+"Betis",
+0.46153846153846156
+],
+[
+"Atlético  Madrid",
+"Slovacko",
+0.375
+],
+[
+"Atlético  Madrid",
+"Sigma Olomouc",
+0.2857142857142857
+],
+[
+"Atlético  Madrid",
+"Sigma",
+0.15384615384615385
+],
+[
+"Atlético  Madrid",
+"Banik Ostrava",
+0.19047619047619047
+],
+[
+"Atlético  Madrid",
+"FC Banik Ostrava",
+0.19047619047619047
+],
+[
+"  AC Milan ",
+"Brighton & Hove Albion",
+0.20689655172413793
+],
+[
+"  AC Milan ",
+"Brighton",
+0.3076923076923077
+],
+[
+"  AC Milan ",
+"Tottenham Hotspur",
+0.09090909090909091
+],
+[
+"  AC Milan ",
+"Tottenham",
+0.09090909090909091
+],
+[
+"  AC Milan ",
+"Coventry",
+0.15384615384615385
+],
+[
+"  AC Milan ",
+"Coventry City",
+0.1111111111111111
+],
+[
+"  AC Milan ",
+"Como 1907",
+0.14285714285714285
+],
+[
+"  AC Milan ",
+"Como",
+0.2222222222222222
+],
+[
+"  AC Milan ",
+"Udinese Calcio",
+0.3333333333333333
+],
+[
+"  AC Milan ",
+"Udinese",
+0.3333333333333333
+],
+[
+"  AC Milan ",
+"1. FC Köln",
+0.36363636363636365
+],
+[
+"  AC Milan ",
+"FC Koln",
+0.4444444444444444
+],
+[
+"  AC Milan ",
+"Manchester Utd",
+0.2727272727272727
+],
+[
+"  AC Milan ",
+"Manchester United",
+0.2727272727272727
+],
+[
+"  AC Milan ",
+"Inter",
+0.4
+],
+[
+"  AC Milan ",
+"Internazionale",
+0.4
+],
+[
+"  AC Milan ",
+"Racing",
+0.36363636363636365
+],
+[
+"  AC Milan ",
+"Racing Santander",
+0.2857142857142857
+],
+[
+"  AC Milan ",
+"Bayern Munich",
+0.2222222222222222
+],
+[
+"  AC Milan ",
+"Bayern Munchen",
+0.21052631578947367
+],
+[
+"  AC Milan ",
+"Manchester City",
+0.3
+],
+[
+"  AC Milan ",
+"Real Madrid",
+0.25
+],
+[
+"  AC Milan ",
+"Real Sociedad",
+0.2222222222222222
+],
+[
+"  AC Milan ",
+"Arsenal",
+0.16666666666666666
+],
+[
+"  AC Milan ",
+"Everton",
+0.16666666666666666
+],
+[
+"  AC Milan ",
+"Newcastle United",
+0.09523809523809523
+],
+[
+"  AC Milan ",
+"Atletico Madrid",
+0.15384615384615385
+],
+[
+"  AC Milan ",
+"Paris Saint-Germain",
+0.25
+],
+[
+"  AC Milan ",
+"PSG",
+0.25
+],
+[
+"  AC Milan ",
+"Borussia M'gladbach",
+0.25
+],
+[
+"  AC Milan ",
+"Borussia Monchengladbach",
+0.3
+],
+[
+"  AC Milan ",
+"Sparta Prague",
+0.11764705882352941
+],
+[
+"  AC Milan ",
+"Slavia Praha",
+0.23529411764705882
+],
+[
+"  AC Milan ",
+"Olympique Marseille",
+0.42857142857142855
+],
+[
+"  AC Milan ",
+"Marseille",
+0.42857142857142855
+],
+[
+"  AC Milan ",
+"Atlético  Madrid",
+0.15384615384615385
+],
+[
+"  AC Milan ",
+"Milan",
+1.0
+],
+[
+"  AC Milan ",
+"Real Betis",
+0.13333333333333333
+],
+[
+"  AC Milan ",
+"Betis",
+0.2
+],
+[
+"  AC Milan ",
+"1. FC Slovacko",
+0.26666666666666666
+],
+[
+"  AC Milan ",
+"Slovacko",
+0.3076923076923077
+],
+[
+"  AC Milan ",
+"Sigma Olomouc",
+0.2222222222222222
+],
+[
+"  AC Milan ",
+"Sigma",
+0.4
+],
+[
+"  AC Milan ",
+"Banik Ostrava",
+0.2222222222222222
+],
+[
+"  AC Milan ",
+"FC Banik Ostrava",
+0.2222222222222222
+],
+[
+"Milan",
+"Tottenham Hotspur",
+0.09090909090909091
+],
+[
+"Milan",
+"Tottenham",
+0.09090909090909091
+],
+[
+"Milan",
+"Udinese Calcio",
+0.3333333333333333
+],
+[
+"Milan",
+"Udinese",
+0.3333333333333333
+],
+[
+"Milan",
+"Racing",
+0.36363636363636365
+],
+[
+"Milan",
+"Racing Santander",
+0.2857142857142857
+],
+[
+"Milan",
+"Real Madrid",
+0.25
+],
+[
+"Milan",
+"Real Sociedad",
+0.2222222222222222
+],
+[
+"Milan",
+"Newcastle United",
+0.09523809523809523
+],
+[
+"Milan",
+"Paris Saint-Germain",
+0.25
+],
+[
+"Milan",
+"PSG",
+0.25
+],
+[
+"Milan",
+"Sparta Prague",
+0.11764705882352941
+],
+[
+"Milan",
+"Slavia Praha",
+0.23529411764705882
+],
+[
+"Milan",
+"Olympique Marseille",
+0.42857142857142855
+],
+[
+"Milan",
+"Real Betis",
+0.13333333333333333
+],
+[
+"Milan",
+"Slovacko",
+0.3076923076923077
+],
+[
+"Milan",
+"Sigma Olomouc",
+0.2222222222222222
+],
+[
+"Milan",
+"Sigma",
+0.4
+],
+[
+"Real Betis",
+"Tottenham Hotspur",
+0.07407407407407407
+],
+[
+"Real Betis",
+"Tottenham",
+0.07407407407407407
+],
+[
+"Real Betis",
+"Udinese Calcio",
+0.23529411764705882
+],
+[
+"Real Betis",
+"Udinese",
+0.23529411764705882
+],
+[
+"Real Betis",
+"Real Madrid",
+0.5
+],
+[
+"Real Betis",
+"Real Sociedad",
+0.5
+],
+[
+"Real Betis",
+"Sparta Prague",
+0.2727272727272727
+],
+[
+"Real Betis",
+"Slavia Praha",
+0.18181818181818182
+],
+[
+"Real Betis",
+"Slovacko",
+0.1111111111111111
+],
+[
+"Real Betis",
+"Sigma Olomouc",
+0.17391304347826086
+],
+[
+"Real Betis",
+"Sigma",
+0.13333333333333333
+],
+[
+"Betis",
+"Brighton & Hove Albion",
+0.20689655172413793
+],
+[
+"Betis",
+"Brighton",
+0.3076923076923077
+],
+[
+"Betis",
+"Tottenham Hotspur",
+0.2727272727272727
+],
+[
+"Betis",
+"Tottenham",
+0.2727272727272727
+],
+[
+"Betis",
+"Coventry",
+0.3076923076923077
+],
+[
+"Betis",
+"Coventry City",
+0.3333333333333333
+],
+[
+"Betis",
+"Como 1907",
+0.0
+],
+[
+"Betis",
+"Como",
+0.0
+],
+[
+"Betis",
+"Udinese Calcio",
+0.3333333333333333
+],
+[
+"Betis",
+"Udinese",
+0.3333333333333333
+],
+[
+"Betis",
+"FC Koln",
+0.0
+],
+[
+"Betis",
+"Manchester Utd",
+0.2727272727272727
+],
+[
+"Betis",
+"Manchester United",
+0.2727272727272727
+],
+[
+"Betis",
+"Inter",
+0.2
+],
+[
+"Betis",
+"Internazionale",
+0.2
+],
+[
+"Betis",
+"Racing",
+0.18181818181818182
+],
+[
+"Betis",
+"Racing Santander",
+0.09523809523809523
+],
+[
+"Betis",
+"Manchester City",
+0.3
+],
+[
+"Betis",
+"Real Madrid",
+0.25
+],
+[
+"Betis",
+"Real Sociedad",
+0.2222222222222222
+],
+[
+"Betis",
+"Everton",
+0.3333333333333333
+],
+[
+"Betis",
+"Newcastle United",
+0.2857142857142857
+],
+[
+"Betis",
+"Paris Saint-Germain",
+0.16666666666666666
+],
+[
+"Betis",
+"PSG",
+0.16666666666666666
+],
+[
+"Betis",
+"Borussia M'gladbach",
+0.16666666666666666
+],
+[
+"Betis",
+"Borussia Monchengladbach",
+0.1
+],
+[
+"Betis",
+"Sparta Prague",
+0.11764705882352941
+],
+[
+"Betis",
+"Slavia Praha",
+0.11764705882352941
+],
+[
+"Betis",
+"Olympique Marseille",
+0.2857142857142857
+],
+[
+"Betis",
+"Marseille",
+0.2857142857142857
+],
+[
+"Betis",
+"Milan",
+0.2
+],
+[
+"Betis",
+"Real Betis",
+0.92
+],
+[
+"Betis",
+"Slovacko",
+0.15384615384615385
+],
+[
+"Betis",
+"Sigma Olomouc",
+0.1111111111111111
+],
+[
+"Betis",
+"Sigma",
+0.2
+],
+[
+"Betis",
+"FC Banik Ostrava",
+0.2222222222222222
+],
+[
+"1. FC Slovacko",
+"Brighton & Hove Albion",
+0.29411764705882354
+],
+[
+"1. FC Slovacko",
+"Brighton",
+0.1111111111111111
+],
+[
+"1. FC Slovacko",
+"Tottenham Hotspur",
+0.14814814814814814
+],
+[
+"1. FC Slovacko",
+"Tottenham",
+0.14814814814814814
+],
+[
+"1. FC Slovacko",
+"Coventry",
+0.2222222222222222
+],
+[
+"1. FC Slovacko",
+"Coventry City",
+0.2608695652173913
+],
+[
+"1. FC Slovacko",
+"Como 1907",
+0.10526315789473684
+],
+[
+"1. FC Slovacko",
+"Como",
+0.2857142857142857
+],
+[
+"1. FC Slovacko",
+"Udinese Calcio",
+0.11764705882352941
+],
+[
+"1. FC Slovacko",
+"Udinese",
+0.11764705882352941
+],
+[
+"1. FC Slovacko",
+"FC Koln",
+0.2857142857142857
+],
+[
+"1. FC Slovacko",
+"Manchester Utd",
+0.07407407407407407
+],
+[
+"1. FC Slovacko",
+"Manchester United",
+0.07407407407407407
+],
+[
+"1. FC Slovacko",
+"Inter",
+0.0
+],
+[
+"1. FC Slovacko",
+"Internazionale",
+0.0
+],
+[
+"1. FC Slovacko",
+"Racing",
+0.25
+],
+[
+"1. FC Slovacko",
+"Racing Santander",
+0.23076923076923078
+],
+[
+"1. FC Slovacko",
+"Bayern Munich",
+0.17391304347826086
+],
+[
+"1. FC Slovacko",
+"Bayern Munchen",
+0.16666666666666666
+],
+[
+"1. FC Slovacko",
+"Manchester City",
+0.16
+],
+[
+"1. FC Slovacko",
+"Real Madrid",
+0.19047619047619047
+],
+[
+"1. FC Slovacko",
+"Real Sociedad",
+0.34782608695652173
+],
+[
+"1. FC Slovacko",
+"Arsenal",
+0.23529411764705882
+],
+[
+"1. FC Slovacko",
+"Everton",
+0.11764705882352941
+],
+[
+"1. FC Slovacko",
+"Newcastle United",
+0.07692307692307693
+],
+[
+"1. FC Slovacko",
+"Atletico Madrid",
+0.2222222222222222
+],
+[
+"1. FC Slovacko",
+"Paris Saint-Germain",
+0.20689655172413793
+],
+[
+"1. FC Slovacko",
+"PSG",
+0.20689655172413793
+],
+[
+"1. FC Slovacko",
+"Borussia M'gladbach",
+0.27586206896551724
+],
+[
+"1. FC Slovacko",
+"Borussia Monchengladbach",
+0.24
+],
+[
+"1. FC Slovacko",
+"Sparta Prague",
+0.18181818181818182
+],
+[
+"1. FC Slovacko",
+"Slavia Praha",
+0.36363636363636365
+],
+[
+"1. FC Slovacko",
+"Olympique Marseille",
+0.21052631578947367
+],
+[
+"1. FC Slovacko",
+"Marseille",
+0.21052631578947367
+],
+[
+"1. FC Slovacko",
+"Atlético  Madrid",
+0.2222222222222222
+],
+[
+"1. FC Slovacko",
+"Milan",
+0.26666666666666666
+],
+[
+"1. FC Slovacko",
+"Real Betis",
+0.2
+],
+[
+"1. FC Slovacko",
+"Betis",
+0.13333333333333333
+],
+[
+"1. FC Slovacko",
+"Slovacko",
+0.92
+],
+[
+"1. FC Slovacko",
+"Sigma Olomouc",
+0.34782608695652173
+],
+[
+"1. FC Slovacko",
+"Sigma",
+0.26666666666666666
+],
+[
+"1. FC Slovacko",
+"Banik Ostrava",
+0.34782608695652173
+],
+[
+"1. FC Slovacko",
+"FC Banik Ostrava",
+0.34782608695652173
+],
+[
+"Slovacko",
+"Tottenham Hotspur",
+0.08
+],
+[
+"Slovacko",
+"Tottenham",
+0.08
+],
+[
+"Slovacko",
+"Udinese Calcio",
+0.13333333333333333
+],
+[
+"Slovacko",
+"Udinese",
+0.13333333333333333
+],
+[
+"Slovacko",
+"Sparta Prague",
+0.2
+],
+[
+"Sigma Olomouc",
+"Tottenham Hotspur",
+0.13333333333333333
+],
+[
+"Sigma Olomouc",
+"Tottenham",
+0.13333333333333333
+],
+[
+"Sigma Olomouc",
+"Udinese Calcio",
+0.1
+],
+[
+"Sigma Olomouc",
+"Udinese",
+0.1
+],
+[
+"Sigma Olomouc",
+"Sparta Prague",
+0.24
+],
+[
+"Sigma Olomouc",
+"Slavia Praha",
+0.32
+],
+[
+"Sigma Olomouc",
+"Slovacko",
+0.38095238095238093
+],
+[
+"Sigma",
+"Tottenham Hotspur",
+0.09090909090909091
+],
+[
+"Sigma",
+"Tottenham",
+0.09090909090909091
+],
+[
+"Sigma",
+"Udinese Calcio",
+0.16666666666666666
+],
+[
+"Sigma",
+"Udinese",
+0.16666666666666666
+],
+[
+"Sigma",
+"Sparta Prague",
+0.23529411764705882
+],
+[
+"Sigma",
+"Slavia Praha",
+0.35294117647058826
+],
+[
+"Sigma",
+"Slovacko",
+0.3076923076923077
+],
+[
+"Sigma",
+"Sigma Olomouc",
+0.92
+],
+[
+"Banik Ostrava",
+"Brighton & Hove Albion",
+0.2702702702702703
+],
+[
+"Banik Ostrava",
+"Brighton",
+0.19047619047619047
+],
+[
+"Banik Ostrava",
+"Tottenham Hotspur",
+0.3333333333333333
+],
+[
+"Banik Ostrava",
+"Tottenham",
+0.3333333333333333
+],
+[
+"Banik Ostrava",
+"Coventry",
+0.2857142857142857
+],
+[
+"Banik Ostrava",
+"Coventry City",
+0.23076923076923078
+],
+[
+"Banik Ostrava",
+"Como 1907",
+0.09090909090909091
+],
+[
+"Banik Ostrava",
+"Como",
+0.11764705882352941
+],
+[
+"Banik Ostrava",
+"Udinese Calcio",
+0.2
+],
+[
+"Banik Ostrava",
+"Udinese",
+0.2
+],
+[
+"Banik Ostrava",
+"FC Koln",
+0.11764705882352941
+],
+[
+"Banik Ostrava",
+"Manchester Utd",
+0.3333333333333333
+],
+[
+"Banik Ostrava",
+"Manchester United",
+0.3333333333333333
+],
+[
+"Banik Ostrava",
+"Inter",
+0.3333333333333333
+],
+[
+"Banik Ostrava",
+"Internazionale",
+0.3333333333333333
+],
+[
+"Banik Ostrava",
+"Racing",
+0.21052631578947367
+],
+[
+"Banik Ostrava",
+"Racing Santander",
+0.27586206896551724
+],
+[
+"Banik Ostrava",
+"Bayern Munich",
+0.3076923076923077
+],
+[
+"Banik Ostrava",
+"Bayern Munchen",
+0.2962962962962963
+],
+[
+"Banik Ostrava",
+"Manchester City",
+0.35714285714285715
+],
+[
+"Banik Ostrava",
+"Real Madrid",
+0.16666666666666666
+],
+[
+"Banik Ostrava",
+"Real Sociedad",
+0.23076923076923078
+],
+[
+"Banik Ostrava",
+"Everton",
+0.1
+],
+[
+"Banik Ostrava",
+"Newcastle United",
+0.27586206896551724
+],
+[
+"Banik Ostrava",
+"Paris Saint-Germain",
+0.1875
+],
+[
+"Banik Ostrava",
+"PSG",
+0.1875
+],
+[
+"Banik Ostrava",
+"Borussia M'gladbach",
+0.125
+],
+[
+"Banik Ostrava",
+"Borussia Monchengladbach",
+0.14285714285714285
+],
+[
+"Banik Ostrava",
+"Sparta Prague",
+0.4
+],
+[
+"Banik Ostrava",
+"Slavia Praha",
+0.48
+],
+[
+"Banik Ostrava",
+"Olympique Marseille",
+0.18181818181818182
+],
+[
+"Banik Ostrava",
+"Marseille",
+0.18181818181818182
+],
+[
+"Banik Ostrava",
+"Milan",
+0.2222222222222222
+],
+[
+"Banik Ostrava",
+"Real Betis",
+0.2608695652173913
+],
+[
+"Banik Ostrava",
+"Betis",
+0.3333333333333333
+],
+[
+"Banik Ostrava",
+"Slovacko",
+0.2857142857142857
+],
+[
+"Banik Ostrava",
+"Sigma Olomouc",
+0.23076923076923078
+],
+[
+"Banik Ostrava",
+"Sigma",
+0.1111111111111111
+],
+[
+"Banik Ostrava",
+"FC Banik Ostrava",
+1.0
+],
+[
+"FC Banik Ostrava",
+"Tottenham Hotspur",
+0.3333333333333333
+],
+[
+"FC Banik Ostrava",
+"Tottenham",
+0.3333333333333333
+],
+[
+"FC Banik Ostrava",
+"Udinese Calcio",
+0.2
+],
+[
+"FC Banik Ostrava",
+"Udinese",
+0.2
+],
+[
+"FC Banik Ostrava",
+"FC Koln",
+0.11764705882352941
+],
+[
+"FC Banik Ostrava",
+"Manchester Utd",
+0.3333333333333333
+],
+[
+"FC Banik Ostrava",
+"Manchester United",
+0.3333333333333333
+],
+[
+"FC Banik Ostrava",
+"Inter",
+0.3333333333333333
+],
+[
+"FC Banik Ostrava",
+"Internazionale",
+0.3333333333333333
+],
+[
+"FC Banik Ostrava",
+"Racing",
+0.21052631578947367
+],
+[
+"FC Banik Ostrava",
+"Racing Santander",
+0.27586206896551724
+],
+[
+"FC Banik Ostrava",
+"Manchester City",
+0.35714285714285715
+],
+[
+"FC Banik Ostrava",
+"Real Madrid",
+0.16666666666666666
+],
+[
+"FC Banik Ostrava",
+"Real Sociedad",
+0.23076923076923078
+],
+[
+"FC Banik Ostrava",
+"Newcastle United",
+0.27586206896551724
+],
+[
+"FC Banik Ostrava",
+"Paris Saint-Germain",
+0.1875
+],
+[
+"FC Banik Ostrava",
+"PSG",
+0.1875
+],
+[
+"FC Banik Ostrava",
+"Sparta Prague",
+0.4
+],
+[
+"FC Banik Ostrava",
+"Slavia Praha",
+0.48
+],
+[
+"FC Banik Ostrava",
+"Olympique Marseille",
+0.18181818181818182
+],
+[
+"FC Banik Ostrava",
+"Marseille",
+0.18181818181818182
+],
+[
+"FC Banik Ostrava",
+"Milan",
+0.2222222222222222
+],
+[
+"FC Banik Ostrava",
+"Real Betis",
+0.2608695652173913
+],
+[
+"FC Banik Ostrava",
+"Slovacko",
+0.2857142857142857
+],
+[
+"FC Banik Ostrava",
+"Sigma Olomouc",
+0.23076923076923078
+],
+[
+"FC Banik Ostrava",
+"Sigma",
+0.1111111111111111
+]
+]
+}
