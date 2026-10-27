@@ -8,7 +8,7 @@ const config = require("../src/config");
 const { parseOdds, estimateOdds } = require("../src/odds");
 const { normalizePick, evaluate, forebetProbability, WIN, LOSS, VOID } = require("../src/markets");
 const { normalize, teamSimilarity, sameMatch } = require("../src/names");
-const { applyFilters, passesFilters, probabilityClass, HIGH, MID } = require("../src/filters");
+const { applyFilters, passesFilters, rejectReason, splitByFilters, probabilityClass, HIGH, MID } = require("../src/filters");
 const { localDate, fmtStamp, addDays, utcDateTime } = require("../src/timeutil");
 const golden = require("./fixtures/golden.json");
 
@@ -34,6 +34,14 @@ test("shoda s Pythonem: evaluate", () => {
 });
 test("shoda s Pythonem: forebetProbability", () => {
   for (const [code, p1, px, p2, expected] of golden.forebetProbability) assert.ok(near(forebetProbability(code, p1, px, p2), expected), code);
+});
+test("forebetProbability: handicap 0 (sázka bez remízy) = výhra týmu při vyřazení remízy", () => {
+  assert.equal(forebetProbability("AH1:0", 45, 28, 27), 62.5);
+  assert.equal(forebetProbability("AH2:0", 45, 28, 27), 37.5);
+  assert.equal(forebetProbability("AH2:0", 10, 20, 70), 87.5);
+  assert.equal(forebetProbability("AH1:0", 0, 100, 0), null); // nemá z čeho počítat
+  assert.equal(forebetProbability("AH1:-1.5", 45, 28, 27), null); // ostatní handicapy Forebet nehodnotí
+  assert.equal(forebetProbability("AH2:+1.5", 45, 28, 27), null);
 });
 test("shoda s Pythonem: normalize a teamSimilarity (1000+ dvojic)", () => {
   for (const [name, expected] of golden.normalize) assert.equal(normalize(name), expected, JSON.stringify(name));
@@ -123,6 +131,19 @@ test("filtr: chybějící kurz se odhadne a označí; příliš nízký odhad vy
   assert.equal(t.oddsEstimated, true);
   assert.ok(t.odds >= config.MIN_ODDS);
   assert.deepEqual(applyFilters([mk({ probability: 85, odds: null })]), []);
+});
+test("filtr: rejectReason říká, proč tip nepřešel (v pořadí podmínek), a prošlý tip nemá důvod", () => {
+  assert.equal(rejectReason(mk()), null);
+  assert.equal(rejectReason(mk({ home: "Arsenal W" })).code, "women");
+  assert.equal(rejectReason(mk({ leagueKey: "MLS" })).code, "league");
+  assert.equal(rejectReason(mk({ probability: null })).code, "noprob");
+  assert.deepEqual(rejectReason(mk({ probability: 55.25, probSource: "Forebet" })), { code: "lowprob", text: "pravděpodobnost 55,3 % (Forebet) není nad 60 %" });
+  assert.equal(rejectReason(mk({ probability: 60 })).code, "lowprob"); // striktně nad 60
+  assert.equal(rejectReason(mk({ odds: null })).code, "noodds");
+  assert.deepEqual(rejectReason(mk({ odds: 1.3 })), { code: "lowodds", text: "kurz 1,3 je pod 1,50" });
+  const { passed, rejected } = splitByFilters([mk(), mk({ probability: 50 }), mk({ odds: 1.2 })]);
+  assert.equal(passed.length, 1);
+  assert.deepEqual(rejected.map((r) => r.reason.code), ["lowprob", "lowodds"]);
 });
 test("filtr: kombinace a pásma barev (75 % je ještě žlutá)", () => {
   const out = applyFilters([mk({ probability: 80, odds: 1.7 }), mk({ probability: 59, odds: 2.5 }), mk({ probability: 75, odds: 1.2 }), mk({ probability: 61, odds: 1.5 })]);

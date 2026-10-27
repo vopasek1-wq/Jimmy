@@ -127,7 +127,9 @@ function parseRow($, a) {
     href: $(a).attr("href"), home, away, timeStr, statusToken, pickLabel: "", percent: null, odds: null,
     homeScore: null, awayScore: null, leagueKey: null, leagueText: "",
   };
-  parseRightPart(row, afterTeams);
+  // ikona ohně (#fire) místo „palce“ (#finger-up): číslo vedle ní je čítač „hot“ tipu, ne procento shody
+  const hot = main.find("use").toArray().some((u) => /#fire$/.test(u.attribs["xlink:href"] || u.attribs.href || ""));
+  parseRightPart(row, afterTeams, { hot });
   row.url = config.SCORES24_BASE + row.href;
   return row;
 }
@@ -137,7 +139,7 @@ function parseRow($, a) {
  * (tip bez shody – takový řádek pak nesplní filtr) a znak „%“ se někdy vykresluje jen přes CSS,
  * proto se bere číslo ve struktuře.
  */
-function parseRightPart(row, tokensIn) {
+function parseRightPart(row, tokensIn, { hot = false } = {}) {
   let toks = tokensIn.filter((t) => t !== "%");
   if (!toks.length) return;
   const odds = parseOdds(toks[toks.length - 1]);
@@ -156,7 +158,8 @@ function parseRightPart(row, tokensIn) {
   if (toks.length >= 2 && INT.test(toks[0])) {
     // Scores24 občas ukáže víc než 100 (naměřeno: 101) – je to míra shody, ne pravděpodobnost.
     // Jako procento nad 100 by to byl nesmysl, proto se omezí na 100.
-    row.percent = Math.min(Number(toks[0]), 100.0);
+    // Číslo u ikony ohně bez znaku „%“ (naměřeno: 13, 36, 82) procento není – řádek zůstane bez procent.
+    if (!(hot && !tokensIn.includes("%"))) row.percent = Math.min(Number(toks[0]), 100.0);
     toks = toks.slice(1);
   }
   row.pickLabel = toks.length ? toks[0] : "";

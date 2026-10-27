@@ -17,7 +17,7 @@ function readLimited(file, limit) {
 
 // [soubor, limit znaků]
 const FILES = [
-  ["zdroje-diagnostika.txt", 10000],
+  ["zdroje-diagnostika.txt", 20000], // i s přehledem zahozených tipů (až 40 řádků)
   ["tikety-statistiky.txt", 6000],
 ];
 

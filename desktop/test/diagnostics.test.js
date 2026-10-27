@@ -7,7 +7,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 
-const { Pipeline, forebetCoverage } = require("../src/pipeline");
+const { Pipeline, forebetCoverage, droppedReport } = require("../src/pipeline");
 const { ForebetScraper } = require("../src/scrapers/forebet");
 const { buildDiagnostics } = require("../src/diagnostics");
 const { SourceError } = require("../src/http");
@@ -58,6 +58,66 @@ test("Pipeline: po stažení vznikne zdroje-diagnostika.txt se stavem zdrojů, p
   assert.match(text, /Výsledek zápasu \(1X2\): 1 \(Forebet 1\)/);
   assert.match(text, /SofaScore: zápas nalezen u 1 z 1 tipů/);
   fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test("Pipeline: handicap 0 bez procent ze Scores24 dostane pravděpodobnost z Forebetu (sázka bez remízy)", async () => {
+  const web = {
+    http: {
+      async getText(url) {
+        if (url.includes("scores24")) return epl([s24Row({ home: "Nottingham Forest", away: "Arsenal", pick: "Arsenal Handicap (0)", percent: null, odds: "1.72", status: "tomorrow" })]);
+        return forebetPage([forebetRow({ home: "Nottingham Forest", away: "Arsenal", when: "2026-10-19 15:30:00", p: [10, 20, 70], pick: "2" })]);
+      },
+      async getJson() { return { events: [] }; },
+    },
+    browser: { expandScores24: async () => { throw new Error("nemělo být potřeba"); }, loadHtml: async () => "<html></html>" },
+  };
+  const result = await new Pipeline(web).run({ now: new Date(Date.UTC(2026, 9, 18, 12)) });
+  const t = result.tips.find((x) => x.tipCode === "AH2:0");
+  assert.ok(t, "tip s handicapem 0 prošel filtry");
+  assert.equal(t.probability, 87.5); // 70 / (10 + 70)
+  assert.equal(t.probSource, "Forebet");
+  assert.equal(t.probForebet, 87.5);
+});
+
+test("Pipeline: zdroje-diagnostika.txt vypíše zahozené tipy s důvodem a souhrnem", async () => {
+  const dir = tmp();
+  const page = epl([
+    s24Row({ home: "Nottingham Forest", away: "Arsenal", pick: "Arsenal to Win", percent: "80", odds: "1.7" }), // projde
+    s24Row({ home: "Chelsea", away: "Everton", slug: "c-e", pick: "Chelsea to Win", percent: "45", odds: "1.8" }), // pravděpodobnost
+    s24Row({ home: "Brentford", away: "Fulham", slug: "b-f", pick: "Brentford to Win", percent: null, odds: "1.8", status: "tomorrow" }), // Forebet zápas nezná
+    s24Row({ home: "Wolves", away: "Leeds", slug: "w-l", pick: "Wolves to Win", percent: "70", odds: "1.3" }), // kurz
+  ]);
+  const web = {
+    http: {
+      async getText(url) { return url.includes("scores24") ? page : forebetPage([forebetRow({ home: "Nottingham Forest", away: "Arsenal", p: [10, 20, 70], pick: "2" })]); },
+      async getJson() { return { events: [] }; },
+    },
+    browser: { expandScores24: async () => { throw new Error("nemělo být potřeba"); }, loadHtml: async () => "<html></html>" },
+  };
+  await new Pipeline({ ...web, debugDir: dir }).run({ now: new Date(Date.UTC(2026, 9, 18, 12)) });
+  const text = fs.readFileSync(path.join(dir, "zdroje-diagnostika.txt"), "utf8");
+  assert.match(text, /Scores24: 4 tipů před filtry; po filtrech 1\nZahozené tipy podle filtrů: celkem 3 \(pravděpodobnost do 60 % 1, bez pravděpodobnosti 1, kurz pod 1,50 1\)/);
+  assert.match(text, /Chelsea – Everton \[EPL\] .* \| 1 – výhra Chelsea \| kurz 1,8 \| pravděpodobnost 45 % \(Scores24\) není nad 60 %/);
+  assert.match(text, /Brentford – Fulham \[EPL\] .* \| bez pravděpodobnosti \(Forebet: zápas nenalezen\)/);
+  assert.match(text, /Wolves – Leeds \[EPL\] .* \| kurz 1,3 je pod 1,50/);
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test("droppedReport: skončené zápasy jen v souhrnu, výpis se omezí na limit a seřadí podle začátku", () => {
+  const r = (tip, reason) => ({ tip: { tipLabel: "x", odds: 1.8, oddsEstimated: false, status: "upcoming", ...tip }, reason });
+  const rejected = [
+    r({ home: "B", away: "b", leagueKey: "EPL", kickoff: new Date(KO.getTime() + 3600e3) }, { code: "lowprob", text: "nízká" }),
+    r({ home: "A", away: "a", leagueKey: "EPL", kickoff: KO }, { code: "lowprob", text: "nízká" }),
+    r({ home: "C", away: "c", leagueKey: "EPL", kickoff: KO, status: "finished" }, { code: "lowodds", text: "nízký" }),
+    r({ home: "D", away: "d", leagueKey: "EPL", kickoff: new Date(KO.getTime() + 7200e3) }, { code: "lowprob", text: "nízká" }),
+  ];
+  const lines = droppedReport(rejected, [], { limit: 2 });
+  assert.equal(lines[0], "Zahozené tipy podle filtrů: celkem 4 (pravděpodobnost do 60 % 3, kurz pod 1,50 1)");
+  assert.match(lines[1], /^ {2}A – a /); // nejbližší první
+  assert.match(lines[2], /^ {2}B – b /);
+  assert.equal(lines[3], "  … a dalších 1 (nezobrazeno)");
+  assert.equal(lines.some((l) => /C – c/.test(l)), false);
+  assert.deepEqual(droppedReport([], []), []);
 });
 
 test("Pipeline: kvůli ženské Lize mistrů se stránka ligy na Forebetu nestahuje", async () => {

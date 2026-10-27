@@ -76,7 +76,9 @@ skončené jsou ztlumené.
   (naměřeno 101) – v aplikaci se omezí na 100 %.
 * **Sloupec „Forebet“** je statistický model. Pro 1 / X / 2 a dvojitou šanci (1X, X2, 12) se bere z přehledu
   Forebetu; pro **Over/Under a oba týmy skórují** aplikace otevře stránku zápasu na Forebetu (až 25 stránek za běh)
-  a přečte z ní pravděpodobnosti gólů. Týmové totaly a handicapy Forebet nehodnotí (v tabulce „n/a“).
+  a přečte z ní pravděpodobnosti gólů. Týmové totaly a handicapy Forebet nehodnotí (v tabulce „n/a“). Jediná výjimka je **handicap 0**
+  („sázka bez remízy“): ten se dopočítá z 1 / X / 2 jako výhra týmu při vyřazení remízy, tj. `p / (p1 + p2)` (např. 45 / 28 / 27 → domácí 62,5 %,
+  hosté 37,5 %). Je to odhad, ne údaj Forebetu; ve sloupci Forebet se ukáže vždy a jako pravděpodobnost tipu se bere, jen když Scores24 procento neuvedl.
   
 * Když Forebet doporučí výsledek s pravděpodobností nad 60 %, který Scores24 nemá, přidá se jako samostatný
   tip se zdrojem „Forebet“.
@@ -210,7 +212,7 @@ API klíč ani nic osobního. Ladicí soubory ve složce `ladeni` se přepisují
 
 | Soubor | Co v něm je |
 |---|---|
-| `zdroje-diagnostika.txt` | stav zdrojů, přehled načtených stránek Forebetu (odkud, kolik zápasů, jak se našly sledované ligy), párování tipů s Forebetem (časový rozsah, nespárované tipy s nejbližším zápasem), pokrytí SofaScore |
+| `zdroje-diagnostika.txt` | stav zdrojů, **zahozené tipy a proč** (souhrn podle důvodů a až 40 nezačatých nebo živých tipů s důvodem: pravděpodobnost není nad 60 %, bez pravděpodobnosti, kurz pod 1,50, …), přehled načtených stránek Forebetu (odkud, kolik zápasů, jak se našly sledované ligy), párování tipů s Forebetem (časový rozsah, nespárované tipy s nejbližším zápasem), pokrytí SofaScore |
 | `tikety-statistiky.txt` | co se stáhlo ze SofaScore pro tikety (po zápasech) |
 
 ## Vývoj
@@ -255,6 +257,7 @@ desktop/
 | „Forebet: Cloudflare kontrola neprošla“ | Klikněte na **Ověřit Forebet**, nebo Forebet nechte být. |
 | „Forebet: … pravděpodobnosti gólů“ nahoře | Struktura stránky zápasu se liší od předpokladu – stiskněte **Ctrl + Shift + D** a pošlete diagnostiku. |
 | Forebet se u většiny tipů nezobrazuje | Stiskněte **Ctrl + Shift + D**: v `zdroje-diagnostika.txt` je vidět, kolik tipů se s Forebetem spárovalo a u nespárovaných nejbližší zápas (rozdílné jméno týmu, čas nebo liga). |
+| Chybí konkrétní zápas, který Scores24 nabízí | Stiskněte **Ctrl + Shift + D** a v části „Zahozené tipy podle filtrů“ najděte zápas: je tam uvedený důvod (např. „pravděpodobnost 55 % (Forebet) není nad 60 %“ nebo „bez pravděpodobnosti (Forebet: zápas nenalezen)“). |
 | Windows SmartScreen aplikaci blokuje | *Další informace → Přesto spustit* (aplikace není podepsaná). |
 | Zápasy mají posunutý čas | Časy se převádějí z UTC do `Europe/Prague`; zkontrolujte systémové datum a čas. |
 | „Struktura webu se změnila“ | Weby se mění; parsery jsou v `desktop/src/scrapers/`, testy ukazují očekávaný tvar dat. |

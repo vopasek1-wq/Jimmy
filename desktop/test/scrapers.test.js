@@ -49,6 +49,21 @@ test("Scores24: řádek bez procent je kandidát bez pravděpodobnosti", () => {
   assert.equal(t.probSource, null);
 });
 
+test("Scores24: číslo u ikony ohně (bez %) je čítač, ne procento", () => {
+  // živě naměřeno: Venezia – Inter „13“ i skončené zápasy „82“ měly ikonu #fire a žádné %
+  const hot = firstRow([s24Row({ home: "Venezia", away: "Inter", status: "tomorrow", pick: "Both Teams to Score –  (Yes)", percent: "13", odds: "1.53", pctSign: false, icon: "fire" })]);
+  assert.equal(hot.percent, null);
+  assert.equal(hot.odds, 1.53);
+  assert.ok(hot.pickLabel.includes("Both Teams to Score"));
+  const t = scores24.rowToTip(hot, NOW);
+  assert.equal(t.probability, null); // procento doplní případně Forebet
+  assert.equal(t.probSource, null);
+  assert.equal(firstRow([s24Row({ home: "Dortmund", away: "Bremen", status: "Ended", percent: "82", pctSign: false, icon: "fire" })]).percent, null);
+  // skutečné procento zůstává, i kdyby u něj byl oheň, pokud má „%“
+  assert.equal(firstRow([s24Row({ home: "A", away: "B", percent: "90", icon: "fire" })]).percent, 90);
+  assert.equal(firstRow([s24Row({ home: "A", away: "B", percent: "93" })]).percent, 93);
+});
+
 test("Scores24: americké kurzy a procenta nad 100", () => {
   assert.equal(firstRow([s24Row({ home: "A", away: "B", odds: "-143" })]).odds, 1.7);
   const r = firstRow([s24Row({ home: "A", away: "B", percent: "101" })]); // živě naměřeno: Scores24 ukázal 101

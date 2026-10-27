@@ -1,7 +1,7 @@
 // Řízení celého stahování: zdroje → sloučení → povinné filtry → obohacení → výsledek.
 //
 //   Scores24  (tipy + procenta + kurzy)  ┐
-//   Forebet   (pravděpodobnosti 1/X/2)   ├→ combine() → applyFilters() → SofaScore (čas, stav, skóre)
+//   Forebet   (pravděpodobnosti 1/X/2)   ├→ combine() → splitByFilters() → SofaScore (čas, stav, skóre)
 //   SofaScore (detaily zápasů)           ┘
 //
 // Každý zdroj může selhat samostatně – chyba se zapíše do stavu zdroje a ostatní pokračují. Běh se
@@ -11,7 +11,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const config = require("./config");
-const { applyFilters, mayPass, isWomens } = require("./filters");
+const { splitByFilters, mayPass, isWomens, REASON_NAMES } = require("./filters");
 const { NetworkError, SourceError } = require("./http");
 const { BrowserUnavailable } = require("./browser");
 const { evaluate, forebetProbability, goalsProbability, resultMarket } = require("./markets");
@@ -89,6 +89,36 @@ function forebetCoverage(tips, forebet, { sample = 12 } = {}) {
   return lines;
 }
 
+/** Trhy, které Forebet z přehledu nepokryje, ale jeho stránka zápasu ano: góly celého zápasu a BTTS. */
+const needsGoalsPage = (code) => code === "BTTS" || code === "NOBTTS" || /^[OU]\d+(?:\.\d+)?$/.test(code);
+
+/**
+ * Tipy, které nepřešly povinnými filtry, i s důvodem (pro ladění: „proč tam zápas X chybí“). Skončené zápasy se jen
+ * započítají do souhrnu, vypisují se jen nezačaté a živé, nejbližší první. U tipu bez pravděpodobnosti se přidá, co o něm ví Forebet.
+ */
+function droppedReport(rejected, forebet, { limit = 40 } = {}) {
+  if (!rejected.length) return [];
+  const counts = new Map();
+  for (const r of rejected) counts.set(r.reason.code, (counts.get(r.reason.code) || 0) + 1);
+  const summary = [...counts].map(([code, n]) => `${REASON_NAMES[code] || code} ${n}`).join(", ");
+  const lines = [`Zahozené tipy podle filtrů: celkem ${rejected.length} (${summary})`];
+  const open = rejected.filter((r) => r.tip.status !== FINISHED).sort((a, b) => a.tip.kickoff - b.tip.kickoff);
+  for (const { tip: t, reason } of open.slice(0, limit)) {
+    let text = reason.text;
+    if (reason.code === "noprob") {
+      const m = forebet ? findForebet(t.home, t.away, t.leagueKey, t.kickoff, forebet) : null;
+      text += !forebet ? " (Forebet bez dat)"
+        : !m ? " (Forebet: zápas nenalezen)"
+          : needsGoalsPage(t.tipCode) ? " (Forebet: zápas nalezen, ale pravděpodobnost gólů se nepodařilo přečíst)"
+            : " (Forebet pro tento trh pravděpodobnost nedává)";
+    }
+    const odds = t.odds === null || t.odds === undefined ? "bez kurzu" : `kurz ${t.oddsEstimated ? "~" : ""}${String(t.odds).replace(".", ",")}`;
+    lines.push(`  ${t.home} – ${t.away} [${t.leagueKey}] ${iso(t.kickoff)} | ${t.tipLabel} | ${odds} | ${text}`);
+  }
+  if (open.length > limit) lines.push(`  … a dalších ${open.length - limit} (nezobrazeno)`);
+  return lines;
+}
+
 /** Spojí tipy ze Scores24 s pravděpodobnostmi z Forebetu a přidá vlastní tipy Forebetu. */
 function combine(s24, forebet, now) {
   const tips = s24 ? [...s24.tips] : [];
@@ -138,9 +168,6 @@ function combine(s24, forebet, now) {
 // --- celý běh ------------------------------------------------------------------------------------------------
 
 const setStatus = (result, name, state, message = "") => { result.statuses[name] = { name, state, message }; };
-
-/** Trhy, které Forebet z přehledu nepokryje, ale jeho stránka zápasu ano: góly celého zápasu a BTTS. */
-const needsGoalsPage = (code) => code === "BTTS" || code === "NOBTTS" || /^[OU]\d+(?:\.\d+)?$/.test(code);
 
 class Pipeline {
   constructor({ http, browser, debugDir = null, goalsCache = null }) {
@@ -218,7 +245,8 @@ class Pipeline {
     lap("Forebet");
 
     // 3) sloučení + povinné filtry
-    let tips = applyFilters(combine(s24, forebet, now));
+    const { passed, rejected } = splitByFilters(combine(s24, forebet, now));
+    let tips = passed;
 
     // 4) SofaScore – přesný čas, stav, skóre
     const sofa = new SofaScoreClient(this.http);
@@ -232,12 +260,12 @@ class Pipeline {
 
     lap("SofaScore");
     result.tips = tips.sort((a, b) => a.kickoff - b.kickoff || b.probability - a.probability);
-    this._writeDiagnostics(result, { s24, forebet, forebetReport, goalsInfo, sofa, stages });
+    this._writeDiagnostics(result, { s24, forebet, forebetReport, goalsInfo, sofa, stages, rejected });
     return this._finish(result);
   }
 
   /** Souhrn posledního stahování do `ladeni/zdroje-diagnostika.txt` (přepisuje se): stav zdrojů, párování Forebetu, pokrytí SofaScore. */
-  _writeDiagnostics(result, { s24, forebet, forebetReport = [], goalsInfo, sofa, stages = {} }) {
+  _writeDiagnostics(result, { s24, forebet, forebetReport = [], goalsInfo, sofa, stages = {}, rejected = [] }) {
     if (!this.debugDir) return;
     try {
       const lines = [`Stahování tipů – ${new Date().toISOString()}`, "", "Stav zdrojů:"];
@@ -245,6 +273,7 @@ class Pipeline {
       const total = Object.values(stages).reduce((a, b) => a + b, 0);
       lines.push(`Doba kroků: ${Object.entries(stages).map(([k, v]) => `${k} ${v} s`).join(" · ")} · celkem ${Math.round(total * 10) / 10} s`);
       lines.push("", `Scores24: ${s24 ? s24.tips.length : 0} tipů před filtry; po filtrech ${result.tips.length}`);
+      lines.push(...droppedReport(rejected, forebet));
       if (forebet) {
         lines.push(...forebetCoverage(s24 ? s24.tips : [], forebet));
         if (forebetReport.length) lines.push("Stránky Forebetu:", ...forebetReport.map((l) => `  ${l}`));
@@ -333,4 +362,4 @@ async function updateResults(db, http, { progress = () => {}, maxAgeDays = 14, n
   return { done, message: `${message}.` };
 }
 
-module.exports = { Pipeline, combine, updateResults, settleFinished, forebetCoverage };
+module.exports = { Pipeline, combine, updateResults, settleFinished, forebetCoverage, droppedReport };
