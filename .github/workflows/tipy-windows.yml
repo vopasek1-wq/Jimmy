@@ -59,8 +59,7 @@ jobs:
           Stop-Process -Id $p.Id -Force
           Write-Host "Aplikace běží a databáze je vytvořená."
 
-      # Jedno průběžné vydání „tipy-latest“ s jedním souborem FotbalTipy.exe. Neoznačuje se jako „Latest“,
-      # aby nepřebilo odkaz /releases/latest ostatních aplikací v tomto repozitáři (např. JIMMY.exe).
+      # Jedno průběžné vydání „tipy-latest“ s jedním souborem FotbalTipy.exe (neoznačuje se jako „Latest“).
       # Stálý odkaz: https://github.com/<vlastník>/<repozitář>/releases/download/tipy-latest/FotbalTipy.exe
       - name: Vydání na GitHubu
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/claude/cool-ride-77had5' || github.event_name == 'workflow_dispatch'

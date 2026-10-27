@@ -2,8 +2,8 @@
   "name": "fotbalove-tipy",
   "productName": "Fotbalové tipy",
   "version": "1.0.0",
-  "description": "Fotbalové tipy – desktopová aplikace pro Windows (Electron), vzhled sjednocený s J.I.M.M.Y.",
-  "author": "Jimmy",
+  "description": "Fotbalové tipy – desktopová aplikace pro Windows (Electron)",
+  "author": "Fotbalové tipy",
   "private": true,
   "main": "main.js",
   "scripts": {
@@ -19,9 +19,9 @@
     "electron-builder": "^26.15.3"
   },
   "build": {
-    "appId": "cz.jimmy.fotbalovetipy",
+    "appId": "cz.fotbalovetipy",
     "productName": "Fotbalové tipy",
-    "copyright": "© 2026 J.I.M.M.Y.",
+    "copyright": "© 2026 Fotbalové tipy",
     "directories": {
       "output": "dist",
       "buildResources": "build"
