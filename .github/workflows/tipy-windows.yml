@@ -1,0 +1,83 @@
+name: Fotbalové tipy – Windows build
+
+on:
+  push:
+    branches: ["**"]
+    paths: ["desktop/**", ".github/workflows/tipy-windows.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write # vydání (Releases) s hotovým FotbalTipy.exe
+
+concurrency:
+  group: tipy-windows-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: desktop
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+
+      - name: Instalace závislostí
+        run: npm ci
+
+      # Číslo sestavení = poslední část verze (1.0.<číslo běhu>). Aplikace podle něj pozná, že je k dispozici novější
+      # vydání „tipy-latest“ (v jeho názvu je stejné číslo), a nabídne stažení.
+      - name: Číslo sestavení
+        run: npm version "1.0.${{ github.run_number }}" --no-git-tag-version --allow-same-version
+
+      - name: Testy
+        run: npm test
+
+      - name: Sestavení (portable .exe)
+        run: npm run dist
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+      # Aplikace musí naběhnout a založit databázi (ověří i node:sqlite v zabalené aplikaci).
+      - name: Zkušební spuštění aplikace
+        shell: pwsh
+        run: |
+          $data = Join-Path $env:RUNNER_TEMP "tipy-data"
+          $env:TIPSTER_DATA_DIR = $data
+          $exe = Join-Path $PWD "dist\win-unpacked\FotbalTipy.exe"
+          $p = Start-Process -FilePath $exe -PassThru
+          Start-Sleep -Seconds 20
+          if ($p.HasExited) { throw "Aplikace se ukončila s kódem $($p.ExitCode)" }
+          if (-not (Test-Path (Join-Path $data "tipy.sqlite3"))) { throw "Aplikace nevytvořila databázi" }
+          Stop-Process -Id $p.Id -Force
+          Write-Host "Aplikace běží a databáze je vytvořená."
+
+      # Jedno průběžné vydání „tipy-latest“ s jedním souborem FotbalTipy.exe. Neoznačuje se jako „Latest“,
+      # aby nepřebilo odkaz /releases/latest ostatních aplikací v tomto repozitáři (např. JIMMY.exe).
+      # Stálý odkaz: https://github.com/<vlastník>/<repozitář>/releases/download/tipy-latest/FotbalTipy.exe
+      - name: Vydání na GitHubu
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/claude/cool-ride-77had5' || github.event_name == 'workflow_dispatch'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: tipy-latest
+        run: |
+          cp dist/FotbalTipy-*-portable.exe dist/FotbalTipy.exe
+          {
+            echo "Sestaveno $(date -u +'%d.%m.%Y %H:%M') UTC z commitu ${GITHUB_SHA::7} (běh č. ${{ github.run_number }})."
+            echo
+            echo "**Změna:** $(git log -1 --pretty=%s)"
+            echo
+            echo "Stáhni **FotbalTipy.exe** a spusť – bez instalace. Pokud Windows SmartScreen zobrazí varování: Další informace → Přesto spustit."
+          } > notes.md
+          # nové sestavení nahradí předchozí
+          gh release delete "$TAG" --cleanup-tag --yes 2>/dev/null || true
+          gh release create "$TAG" dist/FotbalTipy.exe --target "$GITHUB_SHA" \
+            --title "Fotbalové tipy – sestavení ${{ github.run_number }}" --notes-file notes.md --latest=false
