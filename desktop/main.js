@@ -105,7 +105,7 @@ ipcMain.on("win:close", (e) => senderWindow(e)?.close());
 ipcMain.on("shell:open-external", (_e, url) => { if (isHttpUrl(url)) shell.openExternal(String(url)); });
 ipcMain.handle("app:info", () => ({
   version: app.getVersion(), dataDir: app.getPath("userData"),
-  leagues: config.LEAGUES.filter((l) => l.enabled).map((l) => ({ key: l.key, short: l.short, nameCs: l.nameCs })),
+  leagues: config.LEAGUES.filter((l) => l.enabled).map((l) => ({ key: l.key, group: l.group, short: l.short, nameCs: l.nameCs })),
   limits: { minProbability: config.MIN_PROBABILITY, minOdds: config.MIN_ODDS, highProbability: config.HIGH_PROBABILITY },
 }));
 

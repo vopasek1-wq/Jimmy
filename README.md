@@ -63,7 +63,9 @@ Tip se objeví, **jen když platí všechno** z následujícího (konstanty jsou
 
 * soutěž je mezi sledovanými – Premier League, La Liga, Serie A, Bundesliga, Ligue 1, Liga mistrů,
   Evropská liga, Konferenční liga, Eredivisie, Liga Portugal, belgická Pro League, Süper Lig,
-  skotská Premiership a česká 1. liga (seznam upravíte v `LEAGUES`),
+  skotská Premiership a česká 1. liga, k tomu domácí poháry těchto zemí (FA Cup, EFL Cup, Copa del Rey, Coppa Italia, DFB-Pokal,
+  Coupe de France, KNVB Beker, Taça de Portugal a Taça da Liga, belgický, turecký, český pohár, Scottish Cup a Scottish League Cup;
+  v levém sloupci jsou pod svou zemí). Ženské soutěže se nesledují (seznam upravíte v `LEAGUES`),
 * pravděpodobnost je **striktně větší než 60 %**,
 * kurz je **alespoň 1,50**.
 * nejde o **ženský zápas** (týmy typu „… W“, „… Women“, „Femenina“, „Frauen“ se vyřazují; dříve uložené se při spuštění z historie smažou).

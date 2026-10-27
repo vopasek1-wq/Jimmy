@@ -274,7 +274,7 @@
     const tomorrow = nextDay(today);
     const list = tips.filter((t) => {
       if (!applyDayFilter(t, today, tomorrow)) return false;
-      if (state.league && t.leagueKey !== state.league) return false;
+      if (!inLeagueFilter(t.leagueKey)) return false;
       if (state.live) {
         const kind = matchState(t, now).kind;
         const playing = kind === "live" || kind === "started";
@@ -754,7 +754,7 @@
     ].join("");
     renderIcons();
 
-    const list = sortList(h.tips.filter((t) => matchesQuery(t) && (!state.league || t.leagueKey === state.league)), HIST_SORT, state.hsort);
+    const list = sortList(h.tips.filter((t) => matchesQuery(t) && inLeagueFilter(t.leagueKey)), HIST_SORT, state.hsort);
     if (!list.some((t) => t.id === state.hselected)) state.hselected = null;
     histBody.innerHTML = list.map((t) => {
       const ov = OUTCOME_VIEW[t.outcome];
@@ -836,7 +836,7 @@
 
   function renderLiveList() {
     renderCats();
-    const shown = liveOfOverview().filter((m) => !state.league || m.leagueKey === state.league);
+    const shown = liveOfOverview().filter((m) => inLeagueFilter(m.leagueKey));
     $("#live-note").textContent = live.loaded ? `${shown.length} ${shown.length === 1 ? "zápas" : shown.length < 5 && shown.length ? "zápasy" : "zápasů"}` : "";
     if (!shown.length) {
       liveListEl.innerHTML = `<p class="empty">${esc(live.error ? `Živé zápasy se nepodařilo načíst: ${live.error}` : !live.loaded ? "Načítám živé zápasy…"
@@ -978,6 +978,9 @@
   // Vlajky (flag-icons, MIT; soubory ve vendor/flags): emoji vlajky Windows neukazuje. Poháry nejsou země, ty zůstávají se zkratkou.
   const COUNTRY_FLAG = { EPL: "gb-eng", LALIGA: "es", SERIEA: "it", BUNDESLIGA: "de", LIGUE1: "fr", EREDIVISIE: "nl", PORTUGAL: "pt", BELGIE: "be", TURECKO: "tr", SKOTSKO: "gb-sct", CESKO: "cz" };
   const leagueLabel = (l) => (String(l.nameCs || "").includes(" – ") ? l.nameCs.split(" – ")[0] : l.short);
+  // Domácí poháry jsou v levém sloupci pod svou zemí: filtr je skupina (klíč hlavní ligy země), ne jednotlivá soutěž.
+  const groupOfKey = new Map();
+  const inLeagueFilter = (leagueKey) => !state.league || (groupOfKey.get(leagueKey) || leagueKey) === state.league;
 
   /** Počty zápasů podle soutěže pro právě otevřenou záložku. */
   function leagueCounts() {
@@ -991,7 +994,7 @@
       const tomorrow = nextDay(today);
       list = (state.payload?.tips || []).filter((t) => applyDayFilter(t, today, tomorrow) && matchesQuery(t));
     }
-    for (const x of list) counts[x.leagueKey] = (counts[x.leagueKey] || 0) + 1;
+    for (const x of list) { const g = groupOfKey.get(x.leagueKey) || x.leagueKey; counts[g] = (counts[g] || 0) + 1; }
     return { counts, total: list.length };
   }
 
@@ -1000,7 +1003,7 @@
     const { counts, total } = leagueCounts();
     const item = (key, name, badge, count, title = name) => `<button type="button" class="cat${state.league === key ? " is-active" : ""}${count ? "" : " is-empty"}" data-league="${esc(key)}" title="${esc(title)}" aria-pressed="${state.league === key}">
       ${badge.startsWith("flag:") ? `<span class="cat__badge cat__badge--flag"><img src="vendor/flags/${esc(badge.slice(5))}.svg" alt="" width="26" height="26"></span>` : `<span class="cat__badge">${esc(badge)}</span>`}<span class="cat__name">${esc(name)}</span><span class="cat__count">${count}</span></button>`;
-    catsEl.innerHTML = `<div class="cats__title">Soutěže</div>${item("", "Všechny soutěže", "★", total)}${state.leagues.map((l) => item(l.key, leagueLabel(l), COUNTRY_FLAG[l.key] ? `flag:${COUNTRY_FLAG[l.key]}` : badgeOf(l.short), counts[l.key] || 0, l.nameCs || l.short)).join("")}`;
+    catsEl.innerHTML = `<div class="cats__title">Soutěže</div>${item("", "Všechny soutěže", "★", total)}${state.leagues.filter((l) => l.group === l.key).map((l) => item(l.key, leagueLabel(l), COUNTRY_FLAG[l.key] ? `flag:${COUNTRY_FLAG[l.key]}` : badgeOf(l.short), counts[l.key] || 0, state.leagues.filter((x) => x.group === l.key).map((x) => (x.key === l.key ? x.nameCs || x.short : x.short)).join(", "))).join("")}`;
   }
 
   catsEl.addEventListener("click", (e) => {
@@ -1573,7 +1576,9 @@
       }
       state.limits = { ...state.limits, ...info.limits };
       state.leagues = info.leagues || [];
-      if (state.league && !state.leagues.some((l) => l.key === state.league)) state.league = "";
+      groupOfKey.clear();
+      for (const l of state.leagues) groupOfKey.set(l.key, l.group || l.key);
+      if (state.league && !state.leagues.some((l) => l.key === state.league && l.group === l.key)) state.league = "";
     }
     const cached = await desktop.tips.cached();
     if (cached.ok) state.payload = cached.data;
