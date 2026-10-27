@@ -197,11 +197,10 @@ skrytém okně. Starý přehled `/football-predictions` (jen první země podle 
 objeví se pruh s tlačítkem **Ověřit Forebet**: otevře se okno, ve kterém kontrolu dokončíte (až 90 s), a aplikace
 si ověření pamatuje.
 
-> **Poctivě k Forebetu:** Cloudflare při vývoji nepustil Forebet ani skutečný prohlížeč z datacentrové IP.
-> Seznam zápasů (1 / X / 2) se u uživatele na běžném domácím internetu načetl (130 zápasů), ale **čtení
-> pravděpodobností gólů ze stránky zápasu nebylo ověřeno na živé stránce** – hledá se podle viditelného textu
-> („Over 2.5 … 55 %“, „Both teams to score … Yes … No …“), ne podle tříd. Když na stránce zápasu nic takového
-> nenajde, ukáže se nahoře upozornění (`parseGoals` v `desktop/src/scrapers/forebet.js`).
+> **Ověřeno na živých stránkách:** Cloudflare při vývoji nepustil Forebet z datacentrové IP, ale u uživatele na domácím
+> internetu se seznamy zápasů i stránky zápasů načítají (diagnostika z verze 1.0.118: góly u 7 z 7 zápasů). Pravděpodobnosti
+> gólů se čtou z viditelného textu („Over 2.5 … 55 %“, „Both teams to score … Yes … No …“), ne podle tříd. Když na stránce
+> zápasu nic takového nenajde, ukáže se nahoře upozornění (`parseGoals` v `desktop/src/scrapers/forebet.js`).
 
 ### Diagnostika pro vývojáře
 

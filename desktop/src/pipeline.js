@@ -11,7 +11,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const config = require("./config");
-const { applyFilters, mayPass } = require("./filters");
+const { applyFilters, mayPass, isWomens } = require("./filters");
 const { NetworkError, SourceError } = require("./http");
 const { BrowserUnavailable } = require("./browser");
 const { evaluate, forebetProbability, goalsProbability, resultMarket } = require("./markets");
@@ -182,8 +182,8 @@ class Pipeline {
     // 2) Forebet – pravděpodobnosti (volitelný zdroj)
     try {
       const scraper = new ForebetScraper(this.http, this.browser);
-      // Stránky lig na Forebetu se načítají jen pro ligy, které Scores24 právě nabízí.
-      const leagues = new Set([...s24.rows, ...s24.tips].map((x) => x.leagueKey).filter(Boolean));
+      // Stránky lig na Forebetu se načítají jen pro ligy, které Scores24 právě nabízí (ženské zápasy se nesledují, Forebet je nemá).
+      const leagues = new Set([...s24.rows, ...s24.tips].filter((x) => !isWomens(x)).map((x) => x.leagueKey).filter(Boolean));
       forebet = await scraper.fetch(progress, { interactive: interactiveForebet, leagues });
       forebetReport = scraper.report;
       let message = `${forebet.length} zápasů`;

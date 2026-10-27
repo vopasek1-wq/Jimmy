@@ -60,6 +60,26 @@ test("Pipeline: po stažení vznikne zdroje-diagnostika.txt se stavem zdrojů, p
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
+test("Pipeline: kvůli ženské Lize mistrů se stránka ligy na Forebetu nestahuje", async () => {
+  const dir = tmp();
+  const asked = [];
+  const page = s24Page([
+    s24Block("England", "Premier League", "england-premier-league", 1, [s24Row({ home: "Nottingham Forest", away: "Arsenal", pick: "Arsenal to Win", percent: "80", odds: "1.7" })]),
+    s24Block("Europe", "UEFA Champions League", "uefa-champions-league", 1, [s24Row({ home: "Chelsea (W)", away: "Roma (W)", pick: "Chelsea (W) to Win", percent: "80", odds: "1.7" })]),
+  ]);
+  const web = {
+    http: {
+      async getText(url) { asked.push(url); return url.includes("scores24") ? page : forebetPage([forebetRow({ home: "Nottingham Forest", away: "Arsenal", p: [10, 20, 70], pick: "2" })]); },
+      async getJson() { return { events: [] }; },
+    },
+    browser: { expandScores24: async () => { throw new Error("nemělo být potřeba"); }, loadHtml: async () => "<html></html>" },
+  };
+  await new Pipeline({ ...web, debugDir: dir }).run({ now: new Date(Date.UTC(2026, 9, 18, 12)) });
+  assert.ok(asked.some((u) => u.includes("forebet")));
+  assert.equal(asked.some((u) => /champions-league/.test(u) && u.includes("forebet")), false);
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
 test("Forebet: když se na stránce nenajde žádný zápas, skončí chybou a nic se neukládá; stránka kontroly robota je Cloudflare", async () => {
   const html = '<html><body><div class="novyZapas"><span class="tym">A</span> <span class="tym">B</span></div><time datetime="2026-10-18 15:30">x</time></body></html>';
   const scraper = new ForebetScraper({ getText: async () => html }, { loadHtml: async () => html });
