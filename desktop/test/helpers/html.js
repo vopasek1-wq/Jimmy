@@ -3,8 +3,8 @@
 "use strict";
 
 function s24Row({ home, away, time = "15:30", status = "today", pick = "Arsenal to Win", percent = "86", odds = "1.71",
-  score = ["-", "-"], slug = "a-b", pctSign = true }) {
-  const pct = percent === null ? "" : `<div class="x1"><svg><use xlink:href="#finger-up"></use></svg><span>${percent}${pctSign ? "<!-- -->%" : ""}</span></div>`;
+  score = ["-", "-"], slug = "a-b", pctSign = true, icon = "finger-up" }) {
+  const pct = percent === null ? "" : `<div class="x1"><svg><use xlink:href="#${icon}"></use></svg><span>${percent}${pctSign ? "<!-- -->%" : ""}</span></div>`;
   return `
 <a class="link r1" href="/en/soccer/m-17-10-2026-${slug}-prediction">
   <div class="r2">
