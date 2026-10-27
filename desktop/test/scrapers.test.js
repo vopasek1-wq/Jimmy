@@ -325,6 +325,17 @@ test("Forebet: odkazy na ligy z nabídky a výběr stránek sledovaných lig", (
   assert.deepEqual(forebet.leagueTargets(links, ["NEZNAMA"]), []);
 });
 
+test("Forebet: poháry a evropské soutěže se bez odkazu v nabídce zkusí podle ověřených adres", () => {
+  // živě naměřeno: v nabídce Forebetu poháry nejsou (EFLCUP=NENALEZENO), proto se jejich stránky načtou podle odhadu
+  const t = forebet.leagueTargets([], ["EFLCUP", "FACUP", "DFBPOKAL", "COPADELREY", "COPPAITALIA", "COUPEFR", "UCL", "UEL", "UECL"]);
+  assert.deepEqual(t.map((x) => [x.key, x.candidates[0].from, x.candidates[0].force]), ["EFLCUP", "FACUP", "DFBPOKAL", "COPADELREY", "COPPAITALIA", "COUPEFR", "UCL", "UEL", "UECL"].map((k) => [k, "odhad", true]));
+  const url = (k) => t.find((x) => x.key === k).candidates[0].url;
+  assert.equal(url("EFLCUP"), "https://www.forebet.com/en/football-tips-and-predictions-for-england/efl-cup");
+  assert.equal(url("DFBPOKAL"), "https://www.forebet.com/en/football-tips-and-predictions-for-germany/dfb-pokal");
+  assert.equal(url("UCL"), "https://www.forebet.com/en/predictions-europe/uefa-champions-league");
+  assert.equal(url("UECL"), "https://www.forebet.com/en/predictions-europe/uefa-europa-conference-league");
+});
+
 test("Forebet: přehled dnes → stránky sledovaných lig, zápasy mají ligu podle stránky", async () => {
   const today = withMenu(forebetPage([eplRow("Tirana", "Vllaznia", [50, 30, 20])], "Alb1"), "england/premier-league", "italy/serie-a");
   const epl = forebetPage([eplRow("Arsenal", "Everton", [60, 25, 15], "/en/football/matches/arsenal-everton-1")], "Zzz");

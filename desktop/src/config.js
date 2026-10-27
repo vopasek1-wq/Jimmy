@@ -17,7 +17,8 @@ const SCORES24_URL = `${SCORES24_BASE}/en/predictions/soccer`;
 const FOREBET_BASE = "https://www.forebet.com/en";
 const FOREBET_TODAY_URL = `${FOREBET_BASE}/football-tips-and-predictions-for-today`;
 const FOREBET_URL = `${FOREBET_BASE}/football-predictions`;
-const forebetLeagueUrl = (path) => `${FOREBET_BASE}/football-tips-and-predictions-for-${path}`;
+// Evropské soutěže má Forebet na /en/predictions-europe/<soutěž>, ostatní na /en/football-tips-and-predictions-for-<země>/<liga>.
+const forebetLeagueUrl = (path) => (/^predictions-/.test(path) ? `${FOREBET_BASE}/${path}` : `${FOREBET_BASE}/football-tips-and-predictions-for-${path}`);
 const SOFASCORE_API = "https://www.sofascore.com/api/v1";
 const SOFASCORE_WEB = "https://www.sofascore.com";
 // Průběžné vydání s hotovou aplikací (vytváří ho workflow .github/workflows/tipy-windows.yml): kontrola nové verze a stažení.
@@ -48,12 +49,12 @@ const LEAGUES = [
   { key: "LIGUE1", nameCs: "Francie – Ligue 1", short: "Ligue 1", sofascoreId: 34,
     slugRe: /^france-ligue-1-?$/i, countryRe: /^France$/i, nameRe: /^Ligue 1$/i, forebetTags: ["Fra1", "Fr1"], forebetPaths: [/^france\/ligue-?1$/], forebetGuess: "france/ligue1", forebetCountry: "france" },
   { key: "UCL", nameCs: "Liga mistrů UEFA", short: "Liga mistrů", sofascoreId: 7,
-    slugRe: /uefa-champions-league$/i, countryRe: EUROPE, nameRe: /^(UEFA )?Champions League$/i, forebetTags: ["UCL", "CL"], forebetPaths: [/(^|\/)(uefa-)?champions-league$/], forebetGuess: ["europe/champions-league", "uefa/champions-league"] },
+    slugRe: /uefa-champions-league$/i, countryRe: EUROPE, nameRe: /^(UEFA )?Champions League$/i, forebetTags: ["UCL", "CL"], forebetPaths: [/(^|\/)(uefa-)?champions-league$/], forebetGuess: "predictions-europe/uefa-champions-league" },
   { key: "UEL", nameCs: "Evropská liga UEFA", short: "Evropská liga", sofascoreId: 679,
-    slugRe: /uefa-europa-league$/i, countryRe: EUROPE, nameRe: /^(UEFA )?Europa League$/i, forebetTags: ["UEL", "EL"], forebetPaths: [/(^|\/)(uefa-)?europa-league$/], forebetGuess: ["europe/europa-league", "uefa/europa-league"] },
+    slugRe: /uefa-europa-league$/i, countryRe: EUROPE, nameRe: /^(UEFA )?Europa League$/i, forebetTags: ["UEL", "EL"], forebetPaths: [/(^|\/)(uefa-)?europa-league$/], forebetGuess: "predictions-europe/uefa-europa-league" },
   { key: "UECL", nameCs: "Konferenční liga UEFA", short: "Konferenční liga", sofascoreId: 17015,
     slugRe: /uefa-(europa-)?conference-league$/i, countryRe: EUROPE, nameRe: /^(UEFA )?(Europa )?Conference League$/i,
-    forebetTags: ["UECL", "UEC", "ECL"], forebetPaths: [/(^|\/)(uefa-)?(europa-)?conference-league$/], forebetGuess: ["europe/conference-league", "uefa/conference-league"] },
+    forebetTags: ["UECL", "UEC", "ECL"], forebetPaths: [/(^|\/)(uefa-)?(europa-)?conference-league$/], forebetGuess: "predictions-europe/uefa-europa-conference-league" },
   { key: "EREDIVISIE", nameCs: "Nizozemsko – Eredivisie", short: "Eredivisie", sofascoreId: 37,
     slugRe: /^netherlands-eredivisie$/i, countryRe: /^Netherlands$/i, nameRe: /^Eredivisie$/i, forebetTags: ["Ned1", "Nl1"], forebetPaths: [/^netherlands\/eredivisie$/], forebetGuess: "netherlands/eredivisie" },
   { key: "PORTUGAL", nameCs: "Portugalsko – Liga Portugal", short: "Liga Portugal", sofascoreId: 238,
@@ -69,17 +70,17 @@ const LEAGUES = [
     slugRe: /^czech-republic-1-liga$/i, countryRe: /^Czech/i, nameRe: /^1\.? ?Liga$/i, forebetTags: ["Cze1", "Cz1"], forebetPaths: [/^czech-rep\/(chance-liga|1-liga|fortuna-liga)$/], forebetGuess: "czech-rep/chance-liga" },
   // Domácí poháry zemí výše: v levém sloupci jsou pod svou zemí (`group` = klíč hlavní ligy). Adresy na Forebetu se hledají jen v jeho nabídce.
   { key: "FACUP", group: "EPL", nameCs: "Anglie – FA Cup", short: "FA Cup", sofascoreId: 19,
-    slugRe: /^england-fa-cup$/i, countryRe: /^England$/i, nameRe: /^FA Cup$/i, forebetTags: [], forebetPaths: [/^england\/fa-cup$/] },
+    slugRe: /^england-fa-cup$/i, countryRe: /^England$/i, nameRe: /^FA Cup$/i, forebetTags: [], forebetPaths: [/^england\/fa-cup$/], forebetGuess: "england/fa-cup" },
   { key: "EFLCUP", group: "EPL", nameCs: "Anglie – EFL Cup", short: "EFL Cup", sofascoreId: 21,
-    slugRe: /^england-(efl|league)-cup$/i, countryRe: /^England$/i, nameRe: /^(EFL|League|Carabao) Cup$/i, forebetTags: [], forebetPaths: [/^england\/(efl-cup|league-cup|carabao-cup)$/] },
+    slugRe: /^england-(efl|league)-cup$/i, countryRe: /^England$/i, nameRe: /^(EFL|League|Carabao) Cup$/i, forebetTags: [], forebetPaths: [/^england\/(efl-cup|league-cup|carabao-cup)$/], forebetGuess: "england/efl-cup" },
   { key: "COPADELREY", group: "LALIGA", nameCs: "Španělsko – Copa del Rey", short: "Copa del Rey", sofascoreId: 329,
-    slugRe: /^spain-copa-del-rey$/i, countryRe: /^Spain$/i, nameRe: /^Copa del Rey$/i, forebetTags: [], forebetPaths: [/^spain\/copa-del-rey$/] },
+    slugRe: /^spain-copa-del-rey$/i, countryRe: /^Spain$/i, nameRe: /^Copa del Rey$/i, forebetTags: [], forebetPaths: [/^spain\/copa-del-rey$/], forebetGuess: "spain/copa-del-rey" },
   { key: "COPPAITALIA", group: "SERIEA", nameCs: "Itálie – Coppa Italia", short: "Coppa Italia", sofascoreId: 328,
-    slugRe: /^italy-coppa-italia$/i, countryRe: /^Italy$/i, nameRe: /^Coppa Italia$/i, forebetTags: [], forebetPaths: [/^italy\/coppa-italia$/] },
+    slugRe: /^italy-coppa-italia$/i, countryRe: /^Italy$/i, nameRe: /^Coppa Italia$/i, forebetTags: [], forebetPaths: [/^italy\/coppa-italia$/], forebetGuess: "italy/coppa-italia" },
   { key: "DFBPOKAL", group: "BUNDESLIGA", nameCs: "Německo – DFB-Pokal", short: "DFB-Pokal", sofascoreId: 217,
-    slugRe: /^germany-dfb-pokal$/i, countryRe: /^Germany$/i, nameRe: /^DFB[ -]Pokal$/i, forebetTags: ["DFB"], forebetPaths: [/^germany\/dfb-pokal$/] },
+    slugRe: /^germany-dfb-pokal$/i, countryRe: /^Germany$/i, nameRe: /^DFB[ -]Pokal$/i, forebetTags: ["DFB"], forebetPaths: [/^germany\/dfb-pokal$/], forebetGuess: "germany/dfb-pokal" },
   { key: "COUPEFR", group: "LIGUE1", nameCs: "Francie – Coupe de France", short: "Coupe de France", sofascoreId: 335,
-    slugRe: /^france-(coupe-de-france|french-cup)$/i, countryRe: /^France$/i, nameRe: /^(Coupe de France|French Cup)$/i, forebetTags: [], forebetPaths: [/^france\/coupe-de-france$/] },
+    slugRe: /^france-(coupe-de-france|french-cup)$/i, countryRe: /^France$/i, nameRe: /^(Coupe de France|French Cup)$/i, forebetTags: [], forebetPaths: [/^france\/coupe-de-france$/], forebetGuess: "france/coupe-de-france" },
   { key: "KNVB", group: "EREDIVISIE", nameCs: "Nizozemsko – KNVB Beker", short: "KNVB Beker", sofascoreId: 330,
     slugRe: /^netherlands-knvb-(beker|cup)$/i, countryRe: /^Netherlands$/i, nameRe: /^KNVB[ -](beker|cup)$/i, forebetTags: [], forebetPaths: [/^netherlands\/(knvb-beker|knvb-cup)$/] },
   { key: "TACAPT", group: "PORTUGAL", nameCs: "Portugalsko – Taça de Portugal", short: "Taça de Portugal", sofascoreId: 336,
