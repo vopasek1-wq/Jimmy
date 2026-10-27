@@ -166,10 +166,16 @@ function resultMarket(code, home, away) {
   return { code: "X", labelCs: "X – remíza" };
 }
 
-/** Pravděpodobnost trhu z rozdělení 1/X/2; pro ostatní trhy null (Forebet je zde nedává). */
+/**
+ * Pravděpodobnost trhu z rozdělení 1/X/2; pro ostatní trhy null (Forebet je zde nedává).
+ * Handicap 0 (sázka bez remízy) je odhad: pravděpodobnost výhry týmu při vyřazení remízy, tedy p / (p1 + p2).
+ */
 function forebetProbability(code, p1, px, p2) {
   const table = { 1: p1, X: px, 2: p2, "1X": p1 + px, X2: px + p2, 12: p1 + p2 };
-  return Object.prototype.hasOwnProperty.call(table, code) ? table[code] : null;
+  if (Object.prototype.hasOwnProperty.call(table, code)) return table[code];
+  const noDraw = /^AH([12]):0$/.exec(code);
+  if (noDraw && p1 + p2 > 0) return Math.round(((noDraw[1] === "1" ? p1 : p2) / (p1 + p2)) * 1000) / 10;
+  return null;
 }
 
 /**
