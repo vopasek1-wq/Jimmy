@@ -127,11 +127,10 @@
   });
 
   /**
-   * Dlaždice se statistikou. `extra`: icon (název ikony Lucide), bar (pole { w: šířka v %, cls: is-win|is-loss|is-void|is-good|is-warn|is-bad }),
+   * Dlaždice se statistikou. `extra`: bar (pole { w: šířka v %, cls: is-win|is-loss|is-void|is-good|is-warn|is-bad }),
    * note (HTML pod tím, vkládá se jen z hodnot, které už prošly přes esc()).
    */
   const stat = (value, label, cls = "", extra = {}) => `<div class="stat ${cls}">
-    ${extra.icon ? `<i class="stat__icon" data-lucide="${extra.icon}"></i>` : ""}
     <div class="stat__value">${esc(value)}</div><div class="stat__label" title="${esc(label)}">${esc(label)}</div>
     ${extra.bar ? `<div class="stat__bar">${extra.bar.map((p) => `<i class="${p.cls}" style="width:${Math.max(0, Math.min(100, p.w))}%"></i>`).join("")}</div>` : ""}
     ${extra.note ? `<div class="stat__note">${extra.note}</div>` : ""}</div>`;
@@ -274,7 +273,7 @@
     const tomorrow = nextDay(today);
     const list = tips.filter((t) => {
       if (!applyDayFilter(t, today, tomorrow)) return false;
-      if (state.league && t.leagueKey !== state.league) return false;
+      if (!inLeagueFilter(t.leagueKey)) return false;
       if (state.live) {
         const kind = matchState(t, now).kind;
         const playing = kind === "live" || kind === "started";
@@ -741,20 +740,20 @@
     const span = (txt) => `<span>${esc(txt)}</span>`;
     $("#history-stats").innerHTML = [
       stat(String(s.total), "tipů v období", "stat--accent", {
-        icon: "list", bar: s.total ? [{ w: (100 * s.evaluated) / s.total, cls: "is-muted" }] : null,
+        bar: s.total ? [{ w: (100 * s.evaluated) / s.total, cls: "is-muted" }] : null,
         note: span(`${pending} čeká na výsledek`) + span(`${leagues} ${leagues === 1 ? "soutěž" : leagues > 0 && leagues < 5 ? "soutěže" : "soutěží"}`),
       }),
       stat(String(s.evaluated), "vyhodnoceno", "", { bar: v.outcomeBar, note: v.outcomeNote }),
-      stat(v.rate, "úspěšnost", v.rateCls, { bar: v.rateBar, icon: "target", note: expected === null ? "" : span(`odhad zdrojů ${Math.round(expected)} %`) }),
+      stat(v.rate, "úspěšnost", v.rateCls, { bar: v.rateBar, note: expected === null ? "" : span(`odhad zdrojů ${Math.round(expected)} %`) }),
       stat(s.avgOdds === null ? "–" : nf2.format(s.avgOdds), "průměrný kurz", "", {
-        icon: "coins", bar: s.avgOdds ? [{ w: 100 / s.avgOdds, cls: "is-muted" }] : null,
+        bar: s.avgOdds ? [{ w: 100 / s.avgOdds, cls: "is-muted" }] : null,
         note: odds.length ? span(`kurz značí ${Math.round(100 / s.avgOdds)} %`) + span(`${nf2.format(Math.min(...odds))}–${nf2.format(Math.max(...odds))}`) : "",
       }),
-      stat(v.profit, "zisk (vklad 1)", v.profitCls, { note: v.roiChip + (s.evaluated && s.profit !== null ? span(`${fmtSigned(s.profit / s.evaluated)} na tip`) : ""), icon: "trending-up" }),
+      stat(v.profit, "zisk (vklad 1)", v.profitCls, { note: v.roiChip + (s.evaluated && s.profit !== null ? span(`${fmtSigned(s.profit / s.evaluated)} na tip`) : "") }),
     ].join("");
     renderIcons();
 
-    const list = sortList(h.tips.filter((t) => matchesQuery(t) && (!state.league || t.leagueKey === state.league)), HIST_SORT, state.hsort);
+    const list = sortList(h.tips.filter((t) => matchesQuery(t) && inLeagueFilter(t.leagueKey)), HIST_SORT, state.hsort);
     if (!list.some((t) => t.id === state.hselected)) state.hselected = null;
     histBody.innerHTML = list.map((t) => {
       const ov = OUTCOME_VIEW[t.outcome];
@@ -836,7 +835,7 @@
 
   function renderLiveList() {
     renderCats();
-    const shown = liveOfOverview().filter((m) => !state.league || m.leagueKey === state.league);
+    const shown = liveOfOverview().filter((m) => inLeagueFilter(m.leagueKey));
     $("#live-note").textContent = live.loaded ? `${shown.length} ${shown.length === 1 ? "zápas" : shown.length < 5 && shown.length ? "zápasy" : "zápasů"}` : "";
     if (!shown.length) {
       liveListEl.innerHTML = `<p class="empty">${esc(live.error ? `Živé zápasy se nepodařilo načíst: ${live.error}` : !live.loaded ? "Načítám živé zápasy…"
@@ -857,9 +856,8 @@
     }).join("");
   }
 
-  /** Momentum: nad osou tlak domácích, pod ní hostů; červená čára = aktuální minuta, dole branky. */
+  /** Graf tlaku: nad osou tlak domácích, pod ní hostů; červená čára = aktuální minuta, dole branky. */
   function momentumSvg(graph, incidents) {
-    if (!graph.length) return '<p class="empty">Momentum zatím není k dispozici.</p>';
     const W = 300;
     const last = graph[graph.length - 1].m;
     const span = Math.max(90, last);
@@ -872,7 +870,7 @@
     };
     const goals = incidents.filter((i) => i.kind === "goal").map((g) =>
       `<circle cx="${X(g.minute).toFixed(1)}" cy="86" r="3.2" fill="#fff" stroke="${g.home ? "#36b5f4" : "#ff6b6b"}" stroke-width="1.2"><title>${g.minute}' ${esc(g.player)}</title></circle>`).join("");
-    return `<svg class="momentum" viewBox="0 0 ${W} 92" role="img" aria-label="Momentum zápasu">
+    return `<svg class="momentum" viewBox="0 0 ${W} 92" role="img" aria-label="Průběh zápasu">
       <rect x="0" y="0" width="${W}" height="40" fill="rgba(43,210,107,.10)"/><rect x="0" y="40" width="${W}" height="40" fill="rgba(59,143,240,.12)"/>
       <path d="${area(1)}" fill="rgba(43,210,107,.75)"/><path d="${area(-1)}" fill="rgba(59,143,240,.8)"/>
       <line x1="0" y1="40" x2="${W}" y2="40" stroke="rgba(255,255,255,.25)" stroke-width=".5"/>
@@ -907,7 +905,7 @@
     const m = live.list.find((x) => x.id === live.selected);
     $("#live-open").hidden = !m;
     if (!m) {
-      liveDetailEl.innerHTML = '<p class="detail__empty">Vyber zápas vlevo – ukážu momentum, střely na hřišti, branky a statistiky ze SofaScore.</p>';
+      liveDetailEl.innerHTML = '<p class="detail__empty">Vyber zápas vlevo – ukážu průběh zápasu, střely na hřišti, branky a statistiky ze SofaScore.</p>';
       return;
     }
     $("#live-open").dataset.url = m.url;
@@ -919,8 +917,8 @@
       return;
     }
     liveDetailEl.innerHTML = `${head}
-      <div class="live-box"><div class="live-box__title">Momentum zápasu</div>${momentumSvg(d.graph, d.incidents)}
-        <div class="momentum-teams"><span>▲ ${esc(m.home)}</span><span>▼ ${esc(m.away)}</span></div></div>
+      ${d.graph.length ? `<div class="live-box">${momentumSvg(d.graph, d.incidents)}
+        <div class="momentum-teams"><span>▲ ${esc(m.home)}</span><span>▼ ${esc(m.away)}</span></div></div>` : ""}
       <div class="live-box"><div class="live-box__title">Branky a karty</div>${eventsHtml(d.incidents)}</div>
       <div class="live-box"><div class="live-box__title">Statistiky</div>${statsHtml(d.stats)}</div>`;
     renderIcons();
@@ -978,6 +976,9 @@
   // Vlajky (flag-icons, MIT; soubory ve vendor/flags): emoji vlajky Windows neukazuje. Poháry nejsou země, ty zůstávají se zkratkou.
   const COUNTRY_FLAG = { EPL: "gb-eng", LALIGA: "es", SERIEA: "it", BUNDESLIGA: "de", LIGUE1: "fr", EREDIVISIE: "nl", PORTUGAL: "pt", BELGIE: "be", TURECKO: "tr", SKOTSKO: "gb-sct", CESKO: "cz" };
   const leagueLabel = (l) => (String(l.nameCs || "").includes(" – ") ? l.nameCs.split(" – ")[0] : l.short);
+  // Domácí poháry jsou v levém sloupci pod svou zemí: filtr je skupina (klíč hlavní ligy země), ne jednotlivá soutěž.
+  const groupOfKey = new Map();
+  const inLeagueFilter = (leagueKey) => !state.league || (groupOfKey.get(leagueKey) || leagueKey) === state.league;
 
   /** Počty zápasů podle soutěže pro právě otevřenou záložku. */
   function leagueCounts() {
@@ -991,7 +992,7 @@
       const tomorrow = nextDay(today);
       list = (state.payload?.tips || []).filter((t) => applyDayFilter(t, today, tomorrow) && matchesQuery(t));
     }
-    for (const x of list) counts[x.leagueKey] = (counts[x.leagueKey] || 0) + 1;
+    for (const x of list) { const g = groupOfKey.get(x.leagueKey) || x.leagueKey; counts[g] = (counts[g] || 0) + 1; }
     return { counts, total: list.length };
   }
 
@@ -1000,7 +1001,7 @@
     const { counts, total } = leagueCounts();
     const item = (key, name, badge, count, title = name) => `<button type="button" class="cat${state.league === key ? " is-active" : ""}${count ? "" : " is-empty"}" data-league="${esc(key)}" title="${esc(title)}" aria-pressed="${state.league === key}">
       ${badge.startsWith("flag:") ? `<span class="cat__badge cat__badge--flag"><img src="vendor/flags/${esc(badge.slice(5))}.svg" alt="" width="26" height="26"></span>` : `<span class="cat__badge">${esc(badge)}</span>`}<span class="cat__name">${esc(name)}</span><span class="cat__count">${count}</span></button>`;
-    catsEl.innerHTML = `<div class="cats__title">Soutěže</div>${item("", "Všechny soutěže", "★", total)}${state.leagues.map((l) => item(l.key, leagueLabel(l), COUNTRY_FLAG[l.key] ? `flag:${COUNTRY_FLAG[l.key]}` : badgeOf(l.short), counts[l.key] || 0, l.nameCs || l.short)).join("")}`;
+    catsEl.innerHTML = `<div class="cats__title">Soutěže</div>${item("", "Všechny soutěže", "★", total)}${state.leagues.filter((l) => l.group === l.key).map((l) => item(l.key, leagueLabel(l), COUNTRY_FLAG[l.key] ? `flag:${COUNTRY_FLAG[l.key]}` : badgeOf(l.short), counts[l.key] || 0, state.leagues.filter((x) => x.group === l.key).map((x) => (x.key === l.key ? x.nameCs || x.short : x.short)).join(", "))).join("")}`;
   }
 
   catsEl.addEventListener("click", (e) => {
@@ -1138,15 +1139,15 @@
     const span = (txt) => `<span>${esc(txt)}</span>`;
     const expected = mean(list.filter((t) => t.status === "win" || t.status === "loss").map((t) => t.jointProbability));
     return [
-      stat(String(list.length), "tiketů", "stat--accent", { icon: "ticket", bar: list.length ? [{ w: (100 * settled) / list.length, cls: "is-muted" }] : null, note: span(`${pending} čeká na výsledek`) }),
+      stat(String(list.length), "tiketů", "stat--accent", { bar: list.length ? [{ w: (100 * settled) / list.length, cls: "is-muted" }] : null, note: span(`${pending} čeká na výsledek`) }),
       stat(String(win), "vyhráno", "", {
         bar: settled ? [{ w: (100 * win) / settled, cls: "is-win" }, { w: (100 * loss) / settled, cls: "is-loss" }, { w: (100 * voided) / settled, cls: "is-void" }] : null,
         note: `<span class="g">${win} V</span><span class="r">${loss} P</span><span class="y">${voided} vr.</span>`,
       }),
-      stat(rate === null ? "–" : `${Math.round(rate)} %`, "úspěšnost tiketů", tone ? `stat--${tone}` : "", { icon: "target", bar: rate === null ? null : [{ w: rate, cls: `is-${tone}` }], note: expected === null ? "" : span(`odhad ${Math.round(expected)} %`) }),
-      stat(list.length ? nf2.format(mean(list.map((t) => t.totalOdds))) : "–", "průměrný kurz tiketu", "", { icon: "coins" }),
+      stat(rate === null ? "–" : `${Math.round(rate)} %`, "úspěšnost tiketů", tone ? `stat--${tone}` : "", { bar: rate === null ? null : [{ w: rate, cls: `is-${tone}` }], note: expected === null ? "" : span(`odhad ${Math.round(expected)} %`) }),
+      stat(list.length ? nf2.format(mean(list.map((t) => t.totalOdds))) : "–", "průměrný kurz tiketu"),
       stat(decided || voided ? fmtProfit(profit) : "–", "zisk (vklad 1 na tiket)", profit > 0 ? "stat--pos" : profit < 0 ? "stat--neg" : "", {
-        icon: "trending-up", note: `<span class="stat__chip stat__chip--${profit > 0 ? "pos" : profit < 0 ? "neg" : "muted"}">${esc(roiText)}</span>`,
+        note: `<span class="stat__chip stat__chip--${profit > 0 ? "pos" : profit < 0 ? "neg" : "muted"}">${esc(roiText)}</span>`,
       }),
     ].join("");
   }
@@ -1336,9 +1337,9 @@
     }
     const o = a.overall;
     $("#an-stats").innerHTML = [
-      stat(String(o.n), "vyhodnocených tipů", "stat--accent", { icon: "list-checks" }),
-      stat(o.n ? `${nf1.format(o.actual)} %` : "–", "skutečná úspěšnost", "", { icon: "target", bar: o.n ? [{ w: o.actual, cls: o.actual >= 60 ? "is-good" : o.actual >= 45 ? "is-warn" : "is-bad" }] : null }),
-      stat(o.n ? `${nf1.format(o.predicted)} %` : "–", "průměrný odhad", "", { icon: "gauge", bar: o.n ? [{ w: o.predicted, cls: "is-muted" }] : null }),
+      stat(String(o.n), "vyhodnocených tipů", "stat--accent"),
+      stat(o.n ? `${nf1.format(o.actual)} %` : "–", "skutečná úspěšnost", "", { bar: o.n ? [{ w: o.actual, cls: o.actual >= 60 ? "is-good" : o.actual >= 45 ? "is-warn" : "is-bad" }] : null }),
+      stat(o.n ? `${nf1.format(o.predicted)} %` : "–", "průměrný odhad", "", { bar: o.n ? [{ w: o.predicted, cls: "is-muted" }] : null }),
       stat(o.n ? `${signed1(o.gap)} p. b.` : "–", "rozdíl od odhadu", o.gap > 0 ? "stat--pos" : o.gap < 0 ? "stat--neg" : ""),
       stat(o.roi === null ? "–" : `${signed1(o.roi)} %`, "ROI (skutečné kurzy)", o.roi > 0 ? "stat--pos" : o.roi < 0 ? "stat--neg" : ""),
     ].join("");
@@ -1573,7 +1574,9 @@
       }
       state.limits = { ...state.limits, ...info.limits };
       state.leagues = info.leagues || [];
-      if (state.league && !state.leagues.some((l) => l.key === state.league)) state.league = "";
+      groupOfKey.clear();
+      for (const l of state.leagues) groupOfKey.set(l.key, l.group || l.key);
+      if (state.league && !state.leagues.some((l) => l.key === state.league && l.group === l.key)) state.league = "";
     }
     const cached = await desktop.tips.cached();
     if (cached.ok) state.payload = cached.data;

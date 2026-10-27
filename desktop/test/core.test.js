@@ -162,3 +162,25 @@ test("teamSimilarity: aliasy názvů, které se mezi zdroji liší (Cologne × K
   assert.ok(sameMatch("Fastav Zlin", "Sigma", "FK Trinity Zlin", "Sigma Olomouc") > 0.9);
   assert.equal(sameMatch("Fastav Zlin", "Sigma", "Sigma Olomouc", "FK Trinity Zlin"), 0); // zrcadlový zápas je jiný
 });
+
+test("Ligy: domácí poháry sledovaných zemí se poznají podle hlavičky Scores24 a patří pod hlavní ligu země", () => {
+  const key = (country, name, slug) => (config.findLeague(country, name, slug) || {}).key || null;
+  assert.equal(key("England", "EFL Cup", "england-efl-cup"), "EFLCUP");
+  assert.equal(key("Germany", "DFB Pokal", "germany-dfb-pokal"), "DFBPOKAL");
+  assert.equal(key("Netherlands", "KNVB beker", "netherlands-knvb-beker"), "KNVB");
+  assert.equal(key("Turkey", "Football Cup", "turkey-turkiye-kupasi"), "TURCUP");
+  assert.equal(key("Czech Republic", "Cup", "czech-republic-cup"), "CZECUP");
+  assert.equal(key("Portugal", "League Cup", "portugal-league-cup"), "TACALIGA");
+  assert.equal(key("Spain", "Copa del Rey", "spain-copa-del-rey"), "COPADELREY");
+  assert.equal(key("Greece", "Cup", "greece-greece-cup"), null);                       // pohár země, kterou nesledujeme
+  assert.equal(key("Scotland", "Cup", "scotland-cup"), "SCOCUP");
+  const group = (k) => config.leagueByKey(k).group;
+  assert.deepEqual(["EPL", "FACUP", "EFLCUP", "SKOTSKO", "SCOLCUP", "UCL"].map(group), ["EPL", "EPL", "EPL", "SKOTSKO", "SKOTSKO", "UCL"]);
+  assert.ok(config.LEAGUES.every((lg) => config.leagueByKey(lg.group)));                // skupina vždy odkazuje na existující ligu
+  assert.equal(new Set(config.LEAGUES.map((lg) => lg.sofascoreId)).size, config.LEAGUES.length); // ID soutěže na SofaScore je u každé jiné
+});
+
+test("Ligy: ženská Liga mistrů se za Ligu mistrů nepovažuje", () => {
+  assert.equal(config.findLeague("Europe", "UEFA Champions League Women", "international-clubs-uefa-champions-league-women"), null);
+  assert.equal(config.findLeague("Europe", "UEFA Champions League", "international-clubs-uefa-champions-league").key, "UCL");
+});

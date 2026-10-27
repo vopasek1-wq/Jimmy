@@ -47,7 +47,7 @@ a tlumeně modrá tlačítka bez záře. Styly jsou v `desktop/renderer/styles.c
 
 ## Ovládání
 
-Záložky pod vyhledáváním: **Přehled** (tabulka tipů a vedle ní detail vybraného tipu; vedle přepínače Dnes / Zítra je filtr **Živě** – jen právě hrané zápasy – a **Nadcházející** – jen zápasy, které ještě nezačaly (bez živých i skončených); druhé kliknutí filtr vypne), **Živé zápasy** (právě hrané zápasy z Přehledu (podle SofaScore); po kliknutí momentum zápasu, branky a karty a statistiky; obnovuje se každých 30 s) a **Historie**. V levém sloupci jsou **soutěže** (ligy podle zemí s **vlajkou** – Anglie, Francie…; evropské poháry pod svým názvem se zkratkou; vlajky jsou z [flag-icons](https://github.com/lipis/flag-icons), licence MIT, `renderer/vendor/flags`) s počty zápasů – klik na soutěž filtruje tabulku tipů, živé zápasy i historii (hvězdička = všechny). Stav zdrojů se ukazuje jen v pruhu nahoře, když nějaký selže.
+Záložky pod vyhledáváním: **Přehled** (tabulka tipů a vedle ní detail vybraného tipu; vedle přepínače Dnes / Zítra je filtr **Živě** – jen právě hrané zápasy – a **Nadcházející** – jen zápasy, které ještě nezačaly (bez živých i skončených); druhé kliknutí filtr vypne), **Živé zápasy** (právě hrané zápasy z Přehledu (podle SofaScore); po kliknutí graf průběhu zápasu, branky a karty a statistiky; obnovuje se každých 30 s) a **Historie**. V levém sloupci jsou **soutěže** (ligy podle zemí s **vlajkou** – Anglie, Francie…; evropské poháry pod svým názvem se zkratkou; vlajky jsou z [flag-icons](https://github.com/lipis/flag-icons), licence MIT, `renderer/vendor/flags`) s počty zápasů – klik na soutěž filtruje tabulku tipů, živé zápasy i historii (hvězdička = všechny). Stav zdrojů se ukazuje jen v pruhu nahoře, když nějaký selže.
 
 * **Dnes / Zítra** – přepínač dne hned za nadpisem „Tipy po filtraci“ (volba se pamatuje).
 * Kliknutí na záhlaví sloupce řadí (pravděpodobnost, kurz, čas, …); hledání v horní liště (**Ctrl + K**) filtruje
@@ -63,7 +63,9 @@ Tip se objeví, **jen když platí všechno** z následujícího (konstanty jsou
 
 * soutěž je mezi sledovanými – Premier League, La Liga, Serie A, Bundesliga, Ligue 1, Liga mistrů,
   Evropská liga, Konferenční liga, Eredivisie, Liga Portugal, belgická Pro League, Süper Lig,
-  skotská Premiership a česká 1. liga (seznam upravíte v `LEAGUES`),
+  skotská Premiership a česká 1. liga, k tomu domácí poháry těchto zemí (FA Cup, EFL Cup, Copa del Rey, Coppa Italia, DFB-Pokal,
+  Coupe de France, KNVB Beker, Taça de Portugal a Taça da Liga, belgický, turecký, český pohár, Scottish Cup a Scottish League Cup;
+  v levém sloupci jsou pod svou zemí). Ženské soutěže se nesledují (seznam upravíte v `LEAGUES`),
 * pravděpodobnost je **striktně větší než 60 %**,
 * kurz je **alespoň 1,50**.
 * nejde o **ženský zápas** (týmy typu „… W“, „… Women“, „Femenina“, „Frauen“ se vyřazují; dříve uložené se při spuštění z historie smažou).
