@@ -586,7 +586,6 @@ i[data-lucide],
 .stat--warn .stat__value { color: var(--yellow); }
 .stat--bad .stat__value { color: var(--red); }
 .stat { position: relative; }
-.stat__icon { position: absolute; top: 11px; right: 12px; width: 16px; height: 16px; color: var(--accent-bright); opacity: 0.5; }
 .stat__bar { display: flex; height: 5px; margin-top: 9px; border-radius: 3px; overflow: hidden; background: rgba(255, 255, 255, 0.07); }
 .stat__bar i { display: block; height: 100%; }
 .stat__bar .is-win, .stat__bar .is-good { background: var(--green); }
