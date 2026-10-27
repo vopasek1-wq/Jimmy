@@ -369,23 +369,28 @@ i[data-lucide],
 .app[data-view="history"] .pages,
 .app[data-view="live"] .pages,
 .app[data-view="analysis"] .pages,
+.app[data-view="evaluation"] .pages,
 .app[data-view="tickets"] .pages { display: block; }
 .app[data-view="history"] .board,
 .app[data-view="live"] .board,
 .app[data-view="analysis"] .board,
+.app[data-view="evaluation"] .board,
 .app[data-view="tickets"] .board { display: none; }
 .app[data-view="live"] .page-history,
 .app[data-view="history"] .live-page,
 .app[data-view="analysis"] .live-page,
 .app[data-view="analysis"] .page-history,
+.app[data-view="evaluation"] .live-page,
+.app[data-view="evaluation"] .page-history,
 .app[data-view="tickets"] .live-page,
 .app[data-view="tickets"] .page-history { display: none; }
 .pages > .analysis-page { display: none; height: calc(100dvh - var(--topbar-h) - 33px); }
 .app[data-view="analysis"] .pages > .analysis-page { display: flex; }
-.pages > .tickets-page { display: none; grid-template-columns: minmax(0, 15fr) minmax(0, 9fr); gap: 16px; height: calc(100dvh - var(--topbar-h) - 33px); }
-.app[data-view="tickets"] .pages > .tickets-page { display: grid; }
-.tickets-page > .card { min-height: 0; overflow: hidden; }
-.tickets-page > .tk-main { overflow-x: hidden; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border-3) transparent; }   /* přebíjí overflow: hidden výše */
+.pages > .tk-page { display: none; grid-template-columns: minmax(0, 15fr) minmax(0, 9fr); gap: 16px; height: calc(100dvh - var(--topbar-h) - 33px); }
+.app[data-view="tickets"] .pages > .tickets-page,
+.app[data-view="evaluation"] .pages > .evaluation-page { display: grid; }
+.tk-page > .card { min-height: 0; overflow: hidden; }
+.tk-page > .tk-main { overflow-x: hidden; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border-3) transparent; }   /* přebíjí overflow: hidden výše */
 
 /* ---------- Karta ---------- */
 .card {
@@ -721,8 +726,8 @@ i[data-lucide],
 .stat-line__bar .h { background: var(--accent); }
 .stat-line__bar .a { background: #ff6b6b; }
 @media (max-width: 1100px) {
-  .live-page, .tickets-page { grid-template-columns: 1fr; height: auto; }
-  .live-page > .card, .tickets-page > .card { max-height: 70vh; }
+  .live-page, .tk-page { grid-template-columns: 1fr; height: auto; }
+  .live-page > .card, .tk-page > .card { max-height: 70vh; }
 }
 
 /* ==========================================================================
@@ -866,6 +871,7 @@ body { background: var(--bg); }
    ========================================================================== */
 .tk-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
 .tk-controls .btn { margin-left: auto; }
+.tk-main > h2 + .tk-controls { margin-top: 0; }
 .tk-controls__label { font-size: 12.5px; color: var(--muted); }
 .tk-controls .tk-controls__label + .seg-control { margin-left: -2px; }
 .tk-note { margin-top: 12px; font-size: 12px; color: var(--muted); }

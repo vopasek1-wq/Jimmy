@@ -106,10 +106,11 @@ Vyhodnocují se běžné trhy (1X2, dvojitá šance, Over/Under, oba týmy skór
 
 ## Tikety (Gemini)
 
-Záložka **Tikety** nechá Gemini poskládat kombinace (tikety) z tipů v Přehledu, které pak ručně zadáš do Tipsportu (ten nemá API), a ukáže, jak dopadly. Všechny tikety se ukládají do databáze a seznam se bere jen z ní.
+Záložka **Tikety** nechá Gemini poskládat kombinace (tikety) z tipů v Přehledu, které pak ručně zadáš do Tipsportu (ten nemá API). Jak tikety dopadly, ukazuje samostatná záložka **Vyhodnocení**. Všechny tikety se ukládají do databáze a seznamy se berou jen z ní.
 
-**Rozložení:** vlevo je souhrn za zvolené období (**Zítra / Dnes / Včera / 7 dní / Vše**: počet tiketů, kolik vyhrálo / prohrálo / bylo vráceno, úspěšnost a odhad zdrojů, průměrný kurz tiketu, zisk při vkladu 1 na tiket s ROI), ovládání (**Vytvořit pro Dnes / Zítra**, **Vytvořit tikety (AI)**, **Vyhodnotit automaticky**) a seznam tiketů. U každého tiketu je výsledek (Vyhráno / Prohráno / Vráceno / Čeká), jistota a shrnutí od AI, u každého zápasu značka ✓ / ✗ / ↺, konečné skóre a kurz; dole kurz tiketu, pravděpodobnost a zisk. Prohra jednoho zápasu znamená prohru celého tiketu, vrácený zápas se z kurzu vyjme. Pod tikety je seznam **Nezařazeno do tiketů** s důvodem, proč zápas do tiketu nepřišel.
-Vpravo je přepínač **Detail zápasu / Slovní vyhodnocení**. Po kliknutí na zápas (v tiketu i v seznamu nezařazených) se ukáže stejná karta jako v Přehledu (pravděpodobnost, kurz, odkazy, forma, vzájemné zápasy, koláče gólů, absence) se zdůvodněním od AI. **Slovní vyhodnocení** je rozbor vyhodnocených tiketů od Gemini (co je špatně, na co si dát pozor); poslední rozbor zůstane i po restartu.
+**Záložka Tikety (jen vytváření):** vlevo je ovládání (**Vytvořit pro Dnes / Zítra**, **Vytvořit tikety (AI)**) a tikety pro zvolený den. U každého tiketu je jistota a shrnutí od AI, u každého zápasu konečné skóre a kurz; dole kurz tiketu, pravděpodobnost a zisk. Pod tikety je seznam **Nezařazeno do tiketů** s důvodem, proč zápas do tiketu nepřišel. Vpravo je po kliknutí na zápas (v tiketu i v seznamu nezařazených) stejná karta jako v Přehledu (pravděpodobnost, kurz, odkazy, forma, vzájemné zápasy, koláče gólů, absence) se zdůvodněním od AI.
+
+**Záložka Vyhodnocení:** vlevo je souhrn za zvolené období (**Zítra / Dnes / Včera / 7 dní / Vše**: počet tiketů, kolik vyhrálo / prohrálo / bylo vráceno, úspěšnost a odhad zdrojů, průměrný kurz tiketu, zisk při vkladu 1 na tiket s ROI), tlačítko **Vyhodnotit automaticky** a seznam tiketů s výsledkem (Vyhráno / Prohráno / Vráceno / Čeká) a značkou ✓ / ✗ / ↺ u každého zápasu. Prohra jednoho zápasu znamená prohru celého tiketu, vrácený zápas se z kurzu vyjme. Vpravo je přepínač **Detail zápasu / Slovní vyhodnocení**; **Slovní vyhodnocení** je rozbor vyhodnocených tiketů od Gemini (co je špatně, na co si dát pozor), poslední rozbor zůstane i po restartu.
 Tlačítko **Vyhodnotit automaticky** zjistí výsledky zápasů ze SofaScore (stejně jako v Historii) a tikety se podle nich přepočítají; výsledky se doplňují i při každém stahování tipů.
 
 Zvolíš den (Dnes / Zítra) a klikneš na **Vytvořit tikety (AI)** – počet tipů ani tiketů se nezadává, určí je Gemini. Postup:
@@ -132,8 +133,8 @@ každý zápas nejvýš v jednom tiketu a žádné neznámé tipy. **U každého
 a úroveň jistoty; **celkový kurz, pravděpodobnost (součin) a odhad výnosu počítá aplikace sama**. Používá se stejný Gemini klíč
 jako v Analýze; poslední tikety zůstanou po restartu.
 
-**Uložené tikety a jejich výsledky.** Každý vytvořený tiket se uloží (stejná sada tipů ve stejný den jen jednou). Pod aktuálními tikety je
-seznam **Dřívější tikety** s výsledkem: tiket je *vyhraný*, když vyjdou všechny jeho tipy, *prohraný* hned po první prohře, vrácený tip se
+**Uložené tikety a jejich výsledky.** Každý vytvořený tiket se uloží (stejná sada tipů ve stejný den jen jednou). Ve **Vyhodnocení** je
+seznam všech tiketů s výsledkem: tiket je *vyhraný*, když vyjdou všechny jeho tipy, *prohraný* hned po první prohře, vrácený tip se
 z kurzu vyjme. Výsledky tipů se berou z automatického vyhodnocení. V **Analýze** je srovnání „tikety od Gemini × všechny tipy jednotlivě“
 (odhad = součin pravděpodobností, úspěšnost, rozdíl, ROI při vkladu 1). Patnáct minut před začátkem zápasu z čekajícího tiketu přijde
 systémové oznámení (jednou na zápas).
@@ -158,7 +159,7 @@ skupina s ROI od +5 % (a ne s nadhodnoceným odhadem), do sloupce **Nesázet** s
 odhadem. Hodnotí se jen skupiny s aspoň 4 tikety, resp. 6 tipy; u malého vzorku se to výslovně napíše. Je to pomůcka z dosavadních
 výsledků, ne záruka.
 
-Tlačítko **Vyhodnotit pomocí AI** (panel **Slovní vyhodnocení** v záložce Tikety) pošle **vyhodnocené tikety** (nejvýš 25 nejnovějších: zápasy, tipy, kurzy, výsledky, skóre a původní zdůvodnění) do **Google Gemini API** **tvým vlastním
+Tlačítko **Vyhodnotit pomocí AI** (panel **Slovní vyhodnocení** v záložce Vyhodnocení) pošle **vyhodnocené tikety** (nejvýš 25 nejnovějších: zápasy, tipy, kurzy, výsledky, skóre a původní zdůvodnění) do **Google Gemini API** **tvým vlastním
 klíčem** a zobrazí **slovní vyhodnocení**: jak tikety dopadly, co je špatně (co prohrané tikety shodilo a jaké chyby se opakují), na co si dát pozor a co dělat jinak. Bez vyhodnocených tiketů se analýza nespustí. Klíč si vytvoříš zdarma v Google AI Studio
 (aistudio.google.com → *Get API key*), v aplikaci ho zadáš v levém panelu pod tlačítkem **Aktualizace** (tlačítko „Gemini API klíč“). Jeden klíč platí pro Tikety i AI analýzu; když chybí, kliknutí na „Vytvořit tikety“ nebo „Vyhodnotit pomocí AI“ okno pro zadání otevře. Ukládá se šifrovaně (Windows DPAPI) a nikam
 jinam se neposílá. Zda je volání zpoplatněné, závisí na tarifu tvého Google účtu (Gemini API má bezplatný limit, jeho výši určuje Google);

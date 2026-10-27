@@ -137,7 +137,7 @@
     ${extra.note ? `<div class="stat__note">${extra.note}</div>` : ""}</div>`;
 
   /* ---------- Navigace ---------- */
-  const VIEWS = ["overview", "live", "tickets", "analysis", "history"];
+  const VIEWS = ["overview", "live", "tickets", "evaluation", "analysis", "history"];
   const showView = (view) => {
     if (!VIEWS.includes(view)) view = "overview";
     app.dataset.view = view;
@@ -155,6 +155,7 @@
     else stopLive();
     if (view === "analysis") loadAnalysis();
     if (view === "tickets") loadTickets();
+    if (view === "evaluation") loadEvaluation();
     renderCats();
   };
 
@@ -1014,20 +1015,24 @@
 
 
 
-  /* ---------- Tikety: vytváření, výsledky a slovní vyhodnocení (Gemini) ---------- */
+  /* ---------- Tikety (vytváření) a Vyhodnocení (výsledky, statistiky a slovní rozbor od Gemini) ---------- */
   const TK_RANGES = ["tomorrow", "today", "yesterday", "week", "all"];
-  const tk = {
+  const tk = {                          // záložka Tikety
     day: ["today", "tomorrow"].includes(store.get("tk-day")) ? store.get("tk-day") : "today",   // pro který den se tikety vytvářejí
-    range: TK_RANGES.includes(store.get("tk-range")) ? store.get("tk-range") : "all",          // která období se v seznamu ukazují
-    history: null,                      // tikety z databáze (jediný zdroj) i s výsledky
     omitted: store.get("tk-omitted"),   // poslední vytvoření: { forDay, analyzed, items } – zápasy, které do tiketů nepřišly
     message: null,                      // { text, error } k poslednímu vytvoření (chyba, nebo že nic nevzniklo)
     warning: "",                        // upozornění k poslednímu vytvoření (chybějící statistiky, zahozené tikety)
     busy: false, step: "", startedAt: 0, timer: null,
     selected: null,                     // tipId zápasu, jehož detail je vpravo
+  };
+  const ev = {                          // záložka Vyhodnocení
+    range: TK_RANGES.includes(store.get("tk-range")) ? store.get("tk-range") : "all",          // která období se v seznamu ukazují
+    selected: null,
     pane: "detail",                     // pravá karta: „detail“ (zápasu) × „ai“ (slovní vyhodnocení)
     ai: store.get("tk-ai"), aiBusy: false,   // { text, at }: poslední rozbor zůstane i po restartu
   };
+  let ticketHistory = null;             // tikety z databáze (jediný zdroj) i s výsledky, společné pro obě záložky
+  const savedTickets = () => (ticketHistory && ticketHistory.tickets) || [];
   const CERTAINTY_CS = { good: "Vysoká jistota", ok: "Střední jistota", risky: "Nižší jistota" };
   const TK_STATUS = { pending: "Čeká", win: "Vyhráno", loss: "Prohráno", void: "Vráceno" };
   const LEG_MARK = { win: "✓", loss: "✗", void: "↺" };
@@ -1039,14 +1044,17 @@
   /** Den (RRRR-MM-DD), pro který se tikety vytvářejí podle přepínače Dnes / Zítra. */
   const tkTargetDay = () => { const today = localDay(new Date()); return tk.day === "tomorrow" ? nextDay(today) : today; };
 
-  /** Uložené tikety za zvolené období (podle dne zápasů). */
-  function tkTickets() {
-    const all = (tk.history && tk.history.tickets) || [];
+  /** Tikety pro den, který je zvolený ve vytváření. */
+  const tkTickets = () => savedTickets().filter((t) => t.day === tkTargetDay());
+
+  /** Uložené tikety za období zvolené ve vyhodnocení (podle dne zápasů). */
+  function evTickets() {
+    const all = savedTickets();
     const today = localDay(new Date());
-    if (tk.range === "tomorrow") return all.filter((t) => t.day === nextDay(today));
-    if (tk.range === "today") return all.filter((t) => t.day === today);
-    if (tk.range === "yesterday") return all.filter((t) => t.day === shiftDay(today, -1));
-    if (tk.range === "week") return all.filter((t) => t.day >= shiftDay(today, -6) && t.day <= today);
+    if (ev.range === "tomorrow") return all.filter((t) => t.day === nextDay(today));
+    if (ev.range === "today") return all.filter((t) => t.day === today);
+    if (ev.range === "yesterday") return all.filter((t) => t.day === shiftDay(today, -1));
+    if (ev.range === "week") return all.filter((t) => t.day >= shiftDay(today, -6) && t.day <= today);
     return all;
   }
 
@@ -1077,39 +1085,41 @@
   // zápasy, na které jde kliknout: zápasy mimo tikety (s důvodem) a nohy uložených tiketů
   const tkLegs = () => [
     ...omittedItems().map((o) => ({ ...o, reason: `Nezařazeno do tiketů: ${o.reason}` })),
-    ...((tk.history && tk.history.tickets) || []).flatMap((t) => t.legs),
+    ...savedTickets().flatMap((t) => t.legs),
   ];
 
-  const tkDetailEl = $("#tk-detail");
-  const tkDetailMatch = $("#tk-detail-match");
-
-  function renderTicketDetail() {
-    const leg = tk.selected === null ? null : tkLegs().find((l) => l.tipId === tk.selected);
-    fillDetail(tkDetailEl, tkDetailMatch, leg ? legTip(leg) : null, '<p class="detail__empty">Klikni na zápas v tiketu – ukážu statistiky, formu a vzájemné zápasy.</p>');
-    $$("#tk-list [data-tip], #tk-omitted [data-tip]").forEach((el) => el.classList.toggle("is-selected", Number(el.dataset.tip) === tk.selected));
+  /** Detail zápasu vedle seznamu tiketů: klik na nohu tiketu (nebo na nezařazený zápas) ukáže statistiky. Vrací funkci, která detail překreslí. */
+  function legDetail({ st, detailEl, matchEl, lists, onPick = () => {} }) {
+    const render = () => {
+      const leg = st.selected === null ? null : tkLegs().find((l) => l.tipId === st.selected);
+      fillDetail(detailEl, matchEl, leg ? legTip(leg) : null, '<p class="detail__empty">Klikni na zápas v tiketu – ukážu statistiky, formu a vzájemné zápasy.</p>');
+      $$(lists.map((sel) => `${sel} [data-tip]`).join(", ")).forEach((el) => el.classList.toggle("is-selected", Number(el.dataset.tip) === st.selected));
+    };
+    const pick = (e) => {
+      if (e.type === "keydown" && e.key !== "Enter" && e.key !== " ") return;
+      const el = e.target.closest("[data-tip]");
+      if (!el) return;
+      e.preventDefault();
+      st.selected = Number(el.dataset.tip);
+      onPick();
+      render();
+    };
+    for (const sel of lists) { $(sel).addEventListener("click", pick); $(sel).addEventListener("keydown", pick); }
+    detailEl.addEventListener("click", onDetailLink);
+    return render;
   }
+  const renderTkDetail = legDetail({ st: tk, detailEl: $("#tk-detail"), matchEl: $("#tk-detail-match"), lists: ["#tk-list", "#tk-omitted"] });
+  const renderEvDetail = legDetail({ st: ev, detailEl: $("#ev-detail"), matchEl: $("#ev-detail-match"), lists: ["#ev-list"], onPick: () => setEvPane("detail") });
 
-  /** Pravá karta: detail zápasu × slovní vyhodnocení. */
-  function setPane(pane) {
-    tk.pane = pane === "ai" ? "ai" : "detail";
-    $$("[data-tkpane]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.tkpane === tk.pane)));
-    $("#tk-pane-detail").hidden = tk.pane !== "detail";
-    $("#tk-pane-ai").hidden = tk.pane !== "ai";
-    if (tk.pane === "ai") renderTkAi();
+  /** Pravá karta ve vyhodnocení: detail zápasu × slovní vyhodnocení. */
+  function setEvPane(pane) {
+    ev.pane = pane === "ai" ? "ai" : "detail";
+    $$("[data-evpane]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.evpane === ev.pane)));
+    $("#ev-pane-detail").hidden = ev.pane !== "detail";
+    $("#ev-pane-ai").hidden = ev.pane !== "ai";
+    if (ev.pane === "ai") renderEvAi();
   }
-  $$("[data-tkpane]").forEach((b) => b.addEventListener("click", () => setPane(b.dataset.tkpane)));
-
-  const onLegPick = (e) => {
-    if (e.type === "keydown" && e.key !== "Enter" && e.key !== " ") return;
-    const el = e.target.closest("[data-tip]");
-    if (!el) return;
-    e.preventDefault();
-    tk.selected = Number(el.dataset.tip);
-    setPane("detail");
-    renderTicketDetail();
-  };
-  ["#tk-list", "#tk-omitted"].forEach((sel) => { $(sel).addEventListener("click", onLegPick); $(sel).addEventListener("keydown", onLegPick); });
-  tkDetailEl.addEventListener("click", onDetailLink);
+  $$("[data-evpane]").forEach((b) => b.addEventListener("click", () => setEvPane(b.dataset.evpane)));
 
   const fmtProfit = (p) => (p === null ? "–" : `${p > 0 ? "+" : p < 0 ? "−" : ""}${nf2.format(Math.abs(p))}`);
   const mean = (list) => (list.length ? list.reduce((a, b) => a + b, 0) / list.length : null);
@@ -1166,9 +1176,7 @@
 
   function renderTickets() {
     $$("#tk-day [data-tkday]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.tkday === tk.day)));
-    $$("#tk-range [data-tkrange]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.tkrange === tk.range)));
     const list = tkTickets();
-    $("#tk-stats").innerHTML = tkStatsHtml(list);
 
     const status = $("#tk-status");
     if (tk.busy) {
@@ -1176,15 +1184,15 @@
         <p class="tk-busy__hint">Aplikace stahuje ze SofaScore statistiky zápasů a Gemini je pak vyhodnotí a složí tikety. Obvykle to trvá do dvou minut, mezitím můžeš přepnout na jinou záložku.</p></div>`;
     } else if (tk.message) {
       status.innerHTML = `<p class="empty tk-msg${tk.message.error ? " is-error" : ""}">${esc(tk.message.text)}</p>`;
-    } else if (!tk.history) {
+    } else if (!ticketHistory) {
       status.innerHTML = `<p class="empty tk-msg">${desktop ? "Načítám tikety…" : "Tikety jsou dostupné jen v aplikaci."}</p>`;
     } else if (!list.length) {
-      status.innerHTML = '<p class="empty tk-msg">V tomto období nejsou žádné uložené tikety. Zvol den a klikni na „Vytvořit tikety (AI)“.</p>';
+      status.innerHTML = '<p class="empty tk-msg">Na tento den ještě nejsou tikety. Zvol den a klikni na „Vytvořit tikety (AI)“.</p>';
     } else {
       status.innerHTML = "";
     }
     const note = $("#tk-note");
-    note.textContent = tk.warning || (tk.history && !tk.history.tickets.length ? TK_NOTE : "");   // upozornění jen při potížích; vysvětlení, dokud nejsou žádné tikety
+    note.textContent = tk.warning || (ticketHistory && !savedTickets().length ? TK_NOTE : "");   // upozornění jen při potížích; vysvětlení, dokud nejsou žádné tikety
     note.hidden = !note.textContent;
 
     $("#tk-list").innerHTML = list.map(tkCardHtml).join("");
@@ -1192,16 +1200,33 @@
     renderIcons();
   }
 
+  function renderEvaluation() {
+    $$("#ev-range [data-evrange]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.evrange === ev.range)));
+    const list = evTickets();
+    $("#ev-stats").innerHTML = tkStatsHtml(list);
+    $("#ev-status").innerHTML = !ticketHistory
+      ? `<p class="empty tk-msg">${desktop ? "Načítám tikety…" : "Tikety jsou dostupné jen v aplikaci."}</p>`
+      : list.length ? "" : '<p class="empty tk-msg">V tomto období nejsou žádné uložené tikety. Vytvoř je v záložce Tikety.</p>';
+    $("#ev-list").innerHTML = list.map(tkCardHtml).join("");
+    renderIcons();
+  }
+
   async function loadTicketHistory() {
     if (!desktop) return;
     const res = await desktop.tickets.history();
-    if (res.ok) { tk.history = res.data; renderTickets(); renderTicketDetail(); }
+    if (res.ok) { ticketHistory = res.data; renderTickets(); renderEvaluation(); renderTkDetail(); renderEvDetail(); }
   }
 
   function loadTickets() {
     renderTickets();
-    setPane(tk.pane);
-    renderTicketDetail();
+    renderTkDetail();
+    loadTicketHistory();
+  }
+
+  function loadEvaluation() {
+    renderEvaluation();
+    setEvPane(ev.pane);
+    renderEvDetail();
     loadTicketHistory();
   }
 
@@ -1210,12 +1235,12 @@
     store.set("tk-day", tk.day);
     renderTickets();
   }));
-  $$("#tk-range [data-tkrange]").forEach((b) => b.addEventListener("click", () => {
-    tk.range = b.dataset.tkrange;
-    store.set("tk-range", tk.range);
-    renderTickets();
+  $$("#ev-range [data-evrange]").forEach((b) => b.addEventListener("click", () => {
+    ev.range = b.dataset.evrange;
+    store.set("tk-range", ev.range);
+    renderEvaluation();
   }));
-  $("#tk-evaluate").addEventListener("click", evaluateResults);
+  $("#ev-evaluate").addEventListener("click", evaluateResults);
   if (desktop) desktop.tickets.onProgress((message) => { tk.step = message; tickBusy(); });
 
   $("#tk-create").addEventListener("click", async () => {
@@ -1244,8 +1269,6 @@
       if (r.covered < r.analyzed) parts.push(`Statistiky se našly jen k ${r.covered} z ${r.analyzed} zápasů`);
       if (r.rejected) parts.push(`${r.rejected} ${r.rejected === 1 ? "tiket navržený" : "tiketů navržených"} AI porušil${r.rejected === 1 ? "" : "o"} pravidla a ${r.rejected === 1 ? "byl zahozen" : "bylo zahozeno"}`);
       tk.warning = parts.length ? `${parts.join(" · ")}.` : "";
-      tk.range = forDay === tkTargetDay() ? tk.day : tk.range;   // nové tikety se hned ukážou (zvolené období = den, pro který vznikly)
-      store.set("tk-range", tk.range);
       if (r.reused) toast("Podklady se od minula nezměnily – použila se předchozí odpověď Gemini, nový dotaz se neposlal.");
     } else {
       tk.message = { text: res.error, error: true };
@@ -1254,38 +1277,38 @@
     loadTicketHistory();
   });
 
-  /* ---------- Slovní vyhodnocení tiketů (Gemini) – druhý panel pravé karty ---------- */
-  function renderTkAi(errorText = "") {
-    const out = $("#tk-ai-out");
-    const note = $("#tk-ai-note");
-    const btn = $("#tk-ai-run");
-    btn.disabled = tk.aiBusy;
-    btn.classList.toggle("is-busy", tk.aiBusy);
-    $("span", btn).textContent = tk.aiBusy ? "Vyhodnocuji…" : "Vyhodnotit pomocí AI";
+  /* ---------- Slovní vyhodnocení tiketů (Gemini) – panel ve vyhodnocení ---------- */
+  function renderEvAi(errorText = "") {
+    const out = $("#ev-ai-out");
+    const note = $("#ev-ai-note");
+    const btn = $("#ev-ai-run");
+    btn.disabled = ev.aiBusy;
+    btn.classList.toggle("is-busy", ev.aiBusy);
+    $("span", btn).textContent = ev.aiBusy ? "Vyhodnocuji…" : "Vyhodnotit pomocí AI";
     note.textContent = "";
-    if (tk.aiBusy) { out.innerHTML = "<p>AI rozebírá tikety…</p>"; return; }
+    if (ev.aiBusy) { out.innerHTML = "<p>AI rozebírá tikety…</p>"; return; }
     if (errorText) { out.innerHTML = `<p class="is-error">${esc(errorText)}</p>`; return; }
-    if (tk.ai && tk.ai.text) {
-      out.innerHTML = aiHtml(tk.ai.text);
-      note.textContent = `Vytvořeno ${fmtKickoff(tk.ai.at)}`;
+    if (ev.ai && ev.ai.text) {
+      out.innerHTML = aiHtml(ev.ai.text);
+      note.textContent = `Vytvořeno ${fmtKickoff(ev.ai.at)}`;
       return;
     }
     out.innerHTML = '<p class="detail__empty">Klikni na „Vyhodnotit pomocí AI“ – Gemini slovně rozebere tvoje vyhodnocené tikety: co je špatně a na co si dát pozor.</p>';
   }
 
-  $("#tk-ai-run").addEventListener("click", async () => {
-    if (!desktop || tk.aiBusy) return;
-    if (!geminiKey.has) { openKey(); renderTkAi("Nejdřív zadej Gemini API klíč (vlevo dole)."); return; }
-    tk.aiBusy = true;
-    renderTkAi();
+  $("#ev-ai-run").addEventListener("click", async () => {
+    if (!desktop || ev.aiBusy) return;
+    if (!geminiKey.has) { openKey(); renderEvAi("Nejdřív zadej Gemini API klíč (vlevo dole)."); return; }
+    ev.aiBusy = true;
+    renderEvAi();
     let res;
     try { res = await desktop.analysis.run(); } catch (err) { res = { ok: false, error: err.message }; }
-    tk.aiBusy = false;
+    ev.aiBusy = false;
     if (res.ok) {
-      tk.ai = { text: res.data, at: new Date().toISOString() };
-      store.set("tk-ai", tk.ai);
-      renderTkAi();
-    } else renderTkAi(res.error);
+      ev.ai = { text: res.data, at: new Date().toISOString() };
+      store.set("tk-ai", ev.ai);
+      renderEvAi();
+    } else renderEvAi(res.error);
   });
 
   /* ---------- Analýza úspěšnosti tipů a tiketů ---------- */
