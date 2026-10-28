@@ -8,7 +8,9 @@ const config = require("../src/config");
 const { parseOdds, estimateOdds } = require("../src/odds");
 const { normalizePick, evaluate, forebetProbability, WIN, LOSS, VOID } = require("../src/markets");
 const { normalize, teamSimilarity, sameMatch } = require("../src/names");
-const { applyFilters, passesFilters, rejectReason, splitByFilters, probabilityClass, HIGH, MID } = require("../src/filters");
+const { rejectReason, splitByFilters, probabilityClass, HIGH, MID } = require("../src/filters");
+const passesFilters = (tip) => rejectReason(tip) === null;
+const applyFilters = (tips) => splitByFilters(tips).passed;
 const { localDate, fmtStamp, addDays, utcDateTime } = require("../src/timeutil");
 const golden = require("./fixtures/golden.json");
 

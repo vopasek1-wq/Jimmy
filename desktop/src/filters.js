@@ -54,10 +54,6 @@ function rejectReason(tip) {
   return null;
 }
 
-function passesFilters(tip) {
-  return rejectReason(tip) === null;
-}
-
 /** Doplní kurzy a rozdělí tipy na ty, které splnily všechny povinné podmínky, a zamítnuté i s důvodem. */
 function splitByFilters(tips) {
   const passed = [];
@@ -70,11 +66,6 @@ function splitByFilters(tips) {
   return { passed, rejected };
 }
 
-/** Zpracuje kurzy a nechá jen tipy, které splní všechny povinné podmínky. */
-function applyFilters(tips) {
-  return splitByFilters(tips).passed;
-}
-
 /**
  * Má smysl pro tip stahovat doplňující data? Platí, když by po doplnění pravděpodobnosti z Forebetu mohl projít filtry
  * (pravděpodobnost bez zdroje se doplní až z Forebetu). Šetří dotazy na tipy, které se stejně zahodí.
@@ -84,7 +75,7 @@ function mayPass(tip) {
   const league = config.leagueByKey(tip.leagueKey);
   if (!league || !league.enabled) return false;
   if (tip.probability === null || tip.probability === undefined) return true;
-  return passesFilters(ensureOdds({ ...tip }));
+  return rejectReason(ensureOdds({ ...tip })) === null;
 }
 
 /** Zelená nad 75 %, žlutá v pásmu 60–75 % (včetně 75). */
@@ -92,4 +83,4 @@ function probabilityClass(probability) {
   return probability > config.HIGH_PROBABILITY ? HIGH : MID;
 }
 
-module.exports = { isWomens, HIGH, MID, REASON_NAMES, rejectReason, passesFilters, mayPass, splitByFilters, applyFilters, probabilityClass };
+module.exports = { isWomens, HIGH, MID, REASON_NAMES, rejectReason, mayPass, splitByFilters, probabilityClass };

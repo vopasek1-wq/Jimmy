@@ -388,12 +388,9 @@ test("Forebet: bez nabídky lig se použije odhad adresy; chybná stránka ligy 
   assert.deepEqual(ms.map((m) => m.home), ["Tirana", "Torino"]);
 });
 
-test("Forebet: když nevyjde ani přehled ani ligy, použije se starý přehled; jinak první chyba", async () => {
+test("Forebet: když nevyjde ani přehled ani ligy, skončí první chybou", async () => {
   const { SourceError } = require("../src/http");
-  const old = forebetPage([eplRow("Torino", "Monza", [50, 30, 20])], "Ita1");
-  const http = { getText: async (url) => { if (url.endsWith("football-predictions")) return old; throw new SourceError("HTTP 404"); } };
   const browser = { loadHtml: async () => { throw new Error("okno nemělo být potřeba"); } };
-  assert.deepEqual((await new forebet.ForebetScraper(http, browser).fetch()).map((m) => m.home), ["Torino"]);
   await assert.rejects(() => new forebet.ForebetScraper({ getText: async () => { throw new SourceError("HTTP 404"); } }, browser).fetch(), /404/);
 });
 

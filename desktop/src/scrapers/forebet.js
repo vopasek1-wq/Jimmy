@@ -88,7 +88,7 @@ function matchUrl($, row) {
   const href = (a.attr("href") || "").trim();
   if (!href) return "";
   try {
-    return new URL(href, config.FOREBET_URL).toString();
+    return new URL(href, config.FOREBET_TODAY_URL).toString();
   } catch {
     return "";
   }
@@ -238,7 +238,7 @@ function leagueLinks(html) {
     const p = `${m[1]}/${m[2]}`.toLowerCase();
     if (seen.has(p)) return;
     seen.add(p);
-    try { out.push({ path: p, url: new URL(href, config.FOREBET_URL).toString() }); } catch { /* vadný odkaz */ }
+    try { out.push({ path: p, url: new URL(href, config.FOREBET_TODAY_URL).toString() }); } catch { /* vadný odkaz */ }
   });
   return out;
 }
@@ -291,7 +291,7 @@ class ForebetScraper {
     this.browser = browser;
   }
 
-  /** Přehled „dnes“ (a záložní starý přehled): obyčejné HTTP, jinak okno prohlížeče. Vrací { url, matches, html, via }. */
+  /** Přehled „dnes“: obyčejné HTTP, jinak okno prohlížeče. Vrací { url, matches, html, via }. */
   async _list(url, { interactive, progress }) {
     let plainHtml = "";
     if (!interactive) {
@@ -371,8 +371,8 @@ class ForebetScraper {
 
   /**
    * Zápasy z Forebetu: přehled „dnes“ slouží hlavně jako zdroj odkazů na stránky lig; pak se načtou stránky sledovaných lig
-   * (`leagues` = klíče lig, které Scores24 teď nabízí), jejich zápasy mají jistě správnou ligu. Starý přehled se bere, jen když
-   * nevyšlo nic jiného. Stručný přehled načtených stránek zůstane v `this.report` (řádky pro diagnostiku). @param {object} [opts] { interactive, leagues }
+   * (`leagues` = klíče lig, které Scores24 teď nabízí), jejich zápasy mají jistě správnou ligu.
+   * Stručný přehled načtených stránek zůstane v `this.report` (řádky pro diagnostiku). @param {object} [opts] { interactive, leagues }
    */
   async fetch(progress = () => {}, { interactive = false, leagues = null } = {}) {
     progress("Forebet: stahuji pravděpodobnosti…");
@@ -409,16 +409,6 @@ class ForebetScraper {
       }
     }
 
-    if (!merged.length) { // nic z lig ani z přehledu → starý přehled
-      try {
-        const old = await this._list(config.FOREBET_URL, { interactive: false, progress });
-        reports.push(old);
-        add(old.matches);
-      } catch (err) {
-        firstError ??= err;
-        reports.push({ url: config.FOREBET_URL, html: "", matches: [], via: "", error: err.message || String(err) });
-      }
-    }
     this.report = [`Odkazy na ligy v nabídce: ${links.length}; sledované ligy: ${trackedLeagues(links)}`, ...reports.map(pageLine)];
     if (!merged.length) throw firstError || new SourceError("Forebet: na stránce nejsou rozpoznatelné zápasy (změnila se struktura webu?).");
     return merged;
