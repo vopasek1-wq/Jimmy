@@ -194,7 +194,7 @@ Forebet je chráněný Cloudflare. Aplikace nejdřív zkusí obyčejný dotaz, p
 (`football-tips-and-predictions-for-today`) obsahuje jen malou část zápasů a žádnou ze sledovaných lig, proto z jeho nabídky
 aplikace vezme odkazy na stránky lig (`…-for-england/premier-league` apod.) a načte přímo stránky těch sledovaných lig, které
 právě nabízí Scores24 (když odkaz v nabídce není, zkusí odhad adresy). Zbylé stránky lig se při ověření Cloudflare projdou v jednom
-skrytém okně. Starý přehled `/football-predictions` (jen první země podle abecedy) je až záloha. Když kontrola nepřejde,
+skrytém okně. Když kontrola nepřejde,
 objeví se pruh s tlačítkem **Ověřit Forebet**: otevře se okno, ve kterém kontrolu dokončíte (až 90 s), a aplikace
 si ověření pamatuje.
 

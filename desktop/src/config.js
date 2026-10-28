@@ -12,11 +12,9 @@ const DISPLAY_TZ = "Europe/Prague";
 const SCORES24_BASE = "https://scores24.live";
 const SCORES24_URL = `${SCORES24_BASE}/en/predictions/soccer`;
 // Forebet: přehled „dnes“ je jen malá část zápasů (a neobsahuje sledované ligy), proto se z jeho nabídky ligových odkazů
-// (`/football-tips-and-predictions-for-<země>/<liga>`) načtou přímo stránky sledovaných lig. Starý přehled /football-predictions
-// vrací jen první země podle abecedy a je až záložní.
+// (`/football-tips-and-predictions-for-<země>/<liga>`) načtou přímo stránky sledovaných lig.
 const FOREBET_BASE = "https://www.forebet.com/en";
 const FOREBET_TODAY_URL = `${FOREBET_BASE}/football-tips-and-predictions-for-today`;
-const FOREBET_URL = `${FOREBET_BASE}/football-predictions`;
 // Evropské soutěže má Forebet na /en/predictions-europe/<soutěž>, ostatní na /en/football-tips-and-predictions-for-<země>/<liga>.
 const forebetLeagueUrl = (path) => (/^predictions-/.test(path) ? `${FOREBET_BASE}/${path}` : `${FOREBET_BASE}/football-tips-and-predictions-for-${path}`);
 const SOFASCORE_API = "https://www.sofascore.com/api/v1";
@@ -118,6 +116,6 @@ function leagueByKey(key) {
 
 module.exports = {
   MIN_PROBABILITY, MIN_ODDS, HIGH_PROBABILITY, ESTIMATED_MARGIN, DISPLAY_TZ,
-  SCORES24_BASE, SCORES24_URL, FOREBET_URL, FOREBET_TODAY_URL, forebetLeagueUrl, SOFASCORE_API, SOFASCORE_WEB, RELEASE_API, DOWNLOAD_URL, SCORES24_COOKIES,
+  SCORES24_BASE, SCORES24_URL, FOREBET_TODAY_URL, forebetLeagueUrl, SOFASCORE_API, SOFASCORE_WEB, RELEASE_API, DOWNLOAD_URL, SCORES24_COOKIES,
   REQUEST_TIMEOUT_MS, REQUEST_DELAY_MS, REQUEST_RETRIES, LEAGUES, findLeague, leagueByKey,
 };
