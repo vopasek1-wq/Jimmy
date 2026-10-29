@@ -189,10 +189,14 @@ function goalsProbability(code, goals) {
   if (code === "NOBTTS") return pick(goals.btts?.no, goals.btts?.yes);
   const m = /^([OU])(\d+(?:\.\d+)?)$/.exec(code);
   if (!m) return null;
-  const line = String(Number(m[2]));
-  const over = goals.over?.[line];
-  const under = goals.under?.[line];
-  return m[1] === "O" ? pick(over, under) : pick(under, over);
+  const isOver = m[1] === "O";
+  const n = Number(m[2]);
+  const at = (line) => (isOver ? pick(goals.over?.[line], goals.under?.[line]) : pick(goals.under?.[line], goals.over?.[line]));
+  const direct = at(String(n));
+  if (direct !== null || !Number.isInteger(n)) return direct;
+  // Celočíselná linie (při přesném počtu gólů se sázka vrací), kterou Forebet nehodnotí: výhra Over n = Over n+0,5, výhra Under n = Under n−0,5.
+  // Je to spodní odhad pravděpodobnosti výhry bez vrácených sázek, takže se nikdy nepřecení.
+  return at(String(isOver ? n + 0.5 : n - 0.5));
 }
 
 const TOTAL_CODE = /^([HA]?)([OU])(\d+(?:\.\d+)?)$/;
