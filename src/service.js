@@ -13,7 +13,6 @@ const { MatchStats, chartsWithForebet } = require("./matchstats");
 const { analyze, buildTicketsPrompt } = require("./analysis");
 const { candidatesFrom, settleTicket, ticketStats, dueKickoffs } = require("./tickets");
 const { GoalsCache } = require("./goalscache");
-const { ticketAdvice } = require("./advice");
 const { tidy } = require("./housekeeping");
 const { buildDiagnostics } = require("./diagnostics");
 const { resultOk } = require("./models");
@@ -194,8 +193,7 @@ class TipService {
   /** Uložené tikety s výsledky podle výsledků jejich tipů a souhrn (tikety × všechny tipy). */
   ticketHistory(limit = 60) {
     const settled = this._settledTickets();
-    const tipInfo = this.db.tipInfoByIds(settled.flatMap((t) => t.legs.map((l) => l.tipId)));
-    return { tickets: settled.slice(0, limit), stats: ticketStats(settled), tips: this.analysis().overall, advice: ticketAdvice(settled, tipInfo) };
+    return { tickets: settled.slice(0, limit), stats: ticketStats(settled) };
   }
 
   /** Všechny uložené tikety s výsledky podle výsledků jejich tipů (nejnovější první). */
