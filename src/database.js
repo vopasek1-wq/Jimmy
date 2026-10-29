@@ -211,14 +211,6 @@ class Database {
     return out;
   }
 
-  /** Typ tipu podle id: Map id → { tipCode, leagueKey } (pro rozbor tiketů po skupinách). */
-  tipInfoByIds(ids) {
-    const out = new Map();
-    const stmt = this.db.prepare("SELECT tip_code, league_key FROM tips WHERE id=?");
-    for (const id of new Set(ids)) { const r = stmt.get(id); if (r) out.set(id, { tipCode: r.tip_code, leagueKey: r.league_key }); }
-    return out;
-  }
-
   /** Aktualizuje stav a skóre rozehraných zápasů (bez nového běhu stahování). */
   updateLive(t) {
     this.db.prepare("UPDATE tips SET status=?, home_score=?, away_score=?, sofascore_url=?, sofascore_id=?, updated_at=? WHERE id=?")

@@ -129,12 +129,12 @@ Zvolíš den (Dnes / Zítra) a klikneš na **Vytvořit tikety (AI)** – počet 
 Pravidla, která aplikace u odpovědi **kontroluje** (tiket, který je porušuje, zahodí): 2–5 zápasů na tiket, kombinovaný kurz alespoň 2,00,
 každý zápas nejvýš v jednom tiketu a žádné neznámé tipy. **U každého tipu v tiketu** je jeho vlastní krátké zdůvodnění (1–2 věty, forma týmů, H2H, góly, zranění; ukáže se v detailu zápasu vpravo nad pravděpodobností), u tiketu jednověté shrnutí
 a úroveň jistoty; **celkový kurz, pravděpodobnost (součin) a odhad výnosu počítá aplikace sama**. Používá se stejný Gemini klíč
-jako v Analýze; poslední tikety zůstanou po restartu.
+jako u slovního vyhodnocení; poslední tikety zůstanou po restartu.
 
 **Uložené tikety a jejich výsledky.** Každý vytvořený tiket se uloží (stejná sada tipů ve stejný den jen jednou). Ve **Vyhodnocení** je
 seznam všech tiketů s výsledkem: tiket je *vyhraný*, když vyjdou všechny jeho tipy, *prohraný* hned po první prohře, vrácený tip se
-z kurzu vyjme. Výsledky tipů se berou z automatického vyhodnocení. V **Analýze** je srovnání „tikety od Gemini × všechny tipy jednotlivě“
-(odhad = součin pravděpodobností, úspěšnost, rozdíl, ROI při vkladu 1). Patnáct minut před začátkem zápasu z čekajícího tiketu přijde
+z kurzu vyjme. Výsledky tipů se berou z automatického vyhodnocení.
+Patnáct minut před začátkem zápasu z čekajícího tiketu přijde
 systémové oznámení (jednou na zápas).
 
 Statistiky se záměrně nehledají přes „vyhledávání na webu“ v Gemini API (Grounding with Google Search) – to u **bezplatného klíče** u novějších
@@ -144,18 +144,7 @@ důvod (vyčerpaný denní/minutový limit, model bez limitu na bezplatném klí
 > Pravděpodobnost tiketu je součin odhadů zdroje, které nejsou kalibrované, takže bývá optimistická; kurzy u Tipsportu se mohou lišit
 > a výnos není zaručen. Sázení je jen pro osoby starší 18 let.
 
-## Analýza úspěšnosti
-
-Záložka **Analýza** porovnává odhadnutou pravděpodobnost tipů se skutečnými výsledky (počítají se jen výhry a prohry, ne vrácené
-sázky): úspěšnost po pásmech 60–70 / 70–80 / 80–90 / 90–100 %, podle typu tipu a podle soutěže, včetně rozdílu v procentních bodech
-a ROI. Pod tabulkami jsou textová **zjištění** (např. „tipy s pravděpodobností 80–90 % vycházejí jen v 50 % případů“); u malého
-počtu tipů (pod 30) aplikace upozorní, že závěry jsou orientační.
-
-Panel **Na co sázet a na co ne** vychází z výsledků uložených tiketů. Porovnává skupiny tiketů (počet zápasů, jistota podle AI, kurz
-tiketu) a tipů v nich (typ tipu, soutěž, pravděpodobnost) podle skutečné úspěšnosti a ROI při vkladu 1. Do sloupce **Sázet** se dostane
-skupina s ROI od +5 % (a ne s nadhodnoceným odhadem), do sloupce **Nesázet** skupina s ROI do −10 % nebo s úspěšností o 10 p. b. pod
-odhadem. Hodnotí se jen skupiny s aspoň 4 tikety, resp. 6 tipy; u malého vzorku se to výslovně napíše. Je to pomůcka z dosavadních
-výsledků, ne záruka.
+## Slovní vyhodnocení (Gemini)
 
 Tlačítko **Vyhodnotit pomocí AI** (panel **Slovní vyhodnocení** v záložce Vyhodnocení) pošle **vyhodnocené tikety** (nejvýš 25 nejnovějších: zápasy, tipy, kurzy, výsledky, skóre a původní zdůvodnění) do **Google Gemini API** **tvým vlastním
 klíčem** a zobrazí **slovní vyhodnocení**: jak tikety dopadly, co je špatně (co prohrané tikety shodilo a jaké chyby se opakují), na co si dát pozor a co dělat jinak. Bez vyhodnocených tiketů se analýza nespustí. Klíč si vytvoříš zdarma v Google AI Studio
@@ -220,7 +209,7 @@ Potřebujete Node.js 22+ (aplikace používá vestavěné `node:sqlite` z Electr
 ```bat
 npm install
 npm start          :: spustí aplikaci
-npm test           :: testy (parsery, filtry, databáze, pipeline, HTTP, tikety, analýza)
+npm test           :: testy (parsery, filtry, databáze, pipeline, HTTP, tikety)
 npm run dist       :: portable .exe do dist\ (na Windows)
 ```
 
@@ -237,7 +226,7 @@ src/
   scrapers/             scores24.js, forebet.js, sofascore.js
   pipeline.js           sloučení zdrojů → filtry → obohacení; automatické vyhodnocení výsledků
   matchstats.js, live.js  statistiky zápasů a živé zápasy ze SofaScore
-  tickets.js, analysis.js, advice.js  tikety a analýza přes Gemini, rady k tipům
+  tickets.js, analysis.js  tikety přes Gemini, kalibrace odhadů a slovní vyhodnocení
   database.js           SQLite: běhy, tipy, tikety, historie, statistiky
   service.js            propojení všeho pro okno
   updates.js, diagnostics.js, housekeeping.js, goalscache.js, windowstate.js  kontrola nové verze, diagnostika, úklid, mezipaměť, poloha okna

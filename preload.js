@@ -36,7 +36,6 @@ contextBridge.exposeInMainWorld("desktop", {
     onProgress: (callback) => ipcRenderer.on("tickets:progress", (_event, message) => callback(String(message))),
   },
   analysis: {
-    get: () => ipcRenderer.invoke("analysis:get"),
     hasKey: () => ipcRenderer.invoke("analysis:has-key"),
     setKey: (key) => ipcRenderer.invoke("analysis:set-key", key),
     run: () => ipcRenderer.invoke("analysis:run"),

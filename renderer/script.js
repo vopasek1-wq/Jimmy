@@ -136,7 +136,7 @@
     ${extra.note ? `<div class="stat__note">${extra.note}</div>` : ""}</div>`;
 
   /* ---------- Navigace ---------- */
-  const VIEWS = ["overview", "live", "tickets", "evaluation", "analysis", "history"];
+  const VIEWS = ["overview", "live", "tickets", "evaluation", "history"];
   const showView = (view) => {
     if (!VIEWS.includes(view)) view = "overview";
     app.dataset.view = view;
@@ -152,7 +152,6 @@
     if (view === "history") loadHistory();
     if (view === "live") startLive();
     else stopLive();
-    if (view === "analysis") loadAnalysis();
     if (view === "tickets") loadTickets();
     if (view === "evaluation") loadEvaluation();
     renderCats();
@@ -1311,71 +1310,6 @@
       renderEvAi();
     } else renderEvAi(res.error);
   });
-
-  /* ---------- Analýza úspěšnosti tipů a tiketů ---------- */
-  const an = { data: null, tickets: null };
-  const signed1 = (v) => (v === null ? "–" : `${v > 0 ? "+" : v < 0 ? "−" : ""}${nf1.format(Math.abs(v))}`);
-
-  function tableHtml(rows, nameHead) {
-    if (!rows.length) return '<p class="empty">Zatím není co ukázat.</p>';
-    const body = rows.map((r) => {
-      const cls = r.gap === null ? "" : r.gap >= 3 ? "gap-pos" : r.gap <= -3 ? "gap-neg" : "";
-      const bar = r.n ? `<div class="an-bar" title="skutečnost ${r.actual} %, předpoklad ${r.predicted} %"><i style="width:${Math.min(100, r.actual)}%"></i><b style="left:${Math.min(100, r.predicted)}%"></b></div>` : "";
-      return `<tr><td>${esc(r.label || r.name)}</td><td>${r.n}</td><td>${r.n ? `${nf1.format(r.predicted)} %` : "–"}</td><td>${r.n ? `${nf1.format(r.actual)} %` : "–"}</td>
-        <td class="${cls}">${signed1(r.gap)}${r.n ? " p. b." : ""}</td><td>${r.roi === null ? "–" : `${signed1(r.roi)} %`}</td><td>${bar}</td></tr>`;
-    }).join("");
-    return `<table class="an-table"><thead><tr><th>${esc(nameHead)}</th><th>Tipů</th><th>Odhad</th><th>Skutečně</th><th>Rozdíl</th><th>ROI</th><th></th></tr></thead><tbody>${body}</tbody></table>`;
-  }
-
-  function renderAnalysis() {
-    const a = an.data;
-    if (!a) {
-      $("#an-stats").innerHTML = "";
-      ["an-bands", "an-markets", "an-leagues"].forEach((id) => { $(`#${id}`).innerHTML = ""; });
-      $("#an-insights").innerHTML = `<li>${desktop ? "Načítám…" : "Analýza je dostupná jen v aplikaci."}</li>`;
-      return;
-    }
-    const o = a.overall;
-    $("#an-stats").innerHTML = [
-      stat(String(o.n), "vyhodnocených tipů", "stat--accent"),
-      stat(o.n ? `${nf1.format(o.actual)} %` : "–", "skutečná úspěšnost", "", { bar: o.n ? [{ w: o.actual, cls: o.actual >= 60 ? "is-good" : o.actual >= 45 ? "is-warn" : "is-bad" }] : null }),
-      stat(o.n ? `${nf1.format(o.predicted)} %` : "–", "průměrný odhad", "", { bar: o.n ? [{ w: o.predicted, cls: "is-muted" }] : null }),
-      stat(o.n ? `${signed1(o.gap)} p. b.` : "–", "rozdíl od odhadu", o.gap > 0 ? "stat--pos" : o.gap < 0 ? "stat--neg" : ""),
-      stat(o.roi === null ? "–" : `${signed1(o.roi)} %`, "ROI (skutečné kurzy)", o.roi > 0 ? "stat--pos" : o.roi < 0 ? "stat--neg" : ""),
-    ].join("");
-    renderIcons();
-    $("#an-bands").innerHTML = tableHtml(a.bands, "Pásmo");
-    $("#an-markets").innerHTML = tableHtml(a.markets, "Typ tipu");
-    $("#an-leagues").innerHTML = tableHtml(a.leagues, "Soutěž");
-    const th = an.tickets;
-    $("#an-tickets").innerHTML = !th || !th.stats.n
-      ? `<p class="empty">${th && (th.tickets.length) ? "Uložené tikety zatím čekají na výsledky zápasů." : "Zatím nejsou uložené žádné tikety. Vytvoř je v záložce Tikety, po zápasech se tady vyhodnotí."}</p>`
-      : tableHtml([{ name: "Tikety od Gemini (počet tiketů)", ...th.stats }, { name: "Všechny tipy jednotlivě (počet tipů)", ...th.tips }], "Srovnání");
-    $("#an-insights").innerHTML = (a.insights.length ? a.insights : ["Zatím nejsou žádná zjištění."]).map((t) => `<li>${esc(t)}</li>`).join("");
-    renderAdvice(th && th.advice);
-  }
-
-  /** „Na co sázet a na co ne“ podle výsledků tiketů: dva sloupce se skupinami, které se osvědčily / ne. */
-  function renderAdvice(adv) {
-    const el = $("#an-advice");
-    if (!adv) { el.innerHTML = ""; return; }
-    const list = (items, empty) => (items.length
-      ? `<ul>${items.map((i) => `<li><strong>${esc(i.label)}</strong><span>${esc(i.text)}</span></li>`).join("")}</ul>`
-      : `<p class="adv__empty">${esc(empty)}</p>`);
-    el.innerHTML = `<div class="adv">
-        <div class="adv__col adv__col--bet"><h4>Sázet</h4>${list(adv.bet, "Zatím nic, co by se výrazně osvědčilo.")}</div>
-        <div class="adv__col adv__col--avoid"><h4>Nesázet</h4>${list(adv.avoid, "Zatím nic, co by výrazně prodělávalo.")}</div>
-      </div><p class="adv__note">${esc(adv.note)}</p>`;
-  }
-
-  async function loadAnalysis() {
-    if (!desktop) { renderAnalysis(); return; }
-    const res = await desktop.analysis.get();
-    if (res.ok) an.data = res.data;
-    const th = await desktop.tickets.history();
-    if (th.ok) an.tickets = th.data;
-    renderAnalysis();
-  }
 
   /** Jednoduché zobrazení textu od AI: odstavce, odrážky „- “ a **tučné**. */
   function aiHtml(text) {

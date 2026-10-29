@@ -164,7 +164,6 @@ const keyFile = () => path.join(app.getPath("userData"), "ai-key.bin");
 const readKey = () => {
   try { return safeStorage.decryptString(fs.readFileSync(keyFile())); } catch { return ""; }
 };
-ipcMain.handle("analysis:get", safe(() => service.analysis()));
 ipcMain.handle("analysis:has-key", () => Boolean(readKey()));
 ipcMain.handle("analysis:set-key", safe((_e, key) => {
   const k = String(key || "").trim();
