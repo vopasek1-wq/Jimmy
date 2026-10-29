@@ -10,8 +10,6 @@ a jako cílovou sázkovou kancelář počítá s **Tipsportem**. Vzhled: tmavé 
 | [Forebet](https://www.forebet.com/) | statistické pravděpodobnosti 1 / X / 2 a gólů (Over/Under, oba týmy skórují) | HTTP, jinak okno aplikace (je za Cloudflare) |
 | [SofaScore](https://www.sofascore.com/cs) | přesný začátek, stav, skóre, výsledky | veřejný JSON endpoint webu |
 
-Aplikace žije ve složce [`desktop/`](desktop).
-
 ## Stažení a spuštění (Windows)
 
 `.exe` se sestavuje na GitHubu (Actions → **Fotbalové tipy – Windows build**) a po každém sestavení se nahraje do
@@ -39,7 +37,7 @@ s `.exe`. Pro zkoušení lze složku přesměrovat proměnnou prostředí `TIPST
 ## Vzhled
 
 Aplikace má „skleněný“ vzhled (verze 3): tmavé pozadí, průhledné rozmazané panely se zářivými rohy
-a tlumeně modrá tlačítka bez záře. Styly jsou v `desktop/renderer/styles.css` (poslední sekce „Skleněný vzhled“, barvy v tokenech na začátku souboru).
+a tlumeně modrá tlačítka bez záře. Styly jsou v `renderer/styles.css` (poslední sekce „Skleněný vzhled“, barvy v tokenech na začátku souboru).
 
 ## Ovládání
 
@@ -55,7 +53,7 @@ Záložky pod vyhledáváním: **Přehled** (tabulka tipů a vedle ní detail vy
 
 ## Co aplikace zobrazí
 
-Tip se objeví, **jen když platí všechno** z následujícího (konstanty jsou v `desktop/src/config.js`):
+Tip se objeví, **jen když platí všechno** z následujícího (konstanty jsou v `src/config.js`):
 
 * soutěž je mezi sledovanými – Premier League, La Liga, Serie A, Bundesliga, Ligue 1, Liga mistrů,
   Evropská liga, Konferenční liga, Eredivisie, Liga Portugal, belgická Pro League, Süper Lig,
@@ -201,7 +199,7 @@ si ověření pamatuje.
 > **Ověřeno na živých stránkách:** Cloudflare při vývoji nepustil Forebet z datacentrové IP, ale u uživatele na domácím
 > internetu se seznamy zápasů i stránky zápasů načítají (diagnostika z verze 1.0.118: góly u 7 z 7 zápasů). Pravděpodobnosti
 > gólů se čtou z viditelného textu („Over 2.5 … 55 %“, „Both teams to score … Yes … No …“), ne podle tříd. Když na stránce
-> zápasu nic takového nenajde, ukáže se nahoře upozornění (`parseGoals` v `desktop/src/scrapers/forebet.js`).
+> zápasu nic takového nenajde, ukáže se nahoře upozornění (`parseGoals` v `src/scrapers/forebet.js`).
 
 ### Diagnostika pro vývojáře
 
@@ -220,33 +218,31 @@ API klíč ani nic osobního. Ladicí soubory ve složce `ladeni` se přepisují
 Potřebujete Node.js 22+ (aplikace používá vestavěné `node:sqlite` z Electronu).
 
 ```bat
-cd desktop
 npm install
 npm start          :: spustí aplikaci
 npm test           :: testy (parsery, filtry, databáze, pipeline, HTTP, tikety, analýza)
-npm run dist       :: portable .exe do desktop\dist (na Windows)
+npm run dist       :: portable .exe do dist\ (na Windows)
 ```
 
 `npm run dist` sestaví Windows `.exe`; na jiném systému to nejde bez Wine, proto ho sestavuje GitHub Actions
 (`.github/workflows/tipy-windows.yml`: testy → sestavení → zkušební spuštění → vydání `tipy-latest`).
 
 ```
-desktop/
-  main.js, preload.js     hlavní proces Electronu (okno bez rámečku, IPC) a bezpečný most do okna
-  src/
-    config.js             prahy filtrů, seznam lig, adresy zdrojů
-    markets.js, odds.js,  typy tipů a vyhodnocení výsledku, převod kurzů, párování názvů týmů
-    names.js, filters.js, models.js, timeutil.js, dom.js
-    http.js, browser.js   HTTP klient (pauzy, opakování, detekce blokace) a sdílené skryté okno prohlížeče
-    scrapers/             scores24.js, forebet.js, sofascore.js
-    pipeline.js           sloučení zdrojů → filtry → obohacení; automatické vyhodnocení výsledků
-    matchstats.js, live.js  statistiky zápasů a živé zápasy ze SofaScore
-    tickets.js, analysis.js, advice.js  tikety a analýza přes Gemini, rady k tipům
-    database.js           SQLite: běhy, tipy, tikety, historie, statistiky
-    service.js            propojení všeho pro okno
-    updates.js, diagnostics.js, housekeeping.js, goalscache.js, windowstate.js  kontrola nové verze, diagnostika, úklid, mezipaměť, poloha okna
-  renderer/               rozhraní (index.html, styles.css, script.js, vendor/ = GridStack, Lucide, Roboto)
-  test/                   node:test + ukázkové stránky ve struktuře živých webů
+main.js, preload.js     hlavní proces Electronu (okno bez rámečku, IPC) a bezpečný most do okna
+src/
+  config.js             prahy filtrů, seznam lig, adresy zdrojů
+  markets.js, odds.js,  typy tipů a vyhodnocení výsledku, převod kurzů, párování názvů týmů
+  names.js, filters.js, models.js, timeutil.js, dom.js
+  http.js, browser.js   HTTP klient (pauzy, opakování, detekce blokace) a sdílené skryté okno prohlížeče
+  scrapers/             scores24.js, forebet.js, sofascore.js
+  pipeline.js           sloučení zdrojů → filtry → obohacení; automatické vyhodnocení výsledků
+  matchstats.js, live.js  statistiky zápasů a živé zápasy ze SofaScore
+  tickets.js, analysis.js, advice.js  tikety a analýza přes Gemini, rady k tipům
+  database.js           SQLite: běhy, tipy, tikety, historie, statistiky
+  service.js            propojení všeho pro okno
+  updates.js, diagnostics.js, housekeeping.js, goalscache.js, windowstate.js  kontrola nové verze, diagnostika, úklid, mezipaměť, poloha okna
+renderer/               rozhraní (index.html, styles.css, script.js, vendor/ = GridStack, Lucide, Roboto)
+test/                   node:test + ukázkové stránky ve struktuře živých webů
 ```
 
 ## Řešení potíží
@@ -260,7 +256,7 @@ desktop/
 | Chybí konkrétní zápas, který Scores24 nabízí | Stiskněte **Ctrl + Shift + D** a v části „Zahozené tipy podle filtrů“ najděte zápas: je tam uvedený důvod (např. „pravděpodobnost 55 % (Forebet) není nad 60 %“ nebo „bez pravděpodobnosti (Forebet: zápas nenalezen)“). |
 | Windows SmartScreen aplikaci blokuje | *Další informace → Přesto spustit* (aplikace není podepsaná). |
 | Zápasy mají posunutý čas | Časy se převádějí z UTC do `Europe/Prague`; zkontrolujte systémové datum a čas. |
-| „Struktura webu se změnila“ | Weby se mění; parsery jsou v `desktop/src/scrapers/`, testy ukazují očekávaný tvar dat. |
+| „Struktura webu se změnila“ | Weby se mění; parsery jsou v `src/scrapers/`, testy ukazují očekávaný tvar dat. |
 
 ## Upozornění
 
