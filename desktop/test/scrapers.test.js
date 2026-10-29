@@ -274,6 +274,10 @@ test("Forebet: goalsProbability pro BTTS a Over/Under", () => {
   assert.equal(goalsProbability("O2.5", g), 57);
   assert.equal(goalsProbability("U2.5", g), 43);
   assert.equal(goalsProbability("O3.5", g), null);
+  assert.equal(goalsProbability("U3", g), 43);  // celočíselná linie: výhra Under 3 = Under 2,5 (spodní odhad)
+  assert.equal(goalsProbability("O2", g), 57);  // výhra Over 2 = Over 2,5
+  assert.equal(goalsProbability("O3", g), null); // Over 3,5 Forebet nemá
+  assert.equal(goalsProbability("U2", g), null); // Under 1,5 Forebet nemá
   assert.equal(goalsProbability("BTTS", g), 62);
   assert.equal(goalsProbability("NOBTTS", g), 38);
   assert.equal(goalsProbability("BTTS", { btts: { no: 40 } }), 60); // dopočet z druhé strany

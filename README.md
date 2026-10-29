@@ -76,7 +76,7 @@ skončené jsou ztlumené.
   (naměřeno 101) – v aplikaci se omezí na 100 %.
 * **Sloupec „Forebet“** je statistický model. Pro 1 / X / 2 a dvojitou šanci (1X, X2, 12) se bere z přehledu
   Forebetu; pro **Over/Under a oba týmy skórují** aplikace otevře stránku zápasu na Forebetu (až 25 stránek za běh)
-  a přečte z ní pravděpodobnosti gólů. Týmové totaly a handicapy Forebet nehodnotí (v tabulce „n/a“). Jediná výjimka je **handicap 0**
+  a přečte z ní pravděpodobnosti gólů. Celočíselnou linii (např. Under 3, kde se při přesně 3 gólech sázka vrací) dopočte jako spodní odhad z nejbližší půlené linie (Under 3 ≈ Under 2,5); nikdy nepřecení. Týmové totaly a handicapy Forebet nehodnotí (v tabulce „n/a“). Jediná výjimka je **handicap 0**
   („sázka bez remízy“): ten se dopočítá z 1 / X / 2 jako výhra týmu při vyřazení remízy, tj. `p / (p1 + p2)` (např. 45 / 28 / 27 → domácí 62,5 %,
   hosté 37,5 %). Je to odhad, ne údaj Forebetu; ve sloupci Forebet se ukáže vždy a jako pravděpodobnost tipu se bere, jen když Scores24 procento neuvedl.
   
