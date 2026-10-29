@@ -3,7 +3,7 @@ name: Fotbalové tipy – Windows build
 on:
   push:
     branches: ["**"]
-    paths: ["desktop/**", ".github/workflows/tipy-windows.yml"]
+    paths-ignore: ["README.md"]
   workflow_dispatch:
 
 permissions:
@@ -12,10 +12,6 @@ permissions:
 concurrency:
   group: tipy-windows-${{ github.ref }}
   cancel-in-progress: true
-
-defaults:
-  run:
-    working-directory: desktop
 
 jobs:
   build:
@@ -27,7 +23,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: desktop/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Instalace závislostí
         run: npm ci
