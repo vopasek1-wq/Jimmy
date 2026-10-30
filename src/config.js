@@ -66,6 +66,11 @@ const LEAGUES = [
     slugRe: /^scotland-premiership$/i, countryRe: /^Scotland$/i, nameRe: /^Premiership$/i, forebetTags: ["Sco1", "Sc1"], forebetPaths: [/^scotland\/premiership$/], forebetGuess: "scotland/premiership" },
   { key: "CESKO", nameCs: "Česko – 1. liga", short: "1. liga", sofascoreId: 172,
     slugRe: /^czech-republic-1-liga$/i, countryRe: /^Czech/i, nameRe: /^1\.? ?Liga$/i, forebetTags: ["Cze1", "Cz1"], forebetPaths: [/^czech-rep\/(chance-liga|1-liga|fortuna-liga)$/], forebetGuess: "czech-rep/chance-liga" },
+  { key: "NORSKO", nameCs: "Norsko – Eliteserien", short: "Eliteserien", sofascoreId: 20,
+    slugRe: /^norway-eliteserien$/i, countryRe: /^Norway$/i, nameRe: /^Eliteserien$/i, forebetTags: [], forebetPaths: [/^norway\/eliteserien$/], forebetGuess: "norway/eliteserien" },
+  { key: "BULHARSKO", nameCs: "Bulharsko – První liga", short: "První liga (BG)", sofascoreId: 247,
+    slugRe: /^bulgaria-(first-professional-league|first-league|parva-liga|efbet-liga)$/i, countryRe: /^Bulgaria$/i, nameRe: /^(First Professional League|First League|Parva Liga|efbet Liga)$/i,
+    forebetTags: [], forebetPaths: [/^bulgaria\/(first-league|parva-liga|a-grupa|efbet-liga)$/], forebetGuess: ["bulgaria/first-league", "bulgaria/parva-liga"] },
   // Domácí poháry zemí výše: v levém sloupci jsou pod svou zemí (`group` = klíč hlavní ligy). Adresy na Forebetu se hledají jen v jeho nabídce.
   { key: "FACUP", group: "EPL", nameCs: "Anglie – FA Cup", short: "FA Cup", sofascoreId: 19,
     slugRe: /^england-fa-cup$/i, countryRe: /^England$/i, nameRe: /^FA Cup$/i, forebetTags: [], forebetPaths: [/^england\/fa-cup$/], forebetGuess: "england/fa-cup" },

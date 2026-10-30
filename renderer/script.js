@@ -973,7 +973,7 @@
 
   // Levý sloupec: ligy se jmenují podle zemí (Francie, Itálie…), evropské poháry zůstávají pod svým názvem.
   // Vlajky (flag-icons, MIT; soubory ve vendor/flags): emoji vlajky Windows neukazuje. Poháry nejsou země, ty zůstávají se zkratkou.
-  const COUNTRY_FLAG = { EPL: "gb-eng", LALIGA: "es", SERIEA: "it", BUNDESLIGA: "de", LIGUE1: "fr", EREDIVISIE: "nl", PORTUGAL: "pt", BELGIE: "be", TURECKO: "tr", SKOTSKO: "gb-sct", CESKO: "cz" };
+  const COUNTRY_FLAG = { EPL: "gb-eng", LALIGA: "es", SERIEA: "it", BUNDESLIGA: "de", LIGUE1: "fr", EREDIVISIE: "nl", PORTUGAL: "pt", BELGIE: "be", TURECKO: "tr", SKOTSKO: "gb-sct", CESKO: "cz", NORSKO: "no", BULHARSKO: "bg" };
   const leagueLabel = (l) => (String(l.nameCs || "").includes(" – ") ? l.nameCs.split(" – ")[0] : l.short);
   // Domácí poháry jsou v levém sloupci pod svou zemí: filtr je skupina (klíč hlavní ligy země), ne jednotlivá soutěž.
   const groupOfKey = new Map();
