@@ -123,6 +123,14 @@ test("filtr: minimální kurz je včetně", () => {
   assert.equal(passesFilters(mk({ odds: 1.5 })), true);
   assert.equal(passesFilters(mk({ odds: 1.49 })), false);
 });
+test("ligy: norská Eliteserien a bulharská První liga se poznají podle odkazu na Scores24 i podle názvu", () => {
+  assert.equal(config.findLeague("", "", "norway-eliteserien").key, "NORSKO");
+  assert.equal(config.findLeague("Norway", "Eliteserien", "x").key, "NORSKO");
+  assert.equal(config.findLeague("", "", "bulgaria-first-professional-league").key, "BULHARSKO");
+  assert.equal(config.findLeague("Bulgaria", "First Professional League", "x").key, "BULHARSKO");
+  assert.equal(config.findLeague("Bulgaria", "Second League", "bulgaria-second-league"), null);
+  assert.deepEqual([config.leagueByKey("NORSKO").sofascoreId, config.leagueByKey("BULHARSKO").sofascoreId], [20, 247]);
+});
 test("filtr: jen sledované ligy", () => {
   assert.equal(passesFilters(mk({ leagueKey: "MLS" })), false);
   assert.equal(passesFilters(mk({ leagueKey: "NEEXISTUJE" })), false);
