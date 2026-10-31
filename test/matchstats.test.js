@@ -6,7 +6,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
-const { MatchStats, finishedEvents, teamForm, h2hFromEvents, h2hFromDuel, missingFrom, buildStats, chartsWithForebet } = require("../src/matchstats");
+const { MatchStats, finishedEvents, teamForm, h2hFromEvents, h2hFromDuel, missingFrom, buildStats, chartsWithForebet, playerRole } = require("../src/matchstats");
 const { SourceError, BlockedError } = require("../src/http");
 
 const T0 = Date.UTC(2025, 2, 12, 12) / 1000; // 12. 3. 2025
@@ -97,6 +97,47 @@ test("buildStats: dny od posledního zápasu a souhrn absencí pro AI", () => {
   assert.deepEqual(r.stats.dostupnost, { domaci: "chybí 2 (mezi nimi brankář, útočník), pochybných 1", hoste: "žádné známé absence" });
   assert.deepEqual(r.stats.zraneni, missing); // seznam zůstává beze změny (detail tipu)
   assert.equal(buildStats({ homeLast: aEvents(), awayLast: aEvents(), homeId: 1, awayId: 1, h2h: null, missing: null }).stats.dostupnost, undefined);
+});
+
+test("playerRole: kolikrát chybějící hráč nastoupil v základu v posledních zápasech týmu", () => {
+  const lineup = (ts, homeId, entries) => ({ ev: { id: ts, ts, homeId, awayId: 99 }, data: { home: { players: entries }, away: { players: [] } } });
+  const p = (id, substitute, rating) => ({ player: { id }, substitute, statistics: rating === undefined ? {} : { rating } });
+  const recent = [lineup(3, 1, [p(7, false, 7.4), p(8, true)]), lineup(2, 1, [p(7, false, 6.8)]), lineup(1, 1, [p(8, true)])];
+  assert.deepEqual(playerRole(7, 1, recent), { zapasu: 3, v_zakladu: 2, hodnoceni: 7.1 });
+  assert.deepEqual(playerRole(8, 1, recent), { zapasu: 3, v_zakladu: 0, hodnoceni: null });
+  assert.deepEqual(playerRole(5, 1, recent), { zapasu: 3, v_zakladu: 0, hodnoceni: null }); // v žádné sestavě nebyl
+  assert.equal(playerRole(7, 1, []), null);
+  // tým hrál jako hosté: bere se strana `away`
+  assert.deepEqual(playerRole(4, 2, [{ ev: { homeId: 1, awayId: 2 }, data: { home: { players: [] }, away: { players: [p(4, false, 7)] } } }]), { zapasu: 1, v_zakladu: 1, hodnoceni: 7 });
+});
+
+test("buildStats: v souhrnu absencí je vidět, kdo z chybějících je základní hráč", () => {
+  const missing = { domaci: ["J. Novák (obránce) – chybí", "Karel (záložník) – pochybný"], hoste: ["Petr (útočník) – chybí"] };
+  const roles = {
+    domaci: [{ jmeno: "J. Novák", pozice: "obránce", typ: "chybí", role: { zapasu: 3, v_zakladu: 3, hodnoceni: 7.2 } }, { jmeno: "Karel", pozice: "záložník", typ: "pochybný", role: { zapasu: 3, v_zakladu: 0, hodnoceni: null } }],
+    hoste: [{ jmeno: "Petr", pozice: "útočník", typ: "chybí", role: { zapasu: 3, v_zakladu: 1, hodnoceni: null } }],
+  };
+  const r = buildStats({ homeLast: aEvents(), awayLast: aEvents(), homeId: 1, awayId: 1, h2h: null, missing, roles });
+  assert.equal(r.stats.dostupnost.domaci, "chybí 1, pochybných 1; základní hráči mezi absentujícími: J. Novák (obránce), chybí, v základu 3/3, hodnocení 7.2");
+  assert.equal(r.stats.dostupnost.hoste, "chybí 1 (mezi nimi útočník), pochybných 0; žádný z nich není základní hráč"); // občas hrající (1/3) není „základní“
+  const none = buildStats({ homeLast: aEvents(), awayLast: aEvents(), homeId: 1, awayId: 1, h2h: null, missing: { domaci: ["X – chybí"], hoste: [] }, roles: { domaci: [{ jmeno: "X", pozice: "", typ: "chybí", role: { zapasu: 3, v_zakladu: 0, hodnoceni: null } }], hoste: [] } });
+  assert.equal(none.stats.dostupnost.domaci, "chybí 1, pochybných 0; žádný z nich není základní hráč");
+  // bez rolí (sestavy se nepodařilo stáhnout) zůstává jen počet
+  assert.equal(buildStats({ homeLast: aEvents(), awayLast: aEvents(), homeId: 1, awayId: 1, h2h: null, missing: { domaci: ["X – chybí"], hoste: [] } }).stats.dostupnost.domaci, "chybí 1, pochybných 0");
+});
+
+test("MatchStats.collect: role chybějících hráčů se zjistí z posledních 3 sestav týmu (a jen když někdo chybí)", async () => {
+  const r = routes101();
+  r["/event/101/lineups"] = { home: { missingPlayers: [{ player: { id: 7, name: "Jan", shortName: "Jan", position: "G" }, type: "missing" }] }, away: { missingPlayers: [] } };
+  // poslední zápasy domácích A (id 1): nejnovější mají id = jejich časové razítko (viz ev)
+  for (const k of [6, 5, 4]) r[`/event/${day(k)}/lineups`] = { home: { players: [{ player: { id: 7 }, substitute: false, statistics: { rating: 7 } }] }, away: { players: [] } };
+  const http = fakeHttp(r);
+  const out = await new MatchStats(http, { delayMs: [0, 0] }).collect([cand("t1", 101)]);
+  assert.match(out.stats.t1.dostupnost.domaci, /základní hráči mezi absentujícími: Jan \(brankář\), chybí, v základu \d\/3, hodnocení 7/);
+  assert.equal(out.stats.t1.dostupnost.hoste, "žádné známé absence");
+  const lineupCalls = http.calls.map((c) => c.path).filter((p) => p.endsWith("/lineups"));
+  assert.equal(lineupCalls.length, 4);          // sestava zápasu + 3 poslední zápasy domácích; hosté bez absencí = žádné dotazy
+  assert.deepEqual(out.stats.t1.zraneni, { domaci: ["Jan (brankář) – chybí"], hoste: [] }); // seznam pro detail tipu se nemění
 });
 
 test("buildStats: kompletní jen se známou formou obou týmů", () => {

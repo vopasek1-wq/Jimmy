@@ -124,7 +124,7 @@ Zvolíš den (Dnes / Zítra) a klikneš na **Vytvořit tikety (AI)** – počet 
    jen je hodnotí. Pod tikety je rozbalovací seznam **Nezařazeno do tiketů – proč?**: u každého zápasu, který v tiketu není, je důvod
    (od Gemini, nebo že se k němu statistiky nepodařilo stáhnout / tiket byl zahozen pro porušení pravidel).
    Při posuzování zohlední **domácí a venkovní výkonnost**, formu, H2H, góly obou týmů vůči lince tipu, **absence** (souhrn: kolik hráčů chybí
-   a zda mezi nimi je brankář nebo útočník) a **dny od posledního zápasu** (únava). K tomu dostane **moje dosavadní výsledky z Vyhodnocení**:
+   a zda mezi nimi je brankář nebo útočník; u chybějících hráčů se z posledních 3 zápasů týmu zjistí, jestli patřili do základu a s jakým hodnocením, takže ztráta základního hráče váží víc než chybějící náhradník) a **dny od posledního zápasu** (únava). K tomu dostane **moje dosavadní výsledky z Vyhodnocení**:
    úspěšnost po pásmech pravděpodobnosti, podle typu tipu a soutěže (od 3 vyhodnocených tipů) a výsledky uložených tiketů podle počtu zápasů
    a jistoty. Skupiny, které zaostávají za odhadem o víc než 10 p. b., zařazuje jen s oporou „silná“ a jejich pravděpodobnost bere jako nadhodnocenou.
 
