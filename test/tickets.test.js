@@ -33,7 +33,7 @@ test("buildTicketPrompt: pravidla, tipy a jejich statistiky", () => {
   const c = candidatesFrom([at(2, { tipLabel: "Více než 2,5 gólu" }), at(3)], { now: NOW });
   const stats = { t1: { forma_domaci: { forma: "V V R V P" }, h2h: { zapasu: 3 } }, t2: { forma_domaci: { forma: "P P R V V" } } };
   const p = buildTicketPrompt(c, stats, { calibration: null, now: NOW });
-  for (const need of ["Maximálně 5 zápasy na tiket", "2.00", "seskupuj dohromady", "SILNÁ", "STŘEDNÍ", "SLABÁ", "NEDOSTATEČNÁ DATA", "vytvoř víc tiketů", '"vynechane"',
+  for (const need of ["Maximálně 3 zápasy na tiket", "2.00", "seskupuj dohromady", "SILNÁ", "STŘEDNÍ", "SLABÁ", "NEDOSTATEČNÁ DATA", "vytvoř víc tiketů", '"vynechane"',
     "KAŽDÉMU zápasu v tiketu zvlášť", "1–2 věty", '"shrnuti"', "Piš česky", "nejvýš v jednom tiketu",
     "21. 10. 2026", "ze SofaScore", "posledních 5 zápasů", "vzájemné zápasy (H2H)", "střelecká produktivita", "zranění", "domácí výkonnost", "Legenda: V = výhra, R = remíza, P = prohra", "Zatím nemám dost",
     '"id":"t1"', '"tip":"Více než 2,5 gólu"', '"forma":"V V R V P"', '"h2h":{"zapasu":3}']) {
@@ -92,17 +92,19 @@ test("parseTickets: zahodí tikety, které nesplňují pravidla", () => {
     { nazev: "jiný tip zápasu z prvního tiketu", tipy: [d5, d2btts] },
     { nazev: "už použitý zápas", tipy: [d5, d3] },
     { nazev: "nízký kurz", tipy: [d9, d10] },
-    { nazev: "pět", tipy: [d5, d6, d7, d8, d9] },
+    { nazev: "čtyři", tipy: [d5, d6, d7, d8] },
+    { nazev: "tři", tipy: [d5, d6, d7] },
   ] });
   const out = parseTickets(reply, c);
-  assert.deepEqual(out.tickets.map((t) => t.name), ["dobrý", "pět"]);
-  assert.equal(out.tickets[1].legs.length, 5);
-  assert.equal(out.rejected.length, 7);
+  assert.deepEqual(out.tickets.map((t) => t.name), ["dobrý", "tři"]);
+  assert.equal(out.tickets[1].legs.length, 3);
+  assert.equal(out.rejected.length, 8);
   assert.match(out.rejected.join("|"), /neznámý tip t99/);
   assert.match(out.rejected.join("|"), /dva tipy ze stejného zápasu/);
   assert.match(out.rejected.join("|"), /už v dřívějším tiketu/);
   assert.match(out.rejected.join("|"), /kombinovaný kurz 1\.56 je pod 2\.00/);
-  assert.match(out.rejected.join("|"), /6 zápasů \(povoleno 2–5\)/);
+  assert.match(out.rejected.join("|"), /6 zápasů \(povoleno 2–3\)/);
+  assert.match(out.rejected.join("|"), /4 zápasů \(povoleno 2–3\)/);
   const same = parseTickets(json({ tikety: [{ nazev: "S", tipy: [d2, d2btts] }] }), c);
   assert.equal(same.tickets.length, 0);
   assert.match(same.rejected[0], /dva tipy ze stejného zápasu/);
