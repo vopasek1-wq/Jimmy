@@ -1,4 +1,4 @@
-// Tikety (2–5 tipů): kandidáti z uložených tipů, statistiky zápasů ze SofaScore (matchstats.js), zadání pro Gemini
+// Tikety (2–3 tipy): kandidáti z uložených tipů, statistiky zápasů ze SofaScore (matchstats.js), zadání pro Gemini
 // a kontrola odpovědi. Čísla tiketu (kurz, pravděpodobnost, očekávaný výnos) se počítají vždy zde – z AI se berou jen
 // výběr tipů a zdůvodnění. Statistiky stahuje aplikace sama, protože vyhledávání na webu (Google Search) Gemini API
 // u bezplatného klíče nenabízí.
@@ -7,7 +7,7 @@
 const { addDays, fmtHourMinute, todayLocal } = require("./timeutil");
 
 const MIN_LEGS = 2;
-const MAX_LEGS = 5;
+const MAX_LEGS = 3;
 const MIN_TOTAL_ODDS = 2;       // minimální kombinovaný kurz tiketu
 const MAX_CANDIDATES = 20;      // víc zápasů najednou je zbytečně dlouhé stahování i zadání
 const ASSEMBLE_TIMEOUT = 330000;
@@ -58,7 +58,7 @@ function buildTicketPrompt(candidates, stats, { calibration = null, now = new Da
     + `2. Do tiketů zařaď zápasy s podporou SILNÁ a STŘEDNÍ. SLABÁ a NEDOSTATEČNÁ DATA nezařazuj – vyhýbej se riskantním sázkám bez datové opory.\n`
     + `3. Zařazené zápasy rozděl do tiketů logicky: nejjistější (SILNÁ) tipy seskupuj dohromady do prvního tiketu, další tikety skládej z méně jistých. Je-li zápasů s dostatečnou oporou víc, vytvoř víc tiketů – zápas nenech bez tiketu jen proto, že není mezi nejlepšími.\n\n`
     + `PRAVIDLA:\n`
-    + `- Maximálně ${MAX_LEGS} zápasy na tiket, minimálně ${MIN_LEGS}.\n`
+    + `- Maximálně ${MAX_LEGS} zápasy na tiket, minimálně ${MIN_LEGS}. Čím méně zápasů na tiketu, tím vyšší pravděpodobnost výhry: dávej přednost kratším tiketům z nejjistějších zápasů.\n`
     + `- Minimální kombinovaný kurz tiketu (součin kurzů tipů) je ${MIN_TOTAL_ODDS.toFixed(2)}. Tiket, který to nesplňuje, nevytvářej.\n`
     + `- Každý zápas smí být nejvýš v jednom tiketu (tikety se v zápasech nepřekrývají).\n`
     + `- Zdůvodnění piš ke KAŽDÉMU zápasu v tiketu zvlášť („zduvodneni“ u daného tipu): 1–2 krátké věty (celkem nejvýš 35 slov), věcně a srozumitelně pro běžného sázkaře; odkaž na formu týmů, vzájemné zápasy, góly, zranění nebo domácí/venkovní výkonnost z dodaných statistik právě pro tento zápas. Nepřidávej čísla ani fakta, která ve statistikách nejsou. Chybějící údaj (zraneni není uvedeno) nic nedokazuje.\n`
@@ -105,7 +105,7 @@ function parseSkipped(raw) {
 }
 
 /**
- * Zkontroluje odpověď AI a dopočítá čísla. Zahodí tikety s neznámým tipem, špatným počtem zápasů (2–5),
+ * Zkontroluje odpověď AI a dopočítá čísla. Zahodí tikety s neznámým tipem, špatným počtem zápasů (2–3),
  * zápasem použitým už v dřívějším tiketu nebo s kombinovaným kurzem pod minimem.
  * Vrací { tickets, note, rejected: [důvod, …], dropped: Map id → důvod zahození tiketu, skipped: Map id → důvod vynechání od AI }.
  */
