@@ -36,14 +36,36 @@ function candidatesFrom(tips, { day = "today", now = new Date() } = {}) {
   return list.map((t, i) => ({ ...t, ticketId: `t${i + 1}` }));
 }
 
-function calibrationLine(calibration) {
+const MIN_GROUP = 3;     // skupiny s méně vyhodnocenými tipy nebo tikety se AI neukazují (šum)
+
+/** Souhrn uložených a vyhodnocených tiketů podle počtu zápasů a jistoty (z Vyhodnocení), aby AI viděla, co se osvědčilo. */
+function ticketGroups(settled) {
+  const VERDICT = { good: "vysoká", ok: "střední", risky: "nižší" };
+  const by = (keyOf) => {
+    const groups = new Map();
+    for (const t of settled) { const k = keyOf(t); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(t); }
+    return [...groups].map(([skupina, list]) => ({ skupina, ...ticketStats(list) }))
+      .filter((g) => g.n).map((g) => ({ skupina: g.skupina, n: g.n, vyhralo: g.wins, odhad: g.predicted, skutecnost: g.actual, roi: g.roi }));
+  };
+  return { podle_poctu_zapasu: by((t) => `${t.legs.length} zápasy`), podle_jistoty: by((t) => VERDICT[t.verdict] || "neuvedena"), celkem: ticketStats(settled) };
+}
+
+/** Věta o dosavadních výsledcích: celkově, po pásmech, typech tipů a soutěžích (z analyze) a o uložených tiketech (z ticketGroups). */
+function calibrationLine(calibration, ticketResults = null) {
+  const groupRows = (list) => (list || []).filter((g) => g.n >= MIN_GROUP).slice(0, 12).map((g) => ({ nazev: g.name, n: g.n, odhad: g.predicted, skutecnost: g.actual, roi: g.roi }));
+  const extra = (label, rows) => (rows.length ? ` ${label}: ${JSON.stringify(rows)}.` : "");
+  const tk = ticketResults && ticketResults.celkem && ticketResults.celkem.n
+    ? ` Moje uložené tikety (vyhrané a prohrané): celkem ${JSON.stringify(ticketResults.celkem)}, podle počtu zápasů ${JSON.stringify(ticketResults.podle_poctu_zapasu)}, podle jistoty ${JSON.stringify(ticketResults.podle_jistoty)}.`
+    : "";
   return calibration && calibration.overall && calibration.overall.n
     ? `Moje dosavadní výsledky: ${calibration.overall.n} vyhodnocených tipů, skutečná úspěšnost ${calibration.overall.actual} % při průměrném odhadu ${calibration.overall.predicted} % (rozdíl ${calibration.overall.gap} p. b.). Pásma: ${JSON.stringify(calibration.bands.filter((b) => b.n).map((b) => ({ pasmo: b.label, n: b.n, odhad: b.predicted, skutecnost: b.actual })))}.`
+      + extra("Podle typu tipu", groupRows(calibration.markets)) + extra("Podle soutěže", groupRows(calibration.leagues))
+      + ((calibration.insights || []).length ? ` Zjištění z mých výsledků: ${calibration.insights.slice(0, 5).join(" ")}` : "") + tk
     : "Zatím nemám dost vyhodnocených tipů, takže kalibraci pravděpodobnosti neznám.";
 }
 
 /** Zadání pro Gemini: tipy se statistikami ze SofaScore (`stats[ticketId]`) a pravidla výběru. */
-function buildTicketPrompt(candidates, stats, { calibration = null, now = new Date() } = {}) {
+function buildTicketPrompt(candidates, stats, { calibration = null, ticketResults = null, now = new Date() } = {}) {
   const rows = candidates.map((t) => ({
     id: t.ticketId, zapas: t.matchName, soutez: t.leagueShort || t.league, zacatek: `${czDate(t.day)} ${fmtHourMinute(new Date(t.kickoff))}`,
     tip: t.tipLabel, pravdepodobnost: t.probability, kurz: t.odds, statistiky: stats[t.ticketId] || null,
@@ -51,6 +73,9 @@ function buildTicketPrompt(candidates, stats, { calibration = null, now = new Da
   return `Z nabídky níže sestav tikety (dnes je ${czDate(todayLocal(now))}). U každého zápasu máš aktuální statistiky ze SofaScore: forma obou týmů `
     + `(posledních 5 zápasů a počty výher/remíz/proher), vzájemné zápasy (H2H), střelecká produktivita (vstřelené a obdržené góly na zápas), `
     + `domácí výkonnost domácího týmu a venkovní výkonnost hostů a zranění či absence hráčů. Posuď, jestli tyto statistiky podporují právě tip u zápasu. `
+    + `Zohledni všechno, co máš: kdo hraje doma (domácí výkonnost domácích a venkovní výkonnost hostů), formu a série výsledků, H2H, góly obou týmů vůči lince tipu, `
+    + `absence („dostupnost“ je souhrn, „zraneni“ seznam: chybějící brankář nebo útočníci oslabují tým, absence soupeře naopak pomáhá) a dny od posledního zápasu `
+    + `(méně než 4 dny = únava a riziko rotace). Ke všemu přihlédni i k mým dosavadním výsledkům níže. `
     + `Legenda: V = výhra, R = remíza, P = prohra; forma a seznam zápasů jsou od nejnovějšího; „dal“ a „obdrzel“ jsou průměry vstřelených a obdržených gólů na zápas; `
     + `„doma“ je výkonnost domácího týmu v jeho posledních domácích zápasech, „venku“ výkonnost hostů v jejich posledních venkovních zápasech.\n\n`
     + `POSTUP:\n`
@@ -60,13 +85,14 @@ function buildTicketPrompt(candidates, stats, { calibration = null, now = new Da
     + `PRAVIDLA:\n`
     + `- Maximálně ${MAX_LEGS} zápasy na tiket, minimálně ${MIN_LEGS}. Čím méně zápasů na tiketu, tím vyšší pravděpodobnost výhry: dávej přednost kratším tiketům z nejjistějších zápasů.\n`
     + `- Minimální kombinovaný kurz tiketu (součin kurzů tipů) je ${MIN_TOTAL_ODDS.toFixed(2)}. Tiket, který to nesplňuje, nevytvářej.\n`
+    + `- Využij moje dosavadní výsledky níže: skupiny (typ tipu, soutěž, pásmo pravděpodobnosti, počet zápasů a jistota tiketu), kde skutečná úspěšnost zaostává za odhadem o víc než 10 p. b. (alespoň ${MIN_GROUP} tipy), zařazuj jen s oporou SILNÁ a nabízenou pravděpodobnost v nich považuj za nadhodnocenou; skupiny, které vycházejí lépe, mají při stejné opoře přednost.\n`
     + `- Každý zápas smí být nejvýš v jednom tiketu (tikety se v zápasech nepřekrývají).\n`
     + `- Zdůvodnění piš ke KAŽDÉMU zápasu v tiketu zvlášť („zduvodneni“ u daného tipu): 1–2 krátké věty (celkem nejvýš 35 slov), věcně a srozumitelně pro běžného sázkaře; odkaž na formu týmů, vzájemné zápasy, góly, zranění nebo domácí/venkovní výkonnost z dodaných statistik právě pro tento zápas. Nepřidávej čísla ani fakta, která ve statistikách nejsou. Chybějící údaj (zraneni není uvedeno) nic nedokazuje.\n`
     + `- Shrnutí tiketu („shrnuti“): jedna krátká věta, proč jsou tyto zápasy pohromadě (např. „samé silné domácí týmy“). Neopakuj v něm zdůvodnění jednotlivých zápasů.\n`
     + `- U každého zápasu, který v žádném tiketu není, uveď v poli "vynechane" jeho id a důvod (nejvýš 12 slov, např. „forma hostů tip nepodporuje“, „chybí údaje o H2H i zraněních“).\n`
     + `- Piš česky.\n`
     + `- Pokud žádný tiket pravidla nesplňuje, vrať prázdné pole "tikety" a v "poznamka" stručně napiš proč.\n\n`
-    + `${calibrationLine(calibration)} Pravděpodobnost v nabídce je odhad zdroje, ne kalibrovaná šance.\n\n`
+    + `${calibrationLine(calibration, ticketResults)} Pravděpodobnost v nabídce je odhad zdroje, ne kalibrovaná šance.\n\n`
     + `NABÍDKA SE STATISTIKAMI (JSON): ${JSON.stringify(rows)}\n\n`
     + `Odpověz POUZE JSON podle tohoto tvaru (česky, bez dalšího textu):\n`
     + `{"tikety":[{"nazev":"Tiket 1","jistota":"vysoka|stredni|nizsi","shrnuti":"1 věta","tipy":[{"id":"id zápasu z nabídky","zduvodneni":"1–2 věty k tomuto zápasu"}]}],"vynechane":[{"id":"t2","duvod":"max. 12 slov"}],"poznamka":""}`;
@@ -247,7 +273,7 @@ function ticketStats(settled) {
  * (matchstats.js), `ask` je funkce `generate` z analysis.js (s klíčem a síťovou funkcí), `progress` dostává zprávy o průběhu.
  * Vrací { tickets, note, analyzed, covered, rejected, omitted } (omitted = zápasy mimo tikety s důvodem).
  */
-async function createTickets({ candidates, collect, ask, calibration = null, progress = () => {}, now = new Date(), hint = "", reuse = null }) {
+async function createTickets({ candidates, collect, ask, calibration = null, ticketResults = null, progress = () => {}, now = new Date(), hint = "", reuse = null }) {
   if (candidates.length < MIN_LEGS) {
     throw new Error(`Na tikety je málo vhodných tipů (${candidates.length}): potřebuju alespoň ${MIN_LEGS}, které ještě nezačaly a mají skutečný kurz. Zkus jiný den, nebo nejdřív stáhni tipy.`);
   }
@@ -260,7 +286,7 @@ async function createTickets({ candidates, collect, ask, calibration = null, pro
     throw new Error(`Ze SofaScore se nepodařilo získat statistiky aspoň ke ${MIN_LEGS} zápasům. ${why}${hint}`);
   }
   progress("Gemini vyhodnocuje statistiky a sestavuje tikety…");
-  const prompt = buildTicketPrompt(usable, data.stats, { calibration, now });
+  const prompt = buildTicketPrompt(usable, data.stats, { calibration, ticketResults, now });
   let parsed = null;
   let text = "";
   let reused = false;
@@ -301,6 +327,6 @@ function answerCache({ ttlMs = ANSWER_TTL_MS, now = () => Date.now() } = {}) {
 
 module.exports = {
   answerCache, answerKey,
-  candidatesFrom, buildTicketPrompt, parseTickets, createTickets, settleTicket, ticketStats, dueKickoffs,
+  candidatesFrom, buildTicketPrompt, parseTickets, createTickets, settleTicket, ticketStats, ticketGroups, dueKickoffs,
   MIN_LEGS,
 };

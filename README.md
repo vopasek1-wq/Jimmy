@@ -123,6 +123,10 @@ Zvolíš den (Dnes / Zítra) a klikneš na **Vytvořit tikety (AI)** – počet 
    rozdělí tak, že nejjistější tipy jsou pohromadě (první tiket je nejjistější). Tipy samotné **neupravuje** (nemění typ sázky ani kurz),
    jen je hodnotí. Pod tikety je rozbalovací seznam **Nezařazeno do tiketů – proč?**: u každého zápasu, který v tiketu není, je důvod
    (od Gemini, nebo že se k němu statistiky nepodařilo stáhnout / tiket byl zahozen pro porušení pravidel).
+   Při posuzování zohlední **domácí a venkovní výkonnost**, formu, H2H, góly obou týmů vůči lince tipu, **absence** (souhrn: kolik hráčů chybí
+   a zda mezi nimi je brankář nebo útočník) a **dny od posledního zápasu** (únava). K tomu dostane **moje dosavadní výsledky z Vyhodnocení**:
+   úspěšnost po pásmech pravděpodobnosti, podle typu tipu a soutěže (od 3 vyhodnocených tipů) a výsledky uložených tiketů podle počtu zápasů
+   a jistoty. Skupiny, které zaostávají za odhadem o víc než 10 p. b., zařazuje jen s oporou „silná“ a jejich pravděpodobnost bere jako nadhodnocenou.
 
 **Šetření limitu Gemini API (bezplatný klíč má denní i minutový limit):** tikety se sestavují **jedním dotazem** na všechny zápasy. Přemýšlení modelu je omezené (jeho tokeny se počítají do limitu odpovědi i do kvóty) a zdůvodnění jsou krátká. Když se zadání do 20 minut nezmění (stejné zápasy, kurzy i statistiky), použije se předchozí odpověď a **žádný nový dotaz se neposílá** (stejně u **Vyhodnotit pomocí AI**). Useklá odpověď se zopakuje jen s větším limitem, nevolá se nadarmo víckrát. Každý dotaz má vlastní časový limit (75 s u analýzy, 110 s u tiketů): model, který se zasekne, se opustí a zkusí se záložní, takže se nečeká celé čtyři minuty na jeden.
 

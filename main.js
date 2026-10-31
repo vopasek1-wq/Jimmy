@@ -190,11 +190,11 @@ ipcMain.handle("tickets:create", safe(async (event, req) => {
   const apiKey = readKey();
   if (!apiKey) throw new Error("Nejdřív zadej Gemini API klíč.");
   const day = req && req.day === "tomorrow" ? "tomorrow" : "today";
-  const { candidates, calibration } = service.ticketInput({ day });
+  const { candidates, calibration, ticketResults } = service.ticketInput({ day });
   const ask = (options) => generate({ fetchFn: (url, init) => net.fetch(url, init), apiKey, ...options });
   const progress = (message) => { if (!event.sender.isDestroyed()) event.sender.send("tickets:progress", message); };
   const result = await createTickets({
-    candidates, calibration, ask, progress, reuse: ticketAnswers,
+    candidates, calibration, ticketResults, ask, progress, reuse: ticketAnswers,
     collect: (list, report) => service.collectTicketStats(list, report),
     hint: ` Podrobnosti: ${service.ticketDiagnosticsFile()}`,
   });

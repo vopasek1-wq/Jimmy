@@ -89,10 +89,20 @@ test("zranění: chybějící a pochybní hráči, česky", () => {
   assert.equal(missingFrom({}), null);
 });
 
+test("buildStats: dny od posledního zápasu a souhrn absencí pro AI", () => {
+  const missing = { domaci: ["Jan (brankář) – chybí", "Petr (útočník) – chybí", "Karel (obránce) – pochybný"], hoste: [] };
+  const r = buildStats({ homeLast: aEvents(), awayLast: { events: [ev(B, [9, "Z"], 1, 0, day(3))] }, homeId: 1, awayId: 2, h2h: null, missing, now: (day(6) + 2.5 * 86400) * 1000 });
+  assert.equal(r.stats.forma_domaci.dnu_od_posledniho_zapasu, 2);  // nejnovější odehraný zápas domácích je day(6), „teď“ je o 2,5 dne později
+  assert.equal(r.stats.forma_hoste.dnu_od_posledniho_zapasu, 5);   // jediný zápas hostů je day(3): 3 + 2,5 dne
+  assert.deepEqual(r.stats.dostupnost, { domaci: "chybí 2 (mezi nimi brankář, útočník), pochybných 1", hoste: "žádné známé absence" });
+  assert.deepEqual(r.stats.zraneni, missing); // seznam zůstává beze změny (detail tipu)
+  assert.equal(buildStats({ homeLast: aEvents(), awayLast: aEvents(), homeId: 1, awayId: 1, h2h: null, missing: null }).stats.dostupnost, undefined);
+});
+
 test("buildStats: kompletní jen se známou formou obou týmů", () => {
   const full = buildStats({ homeLast: aEvents(), awayLast: { events: [ev(B, [9, "Z"], 1, 0, day(1))] }, homeId: 1, awayId: 2, h2h: { zapasu: 0 }, missing: null });
   assert.equal(full.complete, true);
-  assert.deepEqual(Object.keys(full.stats), ["forma_domaci", "forma_hoste", "h2h"]);
+  assert.deepEqual(Object.keys(full.stats), ["forma_domaci", "forma_hoste", "h2h"]);   // bez absencí se „dostupnost“ nepřidává
   const partial = buildStats({ homeLast: aEvents(), awayLast: null, homeId: 1, awayId: 2, h2h: null, missing: null });
   assert.equal(partial.complete, false);
 });

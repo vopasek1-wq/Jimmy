@@ -3,7 +3,7 @@
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { candidatesFrom, buildTicketPrompt, parseTickets, createTickets, answerCache } = require("../src/tickets");
+const { candidatesFrom, buildTicketPrompt, parseTickets, createTickets, answerCache, ticketGroups } = require("../src/tickets");
 const { localDate } = require("../src/timeutil");
 
 const NOW = new Date(Date.UTC(2026, 9, 21, 10, 0));
@@ -20,6 +20,37 @@ test("candidatesFrom: jen nezačaté zápasy se skutečným kurzem v daném dni,
   assert.deepEqual(c.map((t) => t.home), ["D3", "D2"]);
   assert.deepEqual(c.map((t) => t.ticketId), ["t1", "t2"]);
   assert.deepEqual(candidatesFrom(tips, { day: "tomorrow", now: NOW }).map((t) => t.home), ["D30"]);
+});
+
+test("buildTicketPrompt: zohlední domácí/hosty, absence, odpočinek a výsledky z Vyhodnocení (typy, soutěže, uložené tikety)", () => {
+  const c = candidatesFrom([at(2), at(3)], { now: NOW });
+  const calibration = {
+    overall: { n: 40, actual: 61, predicted: 78, gap: -17 },
+    bands: [{ label: "70–80 %", n: 20, predicted: 75, actual: 58 }],
+    markets: [{ name: "Góly celkem", n: 12, predicted: 76, actual: 50, roi: -22 }, { name: "Výsledek zápasu (1X2)", n: 2, predicted: 80, actual: 100, roi: 10 }],
+    leagues: [{ name: "Anglie – EFL Cup", n: 6, predicted: 78, actual: 33, roi: -40 }],
+    insights: ["Trh „Góly celkem“ dlouhodobě zaostává."],
+  };
+  const ticketResults = ticketGroups([]);
+  assert.equal(ticketResults.celkem.n, 0);
+  const p = buildTicketPrompt(c, { t1: { dostupnost: { domaci: "chybí 1", hoste: "žádné známé absence" } } }, { calibration, ticketResults: { celkem: { n: 4, wins: 1 }, podle_poctu_zapasu: [{ skupina: "3 zápasy", n: 4 }], podle_jistoty: [] }, now: NOW });
+  for (const need of ["kdo hraje doma", "dostupnost", "dny od posledního zápasu", "Podle typu tipu", "Góly celkem", "Podle soutěže", "EFL Cup", "Zjištění z mých výsledků", "Moje uložené tikety", "3 zápasy", "zařazuj jen s oporou SILNÁ"]) {
+    assert.ok(p.includes(need), `v zadání chybí: ${need}`);
+  }
+  assert.ok(!p.includes("Výsledek zápasu (1X2)"), "skupiny s málo tipy (n < 3) se neukazují");
+  assert.ok(!buildTicketPrompt(c, {}, { calibration: null, now: NOW }).includes("Podle typu tipu"));
+});
+
+test("ticketGroups: vyhodnocené tikety podle počtu zápasů a jistoty", () => {
+  const leg = (outcome) => ({ outcome, odds: 1.8, probability: 80 });
+  const tk = (status, n, verdict, joint = 50) => ({ status, verdict, legs: Array.from({ length: n }, () => leg("win")), jointProbability: joint, profit: status === "win" ? 1 : -1 });
+  const g = ticketGroups([tk("win", 2, "good"), tk("loss", 2, "good"), tk("loss", 3, "ok"), tk("pending", 3, "ok")]);
+  assert.deepEqual(g.podle_poctu_zapasu, [
+    { skupina: "2 zápasy", n: 2, vyhralo: 1, odhad: 50, skutecnost: 50, roi: 0 },
+    { skupina: "3 zápasy", n: 1, vyhralo: 0, odhad: 50, skutecnost: 0, roi: -100 },
+  ]);
+  assert.deepEqual(g.podle_jistoty.map((x) => [x.skupina, x.n]), [["vysoká", 2], ["střední", 1]]);
+  assert.equal(g.celkem.n, 3);
 });
 
 test("candidatesFrom: nejvýš 20 nejlepších zápasů", () => {

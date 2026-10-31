@@ -823,7 +823,7 @@ body { background: var(--bg); }
 .tk-chip--win { background: var(--green-soft); color: var(--green); }
 .tk-chip--loss { background: var(--red-soft); color: var(--red); }
 .tk-chip--void { background: var(--yellow-soft); color: var(--yellow); }
-.tk-omitted { padding: 10px 16px; background: var(--panel); border: 1px solid var(--border-2); border-radius: 14px; }
+.tk-omitted { margin-top: 12px; padding: 10px 16px; background: var(--panel); border: 1px solid var(--border-2); border-radius: 14px; }
 .tk-omitted__title { font-size: 13px; font-weight: 600; color: var(--text-2); }
 .tk-omitted ul { list-style: none; margin: 10px 0 2px; padding: 0; }
 .tk-omitted li[data-tip] { cursor: pointer; border-radius: 8px; transition: background-color 0.14s; }
