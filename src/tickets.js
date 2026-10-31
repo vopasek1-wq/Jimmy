@@ -74,7 +74,7 @@ function buildTicketPrompt(candidates, stats, { calibration = null, ticketResult
     + `(posledních 5 zápasů a počty výher/remíz/proher), vzájemné zápasy (H2H), střelecká produktivita (vstřelené a obdržené góly na zápas), `
     + `domácí výkonnost domácího týmu a venkovní výkonnost hostů a zranění či absence hráčů. Posuď, jestli tyto statistiky podporují právě tip u zápasu. `
     + `Zohledni všechno, co máš: kdo hraje doma (domácí výkonnost domácích a venkovní výkonnost hostů), formu a série výsledků, H2H, góly obou týmů vůči lince tipu, `
-    + `absence („dostupnost“ je souhrn, „zraneni“ seznam: chybějící brankář nebo útočníci oslabují tým, absence soupeře naopak pomáhá) a dny od posledního zápasu `
+    + `absence („dostupnost“ je souhrn, „zraneni“ seznam: chybějící brankář nebo útočníci oslabují tým, absence soupeře naopak pomáhá; ztráta základního hráče, u něhož je uvedeno, v kolika z posledních zápasů byl v základu, váží víc než chybějící náhradník) a dny od posledního zápasu `
     + `(méně než 4 dny = únava a riziko rotace). Ke všemu přihlédni i k mým dosavadním výsledkům níže. `
     + `Legenda: V = výhra, R = remíza, P = prohra; forma a seznam zápasů jsou od nejnovějšího; „dal“ a „obdrzel“ jsou průměry vstřelených a obdržených gólů na zápas; `
     + `„doma“ je výkonnost domácího týmu v jeho posledních domácích zápasech, „venku“ výkonnost hostů v jejich posledních venkovních zápasech.\n\n`

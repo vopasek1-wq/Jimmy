@@ -34,7 +34,7 @@ test("buildTicketPrompt: zohlední domácí/hosty, absence, odpočinek a výsled
   const ticketResults = ticketGroups([]);
   assert.equal(ticketResults.celkem.n, 0);
   const p = buildTicketPrompt(c, { t1: { dostupnost: { domaci: "chybí 1", hoste: "žádné známé absence" } } }, { calibration, ticketResults: { celkem: { n: 4, wins: 1 }, podle_poctu_zapasu: [{ skupina: "3 zápasy", n: 4 }], podle_jistoty: [] }, now: NOW });
-  for (const need of ["kdo hraje doma", "dostupnost", "dny od posledního zápasu", "Podle typu tipu", "Góly celkem", "Podle soutěže", "EFL Cup", "Zjištění z mých výsledků", "Moje uložené tikety", "3 zápasy", "zařazuj jen s oporou SILNÁ"]) {
+  for (const need of ["kdo hraje doma", "dostupnost", "ztráta základního hráče", "dny od posledního zápasu", "Podle typu tipu", "Góly celkem", "Podle soutěže", "EFL Cup", "Zjištění z mých výsledků", "Moje uložené tikety", "3 zápasy", "zařazuj jen s oporou SILNÁ"]) {
     assert.ok(p.includes(need), `v zadání chybí: ${need}`);
   }
   assert.ok(!p.includes("Výsledek zápasu (1X2)"), "skupiny s málo tipy (n < 3) se neukazují");

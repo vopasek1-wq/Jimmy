@@ -29,7 +29,7 @@ function finishedEvents(data) {
       const hs = score(e.homeScore);
       const as = score(e.awayScore);
       if (!Number.isFinite(hs) || !Number.isFinite(as)) continue;
-      out.push({ ts: Number(e.startTimestamp) || 0, homeId: e.homeTeam.id, awayId: e.awayTeam.id, home: e.homeTeam.name, away: e.awayTeam.name, hs, as });
+      out.push({ id: e.id, ts: Number(e.startTimestamp) || 0, homeId: e.homeTeam.id, awayId: e.awayTeam.id, home: e.homeTeam.name, away: e.awayTeam.name, hs, as });
     } catch {
       /* nečitelnou událost přeskočíme */
     }
@@ -118,12 +118,44 @@ function missingFrom(data) {
   return { domaci: side(data.home), hoste: side(data.away) };
 }
 
-/** Stručný souhrn absencí týmu ze seznamu z `missingFrom`: počet chybějících a pochybných a zda mezi chybějícími je brankář nebo útočník. */
-function absenceSummary(list) {
+const ROLE_MATCHES = 3;    // z kolika posledních zápasů týmu se zjišťuje, jestli chybějící hráč patřil do základu
+
+/**
+ * Role chybějícího hráče z odpovědí `event/<id>/lineups` posledních zápasů týmu (`recent` = [{ ev, data }]): v kolika z nich byl v základní
+ * sestavě a jaké měl průměrné hodnocení. null, když nemáme žádnou sestavu.
+ */
+function playerRole(playerId, teamId, recent) {
+  if (!recent.length) return null;
+  let started = 0;
+  const ratings = [];
+  for (const { ev, data } of recent) {
+    const side = ev.homeId === teamId ? data.home : data.away;
+    const entry = ((side && side.players) || []).find((x) => x && x.player && x.player.id === playerId);
+    if (!entry) continue;
+    if (entry.substitute === false) started += 1;
+    const r = Number(entry.statistics && entry.statistics.rating);
+    if (Number.isFinite(r) && r > 0) ratings.push(r);
+  }
+  return { zapasu: recent.length, v_zakladu: started, hodnoceni: ratings.length ? round1(ratings.reduce((a, b) => a + b, 0) / ratings.length) : null };
+}
+
+/** „základní hráč“ (v základu aspoň ve 2/3 zápasů), „občas hraje“, nebo „nehrává v základu“. */
+const roleLabel = (r) => (r.v_zakladu * 3 >= r.zapasu * 2 ? "základní hráč" : r.v_zakladu > 0 ? "občas hraje" : "nehrává v základu");
+
+/**
+ * Stručný souhrn absencí týmu ze seznamu z `missingFrom`: počet chybějících a pochybných a zda mezi chybějícími je brankář nebo útočník.
+ * `roles` (volitelně) = [{ jmeno, pozice, typ, role }] z `playerRole`: doplní, kdo z absentujících je základní hráč.
+ */
+function absenceSummary(list, rolesIn) {
   if (!list || !list.length) return "žádné známé absence";
+  const roles = rolesIn || [];
   const out = list.filter((x) => x.endsWith("– chybí"));
   const key = ["brankář", "útočník"].filter((p) => out.some((x) => x.includes(`(${p})`)));
-  return `chybí ${out.length}${key.length ? ` (mezi nimi ${key.join(", ")})` : ""}, pochybných ${list.length - out.length}`;
+  const regulars = roles.filter((r) => r.role && roleLabel(r.role) === "základní hráč");
+  const detail = regulars.length
+    ? `; základní hráči mezi absentujícími: ${regulars.map((r) => `${r.jmeno}${r.pozice ? ` (${r.pozice})` : ""}, ${r.typ}, v základu ${r.role.v_zakladu}/${r.role.zapasu}${r.role.hodnoceni ? `, hodnocení ${r.role.hodnoceni}` : ""}`).join("; ")}`
+    : (roles.length && roles.every((r) => r.role) ? "; žádný z nich není základní hráč" : "");
+  return `chybí ${out.length}${key.length ? ` (mezi nimi ${key.join(", ")})` : ""}, pochybných ${list.length - out.length}${detail}`;
 }
 
 /** Dny od posledního odehraného zápasu týmu (únava, nasazení v poháru); null, když zápas neznáme. */
@@ -133,7 +165,7 @@ function restDays(data, now) {
 }
 
 /** Složí statistiky zápasu pro AI (české klíče); `complete` = známe formu obou týmů, bez ní se zápas neposuzuje. */
-function buildStats({ homeLast, awayLast, homeId, awayId, h2h, missing, now = Date.now() }) {
+function buildStats({ homeLast, awayLast, homeId, awayId, h2h, missing, roles = null, now = Date.now() }) {
   const home = teamForm(homeLast, homeId);
   const away = teamForm(awayLast, awayId);
   const stats = {};
@@ -143,7 +175,7 @@ function buildStats({ homeLast, awayLast, homeId, awayId, h2h, missing, now = Da
   if (h2h) stats.h2h = h2h;
   if (missing) {
     stats.zraneni = missing;
-    stats.dostupnost = { domaci: absenceSummary(missing.domaci), hoste: absenceSummary(missing.hoste) };
+    stats.dostupnost = { domaci: absenceSummary(missing.domaci, roles && roles.domaci), hoste: absenceSummary(missing.hoste, roles && roles.hoste) };
   }
   return { stats, complete: Boolean(home && away), charts: home && away && home.serie && away.serie ? { zdroj: "SofaScore", n: Math.max(home.serie.zapasu, away.serie.zapasu), home: shares(home.serie), away: shares(away.serie) } : null };
 }
@@ -193,6 +225,24 @@ class MatchStats {
     return (await this.get(`vykonnost_${side}`, `${API}/team/${teamId}/performance`, notes)) || data;
   }
 
+  /**
+   * Role chybějících hráčů jednoho týmu: z posledních zápasů týmu se stáhnou sestavy (jen když někdo chybí a má id) a zjistí se,
+   * kolikrát v nich hráč nastoupil v základu. Vrací [{ jmeno, pozice, typ, role }]; chybějící sestavy nic neshodí (role = null).
+   */
+  async roles(sideData, teamId, last, label, notes) {
+    const players = ((sideData && sideData.missingPlayers) || []).filter((m) => m && m.player && m.player.id).slice(0, 8);
+    if (!players.length) return [];
+    const recent = [];
+    for (const [i, ev] of finishedEvents(last).filter((x) => x.id).slice(0, ROLE_MATCHES).entries()) {
+      const data = await this.get(`sestavy_${label}_${i + 1}`, `${API}/event/${ev.id}/lineups`, notes);
+      if (data && (data.home || data.away)) recent.push({ ev, data });
+    }
+    return players.map((m) => ({
+      jmeno: m.player.shortName || m.player.name || "?", pozice: POSITION[m.player.position] || m.player.position || "",
+      typ: m.type === "doubtful" ? "pochybný" : "chybí", role: playerRole(m.player.id, teamId, recent),
+    }));
+  }
+
   /** Statistiky jednoho zápasu podle jeho SofaScore ID. */
   async statsFor(id) {
     const notes = {};
@@ -209,8 +259,10 @@ class MatchStats {
       const recent = h2hFromEvents(homeLast, homeId, awayId);
       if (recent && recent.zapasu) h2h = { ...recent, poznamka: "jen setkání z posledních zápasů domácího týmu" };
     }
-    const missing = missingFrom(await this.get("sestavy", `${API}/event/${id}/lineups`, notes));
-    return { ...buildStats({ homeLast, awayLast, homeId, awayId, h2h, missing }), notes };
+    const lineups = await this.get("sestavy", `${API}/event/${id}/lineups`, notes);
+    const missing = missingFrom(lineups);
+    const roles = missing ? { domaci: await this.roles(lineups.home, homeId, homeLast, "domaci", notes), hoste: await this.roles(lineups.away, awayId, awayLast, "hoste", notes) } : null;
+    return { ...buildStats({ homeLast, awayLast, homeId, awayId, h2h, missing, roles }), notes };
   }
 
   /** Statistiky jednoho zápasu pro detail tipu (s mezipamětí jako u tiketů); vrací { stats, complete, notes }. */
@@ -277,4 +329,4 @@ class MatchStats {
   }
 }
 
-module.exports = { MatchStats, finishedEvents, teamForm, h2hFromEvents, h2hFromDuel, missingFrom, buildStats, chartsWithForebet };
+module.exports = { MatchStats, finishedEvents, teamForm, h2hFromEvents, h2hFromDuel, missingFrom, buildStats, chartsWithForebet, playerRole };
