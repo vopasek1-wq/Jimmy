@@ -103,6 +103,15 @@ test("Pipeline: zdroje-diagnostika.txt vypíše zahozené tipy s důvodem a souh
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
+test("droppedReport: u gólových linií, které Forebet nemá, to říká správně (ne „nepodařilo se přečíst“)", () => {
+  const t = (o = {}) => ({ ...tip("A", "B"), tipLabel: "Méně než 3,5 gólu", tipCode: "U3.5", odds: 1.56, oddsEstimated: false, status: "upcoming", ...o });
+  const reason = { code: "noprob", text: "bez pravděpodobnosti" };
+  const withGoals = droppedReport([{ tip: t(), reason }], [fb("A", "B", { goals: { over: { "2.5": 50 }, under: { "2.5": 50 } } })]);
+  assert.match(withGoals[1], /Forebet pro tuto linii pravděpodobnost nedává/);
+  const noGoals = droppedReport([{ tip: t(), reason }], [fb("A", "B")]);
+  assert.match(noGoals[1], /pravděpodobnost gólů se nepodařilo přečíst/);
+});
+
 test("droppedReport: skončené zápasy jen v souhrnu, výpis se omezí na limit a seřadí podle začátku", () => {
   const r = (tip, reason) => ({ tip: { tipLabel: "x", odds: 1.8, oddsEstimated: false, status: "upcoming", ...tip }, reason });
   const rejected = [

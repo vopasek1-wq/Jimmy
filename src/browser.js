@@ -27,21 +27,29 @@ const chromeUserAgent = (fallback) => fallback.replace(/\s(?!(?:AppleWebKit|Chro
 const EXPAND_SCRIPT = (slugs) => `(async () => {
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const ancestorDivs = (el) => { const out = []; while ((el = el.parentElement)) if (el.tagName === "DIV") out.push(el); return out; };
+  const hasTips = (block) => Boolean(block.querySelector('a[href*="-prediction"]'));
+  const hasMatches = (block) => Boolean(block.querySelector('a[href*="/soccer/m-"]'));
   const result = {};
   for (const slug of ${JSON.stringify(slugs)}) {
-    result[slug] = false;
-    for (let attempt = 0; attempt < 3 && !result[slug]; attempt++) {
+    let ok = false;
+    let reason = "odkaz na ligu nenalezen";
+    for (let attempt = 0; attempt < 3 && !ok; attempt++) {
       const link = document.querySelector('a[href*="/soccer/l-' + slug + '"]');
       const divs = link ? ancestorDivs(link) : [];
       if (divs.length < 3) { await sleep(800); continue; }
       const header = divs[1], block = divs[2];
+      if (hasTips(block)) { ok = true; break; }       // už rozbaleno: další klik by blok zase sbalil
+      reason = "po kliknutí se zápasy neukázaly";
+      const before = hasMatches(block);
       header.scrollIntoView({ block: "center" });
       header.click();
-      for (let i = 0; i < 10; i++) {
-        if (block.querySelector('a[href*="-prediction"]')) { result[slug] = true; break; }
+      for (let i = 0; i < 12; i++) {
+        // Liga se otevřela i tehdy, když její zápasy nemají tip (odkaz bez „-prediction“); to není chyba.
+        if (hasTips(block) || (!before && hasMatches(block))) { ok = true; break; }
         await sleep(500);
       }
     }
+    result[slug] = ok ? true : reason;
   }
   return { html: document.documentElement.outerHTML, result };
 })()`;
@@ -198,7 +206,8 @@ class WindowBrowser {
         await sleep(400);
       }
       await sleep(1500);
-      const { html } = await win.webContents.executeJavaScript(EXPAND_SCRIPT(slugs), true);
+      const { html, result } = await win.webContents.executeJavaScript(EXPAND_SCRIPT(slugs), true);
+      this.lastExpand = result || {};          // slug → true, nebo důvod, proč se liga nerozbalila (pro varování ve Scores24)
       return html;
     });
   }

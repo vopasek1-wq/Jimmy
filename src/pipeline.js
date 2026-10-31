@@ -25,7 +25,8 @@ const { ForebetScraper } = require("./scrapers/forebet");
 const { SofaScoreClient } = require("./scrapers/sofascore");
 const { localDate, todayLocal, addDays } = require("./timeutil");
 
-const FOREBET_TOLERANCE_MS = 3 * 3600 * 1000; // Forebet může mít jiné pásmo/zaokrouhlení času
+const FOREBET_TOLERANCE_MS = 3 * 3600 * 1000;
+const FINISHED_AFTER_MS = 3 * 3600 * 1000;   // po této době od začátku je zápas jistě odehraný // Forebet může mít jiné pásmo/zaokrouhlení času
 
 // --- sloučení zdrojů -------------------------------------------------------------------------------
 
@@ -109,7 +110,7 @@ function droppedReport(rejected, forebet, { limit = 40 } = {}) {
       const m = forebet ? findForebet(t.home, t.away, t.leagueKey, t.kickoff, forebet) : null;
       text += !forebet ? " (Forebet bez dat)"
         : !m ? " (Forebet: zápas nenalezen)"
-          : needsGoalsPage(t.tipCode) ? " (Forebet: zápas nalezen, ale pravděpodobnost gólů se nepodařilo přečíst)"
+          : needsGoalsPage(t.tipCode) ? (m.goals ? " (Forebet pro tuto linii pravděpodobnost nedává, má jen některé linie)" : " (Forebet: zápas nalezen, ale pravděpodobnost gólů se nepodařilo přečíst)")
             : " (Forebet pro tento trh pravděpodobnost nedává)";
     }
     const odds = t.odds === null || t.odds === undefined ? "bez kurzu" : `kurz ${t.oddsEstimated ? "~" : ""}${String(t.odds).replace(".", ",")}`;
@@ -151,6 +152,7 @@ function combine(s24, forebet, now) {
     const league = leagueKey ? config.leagueByKey(leagueKey) : null;
     const kickoff = (row ? kickoffOf(row, now) : null) || m.kickoff;
     if (!league || !kickoff) continue; // neznáme ligu/čas – nevíme, zda je zápas sledovaný
+    if (kickoff.getTime() < now.getTime() - FINISHED_AFTER_MS) continue; // zápas už skončil (stránka lig Forebetu ukazuje i minulá kola)
     const [home, away] = row ? [row.home, row.away] : [m.home, m.away];
     if (have.has(`${home}|${away}|${m.pick}`)) continue;
     const market = resultMarket(m.pick, home, away);

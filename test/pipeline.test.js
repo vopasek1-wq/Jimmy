@@ -114,6 +114,12 @@ test("combine: vlastní tip Forebetu, když ligu známe z řádku Scores24 (náz
   const t = tips[0];
   assert.deepEqual([t.sources, t.probability, t.odds, t.away, t.leagueKey, t.tipCode], [[SOURCE_FOREBET], 70, 1.65, "Arsenal FC", "EPL", "2"]);
 });
+test("combine: odehraný zápas z Forebetu (minulé kolo na stránce ligy) vlastní tip nevytvoří", () => {
+  const f = fb({ leagueKey: "EPL" });
+  assert.equal(combine({ tips: [], rows: [] }, [f], KO).length, 1);                                    // právě začíná
+  assert.equal(combine({ tips: [], rows: [] }, [f], new Date(KO.getTime() + 2 * 3600e3)).length, 1);   // 2 h po začátku: ještě se hraje
+  assert.equal(combine({ tips: [], rows: [] }, [f], new Date(KO.getTime() + 4 * 3600e3)).length, 0);   // po 4 h je jistě skončeno
+});
 test("combine: tip Forebetu se zahodí bez ligy nebo pod prahem (přesně 60 % neprojde)", () => {
   assert.deepEqual(combine({ tips: [], rows: [] }, [fb()], KO), []);
   assert.deepEqual(combine({ tips: [], rows: [] }, [fb({ p1: 30, px: 30, p2: 40, leagueKey: "EPL", pickProbability: 40 })], KO), []);

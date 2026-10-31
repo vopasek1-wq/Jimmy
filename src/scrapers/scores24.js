@@ -244,9 +244,11 @@ class Scores24Scraper {
         if (!(err instanceof BrowserUnavailable || err instanceof BlockedError || err instanceof SourceError)) throw err;
         warnings.push(`Scores24: sbalené ligy (${names}) nejsou načtené – ${err.message}`);
       }
-      const still = blocks.filter((b) => b.league && b.declaredCount > 0 && b.rows.length === 0);
+      const info = this.browser.lastExpand || {};
+      // liga, která se otevřela, ale její zápasy nemají tip, chybou není; bez informace z okna platí stará podmínka
+      const still = blocks.filter((b) => b.league && b.declaredCount > 0 && b.rows.length === 0 && info[b.slug] !== true);
       if (still.length && !warnings.length) {
-        warnings.push(`Scores24: nepodařilo se rozbalit ligy: ${still.map((b) => b.league.nameCs).join(", ")}`);
+        warnings.push(`Scores24: nepodařilo se rozbalit ligy: ${still.map((b) => `${b.league.nameCs}${typeof info[b.slug] === "string" ? ` (${info[b.slug]})` : ""}`).join(", ")}`);
       }
     }
 

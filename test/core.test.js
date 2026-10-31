@@ -131,6 +131,9 @@ test("ligy: norská Eliteserien a bulharská První liga se poznají podle odkaz
   assert.equal(config.findLeague("Bulgaria", "Second League", "bulgaria-second-league"), null);
   assert.deepEqual([config.leagueByKey("NORSKO").sofascoreId, config.leagueByKey("BULHARSKO").sofascoreId], [20, 247]);
 });
+test("názvy týmů: Hamarkameratene = HamKam", () => {
+  assert.ok(sameMatch("KFUM Oslo", "Hamarkameratene", "KFUM Oslo", "HamKam") >= 0.9);
+});
 test("filtr: jen sledované ligy", () => {
   assert.equal(passesFilters(mk({ leagueKey: "MLS" })), false);
   assert.equal(passesFilters(mk({ leagueKey: "NEEXISTUJE" })), false);

@@ -119,6 +119,21 @@ test("Scores24: scraper rozbalí sbalené ligy přes okno prohlížeče", async 
   assert.deepEqual(res.warnings, []);
 });
 
+test("Scores24: liga, která se otevřela, ale zápasy nemají tip, není chyba; neotevřená je chyba s důvodem", async () => {
+  const collapsed = s24Page([
+    s24Block("Norway", "Eliteserien", "norway-eliteserien", 2),
+    s24Block("Bulgaria", "First Professional League", "bulgaria-first-professional-league", 1),
+  ]);
+  const mk = (info) => { const b = { lastExpand: {}, expandScores24: async () => { b.lastExpand = info; return collapsed; } }; return b; };
+  const http = { getText: async () => collapsed };
+  assert.deepEqual((await new scores24.Scores24Scraper(http, mk({ "norway-eliteserien": true, "bulgaria-first-professional-league": true })).fetch(NOW)).warnings, []);
+  const bad = await new scores24.Scores24Scraper(http, mk({ "norway-eliteserien": true, "bulgaria-first-professional-league": "po kliknutí se zápasy neukázaly" })).fetch(NOW);
+  assert.deepEqual(bad.warnings, ["Scores24: nepodařilo se rozbalit ligy: Bulharsko – První liga (po kliknutí se zápasy neukázaly)"]);
+  // bez informace z okna (starší okno, test) platí původní chování: obě ligy bez zápasů jsou chyba
+  const plain = await new scores24.Scores24Scraper(http, { expandScores24: async () => collapsed }).fetch(NOW);
+  assert.match(plain.warnings[0], /Norsko – Eliteserien, Bulharsko – První liga/);
+});
+
 test("Scores24: selhání prohlížeče je jen varování, tipy z HTTP zůstanou", async () => {
   const { BrowserUnavailable } = require("../src/browser");
   const collapsed = s24Page([

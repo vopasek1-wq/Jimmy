@@ -10,7 +10,7 @@ const ALIASES = {
   "manchester utd": "manchester united", "man united": "manchester united", "man utd": "manchester united",
   "man city": "manchester city", spurs: "tottenham hotspur", tottenham: "tottenham hotspur",
   wolves: "wolverhampton wanderers", newcastle: "newcastle united", internazionale: "inter",
-  "inter milan": "inter", "atletico madrid": "atletico", "athletic club": "athletic bilbao",
+  "inter milan": "inter", hamarkameratene: "hamkam", "atletico madrid": "atletico", "athletic club": "athletic bilbao",
   "borussia monchengladbach": "monchengladbach", gladbach: "monchengladbach", psg: "paris saint germain",
   "paris sg": "paris saint germain", "olympique marseille": "marseille", "olympique lyon": "lyon",
   "olympique lyonnais": "lyon", "sparta prague": "sparta praha", "slavia prague": "slavia praha",
