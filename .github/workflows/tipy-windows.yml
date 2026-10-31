@@ -2,7 +2,9 @@ name: Fotbalové tipy – Windows build
 
 on:
   push:
-    branches: ["**"]
+    branches: [main]
+    paths-ignore: ["README.md"]
+  pull_request:
     paths-ignore: ["README.md"]
   workflow_dispatch:
 
@@ -11,7 +13,7 @@ permissions:
 
 concurrency:
   group: tipy-windows-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}   # sestavení na main se nepřerušuje: uprostřed vydání by mohl zmizet soubor ke stažení
 
 jobs:
   build:
@@ -58,7 +60,7 @@ jobs:
       # Jedno průběžné vydání „tipy-latest“ s jedním souborem FotbalTipy.exe (neoznačuje se jako „Latest“).
       # Stálý odkaz: https://github.com/<vlastník>/<repozitář>/releases/download/tipy-latest/FotbalTipy.exe
       - name: Vydání na GitHubu
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/claude/cool-ride-77had5' || github.event_name == 'workflow_dispatch'
+        if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
