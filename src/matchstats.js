@@ -118,15 +118,33 @@ function missingFrom(data) {
   return { domaci: side(data.home), hoste: side(data.away) };
 }
 
+/** Stručný souhrn absencí týmu ze seznamu z `missingFrom`: počet chybějících a pochybných a zda mezi chybějícími je brankář nebo útočník. */
+function absenceSummary(list) {
+  if (!list || !list.length) return "žádné známé absence";
+  const out = list.filter((x) => x.endsWith("– chybí"));
+  const key = ["brankář", "útočník"].filter((p) => out.some((x) => x.includes(`(${p})`)));
+  return `chybí ${out.length}${key.length ? ` (mezi nimi ${key.join(", ")})` : ""}, pochybných ${list.length - out.length}`;
+}
+
+/** Dny od posledního odehraného zápasu týmu (únava, nasazení v poháru); null, když zápas neznáme. */
+function restDays(data, now) {
+  const last = finishedEvents(data)[0];
+  return last && last.ts ? Math.max(0, Math.floor((now - last.ts * 1000) / 86400e3)) : null;
+}
+
 /** Složí statistiky zápasu pro AI (české klíče); `complete` = známe formu obou týmů, bez ní se zápas neposuzuje. */
-function buildStats({ homeLast, awayLast, homeId, awayId, h2h, missing }) {
+function buildStats({ homeLast, awayLast, homeId, awayId, h2h, missing, now = Date.now() }) {
   const home = teamForm(homeLast, homeId);
   const away = teamForm(awayLast, awayId);
   const stats = {};
-  if (home) stats.forma_domaci = { posledni_zapasy: home.posledni, forma: home.forma, goly_na_zapas: home.goly, doma: home.doma };
-  if (away) stats.forma_hoste = { posledni_zapasy: away.posledni, forma: away.forma, goly_na_zapas: away.goly, venku: away.venku };
+  const rest = (data) => { const d = restDays(data, now); return d === null ? {} : { dnu_od_posledniho_zapasu: d }; };
+  if (home) stats.forma_domaci = { posledni_zapasy: home.posledni, forma: home.forma, goly_na_zapas: home.goly, doma: home.doma, ...rest(homeLast) };
+  if (away) stats.forma_hoste = { posledni_zapasy: away.posledni, forma: away.forma, goly_na_zapas: away.goly, venku: away.venku, ...rest(awayLast) };
   if (h2h) stats.h2h = h2h;
-  if (missing) stats.zraneni = missing;
+  if (missing) {
+    stats.zraneni = missing;
+    stats.dostupnost = { domaci: absenceSummary(missing.domaci), hoste: absenceSummary(missing.hoste) };
+  }
   return { stats, complete: Boolean(home && away), charts: home && away && home.serie && away.serie ? { zdroj: "SofaScore", n: Math.max(home.serie.zapasu, away.serie.zapasu), home: shares(home.serie), away: shares(away.serie) } : null };
 }
 

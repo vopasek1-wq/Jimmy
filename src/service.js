@@ -11,7 +11,7 @@ const { SofaScoreClient } = require("./scrapers/sofascore");
 const { LiveClient } = require("./live");
 const { MatchStats, chartsWithForebet } = require("./matchstats");
 const { analyze, buildTicketsPrompt } = require("./analysis");
-const { candidatesFrom, settleTicket, ticketStats, dueKickoffs } = require("./tickets");
+const { candidatesFrom, settleTicket, ticketStats, ticketGroups, dueKickoffs } = require("./tickets");
 const { GoalsCache } = require("./goalscache");
 const { tidy } = require("./housekeeping");
 const { buildDiagnostics } = require("./diagnostics");
@@ -136,7 +136,7 @@ class TipService {
   /** Tipy z přehledu pro tikety (z posledního stažení; jen ty, které ještě nezačaly) a statistika dosavadní úspěšnosti. */
   ticketInput({ day }) {
     const tips = this.db.tipsOfLatestRun().map(serializeTip);
-    return { candidates: candidatesFrom(tips, { day }), calibration: this.analysis() };
+    return { candidates: candidatesFrom(tips, { day }), calibration: this.analysis(), ticketResults: ticketGroups(this._settledTickets()) };
   }
 
   /**
