@@ -212,22 +212,6 @@ i[data-lucide],
   border-bottom: 1px solid var(--line);
 }
 .topbar__row { display: flex; align-items: center; gap: 16px; height: var(--topbar-row); padding: 0 7px 0 28px; }
-.topbar__progress {
-  position: absolute;
-  left: 0; right: 0; bottom: -1px;
-  height: 2px;
-  overflow: hidden;
-  background: transparent;
-}
-.topbar__progress::after {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 30%;
-  background: linear-gradient(90deg, transparent, var(--accent-bright), transparent);
-  animation: slide 1.3s var(--ease) infinite;
-}
-@keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(340%); } }
 
 .search {
   position: relative;

@@ -595,7 +595,6 @@
   /* ---------- Stahování ---------- */
   const refreshBtn = $("#refresh");
   const progressText = $("#progress-text");
-  const topProgress = $("#topbar-progress");
 
   const stepsEl = $("#steps");
   const updatedLabel = $("#updated-label");
@@ -635,7 +634,6 @@
     refreshBtn.disabled = busy;
     $("#evaluate").disabled = busy;
     $("span", refreshBtn).textContent = busy ? "Stahuji…" : "Obnovit tipy";
-    topProgress.hidden = !busy;
     progressText.hidden = !busy;
     stepsEl.hidden = !busy;
     if (busy) $$("i", stepsEl).forEach((el) => { el.className = ""; });
