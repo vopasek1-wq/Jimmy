@@ -3,7 +3,7 @@
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { candidatesFrom, buildTicketPrompt, parseTickets, createTickets, answerCache, ticketGroups } = require("../src/tickets");
+const { candidatesFrom, buildTicketPrompt, reviewLessons, parseTickets, createTickets, answerCache, ticketGroups } = require("../src/tickets");
 const { localDate } = require("../src/timeutil");
 
 const NOW = new Date(Date.UTC(2026, 9, 21, 10, 0));
@@ -39,6 +39,42 @@ test("buildTicketPrompt: zohlední domácí/hosty, absence, odpočinek a výsled
   }
   assert.ok(!p.includes("Výsledek zápasu (1X2)"), "skupiny s málo tipy (n < 3) se neukazují");
   assert.ok(!buildTicketPrompt(c, {}, { calibration: null, now: NOW }).includes("Podle typu tipu"));
+});
+
+const REVIEW = `Upozorňuji, že vzorek 12 vyhodnocených tiketů je velmi malý.
+
+**Jak tikety dopadly**
+- Ze 12 vyhodnocených tiketů byl úspěšný pouze 1.
+
+**Co je špatně**
+- Všechny tikety měly charakter AKO; jedna prohra zhatila celý tiket.
+- Opakovaně selhávaly sázky na favority a jejich góly.
+- Chybovaly i tipy na venkovní týmy.
+- Čtvrtý bod se už nevejde.
+
+## Na co si dát pozor:
+1. Riziko kumulace v kombinovaných tiketech.
+
+**Co dělat jinak**
+- Snížit počet zápasů na jednom tiketu nebo zcela přejít na solo sázky.`;
+
+test("reviewLessons: ze slovního vyhodnocení zůstanou jen poučení, nejvýš 3 body z oddílu", () => {
+  const out = reviewLessons(REVIEW);
+  assert.equal(out, "Co je špatně: Všechny tikety měly charakter AKO; jedna prohra zhatila celý tiket. | Opakovaně selhávaly sázky na favority a jejich góly. | Chybovaly i tipy na venkovní týmy. "
+    + "Na co si dát pozor: Riziko kumulace v kombinovaných tiketech. Co dělat jinak: Snížit počet zápasů na jednom tiketu nebo zcela přejít na solo sázky.");
+  assert.ok(!out.includes("Upozorňuji") && !out.includes("úspěšný pouze 1") && !out.includes("Čtvrtý"));
+  assert.match(reviewLessons("- " + "slovo ".repeat(100), { maxChars: 30 }) , /…$|^$/);
+  assert.equal(reviewLessons(""), "");
+  // bez rozpoznaných oddílů: začátek textu bez prvního odstavce
+  assert.equal(reviewLessons("Úvod\n**Něco jiného**\n- bod"), "Něco jiného - bod");
+});
+
+test("buildTicketPrompt: poučení ze slovního vyhodnocení jde do zadání, jen když existuje", () => {
+  const c = candidatesFrom([at(2), at(3)], { now: NOW });
+  const p = buildTicketPrompt(c, {}, { calibration: null, review: REVIEW, now: NOW });
+  assert.ok(p.includes("Poučení z mého posledního slovního vyhodnocení tiketů (zkráceně): Co je špatně: Všechny tikety měly charakter AKO"));
+  assert.ok(p.includes("Vezmi to v úvahu při výběru zápasů"));
+  assert.ok(!buildTicketPrompt(c, {}, { calibration: null, now: NOW }).includes("Poučení z mého posledního"));
 });
 
 test("ticketGroups: vyhodnocené tikety podle počtu zápasů a jistoty", () => {

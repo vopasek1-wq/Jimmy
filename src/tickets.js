@@ -64,8 +64,37 @@ function calibrationLine(calibration, ticketResults = null) {
     : "Zatím nemám dost vyhodnocených tipů, takže kalibraci pravděpodobnosti neznám.";
 }
 
+const REVIEW_LABEL = { "co je spatne": "Co je špatně", "na co si dat pozor": "Na co si dát pozor", "co delat jinak": "Co dělat jinak" };
+const cutText = (s, n) => (s.length <= n ? s : `${s.slice(0, n).replace(/\s+\S*$/, "")}…`);
+
+/**
+ * Zkrácené poučení ze slovního vyhodnocení tiketů (panel Vyhodnocení): jen oddíly „Co je špatně“, „Na co si dát pozor“ a „Co dělat jinak“,
+ * z každého první 3 body, každý nejvýš `maxChars` znaků. Úvodní upozornění a „Jak tikety dopadly“ se vynechají (čísla už AI dostává zvlášť).
+ * Když se oddíly nepoznají, vrátí se začátek textu bez markdownu.
+ */
+function reviewLessons(text, { perSection = 3, maxChars = 200 } = {}) {
+  const sections = new Map();
+  let current = null;
+  const plainLines = [];
+  for (const raw of String(text || "").split(/\r?\n/)) {
+    const plain = raw.replace(/[#*_`]/g, "").trim();
+    if (!plain) continue;
+    plainLines.push(plain);
+    const key = norm(plain.replace(/:\s*$/, ""));
+    if (REVIEW_LABEL[key]) { current = key; if (!sections.has(key)) sections.set(key, []); continue; }
+    if (key === "jak tikety dopadly") { current = null; continue; }
+    if (!current) continue;
+    const item = plain.replace(/^(?:[-•–]|\d+[.)])\s+/, "").trim();
+    const list = sections.get(current);
+    if (item && list.length < perSection) list.push(cutText(item, maxChars));
+  }
+  const out = [...sections].filter(([, list]) => list.length).map(([key, list]) => `${REVIEW_LABEL[key]}: ${list.join(" | ")}`).join(" ");
+  return out || cutText(plainLines.slice(1).join(" "), 600);
+}
+
 /** Zadání pro Gemini: tipy se statistikami ze SofaScore (`stats[ticketId]`) a pravidla výběru. */
-function buildTicketPrompt(candidates, stats, { calibration = null, ticketResults = null, now = new Date() } = {}) {
+function buildTicketPrompt(candidates, stats, { calibration = null, ticketResults = null, review = "", now = new Date() } = {}) {
+  const lessons = reviewLessons(review);
   const rows = candidates.map((t) => ({
     id: t.ticketId, zapas: t.matchName, soutez: t.leagueShort || t.league, zacatek: `${czDate(t.day)} ${fmtHourMinute(new Date(t.kickoff))}`,
     tip: t.tipLabel, pravdepodobnost: t.probability, kurz: t.odds, statistiky: stats[t.ticketId] || null,
@@ -92,7 +121,7 @@ function buildTicketPrompt(candidates, stats, { calibration = null, ticketResult
     + `- U každého zápasu, který v žádném tiketu není, uveď v poli "vynechane" jeho id a důvod (nejvýš 12 slov, např. „forma hostů tip nepodporuje“, „chybí údaje o H2H i zraněních“).\n`
     + `- Piš česky.\n`
     + `- Pokud žádný tiket pravidla nesplňuje, vrať prázdné pole "tikety" a v "poznamka" stručně napiš proč.\n\n`
-    + `${calibrationLine(calibration, ticketResults)} Pravděpodobnost v nabídce je odhad zdroje, ne kalibrovaná šance.\n\n`
+    + `${calibrationLine(calibration, ticketResults)} Pravděpodobnost v nabídce je odhad zdroje, ne kalibrovaná šance.${lessons ? ` Poučení z mého posledního slovního vyhodnocení tiketů (zkráceně): ${lessons} Vezmi to v úvahu při výběru zápasů i při sestavování tiketů.` : ""}\n\n`
     + `NABÍDKA SE STATISTIKAMI (JSON): ${JSON.stringify(rows)}\n\n`
     + `Odpověz POUZE JSON podle tohoto tvaru (česky, bez dalšího textu):\n`
     + `{"tikety":[{"nazev":"Tiket 1","jistota":"vysoka|stredni|nizsi","shrnuti":"1 věta","tipy":[{"id":"id zápasu z nabídky","zduvodneni":"1–2 věty k tomuto zápasu"}]}],"vynechane":[{"id":"t2","duvod":"max. 12 slov"}],"poznamka":""}`;
@@ -273,7 +302,7 @@ function ticketStats(settled) {
  * (matchstats.js), `ask` je funkce `generate` z analysis.js (s klíčem a síťovou funkcí), `progress` dostává zprávy o průběhu.
  * Vrací { tickets, note, analyzed, covered, rejected, omitted } (omitted = zápasy mimo tikety s důvodem).
  */
-async function createTickets({ candidates, collect, ask, calibration = null, ticketResults = null, progress = () => {}, now = new Date(), hint = "", reuse = null }) {
+async function createTickets({ candidates, collect, ask, calibration = null, ticketResults = null, review = "", progress = () => {}, now = new Date(), hint = "", reuse = null }) {
   if (candidates.length < MIN_LEGS) {
     throw new Error(`Na tikety je málo vhodných tipů (${candidates.length}): potřebuju alespoň ${MIN_LEGS}, které ještě nezačaly a mají skutečný kurz. Zkus jiný den, nebo nejdřív stáhni tipy.`);
   }
@@ -286,7 +315,7 @@ async function createTickets({ candidates, collect, ask, calibration = null, tic
     throw new Error(`Ze SofaScore se nepodařilo získat statistiky aspoň ke ${MIN_LEGS} zápasům. ${why}${hint}`);
   }
   progress("Gemini vyhodnocuje statistiky a sestavuje tikety…");
-  const prompt = buildTicketPrompt(usable, data.stats, { calibration, ticketResults, now });
+  const prompt = buildTicketPrompt(usable, data.stats, { calibration, ticketResults, review, now });
   let parsed = null;
   let text = "";
   let reused = false;
@@ -327,6 +356,6 @@ function answerCache({ ttlMs = ANSWER_TTL_MS, now = () => Date.now() } = {}) {
 
 module.exports = {
   answerCache, answerKey,
-  candidatesFrom, buildTicketPrompt, parseTickets, createTickets, settleTicket, ticketStats, ticketGroups, dueKickoffs,
+  candidatesFrom, buildTicketPrompt, reviewLessons, parseTickets, createTickets, settleTicket, ticketStats, ticketGroups, dueKickoffs,
   MIN_LEGS,
 };

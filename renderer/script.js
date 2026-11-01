@@ -1253,7 +1253,7 @@
     tk.timer = setInterval(tickBusy, 1000);
     $("#tk-create").disabled = true;
     renderTickets();
-    const res = await desktop.tickets.create({ day: tk.day });
+    const res = await desktop.tickets.create({ day: tk.day, review: ev.ai && ev.ai.text ? ev.ai.text : "" });
     clearInterval(tk.timer);
     tk.busy = false;
     $("#tk-create").disabled = false;

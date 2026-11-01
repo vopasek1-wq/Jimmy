@@ -127,6 +127,7 @@ Zvolíš den (Dnes / Zítra) a klikneš na **Vytvořit tikety (AI)** – počet 
    a zda mezi nimi je brankář nebo útočník; u chybějících hráčů se z posledních 3 zápasů týmu zjistí, jestli patřili do základu a s jakým hodnocením, takže ztráta základního hráče váží víc než chybějící náhradník) a **dny od posledního zápasu** (únava). K tomu dostane **moje dosavadní výsledky z Vyhodnocení**:
    úspěšnost po pásmech pravděpodobnosti, podle typu tipu a soutěže (od 3 vyhodnocených tipů) a výsledky uložených tiketů podle počtu zápasů
    a jistoty. Skupiny, které zaostávají za odhadem o víc než 10 p. b., zařazuje jen s oporou „silná“ a jejich pravděpodobnost bere jako nadhodnocenou.
+   Dostane i **zkrácené poučení z posledního slovního vyhodnocení** (Vyhodnocení → Slovní vyhodnocení): oddíly „Co je špatně“, „Na co si dát pozor“ a „Co dělat jinak“, z každého první tři body.
 
 **Šetření limitu Gemini API (bezplatný klíč má denní i minutový limit):** tikety se sestavují **jedním dotazem** na všechny zápasy. Přemýšlení modelu je omezené (jeho tokeny se počítají do limitu odpovědi i do kvóty) a zdůvodnění jsou krátká. Když se zadání do 20 minut nezmění (stejné zápasy, kurzy i statistiky), použije se předchozí odpověď a **žádný nový dotaz se neposílá** (stejně u **Vyhodnotit pomocí AI**). Useklá odpověď se zopakuje jen s větším limitem, nevolá se nadarmo víckrát. Každý dotaz má vlastní časový limit (75 s u analýzy, 110 s u tiketů): model, který se zasekne, se opustí a zkusí se záložní, takže se nečeká celé čtyři minuty na jeden.
 
