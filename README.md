@@ -97,7 +97,7 @@ z pravděpodobnosti (férový kurz zmenšený o marži 6 %) a v tabulce je ozna�
 ## Historie a statistiky
 
 Každý nalezený tip se ukládá do SQLite. Stránka **Historie** ukazuje uložené tipy za **dnes**, **včera**, vybraný **den** (kalendář) nebo **tento měsíc**,
-včetně sloupce **Výsledek**, který doplňuje aplikace sama podle SofaScore při každém stahování (nebo tlačítkem **Vyhodnotit automaticky**).
+včetně sloupce **Výsledek**, který doplňuje aplikace sama podle SofaScore při každém stahování a na pozadí i při otevření Historie.
 Vyhodnocují se běžné trhy (1X2, dvojitá šance, Over/Under, oba týmy skórují, týmové totaly, celočíselné handicapy);
 čtvrtinové linie a neznámé trhy zůstávají bez výsledku. Zisk a ROI se počítají při vkladu 1 na tip, jen z tipů se skutečným
 (ne odhadnutým) kurzem.
@@ -108,8 +108,8 @@ Záložka **Tikety** nechá Gemini poskládat kombinace (tikety) z tipů v Přeh
 
 **Záložka Tikety (jen vytváření):** vlevo je ovládání (**Vytvořit pro Dnes / Zítra**, **Vytvořit tikety (AI)**) a tikety pro zvolený den. U každého tiketu je jistota a shrnutí od AI, u každého zápasu konečné skóre a kurz; dole kurz tiketu, pravděpodobnost a zisk. Pod tikety je seznam **Nezařazeno do tiketů** s důvodem, proč zápas do tiketu nepřišel. Vpravo je po kliknutí na zápas (v tiketu i v seznamu nezařazených) stejná karta jako v Přehledu (pravděpodobnost, kurz, odkazy, forma, vzájemné zápasy, koláče gólů, absence) se zdůvodněním od AI.
 
-**Záložka Vyhodnocení:** vlevo je souhrn za zvolené období (**Zítra / Dnes / Včera / 7 dní / Vše**: počet tiketů, kolik vyhrálo / prohrálo / bylo vráceno, úspěšnost a odhad zdrojů, průměrný kurz tiketu, zisk při vkladu 1 na tiket s ROI), tlačítko **Vyhodnotit automaticky** a seznam tiketů s výsledkem (Vyhráno / Prohráno / Vráceno / Čeká) a značkou ✓ / ✗ / ↺ u každého zápasu. Prohra jednoho zápasu znamená prohru celého tiketu, vrácený zápas se z kurzu vyjme. Vpravo je **slovní vyhodnocení**: rozbor vyhodnocených tiketů od Gemini (co je špatně, na co si dát pozor), poslední rozbor zůstane i po restartu.
-Tlačítko **Vyhodnotit automaticky** zjistí výsledky zápasů ze SofaScore (stejně jako v Historii) a tikety se podle nich přepočítají; výsledky se doplňují i při každém stahování tipů.
+**Záložka Vyhodnocení:** vlevo je souhrn za zvolené období (**Zítra / Dnes / Včera / 7 dní / Vše**: počet tiketů, kolik vyhrálo / prohrálo / bylo vráceno, úspěšnost a odhad zdrojů, průměrný kurz tiketu, zisk při vkladu 1 na tiket s ROI) a seznam tiketů s výsledkem (Vyhráno / Prohráno / Vráceno / Čeká) a značkou ✓ / ✗ / ↺ u každého zápasu. Prohra jednoho zápasu znamená prohru celého tiketu, vrácený zápas se z kurzu vyjme. Vpravo je **slovní vyhodnocení**: rozbor vyhodnocených tiketů od Gemini (co je špatně, na co si dát pozor), poslední rozbor zůstane i po restartu.
+Výsledky zápasů se ze SofaScore zjišťují samy (při každém stahování tipů a na pozadí při otevření Historie nebo Vyhodnocení, nejvýš jednou za 5 minut) a tikety se podle nich přepočítají; žádné tlačítko k tomu netřeba.
 
 Zvolíš den (Dnes / Zítra) a klikneš na **Vytvořit tikety (AI)** – počet tipů ani tiketů se nezadává, určí je Gemini. Postup:
 

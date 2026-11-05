@@ -150,6 +150,7 @@
     window.scrollTo(0, 0);
     try { sessionStorage.setItem("tips:view", view); } catch { /* bez úložiště */ }
     if (view === "history") loadHistory();
+    if (view === "history" || view === "evaluation") autoEvaluate();
     if (view === "live") startLive();
     else stopLive();
     if (view === "tickets") loadTickets();
@@ -632,7 +633,6 @@
     state.busy = busy;
     app.classList.toggle("is-busy", busy);
     refreshBtn.disabled = busy;
-    $("#evaluate").disabled = busy;
     $("span", refreshBtn).textContent = busy ? "Stahuji…" : "Obnovit tipy";
     progressText.hidden = !busy;
     stepsEl.hidden = !busy;
@@ -803,18 +803,16 @@
     loadHistory();
   });
 
-  async function evaluateResults() {
-    if (state.busy || !desktop) return;
-    setBusy(true, "Zjišťuji výsledky zápasů…");
-    let res;
-    try { res = await desktop.history.evaluate(); } catch (err) { res = { ok: false, error: err.message }; }
-    setBusy(false);
-    if (res.ok) toast(res.data.message);
-    else toast(`Vyhodnocení se nepodařilo: ${res.error}`, "error");
-    await loadHistory();
-    await loadTicketHistory();
+  /** Výsledky tipů a tiketů se na pozadí doplní při otevření Historie a Vyhodnocení (nejvýš jednou za 5 minut, bez hlášení). */
+  let lastAutoEvaluate = 0;
+  async function autoEvaluate() {
+    if (!desktop || state.busy || Date.now() - lastAutoEvaluate < 5 * 60e3) return;
+    lastAutoEvaluate = Date.now();
+    try {
+      const res = await desktop.history.evaluate();
+      if (res.ok) { await loadHistory(); await loadTicketHistory(); }
+    } catch { /* tiše: výsledky se doplní i při dalším stahování */ }
   }
-  $("#evaluate").addEventListener("click", evaluateResults);
 
 
   /* ---------- Živé zápasy (SofaScore) ---------- */
@@ -1225,7 +1223,6 @@
     store.set("tk-range", ev.range);
     renderEvaluation();
   }));
-  $("#ev-evaluate").addEventListener("click", evaluateResults);
   if (desktop) desktop.tickets.onProgress((message) => { tk.step = message; tickBusy(); });
 
   $("#tk-create").addEventListener("click", async () => {
