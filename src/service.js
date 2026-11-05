@@ -70,7 +70,7 @@ class TipService {
       }).run({ progress, interactiveForebet });
       if (resultOk(result)) {
         this.db.saveRun(result);
-        await updateResults(this.db, this.http, { progress }).catch(() => {}); // doplní skóre a výsledky skončených zápasů
+        await updateResults(this.db, this.http, { progress, debugDir: path.join(this.dataDir, "ladeni") }).catch(() => {}); // doplní skóre a výsledky skončených zápasů
         return this._payload({ // z databáze, aby tipy už skončených zápasů měly výsledek
           tips: this.db.tipsOfLatestRun(), statuses: result.statuses, warnings: result.warnings, updatedAt: result.finishedAt, fromCache: false,
         });
@@ -236,7 +236,7 @@ class TipService {
     if (this.busy) throw new Error("Stahování už běží.");
     this.busy = true;
     try {
-      return await updateResults(this.db, this.http, { progress });
+      return await updateResults(this.db, this.http, { progress, debugDir: path.join(this.dataDir, "ladeni") });
     } finally {
       this.busy = false;
     }

@@ -19,6 +19,7 @@ function readLimited(file, limit) {
 const FILES = [
   ["zdroje-diagnostika.txt", 20000], // i s přehledem zahozených tipů (až 40 řádků)
   ["tikety-statistiky.txt", 6000],
+  ["vysledky-diagnostika.txt", 5000],   // proč tipy zůstaly bez výsledku
 ];
 
 /** @param {object} o { version, electron, platform, run, tips, dir, now } */

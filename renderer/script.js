@@ -1026,7 +1026,6 @@
   const ev = {                          // záložka Vyhodnocení
     range: TK_RANGES.includes(store.get("tk-range")) ? store.get("tk-range") : "all",          // která období se v seznamu ukazují
     selected: null,
-    pane: "detail",                     // pravá karta: „detail“ (zápasu) × „ai“ (slovní vyhodnocení)
     ai: store.get("tk-ai"), aiBusy: false,   // { text, at }: poslední rozbor zůstane i po restartu
   };
   let ticketHistory = null;             // tikety z databáze (jediný zdroj) i s výsledky, společné pro obě záložky
@@ -1107,17 +1106,6 @@
     return render;
   }
   const renderTkDetail = legDetail({ st: tk, detailEl: $("#tk-detail"), matchEl: $("#tk-detail-match"), lists: ["#tk-list", "#tk-omitted"] });
-  const renderEvDetail = legDetail({ st: ev, detailEl: $("#ev-detail"), matchEl: $("#ev-detail-match"), lists: ["#ev-list"], onPick: () => setEvPane("detail") });
-
-  /** Pravá karta ve vyhodnocení: detail zápasu × slovní vyhodnocení. */
-  function setEvPane(pane) {
-    ev.pane = pane === "ai" ? "ai" : "detail";
-    $$("[data-evpane]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.evpane === ev.pane)));
-    $("#ev-pane-detail").hidden = ev.pane !== "detail";
-    $("#ev-pane-ai").hidden = ev.pane !== "ai";
-    if (ev.pane === "ai") renderEvAi();
-  }
-  $$("[data-evpane]").forEach((b) => b.addEventListener("click", () => setEvPane(b.dataset.evpane)));
 
   const fmtProfit = (p) => (p === null ? "–" : `${p > 0 ? "+" : p < 0 ? "−" : ""}${nf2.format(Math.abs(p))}`);
   const mean = (list) => (list.length ? list.reduce((a, b) => a + b, 0) / list.length : null);
@@ -1212,7 +1200,7 @@
   async function loadTicketHistory() {
     if (!desktop) return;
     const res = await desktop.tickets.history();
-    if (res.ok) { ticketHistory = res.data; renderTickets(); renderEvaluation(); renderTkDetail(); renderEvDetail(); }
+    if (res.ok) { ticketHistory = res.data; renderTickets(); renderEvaluation(); renderTkDetail(); }
   }
 
   function loadTickets() {
@@ -1223,8 +1211,7 @@
 
   function loadEvaluation() {
     renderEvaluation();
-    setEvPane(ev.pane);
-    renderEvDetail();
+    renderEvAi();
     loadTicketHistory();
   }
 

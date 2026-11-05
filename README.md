@@ -108,7 +108,7 @@ Záložka **Tikety** nechá Gemini poskládat kombinace (tikety) z tipů v Přeh
 
 **Záložka Tikety (jen vytváření):** vlevo je ovládání (**Vytvořit pro Dnes / Zítra**, **Vytvořit tikety (AI)**) a tikety pro zvolený den. U každého tiketu je jistota a shrnutí od AI, u každého zápasu konečné skóre a kurz; dole kurz tiketu, pravděpodobnost a zisk. Pod tikety je seznam **Nezařazeno do tiketů** s důvodem, proč zápas do tiketu nepřišel. Vpravo je po kliknutí na zápas (v tiketu i v seznamu nezařazených) stejná karta jako v Přehledu (pravděpodobnost, kurz, odkazy, forma, vzájemné zápasy, koláče gólů, absence) se zdůvodněním od AI.
 
-**Záložka Vyhodnocení:** vlevo je souhrn za zvolené období (**Zítra / Dnes / Včera / 7 dní / Vše**: počet tiketů, kolik vyhrálo / prohrálo / bylo vráceno, úspěšnost a odhad zdrojů, průměrný kurz tiketu, zisk při vkladu 1 na tiket s ROI), tlačítko **Vyhodnotit automaticky** a seznam tiketů s výsledkem (Vyhráno / Prohráno / Vráceno / Čeká) a značkou ✓ / ✗ / ↺ u každého zápasu. Prohra jednoho zápasu znamená prohru celého tiketu, vrácený zápas se z kurzu vyjme. Vpravo je přepínač **Detail zápasu / Slovní vyhodnocení**; **Slovní vyhodnocení** je rozbor vyhodnocených tiketů od Gemini (co je špatně, na co si dát pozor), poslední rozbor zůstane i po restartu.
+**Záložka Vyhodnocení:** vlevo je souhrn za zvolené období (**Zítra / Dnes / Včera / 7 dní / Vše**: počet tiketů, kolik vyhrálo / prohrálo / bylo vráceno, úspěšnost a odhad zdrojů, průměrný kurz tiketu, zisk při vkladu 1 na tiket s ROI), tlačítko **Vyhodnotit automaticky** a seznam tiketů s výsledkem (Vyhráno / Prohráno / Vráceno / Čeká) a značkou ✓ / ✗ / ↺ u každého zápasu. Prohra jednoho zápasu znamená prohru celého tiketu, vrácený zápas se z kurzu vyjme. Vpravo je **slovní vyhodnocení**: rozbor vyhodnocených tiketů od Gemini (co je špatně, na co si dát pozor), poslední rozbor zůstane i po restartu.
 Tlačítko **Vyhodnotit automaticky** zjistí výsledky zápasů ze SofaScore (stejně jako v Historii) a tikety se podle nich přepočítají; výsledky se doplňují i při každém stahování tipů.
 
 Zvolíš den (Dnes / Zítra) a klikneš na **Vytvořit tikety (AI)** – počet tipů ani tiketů se nezadává, určí je Gemini. Postup:
@@ -206,6 +206,7 @@ API klíč ani nic osobního. Ladicí soubory ve složce `ladeni` se přepisují
 |---|---|
 | `zdroje-diagnostika.txt` | stav zdrojů, **zahozené tipy a proč** (souhrn podle důvodů a až 40 nezačatých nebo živých tipů s důvodem: pravděpodobnost není nad 60 %, bez pravděpodobnosti, kurz pod 1,50, …), přehled načtených stránek Forebetu (odkud, kolik zápasů, jak se našly sledované ligy), párování tipů s Forebetem (časový rozsah, nespárované tipy s nejbližším zápasem), pokrytí SofaScore |
 | `tikety-statistiky.txt` | co se stáhlo ze SofaScore pro tikety (po zápasech) |
+| `vysledky-diagnostika.txt` | proč tipy zůstaly bez výsledku (zápas nenalezen, ještě neskončil, trh nelze vyhodnotit); výsledek se bere podle uloženého ID zápasu na SofaScore, jinak podle týmů a času |
 
 ## Vývoj
 

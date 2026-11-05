@@ -276,6 +276,54 @@ test("updateResults: vyhodnotí jen skončené zápasy a známé trhy, ruční v
   assert.match(message, /Vyhodnoceno 2/);
 });
 
+test("updateResults: tip spárovaný se SofaScore se vyhodnotí podle ID zápasu, i když hledání v soutěži nic nevrátí", async () => {
+  const db = memDb();
+  const ko = new Date(Date.now() - 5 * 3600e3);
+  db.saveRun(okResult([mk({ home: "Hull City", away: "Ipswich Town", tipCode: "1", kickoff: ko, sofascoreId: 77 })]));
+  const calls = [];
+  const http = {
+    getJson: async (url) => {
+      calls.push(url);
+      if (/\/event\/77$/.test(url)) return { event: sofaEvent(77, "Hull City", "Ipswich Town", Math.floor(ko.getTime() / 1000), "finished", 2, 0) };
+      const err = new SourceError("HTTP 404"); err.status = 404; throw err; // seznam zápasů soutěže nedostupný
+    },
+  };
+  const { done } = await updateResults(db, http);
+  const t = db.history()[0];
+  assert.deepEqual([done, t.homeScore, t.awayScore, t.outcome, t.status], [1, 2, 0, "win", "finished"]);
+  assert.equal(calls.length, 1);
+});
+
+test("updateResults: ID patřící jinému zápasu se nepoužije; důvody chybějících výsledků jdou do ladicího souboru", async () => {
+  const fs = require("node:fs");
+  const os = require("node:os");
+  const path = require("node:path");
+  const db = memDb();
+  const ko = new Date(Date.now() - 5 * 3600e3);
+  const ts = Math.floor(ko.getTime() / 1000);
+  db.saveRun(okResult([
+    mk({ home: "Brentford", away: "Fulham", tipCode: "1", kickoff: ko, sofascoreId: 78 }),          // ID existuje, ale zápas ještě „běží“
+    mk({ home: "Everton", away: "Wolves", tipCode: "1", kickoff: ko, sofascoreId: 79 }),             // ID patří úplně jinému zápasu
+    mk({ home: "Leeds", away: "Burnley", tipCode: "1", kickoff: ko, sofascoreId: null }),            // bez ID a v soutěži není
+  ]));
+  const http = {
+    getJson: async (url) => {
+      if (/\/event\/78$/.test(url)) return { event: sofaEvent(78, "Brentford", "Fulham", ts, "inprogress", 1, 1) };
+      if (/\/event\/79$/.test(url)) return { event: sofaEvent(79, "Arsenal", "Chelsea", ts, "finished", 3, 1) };
+      return { events: [] };
+    },
+  };
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "res-"));
+  const { done } = await updateResults(db, http, { debugDir: dir });
+  assert.equal(done, 0);
+  const text = fs.readFileSync(path.join(dir, "vysledky-diagnostika.txt"), "utf8");
+  assert.match(text, /Tipů čekalo na výsledek: 3, vyhodnoceno 0, bez výsledku 3/);
+  assert.match(text, /Brentford – Fulham .*\| SofaScore: stav live, skóre 1:1/);
+  assert.match(text, /Everton – Wolves .*\| zápas na SofaScore nenalezen/);
+  assert.match(text, /Leeds – Burnley .*\| zápas na SofaScore nenalezen/);
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
 test("updateResults: doplní skóre i tipům, které už mají (ruční) výsledek", async () => {
   const db = memDb();
   const ko = new Date(Date.now() - 5 * 3600e3);

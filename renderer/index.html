@@ -190,16 +190,8 @@
             <div class="tk-list" id="ev-list"></div>
           </section>
 
-          <section class="card tk-side" aria-label="Detail zápasu a slovní vyhodnocení">
-            <div class="seg-control tk-side__switch" id="ev-pane" role="group" aria-label="Pravý panel">
-              <button type="button" data-evpane="detail" aria-pressed="true">Detail zápasu</button>
-              <button type="button" data-evpane="ai" aria-pressed="false">Slovní vyhodnocení</button>
-            </div>
-            <div class="tk-pane" id="ev-pane-detail">
-              <header class="card__header"><span class="detail-match" id="ev-detail-match"></span></header>
-              <div class="detail" id="ev-detail"></div>
-            </div>
-            <div class="tk-pane" id="ev-pane-ai" hidden>
+          <section class="card tk-side" aria-label="Slovní vyhodnocení">
+            <div class="tk-pane" id="ev-pane-ai">
               <div class="tk-ai__bar">
                 <button class="btn btn--primary btn--sm" type="button" id="ev-ai-run" title="Gemini slovně rozebere vyhodnocené tikety: co je špatně a na co si dát pozor. Pošle je do Google Gemini API tvým klíčem."><i data-lucide="sparkles"></i><span>Vyhodnotit pomocí AI</span></button>
                 <span class="tk-ai__note" id="ev-ai-note"></span>

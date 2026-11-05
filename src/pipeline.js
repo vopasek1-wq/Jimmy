@@ -331,7 +331,7 @@ function settleFinished(db) {
  * výsledku, jejichž zápas začal před více než 3 hodinami a nejsou starší než `maxAgeDays`. Ručně zadané
  * výsledky se nikdy nepřepisují (ty už výsledek mají). Neznámé trhy a čtvrtinové linie zůstávají ručně.
  */
-async function updateResults(db, http, { progress = () => {}, maxAgeDays = 14, now = new Date() } = {}) {
+async function updateResults(db, http, { progress = () => {}, maxAgeDays = 14, now = new Date(), debugDir = null } = {}) {
   const cutoff = addDays(todayLocal(now), -maxAgeDays);
   const settled = settleFinished(db); // co už je skončené a má skóre, se vyhodnotí hned
   const before = new Date(now.getTime() - 100 * 60 * 1000); // zápas netrvá míň než ~100 min; skončení potvrdí SofaScore
@@ -344,18 +344,36 @@ async function updateResults(db, http, { progress = () => {}, maxAgeDays = 14, n
   const client = new SofaScoreClient(http);
   let done = settled;
   let skipped = 0;
+  const report = []; // proč tip zůstal bez výsledku (do ladicího souboru)
+  const why = (t, reason) => report.push(`${t.home} – ${t.away} [${t.leagueKey}] ${iso(t.kickoff)} | ${t.tipLabel} | ${reason}`);
   for (const t of pending) {
     const league = config.leagueByKey(t.leagueKey);
     const needsOutcome = t.outcome === null;
-    if (!league || !league.sofascoreId) { if (needsOutcome) skipped += 1; continue; }
-    const ev = await client.find(league.sofascoreId, t.home, t.away, t.kickoff);
-    if (!ev || ev.status !== FINISHED || ev.homeScore === null || ev.awayScore === null) { if (needsOutcome) skipped += 1; continue; }
+    // Tip, který už byl spárovaný se zápasem na SofaScore, se najde přímo podle ID (nezávisle na názvech týmů a soutěži); jinak podle týmů a času.
+    let ev = t.sofascoreId ? await client.byId(t.sofascoreId) : null;
+    if (ev && sameMatch(t.home, t.away, ev.home, ev.away) < 0.6) ev = null; // uložené ID by patřilo jinému zápasu
+    if (!ev && league && league.sofascoreId) ev = await client.find(league.sofascoreId, t.home, t.away, t.kickoff);
+    if (!ev) {
+      if (needsOutcome) { skipped += 1; why(t, league && league.sofascoreId ? "zápas na SofaScore nenalezen" : "soutěž nemá ID na SofaScore"); }
+      continue;
+    }
+    if (ev.status !== FINISHED || ev.homeScore === null || ev.awayScore === null) {
+      if (needsOutcome) { skipped += 1; why(t, `SofaScore: ${ev.cancelled ? "zrušen nebo odložen" : `stav ${ev.status || "neznámý"}`}, skóre ${ev.homeScore ?? "–"}:${ev.awayScore ?? "–"}`); }
+      continue;
+    }
     if (t.homeScore !== ev.homeScore || t.awayScore !== ev.awayScore || t.status !== FINISHED) db.setScore(t.id, ev.homeScore, ev.awayScore); // konečné skóre přepíše i zastaralé průběžné
     if (!needsOutcome) continue;
     const outcome = evaluate(t.tipCode, ev.homeScore, ev.awayScore);
-    if (outcome === null) { skipped += 1; continue; }
+    if (outcome === null) { skipped += 1; why(t, `trh ${t.tipCode} nelze vyhodnotit automaticky (skóre ${ev.homeScore}:${ev.awayScore})`); continue; }
     db.setOutcome(t.id, outcome, "auto");
     done += 1;
+  }
+  if (debugDir) {
+    try {
+      fs.mkdirSync(debugDir, { recursive: true });
+      fs.writeFileSync(path.join(debugDir, "vysledky-diagnostika.txt"),
+        `Vyhodnocení výsledků – ${new Date().toISOString()}\nTipů čekalo na výsledek: ${pending.length}, vyhodnoceno ${done - settled}, bez výsledku ${report.length}\n${report.slice(0, 40).join("\n")}\n`, "utf8");
+    } catch { /* ladicí soubor není nutný */ }
   }
 
   let message = `Vyhodnoceno ${done} tipů`;

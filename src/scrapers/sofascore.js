@@ -74,6 +74,23 @@ class SofaScoreClient {
     return this.cache.get(key);
   }
 
+  /** Zápas podle jeho SofaScore ID (tipy ho mají uložené po prvním spárování); null, když se ho nepodaří načíst. */
+  async byId(id) {
+    const key = `id|${id}`;
+    if (!this.cache.has(key)) {
+      try {
+        const data = await this.http.getJson(`${config.SOFASCORE_API}/event/${id}`, { headers: API_HEADERS, delayMs: FAST_DELAY_MS });
+        this.cache.set(key, parseEvents({ events: data && data.event ? [data.event] : [] })[0] || null);
+        this.requestsOk += 1;
+      } catch (err) {
+        if (!(err instanceof SourceError)) throw err;
+        if (err.status !== 404) this.errors.push(err.message);
+        this.cache.set(key, null);
+      }
+    }
+    return this.cache.get(key);
+  }
+
   /** Najde zápas podle týmů a času (±3 h od očekávaného začátku). */
   async find(tournamentId, home, away, kickoff) {
     let best = null;

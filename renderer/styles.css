@@ -953,7 +953,6 @@ body { background: var(--bg); }
 /* Slovní vyhodnocení tiketů (pravá část záložky Vyhodnocení) */
 /* Pravá karta záložky Tikety: detail zápasu × slovní vyhodnocení */
 .tk-side { gap: 0; }
-.tk-side__switch { align-self: flex-start; flex: none; margin-bottom: 12px; }
 .tk-pane { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 .tk-pane[hidden] { display: none; }
 .tk-pane .detail { margin-top: 12px; }
