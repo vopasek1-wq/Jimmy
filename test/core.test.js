@@ -131,8 +131,9 @@ test("ligy: norská Eliteserien a bulharská První liga se poznají podle odkaz
   assert.equal(config.findLeague("Bulgaria", "Second League", "bulgaria-second-league"), null);
   assert.deepEqual([config.leagueByKey("NORSKO").sofascoreId, config.leagueByKey("BULHARSKO").sofascoreId], [20, 247]);
 });
-test("názvy týmů: Hamarkameratene = HamKam", () => {
+test("názvy týmů: Hamarkameratene = HamKam, AZ = AZ Alkmaar", () => {
   assert.ok(sameMatch("KFUM Oslo", "Hamarkameratene", "KFUM Oslo", "HamKam") >= 0.9);
+  assert.ok(sameMatch("AZ", "Juventus", "AZ Alkmaar", "Juventus") >= 0.9);   // Scores24 píše jen „AZ“
 });
 test("filtr: jen sledované ligy", () => {
   assert.equal(passesFilters(mk({ leagueKey: "MLS" })), false);
