@@ -998,7 +998,7 @@
     const { counts, total } = leagueCounts();
     const item = (key, name, badge, count, title = name) => `<button type="button" class="cat${state.league === key ? " is-active" : ""}${count ? "" : " is-empty"}" data-league="${esc(key)}" title="${esc(title)}" aria-pressed="${state.league === key}">
       ${badge.startsWith("flag:") ? `<span class="cat__badge cat__badge--flag"><img src="vendor/flags/${esc(badge.slice(5))}.svg" alt="" width="26" height="26"></span>` : `<span class="cat__badge">${esc(badge)}</span>`}<span class="cat__name">${esc(name)}</span><span class="cat__count">${count}</span></button>`;
-    catsEl.innerHTML = `<div class="cats__title">Soutěže</div>${item("", "Všechny soutěže", "★", total)}${state.leagues.filter((l) => l.group === l.key).map((l) => item(l.key, leagueLabel(l), COUNTRY_FLAG[l.key] ? `flag:${COUNTRY_FLAG[l.key]}` : badgeOf(l.short), counts[l.key] || 0, state.leagues.filter((x) => x.group === l.key).map((x) => (x.key === l.key ? x.nameCs || x.short : x.short)).join(", "))).join("")}`;
+    catsEl.innerHTML = `<div class="cats__title">Soutěže</div>${item("", "Všechny soutěže", "★", total)}${state.leagues.filter((l) => l.group === l.key && (counts[l.key] || state.league === l.key)).map((l) => item(l.key, leagueLabel(l), COUNTRY_FLAG[l.key] ? `flag:${COUNTRY_FLAG[l.key]}` : badgeOf(l.short), counts[l.key] || 0, state.leagues.filter((x) => x.group === l.key).map((x) => (x.key === l.key ? x.nameCs || x.short : x.short)).join(", "))).join("")}`;
   }
 
   catsEl.addEventListener("click", (e) => {
