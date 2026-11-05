@@ -233,6 +233,27 @@ test("SofaScore: odložený zápas se vyřadí, vzdálené události se nepřiř
   assert.deepEqual(kept.map((t) => t.home), ["Chelsea"]); // druhý zápas je o 8 h dál → nepřiřazen, ale zůstává
   assert.equal(kept[0].sofascoreId, null);
 });
+test("SofaScore: když se zápas v soutěži nenajde, hledá se mezi všemi zápasy dne (jen při dobré shodě jmen a času)", async () => {
+  const wide = { events: [
+    sofaEvent(11, "KuPS Kuopio", "KAA Gent", TS + 600),         // správný zápas, jen v jiné soutěži
+    sofaEvent(12, "KuPS Kuopio", "KAA Gent", TS + 3 * 3600),    // stejná jména, ale o 3 h později → ne
+    sofaEvent(13, "Hull City", "Ipswich Town", TS),
+  ] };
+  const http = { calls: [], async getJson(url) { this.calls.push(url); return /sport\/football\/scheduled-events/.test(url) ? wide : { events: [] }; } };
+  const client = new sofascore.SofaScoreClient(http);
+  const t = { ...tipAt("KuPS", "Gent"), leagueKey: "UECL" };
+  const other = tipAt("Hull City", "Leeds United");   // špatný soupeř → nepřiřadí se
+  const kept = await client.enrich([t, other]);
+  assert.equal(kept.length, 2);
+  assert.deepEqual([t.sofascoreId, other.sofascoreId], [11, null]);
+  assert.equal(t.kickoff.getTime() / 1000, TS + 600);
+  assert.equal(http.calls.filter((u) => /sport\/football\/scheduled-events\/2026-10-18/.test(u)).length, 1); // seznam dne se stahuje jednou
+  assert.equal(client.errors.length, 0);
+  // selhání zálohy se nehlásí jako chyba zdroje
+  const failing = new sofascore.SofaScoreClient({ async getJson(url) { if (/sport\/football/.test(url)) throw new SourceError("HTTP 403"); return { events: [] }; } });
+  assert.equal(await failing.findAnywhere("A", "B", new Date(TS * 1000)), null);
+  assert.deepEqual(failing.errors, []);
+});
 test("SofaScore: výpadek není fatální", async () => {
   const client = new sofascore.SofaScoreClient(fakeHttp(null, new SourceError("HTTP 403")));
   const t = tipAt();

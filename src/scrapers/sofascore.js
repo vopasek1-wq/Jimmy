@@ -16,6 +16,8 @@ const { utcDateOf } = require("../timeutil");
 
 const API_HEADERS = { Accept: "application/json", Referer: `${config.SOFASCORE_WEB}/` };
 const MATCH_TOLERANCE_MS = 3 * 3600 * 1000;
+const WIDE_TOLERANCE_MS = 90 * 60 * 1000;   // záloha přes všechny zápasy dne: přísnější čas i shoda jmen
+const WIDE_MIN_SCORE = 0.8;
 const FAST_DELAY_MS = [300, 700]; // drobné dotazy na týž server; stahují se po třech najednou
 const CONCURRENCY = 3;
 
@@ -103,6 +105,32 @@ class SofaScoreClient {
     return best;
   }
 
+  /**
+   * Záloha: zápas se hledá mezi všemi fotbalovými zápasy dne, když se v „své“ soutěži nenašel (jiné ID soutěže, kvalifikace, …).
+   * Bere se jen při velmi dobré shodě obou jmen a času (±90 min). Chyba tohoto dotazu se nehlásí, záloha je nepovinná.
+   */
+  async findAnywhere(home, away, kickoff) {
+    const day = utcDateOf(kickoff);
+    const key = `all|${day}`;
+    if (!this.cache.has(key)) {
+      try {
+        this.cache.set(key, parseEvents(await this.http.getJson(`${config.SOFASCORE_API}/sport/football/scheduled-events/${day}`, { headers: API_HEADERS, delayMs: FAST_DELAY_MS })));
+        this.requestsOk += 1;
+      } catch (err) {
+        if (!(err instanceof SourceError)) throw err;
+        this.cache.set(key, []);
+      }
+    }
+    let best = null;
+    let bestScore = 0;
+    for (const ev of this.cache.get(key)) {
+      if (Math.abs(ev.start - kickoff) > WIDE_TOLERANCE_MS) continue;
+      const score = sameMatch(home, away, ev.home, ev.away);
+      if (score >= WIDE_MIN_SCORE && score > bestScore) { best = ev; bestScore = score; }
+    }
+    return best;
+  }
+
   /** Doplní tipům přesný čas, stav, skóre a odkaz; zrušené/odložené zápasy vyřadí. */
   async enrich(tips, progress = () => {}) {
     const groups = new Set();
@@ -123,7 +151,8 @@ class SofaScoreClient {
     const kept = [];
     for (const t of tips) {
       const lg = config.leagueByKey(t.leagueKey);
-      const ev = lg && lg.sofascoreId ? await this.find(lg.sofascoreId, t.home, t.away, t.kickoff) : null;
+      let ev = lg && lg.sofascoreId ? await this.find(lg.sofascoreId, t.home, t.away, t.kickoff) : null;
+      if (!ev) ev = await this.findAnywhere(t.home, t.away, t.kickoff);
       if (ev) {
         if (ev.cancelled) continue;
         t.kickoff = ev.start;

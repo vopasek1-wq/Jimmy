@@ -353,6 +353,7 @@ async function updateResults(db, http, { progress = () => {}, maxAgeDays = 14, n
     let ev = t.sofascoreId ? await client.byId(t.sofascoreId) : null;
     if (ev && sameMatch(t.home, t.away, ev.home, ev.away) < 0.6) ev = null; // uložené ID by patřilo jinému zápasu
     if (!ev && league && league.sofascoreId) ev = await client.find(league.sofascoreId, t.home, t.away, t.kickoff);
+    if (!ev) ev = await client.findAnywhere(t.home, t.away, t.kickoff);
     if (!ev) {
       if (needsOutcome) { skipped += 1; why(t, league && league.sofascoreId ? "zápas na SofaScore nenalezen" : "soutěž nemá ID na SofaScore"); }
       continue;
