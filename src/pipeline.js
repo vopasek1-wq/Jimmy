@@ -358,6 +358,11 @@ async function updateResults(db, http, { progress = () => {}, maxAgeDays = 14, n
       if (needsOutcome) { skipped += 1; why(t, league && league.sofascoreId ? "zápas na SofaScore nenalezen" : "soutěž nemá ID na SofaScore"); }
       continue;
     }
+    if (ev.cancelled) { // odložený nebo zrušený zápas: sázka se vrací (tiket ho vyjme z kurzu), v tabulce stojí „Odloženo“
+      if (t.status !== "postponed") db.setPostponed(t.id);
+      if (needsOutcome) { db.setOutcome(t.id, "void", "auto"); done += 1; }
+      continue;
+    }
     if (ev.status !== FINISHED || ev.homeScore === null || ev.awayScore === null) {
       if (needsOutcome) { skipped += 1; why(t, `SofaScore: ${ev.cancelled ? "zrušen nebo odložen" : `stav ${ev.status || "neznámý"}`}, skóre ${ev.homeScore ?? "–"}:${ev.awayScore ?? "–"}`); }
       continue;

@@ -217,6 +217,11 @@ class Database {
       .run(t.status, t.homeScore ?? null, t.awayScore ?? null, t.sofascoreUrl || "", t.sofascoreId ?? null, new Date().toISOString(), t.id);
   }
 
+  /** Odložený nebo zrušený zápas: stav „postponed“ (v tabulce „Odloženo“). */
+  setPostponed(tipId) {
+    this.db.prepare("UPDATE tips SET status='postponed', updated_at=? WHERE id=?").run(new Date().toISOString(), tipId);
+  }
+
   setOutcome(tipId, outcome, source = "manual") {
     this.db.prepare("UPDATE tips SET outcome=?, outcome_source=?, updated_at=? WHERE id=?")
       .run(outcome, outcome ? source : null, new Date().toISOString(), tipId);
@@ -266,7 +271,7 @@ class Database {
 
   /** Tipy, jejichž zápas už skončil, ale nemají uložené skóre (zápas doběhl mezi dvěma stahováními). */
   needScores(kickedOffBefore) {
-    return this.db.prepare("SELECT * FROM tips WHERE home_score IS NULL AND kickoff_utc <= ? ORDER BY kickoff_utc")
+    return this.db.prepare("SELECT * FROM tips WHERE home_score IS NULL AND status != 'postponed' AND kickoff_utc <= ? ORDER BY kickoff_utc")
       .all(kickedOffBefore.toISOString()).map(rowToTip);
   }
 

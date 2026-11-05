@@ -93,6 +93,7 @@
   /** Stav zápasu podle dat ze zdroje a hodin počítače. */
   const matchState = (t, now = Date.now()) => {
     const score = fmtScore(t);
+    if (t.status === "postponed") return { kind: "done", text: "Odloženo", order: 3 };
     if (t.status === "finished") return { kind: "done", text: score ? `Skončil ${score}` : "Skončil", order: 3 };
     if (t.status === "live") return { kind: "live", text: score ? `Živě ${score}` : "Živě", order: 1 };
     const kickoff = Date.parse(t.kickoff);
@@ -753,9 +754,10 @@
     const list = sortList(h.tips.filter((t) => matchesQuery(t) && inLeagueFilter(t.leagueKey)), HIST_SORT, state.hsort);
     if (!list.some((t) => t.id === state.hselected)) state.hselected = null;
     histBody.innerHTML = list.map((t) => {
-      const ov = OUTCOME_VIEW[t.outcome];
+      const postponed = t.status === "postponed";   // odložený nebo zrušený zápas: sázka se vrací, ale píše se „Odloženo“
+      const ov = postponed ? { icon: "clock", text: "Odloženo" } : OUTCOME_VIEW[t.outcome];
       const outcome = ov
-        ? `<span class="outcome outcome--${t.outcome}"><i data-lucide="${ov.icon}"></i>${ov.text}</span>`
+        ? `<span class="outcome outcome--${postponed ? "void" : t.outcome}"><i data-lucide="${ov.icon}"></i>${ov.text}</span>`
         : '<span class="outcome outcome--none">—</span>';
       const sel = t.id === state.hselected;
       return `<tr class="trow${t.outcome ? ` is-${t.outcome}` : ""}${sel ? " is-selected" : ""}" data-key="${esc(t.id)}" tabindex="${sel ? 0 : -1}" aria-selected="${sel}">

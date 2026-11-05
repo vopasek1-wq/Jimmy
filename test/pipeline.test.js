@@ -324,6 +324,22 @@ test("updateResults: ID patřící jinému zápasu se nepoužije; důvody chybě
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
+test("updateResults: odložený zápas dostane stav „postponed“ a vrácenou sázku, příště se už nezjišťuje", async () => {
+  const db = memDb();
+  const ko = new Date(Date.now() - 5 * 3600e3);
+  db.saveRun(okResult([mk({ home: "Minera", away: "Cartagena", tipCode: "1X", kickoff: ko, sofascoreId: 80 })]));
+  const calls = [];
+  const http = { getJson: async (url) => { calls.push(url); return { event: sofaEvent(80, "Minera", "Cartagena", Math.floor(ko.getTime() / 1000), "postponed") }; } };
+  const { done } = await updateResults(db, http);
+  let t = db.history()[0];
+  assert.deepEqual([done, t.status, t.outcome, t.outcomeSource], [1, "postponed", "void", "auto"]);
+  const before = calls.length;
+  await updateResults(db, http);
+  assert.equal(calls.length, before);          // odložený tip už není ve frontě na vyhodnocení
+  t = db.history()[0];
+  assert.equal(t.status, "postponed");
+});
+
 test("updateResults: doplní skóre i tipům, které už mají (ruční) výsledek", async () => {
   const db = memDb();
   const ko = new Date(Date.now() - 5 * 3600e3);
