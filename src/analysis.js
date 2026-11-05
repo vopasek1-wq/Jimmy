@@ -49,7 +49,6 @@ function analyze(allTips) {
   const byGroup = (keyOf, minN = 1) => [...groupBy(tips, keyOf)].map(([name, list]) => ({ name, ...summarize(list) })).filter((g) => g.n >= minN).sort((a, b) => b.n - a.n);
   const markets = byGroup((t) => marketGroup(t.tipCode));
   const leagues = byGroup((t) => t.league || t.leagueKey || "?");
-  const sources = byGroup((t) => t.probSource || "Scores24");
 
   const insights = [];
   if (overall.n < 30) insights.push(`Zatím je vyhodnoceno jen ${overall.n} tipů – závěry jsou orientační, smysluplnější budou od několika desítek tipů.`);
@@ -75,7 +74,7 @@ function analyze(allTips) {
   for (const b of bad) insights.push(`Pásmo ${b.label} je při skutečných kurzech ztrátové (ROI ${b.roi} %, ${b.n} tipů).`);
   if (!insights.length && overall.n >= 30) insights.push("Žádný výrazný rozdíl mezi předpokládanou a skutečnou úspěšností se nenašel.");
 
-  return { overall, bands, markets, leagues, sources, insights, pending: allTips.filter((t) => !t.outcome).length };
+  return { overall, bands, markets, leagues, insights, pending: allTips.filter((t) => !t.outcome).length };
 }
 
 const SYSTEM = "Jsi analytik sázkových tipů. Odpovídáš česky, stručně a věcně, bez emoji. Nic si nevymýšlíš – opíráš se jen o dodaná data, "

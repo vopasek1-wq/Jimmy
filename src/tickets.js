@@ -357,5 +357,4 @@ function answerCache({ ttlMs = ANSWER_TTL_MS, now = () => Date.now() } = {}) {
 module.exports = {
   answerCache, answerKey,
   candidatesFrom, buildTicketPrompt, reviewLessons, parseTickets, createTickets, settleTicket, ticketStats, ticketGroups, dueKickoffs,
-  MIN_LEGS,
 };
