@@ -77,8 +77,8 @@ function analyze(allTips) {
   return { overall, bands, markets, leagues, insights, pending: allTips.filter((t) => !t.outcome).length };
 }
 
-const SYSTEM = "Jsi analytik sázkových tipů. Odpovídáš česky, stručně a věcně, bez emoji. Nic si nevymýšlíš – opíráš se jen o dodaná data, "
-  + "u malých vzorků výslovně upozorni, že závěry jsou nejisté. Nikdy nesliboj zisk a nepodporuj sázení nad možnosti uživatele.";
+const SYSTEM = "Jsi analytik sázkových tipů. Odpovídáš česky, stručně a věcně, bez emoji. Nic si nevymýšlíš – opíráš se jen o dodaná data. "
+  + "Nepiš žádná obecná varování, upozornění ani rady (o riziku sázení, limitech, odpovědném sázení, malém vzorku, slibech zisku), jen konkrétní poznatky z dat.";
 
 const MAX_ANALYZED_TICKETS = 25;   // víc tiketů do jednoho dotazu nedáváme (délka zadání = spotřeba limitu Gemini API)
 const RESULT_CS = { win: "výhra", loss: "prohra", void: "vráceno" };
@@ -116,12 +116,11 @@ function buildTicketsPrompt(settled) {
   const data = ticketsForAnalysis(settled);
   return `Tady jsou moje vyhodnocené tikety z fotbalových tipů (kurz = kombinovaný kurz tiketu, pravdepodobnost_pct = odhad ze součinu pravděpodobností zdroje, `
     + `zisk = výhra − vklad při vkladu 1 na tiket, jedna prohra shodí celý tiket, vrácený zápas se z kurzu vyjme; u každého tipu je výsledek, skóre a původní zdůvodnění z AI):\n\n${JSON.stringify(data)}\n\n`
-    + "Napiš slovní vyhodnocení těchto tiketů (analýzu pro mě jako sázkaře) v těchto částech s krátkým nadpisem v **tučně**: "
-    + "1) **Jak tikety dopadly** (2–3 věty: úspěšnost, odhad vs. skutečnost, ROI), "
-    + "2) **Co je špatně** – které zápasy a tipy prohrané tikety shodily a jaké chyby se opakují (typ tipu, soutěž, výše kurzu, počet zápasů v tiketu, jistota tiketu, zdůvodnění, které se nenaplnilo), "
-    + "3) **Na co si dát pozor** – konkrétní rizika a varovné signály, které je dobré hlídat při dalších tiketech, "
-    + "4) **Co dělat jinak** – 2–4 konkrétní doporučení pro sestavování dalších tiketů. "
-    + "Opírej se jen o dodaná data, uváděj konkrétní zápasy a čísla a u malého vzorku to výslovně uveď. Použij krátké odstavce nebo odrážky začínající „- “.";
+    + "Napiš slovní vyhodnocení těchto tiketů (analýzu pro mě jako sázkaře) jen v těchto třech částech s krátkým nadpisem v **tučně** (bez úvodu, bez shrnutí „jak tikety dopadly“): "
+    + "1) **Co je špatně** – které zápasy a tipy prohrané tikety shodily a jaké chyby se opakují (typ tipu, soutěž, výše kurzu, počet zápasů v tiketu, jistota tiketu, zdůvodnění, které se nenaplnilo), "
+    + "2) **Na co si dát pozor** – konkrétní rizika a varovné signály, které je dobré hlídat při dalších tiketech, "
+    + "3) **Co dělat jinak** – 2–4 konkrétní doporučení pro sestavování dalších tiketů. "
+    + "Opírej se jen o dodaná data, uváděj konkrétní zápasy a čísla. Nepiš obecná varování ani upozornění (riziko ztráty, limity sázení, malý vzorek). Použij krátké odstavce nebo odrážky začínající „- “.";
 }
 
 // „latest“ aliasy sledují aktuální modely Gemini; při nedostupnosti nebo přetížení se zkusí další (lehčí) model.

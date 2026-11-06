@@ -1273,7 +1273,7 @@
     if (ev.aiBusy) { out.innerHTML = "<p>AI rozebírá tikety…</p>"; return; }
     if (errorText) { out.innerHTML = `<p class="is-error">${esc(errorText)}</p>`; return; }
     if (ev.ai && ev.ai.text) {
-      out.innerHTML = aiHtml(ev.ai.text);
+      out.innerHTML = aiHtml(cleanAi(ev.ai.text));
       note.textContent = `Vytvořeno ${fmtKickoff(ev.ai.at)}`;
       return;
     }
@@ -1294,6 +1294,20 @@
       renderEvAi();
     } else renderEvAi(res.error);
   });
+
+  /** Starší rozbory: bez úvodního upozornění před prvním nadpisem a bez části „Jak tikety dopadly“ (bez nadpisů zůstane text celý). */
+  function cleanAi(text) {
+    const headingOf = (t) => { const m = /^(?:#+\s*)?\*\*(.+?)\*\*:?$|^#+\s*(.+?):?$/.exec(t); return m ? (m[1] || m[2]) : null; };
+    const out = [];
+    let skip = true;
+    let found = false;
+    for (const line of String(text).split(/\n+/)) {
+      const h = headingOf(line.trim());
+      if (h !== null) { found = true; skip = /jak tikety dopadly/i.test(h); }
+      if (!skip) out.push(line);
+    }
+    return found && out.length ? out.join("\n") : text;
+  }
 
   /** Jednoduché zobrazení textu od AI: odstavce, odrážky „- “ a **tučné**. */
   function aiHtml(text) {
