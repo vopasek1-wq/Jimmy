@@ -134,6 +134,7 @@ test("ligy: norská Eliteserien a bulharská První liga se poznají podle odkaz
 test("názvy týmů: Hamarkameratene = HamKam, AZ = AZ Alkmaar", () => {
   assert.ok(sameMatch("KFUM Oslo", "Hamarkameratene", "KFUM Oslo", "HamKam") >= 0.9);
   assert.ok(sameMatch("AZ", "Juventus", "AZ Alkmaar", "Juventus") >= 0.9);   // Scores24 píše jen „AZ“
+  for (const name of ["FC København", "FC Kobenhavn", "FC Copenhagen"]) assert.ok(sameMatch("Copenhagen", "Saburtalo", name, "Saburtalo Tbilisi") >= 0.9, name);
 });
 test("filtr: jen sledované ligy", () => {
   assert.equal(passesFilters(mk({ leagueKey: "MLS" })), false);
