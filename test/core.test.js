@@ -84,6 +84,9 @@ test("normalizePick: všechny popisky česky (góly, týmové totaly, nedá gól
   assert.equal(cs("A Total goals Under (1,5)"), "A: méně než 1,5 gólu");
   assert.deepEqual(normalizePick("Slovan will not score", "Spartak", "Slovan"), { code: "AU0.5", labelCs: "Slovan nedá gól" });
   assert.deepEqual(normalizePick("Spartak will score", "Spartak", "Slovan"), { code: "HO0.5", labelCs: "Spartak dá gól" });
+  // Scores24 u některých zápasů přidává na konec slovo „goal“ (živě naměřeno: „Lecce will score goal“)
+  assert.deepEqual(normalizePick("Lecce will score goal", "Lecce", "Juventus Turin"), { code: "HO0.5", labelCs: "Lecce dá gól" });
+  assert.deepEqual(normalizePick("Cagliari Calcio will not score goal", "Roma", "Cagliari Calcio"), { code: "AU0.5", labelCs: "Cagliari Calcio nedá gól" });
   assert.equal(cs("Total yellow cards Under (4,5)"), "Méně než 4,5 žlutých karet");
   assert.equal(cs("Draw No Bet"), "Sázka bez remízy");
   assert.ok(!/\b(Over|Under|will|score)\b/.test(cs("A Handicap (+1,5)")));

@@ -254,6 +254,19 @@ test("SofaScore: když se zápas v soutěži nenajde, hledá se mezi všemi záp
   assert.equal(await failing.findAnywhere("A", "B", new Date(TS * 1000)), null);
   assert.deepEqual(failing.errors, []);
 });
+test("SofaScore: describeMiss ukáže nejbližší zápas a chybu seznamu dne (pro diagnostiku nenalezených zápasů)", async () => {
+  const http = { async getJson(url) { return /sport\/football/.test(url) ? { events: [] } : { events: [sofaEvent(21, "Brondby IF", "Dinamo Tbilisi", TS + 1800)] }; } };
+  const client = new sofascore.SofaScoreClient(http);
+  const ko = new Date(TS * 1000);
+  assert.equal(await client.find(17015, "Copenhagen", "Saburtalo", ko), null);   // v seznamu je jiný zápas
+  await client.findAnywhere("Copenhagen", "Saburtalo", ko);
+  const text = client.describeMiss(17015, "Copenhagen", "Saburtalo", ko);
+  assert.match(text, /soutěž: 1 zápasů, nejbližší Brondby IF – Dinamo Tbilisi \(podobnost 0\.\d\d, 2026-10-18 \d\d:\d\d UTC\)/);
+  assert.match(text, /všechny zápasy dne: 0 zápasů, nejbližší nic v ±12 h/);
+  const failing = new sofascore.SofaScoreClient({ async getJson() { throw new SourceError("HTTP 403"); } });
+  await failing.findAnywhere("A", "B", ko);
+  assert.match(failing.describeMiss(17015, "A", "B", ko), /\[chyba seznamu dne: HTTP 403\]$/);
+});
 test("SofaScore: výpadek není fatální", async () => {
   const client = new sofascore.SofaScoreClient(fakeHttp(null, new SourceError("HTTP 403")));
   const t = tipAt();

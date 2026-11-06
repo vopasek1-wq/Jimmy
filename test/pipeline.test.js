@@ -319,7 +319,7 @@ test("updateResults: ID patřící jinému zápasu se nepoužije; důvody chybě
   const text = fs.readFileSync(path.join(dir, "vysledky-diagnostika.txt"), "utf8");
   assert.match(text, /Tipů čekalo na výsledek: 3, vyhodnoceno 0, bez výsledku 3/);
   assert.match(text, /Brentford – Fulham .*\| SofaScore: stav live, skóre 1:1/);
-  assert.match(text, /Everton – Wolves .*\| zápas na SofaScore nenalezen/);
+  assert.match(text, /Everton – Wolves .*\| zápas na SofaScore nenalezen – soutěž: 0 zápasů, nejbližší nic v ±12 h; všechny zápasy dne: 0 zápasů/);
   assert.match(text, /Leeds – Burnley .*\| zápas na SofaScore nenalezen/);
   fs.rmSync(dir, { recursive: true, force: true });
 });

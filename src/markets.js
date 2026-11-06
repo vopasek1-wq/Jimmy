@@ -134,7 +134,7 @@ function normalizePick(label, home, away) {
   }
 
   // „Slovan Bratislava will not score“ / „… will score“ = týmový total pod / nad 0,5 gólu
-  if ((m = /^(.+?)\s+will (not )?score$/i.exec(text))) {
+  if ((m = /^(.+?)\s+will (not )?score(?: goal)?$/i.exec(text))) {
     const side = sideOf(m[1], home, away);
     if (side) {
       const team = side === "1" ? home : away;

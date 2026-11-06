@@ -11,7 +11,7 @@
 const config = require("../config");
 const { SourceError } = require("../http");
 const { UPCOMING, LIVE, FINISHED } = require("../models");
-const { sameMatch } = require("../names");
+const { sameMatch, teamSimilarity } = require("../names");
 const { utcDateOf } = require("../timeutil");
 
 const API_HEADERS = { Accept: "application/json", Referer: `${config.SOFASCORE_WEB}/` };
@@ -118,6 +118,7 @@ class SofaScoreClient {
         this.requestsOk += 1;
       } catch (err) {
         if (!(err instanceof SourceError)) throw err;
+        this.wideError = err.message;      // jen pro ladění (describeMiss), jako chyba zdroje se nehlásí
         this.cache.set(key, []);
       }
     }
@@ -129,6 +130,27 @@ class SofaScoreClient {
       if (score >= WIDE_MIN_SCORE && score > bestScore) { best = ev; bestScore = score; }
     }
     return best;
+  }
+
+  /**
+   * Pro ladění: proč se zápas nenašel. Kolik zápasů měl seznam soutěže a seznam všech zápasů dne a který z nich (±12 h) se jménům
+   * nejvíc podobal i při nedostatečné shodě. Čte jen z už stažených seznamů.
+   */
+  describeMiss(tournamentId, home, away, kickoff) {
+    const day = utcDateOf(kickoff);
+    const stamp = (d) => d.toISOString().slice(0, 16).replace("T", " ");
+    const nearest = (list) => {
+      let best = null;
+      let bestScore = -1;
+      for (const ev of list) {
+        if (Math.abs(ev.start - kickoff) > 12 * 3600 * 1000) continue;
+        const score = (teamSimilarity(home, ev.home) + teamSimilarity(away, ev.away)) / 2;
+        if (score > bestScore) { best = ev; bestScore = score; }
+      }
+      return best ? `${best.home} – ${best.away} (podobnost ${bestScore.toFixed(2)}, ${stamp(best.start)} UTC)` : "nic v ±12 h";
+    };
+    const part = (label, list) => `${label}: ${list ? `${list.length} zápasů, nejbližší ${nearest(list)}` : "nestaženo"}`;
+    return `${part("soutěž", this.cache.get(`${tournamentId}|${day}`))}; ${part("všechny zápasy dne", this.cache.get(`all|${day}`))}${this.wideError ? ` [chyba seznamu dne: ${this.wideError}]` : ""}`;
   }
 
   /** Doplní tipům přesný čas, stav, skóre a odkaz; zrušené/odložené zápasy vyřadí. */
