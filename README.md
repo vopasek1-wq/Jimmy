@@ -56,7 +56,7 @@ Záložky pod vyhledáváním: **Přehled** (tabulka tipů a vedle ní detail vy
 Tip se objeví, **jen když platí všechno** z následujícího (konstanty jsou v `src/config.js`):
 
 * soutěž je mezi sledovanými – Premier League, La Liga, Serie A, Bundesliga, Ligue 1, Liga mistrů,
-  Evropská liga, Konferenční liga, Eredivisie, Liga Portugal, belgická Pro League, Süper Lig,
+  Evropská liga, Konferenční liga, Liga národů UEFA (reprezentace), Eredivisie, Liga Portugal, belgická Pro League, Süper Lig,
   skotská Premiership, česká 1. liga, norská Eliteserien a bulharská První liga, k tomu domácí poháry těchto zemí (FA Cup, EFL Cup, Copa del Rey, Coppa Italia, DFB-Pokal,
   Coupe de France, KNVB Beker, Taça de Portugal a Taça da Liga, belgický, turecký, český pohár, Scottish Cup a Scottish League Cup;
   v levém sloupci jsou pod svou zemí). Ženské soutěže se nesledují (seznam upravíte v `LEAGUES`),

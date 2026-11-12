@@ -53,6 +53,9 @@ const LEAGUES = [
   { key: "UECL", nameCs: "Konferenční liga UEFA", short: "Konferenční liga", sofascoreId: 17015,
     slugRe: /uefa-(europa-)?conference-league$/i, countryRe: EUROPE, nameRe: /^(UEFA )?(Europa )?Conference League$/i,
     forebetTags: ["UECL", "UEC", "ECL"], forebetPaths: [/(^|\/)(uefa-)?(europa-)?conference-league$/], forebetGuess: "predictions-europe/uefa-europa-conference-league" },
+  { key: "UNL", nameCs: "Liga národů UEFA", short: "Liga národů", sofascoreId: 10783,   // reprezentace; slug na Scores24 má číselnou příponu (uefa-nations-league-136)
+    slugRe: /^uefa-nations-league(-\d+)?$/i, countryRe: EUROPE, nameRe: /^(UEFA )?Nations League$/i,
+    forebetTags: [], forebetPaths: [/(^|\/)uefa-nations-league$/], forebetGuess: "predictions-europe/uefa-nations-league" },
   { key: "EREDIVISIE", nameCs: "Nizozemsko – Eredivisie", short: "Eredivisie", sofascoreId: 37,
     slugRe: /^netherlands-eredivisie$/i, countryRe: /^Netherlands$/i, nameRe: /^Eredivisie$/i, forebetTags: ["Ned1", "Nl1"], forebetPaths: [/^netherlands\/eredivisie$/], forebetGuess: "netherlands/eredivisie" },
   { key: "PORTUGAL", nameCs: "Portugalsko – Liga Portugal", short: "Liga Portugal", sofascoreId: 238,

@@ -126,6 +126,13 @@ test("filtr: minimální kurz je včetně", () => {
   assert.equal(passesFilters(mk({ odds: 1.5 })), true);
   assert.equal(passesFilters(mk({ odds: 1.49 })), false);
 });
+test("ligy: Liga národů UEFA se pozná (slug na Scores24 má číselnou příponu), ženská a jiné Ligy národů ne", () => {
+  assert.equal(config.findLeague("", "", "uefa-nations-league-136").key, "UNL");
+  assert.equal(config.findLeague("Europe", "UEFA Nations League", "x").key, "UNL");
+  assert.equal(config.findLeague("", "", "uefa-nations-league-women-12"), null);
+  assert.equal(config.findLeague("World", "CONCACAF Nations League A", "concacaf-nations-league-a"), null);
+  assert.deepEqual([config.leagueByKey("UNL").sofascoreId, config.leagueByKey("UNL").forebetGuess], [10783, "predictions-europe/uefa-nations-league"]);
+});
 test("ligy: norská Eliteserien a bulharská První liga se poznají podle odkazu na Scores24 i podle názvu", () => {
   assert.equal(config.findLeague("", "", "norway-eliteserien").key, "NORSKO");
   assert.equal(config.findLeague("Norway", "Eliteserien", "x").key, "NORSKO");
