@@ -14,6 +14,9 @@ const ALIASES = {
   "atletico madrid": "atletico", "athletic club": "athletic bilbao",
   // reprezentace: SofaScore píše Czechia a Türkiye, Scores24 Czech Republic a Turkey
   "czech republic": "czechia", turkey: "turkiye",
+  // přejmenované / zkrácené kluby (Scores24 × SofaScore)
+  saburtalo: "iberia 1999", "saburtalo tbilisi": "iberia 1999", "strasbourg koenigshoffen": "fcos koenigshoffen",
+  ocpam: "olympique charleville prix ardenne metropole",
   "borussia monchengladbach": "monchengladbach", gladbach: "monchengladbach", psg: "paris saint germain",
   "paris sg": "paris saint germain", "olympique marseille": "marseille", "olympique lyon": "lyon",
   "olympique lyonnais": "lyon", "sparta prague": "sparta praha", "slavia prague": "slavia praha",

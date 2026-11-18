@@ -146,6 +146,9 @@ test("názvy týmů: Hamarkameratene = HamKam, AZ = AZ Alkmaar", () => {
   assert.ok(sameMatch("AZ", "Juventus", "AZ Alkmaar", "Juventus") >= 0.9);   // Scores24 píše jen „AZ“
   assert.ok(sameMatch("Croatia", "Czech Republic", "Croatia", "Czechia") >= 0.9);   // reprezentace (Liga národů)
   assert.ok(sameMatch("Turkey", "Belgium", "Türkiye", "Belgium") >= 0.9);
+  assert.ok(sameMatch("Copenhagen", "Saburtalo", "FC København", "FC Iberia 1999") >= 0.9);
+  assert.ok(sameMatch("Strasbourg Koenigshoffen", "Oberlauterbach", "FCOS Koenigshoffen", "US Oberlauterbach Eberbach") >= 0.9);
+  assert.ok(sameMatch("OCPAM", "Olympique Marcquois", "Olympique Charleville Prix Ardenne Metropole", "Olympique Marcquois") >= 0.9);
   for (const name of ["FC København", "FC Kobenhavn", "FC Copenhagen"]) assert.ok(sameMatch("Copenhagen", "Saburtalo", name, "Saburtalo Tbilisi") >= 0.9, name);
 });
 test("filtr: jen sledované ligy", () => {
