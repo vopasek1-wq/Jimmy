@@ -372,8 +372,13 @@ async function updateResults(db, http, { progress = () => {}, maxAgeDays = 14, n
     }
     if (t.homeScore !== ev.homeScore || t.awayScore !== ev.awayScore || t.status !== FINISHED) db.setScore(t.id, ev.homeScore, ev.awayScore); // konečné skóre přepíše i zastaralé průběžné
     if (!needsOutcome) continue;
-    const outcome = evaluate(t.tipCode, ev.homeScore, ev.awayScore);
-    if (outcome === null) { skipped += 1; why(t, `trh ${t.tipCode} nelze vyhodnotit automaticky (skóre ${ev.homeScore}:${ev.awayScore})`); continue; }
+    const stats = /^C[HA]?[OU]\d/.test(t.tipCode) ? { corners: await client.corners(ev.id) } : null; // rohy se berou ze statistik zápasu
+    const outcome = evaluate(t.tipCode, ev.homeScore, ev.awayScore, stats);
+    if (outcome === null) {
+      skipped += 1;
+      why(t, stats && !stats.corners ? `SofaScore nemá počty rohů tohoto zápasu (skóre ${ev.homeScore}:${ev.awayScore})` : `trh ${t.tipCode} nelze vyhodnotit automaticky (skóre ${ev.homeScore}:${ev.awayScore})`);
+      continue;
+    }
     db.setOutcome(t.id, outcome, "auto");
     done += 1;
   }

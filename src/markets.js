@@ -7,6 +7,7 @@
 //   BTTS  NOBTTS       oba týmy skórují – ano / ne
 //   HO1.5  AU0.5       góly jednoho týmu (H = domácí, A = hosté; O = over, U = under)
 //   AH1:+1.5  AH2:0    handicap týmu 1/2 (linie 0 = sázka bez remízy)
+//   CO9.5  CHU4.5      rohy – celkem / domácí (H) / hosté (A); vyhodnocují se ze statistik zápasu, ne ze skóre
 //   OTHER:<text>       trh, který neumíme interpretovat (zobrazí se původní text)
 "use strict";
 
@@ -94,6 +95,30 @@ function doubleChance(side, home, away) {
   return side === "1" ? { code: "1X", labelCs: `1X – ${home} neprohraje` } : { code: "X2", labelCs: `X2 – ${away} neprohraje` };
 }
 
+const CORNERS_RES = [
+  /^(?:(.+?)\s+)?total corners\s+(over|under)\s*\(\s*([\d.,]+)\s*\)$/i,           // „Total corners Over (9,5)“, „Liverpool Total corners Over (5,5)“
+  /^corners?\s*(?:-\s*(.+?)\s+)?(?:total\s+)?(over|under)\s*\(\s*([\d.,]+)\s*\)$/i, // „Corners - Liverpool Total Over (5.5)“
+];
+
+/** Rohy celkem nebo jednoho týmu; tým, který nesedí na domácí ani hosty → null (zůstane jako OTHER). */
+function cornersMarket(text, home, away) {
+  for (const re of CORNERS_RES) {
+    const m = re.exec(text);
+    if (!m) continue;
+    const line = lineOf(m[3]);
+    if (line === null) return null;
+    const side = m[1] ? sideOf(m[1], home, away) : null;
+    if (m[1] && !side) return null;
+    const over = m[2].toLowerCase() === "over";
+    const unit = Number.isInteger(line) && line === 1 ? "roh" : Number.isInteger(line) && line >= 2 && line <= 4 ? "rohy" : "rohů";
+    const who = side === "1" ? "H" : side === "2" ? "A" : "";
+    const code = `C${who}${over ? "O" : "U"}${line}`;
+    const text2 = `${over ? "více" : "méně"} než ${numCs(line)} ${unit}`;
+    return { code, labelCs: side ? `${side === "1" ? home : away}: ${text2}` : text2.replace(/^./, (c) => c.toUpperCase()) };
+  }
+  return null;
+}
+
 /**
  * Přeloží anglický popis tipu ze Scores24 na {code, labelCs}.
  * Příklady vstupů: „Arsenal to Win“, „Both Teams to Score – (Yes)“, „Total goals Over (2,5)“,
@@ -104,6 +129,8 @@ function normalizePick(label, home, away) {
   const text = String(label).replace(/\s+/g, " ").trim();
   const other = { code: `OTHER:${text}`, labelCs: countMarket(text, home, away) || translateOther(text) };
   if (!text) return other;
+  const corners = cornersMarket(text, home, away);
+  if (corners) return corners;
   let m;
 
   if ((m = BTTS_RE.exec(text))) {
@@ -200,6 +227,7 @@ function goalsProbability(code, goals) {
 }
 
 const TOTAL_CODE = /^([HA]?)([OU])(\d+(?:\.\d+)?)$/;
+const CORNERS_CODE = /^C([HA]?)([OU])(\d+(?:\.\d+)?)$/;
 const AH_CODE = /^AH([12]):([+-]?\d+(?:\.\d+)?)$/;
 
 function vsLine(diff, over, line) {
@@ -212,9 +240,17 @@ function vsLine(diff, over, line) {
  * Vrátí WIN / LOSS / VOID, nebo null, když trh neumíme automaticky vyhodnotit.
  * Čtvrtinové linie se vyhodnocují půl na půl, takže je raději nechávám ručně (null).
  */
-function evaluate(code, homeGoals, awayGoals) {
+function evaluate(code, homeGoals, awayGoals, stats = null) {
   const hg = homeGoals;
   const ag = awayGoals;
+  const corners = CORNERS_CODE.exec(code);
+  if (corners) { // rohy: potřebují statistiky zápasu ({ corners: { home, away } }); bez nich zůstává tip ručně
+    const c = stats && stats.corners;
+    if (!c || !Number.isFinite(c.home) || !Number.isFinite(c.away)) return null;
+    const [, who, direction, lineText] = corners;
+    const count = who === "" ? c.home + c.away : who === "H" ? c.home : c.away;
+    return vsLine(count - Number(lineText), direction === "O", Number(lineText));
+  }
   const simple = {
     1: hg > ag, X: hg === ag, 2: hg < ag, "1X": hg >= ag, X2: hg <= ag, 12: hg !== ag,
     BTTS: hg > 0 && ag > 0, NOBTTS: !(hg > 0 && ag > 0),

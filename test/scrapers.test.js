@@ -254,6 +254,23 @@ test("SofaScore: když se zápas v soutěži nenajde, hledá se mezi všemi záp
   assert.equal(await failing.findAnywhere("A", "B", new Date(TS * 1000)), null);
   assert.deepEqual(failing.errors, []);
 });
+test("SofaScore: počty rohů ze statistik zápasu (celý zápas), bez statistik null, dotaz jen jednou", async () => {
+  const calls = [];
+  const http = { async getJson(url) {
+    calls.push(url);
+    if (/\/event\/1\/statistics/.test(url)) return { statistics: [
+      { period: "1ST", groups: [{ statisticsItems: [{ key: "cornerKicks", homeValue: 1, awayValue: 0 }] }] },
+      { period: "ALL", groups: [{ groupName: "TVData", statisticsItems: [{ key: "ballPossession", homeValue: 60, awayValue: 40 }, { key: "cornerKicks", homeValue: 8, awayValue: 3 }] }] }] };
+    if (/\/event\/2\/statistics/.test(url)) throw Object.assign(new SourceError("HTTP 404"), { status: 404 });
+    return {};
+  } };
+  const client = new sofascore.SofaScoreClient(http);
+  assert.deepEqual(await client.corners(1), { home: 8, away: 3 });
+  assert.deepEqual(await client.corners(1), { home: 8, away: 3 });
+  assert.equal(calls.length, 1);
+  assert.equal(await client.corners(2), null);
+  assert.deepEqual(client.errors, []);
+});
 test("SofaScore: describeMiss ukáže nejbližší zápas a chybu seznamu dne (pro diagnostiku nenalezených zápasů)", async () => {
   const http = { async getJson(url) { return /sport\/football/.test(url) ? { events: [] } : { events: [sofaEvent(21, "Brondby IF", "Dinamo Tbilisi", TS + 1800)] }; } };
   const client = new sofascore.SofaScoreClient(http);

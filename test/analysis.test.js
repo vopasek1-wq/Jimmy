@@ -8,8 +8,8 @@ const { analyze, marketGroup, buildTicketsPrompt, ticketsForAnalysis, askGemini,
 const tip = (probability, outcome, o = {}) => ({ probability, outcome, tipCode: "1", league: "Premier League", odds: 1.8, oddsEstimated: false, matchName: "A – B", tipLabel: "x", homeScore: 0, awayScore: 1, ...o });
 
 test("marketGroup: skupiny trhů", () => {
-  assert.deepEqual(["1", "1X", "BTTS", "O2.5", "HU0.5", "AH1:-1.5", "OTHER:x"].map(marketGroup),
-    ["Výsledek zápasu (1X2)", "Dvojitá šance", "Oba týmy skórují", "Góly celkem", "Góly jednoho týmu", "Handicap", "Ostatní trhy"]);
+  assert.deepEqual(["1", "1X", "BTTS", "O2.5", "HU0.5", "AH1:-1.5", "CHO5.5", "OTHER:x"].map(marketGroup),
+    ["Výsledek zápasu (1X2)", "Dvojitá šance", "Oba týmy skórují", "Góly celkem", "Góly jednoho týmu", "Handicap", "Rohy", "Ostatní trhy"]);
 });
 
 test("analyze: pásma, rozdíl a zjištění o nadhodnocených 80–90 %", () => {

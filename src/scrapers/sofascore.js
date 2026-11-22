@@ -77,6 +77,29 @@ class SofaScoreClient {
   }
 
   /** Zápas podle jeho SofaScore ID (tipy ho mají uložené po prvním spárování); null, když se ho nepodaří načíst. */
+  /** Počty rohů skončeného zápasu { home, away } ze statistik (celý zápas), jinak null. Jeden dotaz na zápas. */
+  async corners(id) {
+    const key = `corners|${id}`;
+    if (!this.cache.has(key)) {
+      let result = null;
+      try {
+        const data = await this.http.getJson(`${config.SOFASCORE_API}/event/${id}/statistics`, { headers: API_HEADERS, delayMs: FAST_DELAY_MS });
+        const all = ((data && data.statistics) || []).find((s) => s.period === "ALL");
+        for (const g of (all && all.groups) || []) {
+          for (const it of g.statisticsItems || []) {
+            if (it.key === "cornerKicks" && Number.isFinite(it.homeValue) && Number.isFinite(it.awayValue)) result = { home: it.homeValue, away: it.awayValue };
+          }
+        }
+        this.requestsOk += 1;
+      } catch (err) {
+        if (!(err instanceof SourceError)) throw err;
+        if (err.status !== 404) this.errors.push(err.message);
+      }
+      this.cache.set(key, result);
+    }
+    return this.cache.get(key);
+  }
+
   async byId(id) {
     const key = `id|${id}`;
     if (!this.cache.has(key)) {

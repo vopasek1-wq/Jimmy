@@ -13,6 +13,7 @@ function marketGroup(code) {
   if (/^[OU]\d/.test(code)) return "Góly celkem";
   if (/^[HA][OU]\d/.test(code)) return "Góly jednoho týmu";
   if (/^AH/.test(code)) return "Handicap";
+  if (/^C[HA]?[OU]\d/.test(code)) return "Rohy";
   return "Ostatní trhy";
 }
 

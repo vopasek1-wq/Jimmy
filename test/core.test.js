@@ -69,9 +69,9 @@ test("estimateOdds je opatrný a validovaný", () => {
 
 // --- trhy ----------------------------------------------------------------------------------------------------
 test("normalizePick: neznámý trh se nezahazuje a české popisky", () => {
-  const m = normalizePick("Total corners Over (9,5)", "A", "B");
+  const m = normalizePick("Total yellow cards Over (4,5)", "A", "B");
   assert.ok(m.code.startsWith("OTHER:"));
-  assert.equal(m.labelCs, "Více než 9,5 rohů");
+  assert.equal(m.labelCs, "Více než 4,5 žlutých karet");
   assert.equal(normalizePick("Total goals Over (2,5)", "A", "B").labelCs, "Více než 2,5 gólu");
   assert.equal(normalizePick("Arsenal to Win", "Forest", "Arsenal").labelCs, "2 – výhra Arsenal");
   assert.ok(normalizePick("Arsenal Handicap (0)", "Forest", "Arsenal").labelCs.includes("bez remízy"));
@@ -150,6 +150,22 @@ test("názvy týmů: Hamarkameratene = HamKam, AZ = AZ Alkmaar", () => {
   assert.ok(sameMatch("Strasbourg Koenigshoffen", "Oberlauterbach", "FCOS Koenigshoffen", "US Oberlauterbach Eberbach") >= 0.9);
   assert.ok(sameMatch("OCPAM", "Olympique Marcquois", "Olympique Charleville Prix Ardenne Metropole", "Olympique Marcquois") >= 0.9);
   for (const name of ["FC København", "FC Kobenhavn", "FC Copenhagen"]) assert.ok(sameMatch("Copenhagen", "Saburtalo", name, "Saburtalo Tbilisi") >= 0.9, name);
+});
+test("rohy: kód, popisek a vyhodnocení ze statistik zápasu", () => {
+  const n = (l) => normalizePick(l, "Liverpool", "Manchester United");
+  assert.deepEqual(n("Corners - Liverpool Total Over (5,5)"), { code: "CHO5.5", labelCs: "Liverpool: více než 5,5 rohů" });
+  assert.equal(n("Corners - Manchester United Total Under (4.5)").code, "CAU4.5");
+  assert.equal(n("Total corners Over (9,5)").code, "CO9.5");
+  assert.equal(n("Liverpool Total corners Under (10)").labelCs, "Liverpool: méně než 10 rohů");
+  assert.ok(n("Corners - Chelsea Total Over (5,5)").code.startsWith("OTHER:"));   // tým ze zápasu nesedí
+  const stats = (home, away) => ({ corners: { home, away } });
+  assert.equal(evaluate("CHO5.5", 4, 0, stats(7, 2)), "win");
+  assert.equal(evaluate("CHO5.5", 4, 0, stats(5, 9)), "loss");
+  assert.equal(evaluate("CO9.5", 1, 1, stats(5, 5)), "win");
+  assert.equal(evaluate("CAU4.5", 1, 1, stats(9, 4)), "win");
+  assert.equal(evaluate("CO10", 1, 1, stats(5, 5)), "void");
+  assert.equal(evaluate("CHO5.5", 4, 0), null);                       // bez statistik zůstává ručně
+  assert.equal(evaluate("CHO5.5", 4, 0, { corners: null }), null);
 });
 test("filtr: jen sledované ligy", () => {
   assert.equal(passesFilters(mk({ leagueKey: "MLS" })), false);
